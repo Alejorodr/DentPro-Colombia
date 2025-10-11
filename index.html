@@ -1,24 +1,31 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+  <!-- Meta básicas y PWA -->
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="Dent Pro, clínica odontológica de alta tecnología en Chía, Cundinamarca. Agenda tu cita por especialidad, conoce nuestros servicios y especialistas." />
   <title>Dent Pro | Clínica Odontológica Digital en Chía</title>
+  <meta name="theme-color" content="#0f7c90" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
+  <!-- Fuentes e íconos -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet" />
 
+  <!-- Estilos e ícono -->
   <link rel="stylesheet" href="css/style.css" />
-  <link rel="manifest" href="manifest.webmanifest" />
-  <meta name="theme-color" content="#0f7c90" />
   <link rel="icon" type="image/svg+xml" href="images/dentpro-logo.svg" />
 </head>
 <body>
+  <!-- Enlace de salto para accesibilidad -->
   <a class="skip-link" href="#contenido-principal">Ir al contenido principal</a>
 
+  <!-- Barra superior con datos de contacto -->
   <header class="topbar">
     <div class="topbar__left">
       <span class="topbar__badge">Chía, Cundinamarca</span>
@@ -42,6 +49,7 @@
     </div>
   </header>
 
+  <!-- Navegación principal con botón hamburguesa accesible -->
   <nav class="main-nav" aria-label="Navegación principal">
     <div class="main-nav__brand">
       <img src="images/dentpro-logo.svg" alt="Dent Pro logo" class="main-nav__logo" />
@@ -50,9 +58,9 @@
         <span class="main-nav__subtitle">Clínica Odontológica Digital</span>
       </div>
     </div>
-    <button class="main-nav__toggle" aria-expanded="false" aria-controls="menu-principal">
+    <button class="main-nav__toggle" aria-expanded="false" aria-controls="menu-principal" aria-label="Abrir menú de navegación">
       <span class="main-nav__toggle-icon" aria-hidden="true"></span>
-      <span class="visualmente-oculto">Abrir menú</span>
+      <span class="visually-hidden" id="texto-toggle-menu">Abrir menú</span>
     </button>
     <div class="main-nav__links" id="menu-principal">
       <a href="#inicio">Inicio</a>
@@ -68,6 +76,7 @@
   </nav>
 
   <main id="contenido-principal">
+    <!-- Hero: mensaje principal + métrica visual -->
     <section class="hero" id="inicio">
       <div class="hero__content">
         <h1>La clínica odontológica <span>más tecnológica</span> de Chía</h1>
@@ -92,6 +101,7 @@
       </div>
     </section>
 
+    <!-- Indicadores rápidos de confianza -->
     <section class="metrics" aria-label="Indicadores de confianza">
       <article><h2>15+</h2><p>Años creando experiencias memorables en odontología integral.</p></article>
       <article><h2>98%</h2><p>Índice de satisfacción gracias a tratamientos personalizados y seguimiento digital.</p></article>
@@ -99,6 +109,7 @@
       <article><h2>24/7</h2><p>Plataforma de agendamiento y acompañamiento continuo por WhatsApp.</p></article>
     </section>
 
+    <!-- Catálogo de servicios -->
     <section class="services" id="servicios">
       <header class="section-header">
         <span class="section-kicker">Catálogo de servicios</span>
@@ -175,6 +186,7 @@
       </div>
     </section>
 
+    <!-- Equipo de especialistas -->
     <section class="specialists" id="especialistas">
       <header class="section-header">
         <span class="section-kicker">Equipo interdisciplinario</span>
@@ -237,6 +249,7 @@
       </div>
     </section>
 
+    <!-- Agenda inteligente con ARIA en vivo -->
     <section class="agenda" id="agenda" aria-labelledby="agenda-titulo">
       <header class="section-header">
         <span class="section-kicker">Agenda inteligente</span>
@@ -277,18 +290,28 @@
         <button type="submit" class="btn btn--primary">Confirmar cita</button>
       </form>
 
-      <aside class="agenda__summary" aria-live="polite">
-        <h3>Tu cita digital</h3>
-        <div id="agenda-resumen" class="agenda__summary-card">
+      <!-- Feedback no intrusivo y acciones contextualizadas -->
+      <div id="agenda-feedback" class="agenda__form-feedback" role="status" aria-live="polite" hidden></div>
+
+      <aside class="agenda__summary" role="region" aria-labelledby="agenda-resumen-titulo">
+        <h3 id="agenda-resumen-titulo">Tu cita digital</h3>
+        <div id="agenda-resumen" class="agenda__summary-card" role="status" aria-live="polite" aria-atomic="true">
           <p>Selecciona opciones para ver el resumen.</p>
+        </div>
+        <div id="agenda-actions" class="agenda__actions" hidden>
+          <button type="button" class="btn btn--outline btn--icon" id="agenda-compartir">
+            <i class="ri-share-forward-line" aria-hidden="true"></i>
+            Compartir confirmación
+          </button>
         </div>
         <div class="agenda__history">
           <h4>Últimas solicitudes</h4>
-          <ul id="agenda-historial"></ul>
+          <ul id="agenda-historial" aria-live="polite"></ul>
         </div>
       </aside>
     </section>
 
+    <!-- Módulo app: vista simulada y controles -->
     <section class="app" id="app" aria-labelledby="app-titulo">
       <header class="section-header">
         <span class="section-kicker">Web app Dent Pro</span>
@@ -312,7 +335,7 @@
                   <h3>Recordatorios</h3>
                   <button class="app-card__toggle" id="toggle-notificaciones" type="button" aria-pressed="false">Activar</button>
                 </div>
-                <p id="estado-notificaciones" class="app-card__description">Recibe avisos 48 y 12 horas antes de cada turno.</p>
+                <p id="estado-notificaciones" class="app-card__description" role="status" aria-live="polite">Recibe avisos 48 y 12 horas antes de cada turno.</p>
               </article>
               <article class="app-card">
                 <h3>Accesos rápidos</h3>
@@ -323,6 +346,7 @@
                 </ul>
               </article>
             </div>
+            <!-- Navegación inferior simulada -->
             <nav class="app-shell__nav">
               <button type="button" class="app-shell__nav-btn is-active" aria-label="Inicio"><i class="ri-home-5-line"></i></button>
               <button type="button" class="app-shell__nav-btn" aria-label="Agenda"><i class="ri-calendar-event-line"></i></button>
@@ -347,6 +371,7 @@
       </div>
     </section>
 
+    <!-- Portal con tabs accesibles -->
     <section class="portal" id="portal" aria-labelledby="portal-titulo">
       <header class="section-header">
         <span class="section-kicker">Portal Dent Pro</span>
@@ -422,6 +447,7 @@
       </div>
     </section>
 
+    <!-- Experiencia digital -->
     <section class="experience" id="experiencia">
       <header class="section-header">
         <span class="section-kicker">Experiencia digital Dent Pro</span>
@@ -436,6 +462,7 @@
       </div>
     </section>
 
+    <!-- Testimonios -->
     <section class="testimonials" aria-label="Testimonios de pacientes">
       <header class="section-header">
         <span class="section-kicker">Historias reales</span>
@@ -466,10 +493,12 @@
       </div>
     </section>
 
+    <!-- Tecnología -->
     <section class="technology" aria-label="Tecnología Dent Pro">
       <header class="section-header">
         <span class="section-kicker">Innovación continua</span>
         <h2>Infraestructura digital que respalda cada tratamiento</h2>
+        <p>Contamos con equipos de última generación y alianzas estratégicas que elevan la precisión y los resultados clínicos.</p>
       </header>
       <div class="technology__grid">
         <article><h3>Escáner Intraoral iTero 5D</h3><p>Captura en colores reales y simulación de desgaste dental en minutos.</p></article>
@@ -479,6 +508,7 @@
       </div>
     </section>
 
+    <!-- Preguntas frecuentes -->
     <section class="faq" aria-label="Preguntas frecuentes">
       <header class="section-header">
         <span class="section-kicker">Resuelve tus dudas</span>
@@ -504,6 +534,7 @@
       </div>
     </section>
 
+    <!-- Contacto + mapa embebido -->
     <section class="contact" id="contacto">
       <div class="contact__info">
         <header class="section-header">
@@ -528,6 +559,7 @@
     </section>
   </main>
 
+  <!-- Pie de página con navegación secundaria y legal -->
   <footer class="footer">
     <div class="footer__brand">
       <img src="images/dentpro-logo.svg" alt="Logo Dent Pro" />
@@ -549,6 +581,7 @@
     </div>
   </footer>
 
+  <!-- Acciones flotantes: WhatsApp, recordatorio, ir a agenda -->
   <div class="floating-actions" aria-label="Acciones rápidas">
     <a href="https://wa.me/573212345678" target="_blank" rel="noopener" class="floating-actions__item" aria-label="Chatear por WhatsApp">
       <i class="ri-whatsapp-fill" aria-hidden="true"></i>
@@ -561,6 +594,7 @@
     </a>
   </div>
 
+  <!-- Modal de recordatorio personalizado -->
   <div class="reminder-modal" id="recordatorio-modal" role="dialog" aria-modal="true" aria-labelledby="recordatorio-titulo" hidden>
     <div class="reminder-modal__content">
       <button class="reminder-modal__close" type="button" aria-label="Cerrar">&times;</button>
@@ -578,6 +612,7 @@
     </div>
   </div>
 
+  <!-- App JS: lógica de agenda, notificaciones y accesibilidad -->
   <script src="js/app.js" type="module"></script>
 </body>
 </html>
