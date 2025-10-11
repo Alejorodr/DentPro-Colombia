@@ -260,32 +260,6 @@ function persistHistory(entry) {
   renderHistory();
 }
 
-function renderHistory() {
-  const history = getStoredAppointments();
-  elements.history.innerHTML = '';
-  if (history.length === 0) {
-    elements.history.innerHTML = '<li>Aún no tienes solicitudes recientes.</li>';
-    renderClientAppointments(history);
-    return;
-  }
-
-  history.forEach((item) => {
-    const date = new Date(item.dateTime);
-    const listItem = document.createElement('li');
-    listItem.innerHTML = `
-      <strong>${item.professional}</strong><br>
-      ${new Intl.DateTimeFormat('es-CO', {
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-    }).format(date)} · ${item.specialty}
-    `;
-    elements.history.append(listItem);
-  });
-  renderClientAppointments(history);
-}
-
 function renderClientAppointments(history) {
   if (!elements.clientAppointments) return;
   elements.clientAppointments.innerHTML = '';
@@ -313,6 +287,32 @@ function renderClientAppointments(history) {
     `;
     elements.clientAppointments.append(element);
   });
+}
+
+function renderHistory() {
+  const history = getStoredAppointments();
+  elements.history.innerHTML = '';
+  if (history.length === 0) {
+    elements.history.innerHTML = '<li>Aún no tienes solicitudes recientes.</li>';
+    renderClientAppointments(history);
+    return;
+  }
+
+  history.forEach((item) => {
+    const date = new Date(item.dateTime);
+    const listItem = document.createElement('li');
+    listItem.innerHTML = `
+      <strong>${item.professional}</strong><br>
+      ${new Intl.DateTimeFormat('es-CO', {
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }).format(date)} · ${item.specialty}
+    `;
+    elements.history.append(listItem);
+  });
+  renderClientAppointments(history);
 }
 
 function handleFormSubmit(event) {
@@ -407,7 +407,7 @@ function initReminderModal() {
     }
   });
 
-  elements.reminderModal.querySelector('.reminder-modal__close').addEventListener('click', closeModal);
+  elements.reminderModal.querySelector('.reminder-modal__close')?.addEventListener('click', closeModal);
 
   elements.reminderModal.addEventListener('click', (event) => {
     if (event.target === elements.reminderModal) {
@@ -636,17 +636,17 @@ function init() {
   setDateMinimum();
   renderHistory();
 
-  elements.specialtySelect.addEventListener('change', (event) => {
+  elements.specialtySelect?.addEventListener('change', (event) => {
     populateProfessionals(event.target.value);
     updateSummary();
   });
 
-  elements.professionalSelect.addEventListener('change', (event) => {
+  elements.professionalSelect?.addEventListener('change', (event) => {
     updateProfessionalDetail(event.target.value);
   });
 
-  elements.dateInput.addEventListener('change', handleDateChange);
-  elements.form.addEventListener('submit', handleFormSubmit);
+  elements.dateInput?.addEventListener('change', handleDateChange);
+  elements.form?.addEventListener('submit', handleFormSubmit);
 
   initReminderModal();
   initNotifications();
