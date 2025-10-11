@@ -1,9 +1,12 @@
+// === Datos base: profesionales y especialidades ===============================
+// Estructura mínima para poblar selects, disponibilidad y resumen.
 const professionals = [
   {
     id: 'laura-martinez',
     name: 'Dra. Laura Martínez',
     specialties: ['Estética y Diseño de Sonrisa', 'Odontología Preventiva'],
     detail: 'Consultorio 2 · Diseño de sonrisa digital',
+    // Disponibilidad por día de la semana: 0=Dom, 1=Lun, ..., 6=Sáb
     availability: {
       1: ['08:00', '09:30', '11:00', '15:00'],
       3: ['08:30', '10:00', '11:30', '16:00'],
@@ -45,65 +48,43 @@ const professionals = [
   }
 ];
 
+// Derivar catálogo de especialidades único + id legible para HTML
 const specialties = Array.from(
-  new Set(professionals.flatMap((professional) => professional.specialties))
+  new Set(professionals.flatMap((p) => p.specialties))
 ).map((name) => ({
   id: name.toLowerCase().replace(/[^a-záéíóúñ0-9]+/gi, '-'),
   name
 }));
 
+// === Constantes de almacenamiento y formato ==================================
 const STORAGE_KEYS = {
   appointments: 'dentpro-agenda',
   notifications: 'dentpro-notifications'
 };
 
+// Estado de selección de la interfaz
 const state = {
   selectedSlot: null,
   selectedDate: null,
   selectedProfessional: null
 };
 
-const shareState = {
-  details: null
-};
+// Estado para compartir y acciones descargables
+const shareState = { details: null };
+const actionState = { downloadUrl: null };
 
-const actionState = {
-  downloadUrl: null
-};
-
+// Formateadores reutilizables para fechas/horas
 const formatters = {
-  longDate: new Intl.DateTimeFormat('es-CO', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  }),
-  longDateTime: new Intl.DateTimeFormat('es-CO', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  }),
-  history: new Intl.DateTimeFormat('es-CO', {
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  }),
-  shortDate: new Intl.DateTimeFormat('es-CO', {
-    month: 'short',
-    day: 'numeric'
-  }),
-  time: new Intl.DateTimeFormat('es-CO', {
-    hour: '2-digit',
-    minute: '2-digit'
-  })
+  longDate: new Intl.DateTimeFormat('es-CO', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }),
+  longDateTime: new Intl.DateTimeFormat('es-CO', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
+  history: new Intl.DateTimeFormat('es-CO', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
+  shortDate: new Intl.DateTimeFormat('es-CO', { month: 'short', day: 'numeric' }),
+  time: new Intl.DateTimeFormat('es-CO', { hour: '2-digit', minute: '2-digit' })
 };
 
 const AGENDA_LOCATION = 'Dent Pro · Cra. 11 # 10-38, Centro Empresarial Sabana, Chía';
 
+// === Cache de elementos del DOM ==============================================
 const elements = {
   specialtySelect: document.getElementById('especialidad'),
   professionalSelect: document.getElementById('profesional'),
@@ -113,9 +94,9 @@ const elements = {
   form: document.getElementById('form-agenda'),
   summary: document.getElementById('agenda-resumen'),
   history: document.getElementById('agenda-historial'),
-  feedback: document.getElementById('agenda-feedback'),
-  actionsContainer: document.getElementById('agenda-actions'),
-  shareButton: document.getElementById('agenda-compartir'),
+  feedback: document.getElementById('agenda-feedback'), // opcional en HTML
+  actionsContainer: document.getElementById('agenda-actions'), // opcional en HTML
+  shareButton: document.getElementById('agenda-compartir'), // opcional en HTML
   reminderButton: document.getElementById('boton-recordatorio'),
   reminderModal: document.getElementById('recordatorio-modal'),
   reminderForm: document.getElementById('recordatorio-form'),
@@ -127,19 +108,18 @@ const elements = {
 
 const navToggle = document.querySelector('.main-nav__toggle');
 const navLinks = document.getElementById('menu-principal');
-const navToggleLabel = document.getElementById('texto-toggle-menu');
+const navToggleLabel = document.getElementById('texto-toggle-menu'); // opcional
 const portalTabs = Array.from(document.querySelectorAll('[data-portal-tab]'));
 const portalPanels = Array.from(document.querySelectorAll('[data-portal-panel]'));
 
+// === Navegación principal (menú responsive accesible) ========================
 function initNavigation() {
   if (!navToggle || !navLinks) return;
 
   const openNav = () => {
     navToggle.setAttribute('aria-expanded', 'true');
     navToggle.setAttribute('aria-label', 'Cerrar menú de navegación');
-    if (navToggleLabel) {
-      navToggleLabel.textContent = 'Cerrar menú';
-    }
+    if (navToggleLabel) navToggleLabel.textContent = 'Cerrar menú';
     navLinks.classList.add('is-open');
     document.body.classList.add('is-nav-open');
   };
@@ -147,62 +127,58 @@ function initNavigation() {
   const closeNav = ({ focusToggle } = {}) => {
     navToggle.setAttribute('aria-expanded', 'false');
     navToggle.setAttribute('aria-label', 'Abrir menú de navegación');
-    if (navToggleLabel) {
-      navToggleLabel.textContent = 'Abrir menú';
-    }
+    if (navToggleLabel) navToggleLabel.textContent = 'Abrir menú';
     navLinks.classList.remove('is-open');
     document.body.classList.remove('is-nav-open');
-    if (focusToggle) {
-      navToggle.focus();
-    }
+    if (focusToggle) navToggle.focus();
   };
 
   navToggle.addEventListener('click', () => {
     const expanded = navToggle.getAttribute('aria-expanded') === 'true';
-    if (expanded) {
-      closeNav();
-    } else {
-      openNav();
-    }
+    expanded ? closeNav() : openNav();
   });
 
   navLinks.querySelectorAll('a').forEach((link) => {
     link.addEventListener('click', () => closeNav());
   });
 
-  document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape' && document.body.classList.contains('is-nav-open')) {
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && document.body.classList.contains('is-nav-open')) {
       closeNav({ focusToggle: true });
     }
   });
 }
 
+// === Especialidades y profesionales ==========================================
 function populateSpecialties() {
+  if (!elements.specialtySelect) return;
   specialties.sort((a, b) => a.name.localeCompare(b.name, 'es'));
-  specialties.forEach((specialty) => {
+  specialties.forEach((s) => {
     const option = document.createElement('option');
-    option.value = specialty.name;
-    option.textContent = specialty.name;
+    option.value = s.name;
+    option.textContent = s.name;
     elements.specialtySelect.append(option);
   });
 }
 
 function resetProfessionals() {
+  if (!elements.professionalSelect || !elements.professionalDetail) return;
   elements.professionalSelect.innerHTML = '<option value="" disabled selected>Selecciona un profesional</option>';
   elements.professionalDetail.textContent = '';
   state.selectedProfessional = null;
 }
 
 function populateProfessionals(specialtyName) {
+  if (!elements.professionalSelect) return;
   resetProfessionals();
-  const filtered = professionals.filter((professional) => professional.specialties.includes(specialtyName));
-  filtered.forEach((professional) => {
+  const filtered = professionals.filter((p) => p.specialties.includes(specialtyName));
+  filtered.forEach((p) => {
     const option = document.createElement('option');
-    option.value = professional.id;
-    option.textContent = professional.name;
+    option.value = p.id;
+    option.textContent = p.name;
     elements.professionalSelect.append(option);
   });
-
+  // Autoseleccionar si solo hay uno
   if (filtered.length === 1) {
     elements.professionalSelect.value = filtered[0].id;
     updateProfessionalDetail(filtered[0].id);
@@ -210,20 +186,22 @@ function populateProfessionals(specialtyName) {
 }
 
 function updateProfessionalDetail(professionalId) {
-  const professional = professionals.find((item) => item.id === professionalId);
+  if (!elements.professionalDetail) return;
+  const professional = professionals.find((p) => p.id === professionalId);
   if (!professional) {
     elements.professionalDetail.textContent = '';
     state.selectedProfessional = null;
     return;
   }
-
   elements.professionalDetail.textContent = professional.detail;
   state.selectedProfessional = professional;
   renderSlots();
   updateSummary();
 }
 
+// === Fecha mínima en date input ==============================================
 function setDateMinimum() {
+  if (!elements.dateInput) return;
   const today = new Date();
   const year = today.getFullYear();
   const month = String(today.getMonth() + 1).padStart(2, '0');
@@ -231,9 +209,12 @@ function setDateMinimum() {
   elements.dateInput.min = `${year}-${month}-${day}`;
 }
 
+// === Render de horarios según profesional + día ==============================
 function renderSlots() {
+  if (!elements.slotsContainer) return;
   elements.slotsContainer.innerHTML = '';
   state.selectedSlot = null;
+
   const { selectedProfessional, selectedDate } = state;
   if (!selectedProfessional || !selectedDate) {
     elements.slotsContainer.innerHTML = '<p class="form-helper">Selecciona una fecha y profesional para ver los horarios.</p>';
@@ -241,7 +222,7 @@ function renderSlots() {
   }
 
   const date = new Date(selectedDate);
-  const weekday = date.getDay();
+  const weekday = date.getDay(); // 0..6
   const slots = selectedProfessional.availability[weekday];
 
   if (!slots || slots.length === 0) {
@@ -257,9 +238,7 @@ function renderSlots() {
     button.dataset.slot = slot;
     button.addEventListener('click', () => {
       state.selectedSlot = slot;
-      elements.slotsContainer.querySelectorAll('.agenda__slot').forEach((slotButton) => {
-        slotButton.classList.remove('is-selected');
-      });
+      elements.slotsContainer.querySelectorAll('.agenda__slot').forEach((b) => b.classList.remove('is-selected'));
       button.classList.add('is-selected');
       updateSummary();
     });
@@ -267,8 +246,11 @@ function renderSlots() {
   });
 }
 
+// === Resumen de cita ==========================================================
 function updateSummary() {
+  if (!elements.summary) return;
   const { selectedProfessional, selectedDate, selectedSlot } = state;
+
   if (!selectedProfessional || !selectedDate) {
     resetAgendaActions();
     elements.summary.innerHTML = '<p>Selecciona opciones para ver el resumen.</p>';
@@ -278,11 +260,8 @@ function updateSummary() {
 
   const date = new Date(selectedDate);
   const formattedDate = formatters.longDate.format(date);
-
   const slotText = selectedSlot ? ` a las <strong>${selectedSlot}</strong>` : '';
-  const availabilityNote = selectedSlot
-    ? ''
-    : '<p class="form-helper">Selecciona un horario para confirmar tu cita.</p>';
+  const availabilityNote = selectedSlot ? '' : '<p class="form-helper">Selecciona un horario para confirmar tu cita.</p>';
 
   if (!selectedSlot) {
     resetAgendaActions();
@@ -296,9 +275,10 @@ function updateSummary() {
   `;
 }
 
+// === Utilidad: generar archivo .ics ==========================================
 function createICS({ title, description, startDate, durationMinutes, location }) {
   const endDate = new Date(startDate.getTime() + durationMinutes * 60 * 1000);
-  const formatDate = (date) => date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+  const formatDate = (d) => d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
   return [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
@@ -317,6 +297,7 @@ function createICS({ title, description, startDate, durationMinutes, location })
   ].join('\r\n');
 }
 
+// === Feedback y acciones (descarga/compartir) =================================
 function updateAgendaFeedback(message = '', type = 'info') {
   if (!elements.feedback) return;
   if (!message) {
@@ -325,7 +306,6 @@ function updateAgendaFeedback(message = '', type = 'info') {
     elements.feedback.removeAttribute('data-state');
     return;
   }
-
   elements.feedback.textContent = message;
   elements.feedback.dataset.state = type;
   elements.feedback.hidden = false;
@@ -337,17 +317,13 @@ function resetAgendaActions() {
     URL.revokeObjectURL(actionState.downloadUrl);
     actionState.downloadUrl = null;
   }
-
   const downloadLink = elements.actionsContainer.querySelector('[data-action="download"]');
-  if (downloadLink) {
-    downloadLink.remove();
-  }
+  if (downloadLink) downloadLink.remove();
 
   if (elements.shareButton) {
     elements.shareButton.hidden = true;
     elements.shareButton.setAttribute('aria-hidden', 'true');
   }
-
   elements.actionsContainer.hidden = true;
   shareState.details = null;
 }
@@ -361,17 +337,15 @@ function showShareButton(details) {
 
 function renderAgendaActions({ downloadUrl, downloadFilename, shareDetails }) {
   if (!elements.actionsContainer) return;
-
   elements.actionsContainer.hidden = false;
 
   let downloadLink = elements.actionsContainer.querySelector('[data-action="download"]');
   if (!downloadLink) {
     downloadLink = document.createElement('a');
     downloadLink.dataset.action = 'download';
-    downloadLink.className = 'btn btn--outline';
+    downloadLink.className = 'btn btn--ghost';
     elements.actionsContainer.prepend(downloadLink);
   }
-
   downloadLink.href = downloadUrl;
   downloadLink.download = downloadFilename;
   downloadLink.textContent = 'Descargar recordatorio (.ics)';
@@ -386,7 +360,6 @@ function renderAgendaActions({ downloadUrl, downloadFilename, shareDetails }) {
 
 async function handleShareClick() {
   if (!navigator.share || !shareState.details) return;
-
   const { patientName, specialty, professionalName, formattedDate, location } = shareState.details;
 
   try {
@@ -395,7 +368,7 @@ async function handleShareClick() {
       text: `${patientName} - ${specialty} con ${professionalName} · ${formattedDate} · ${location}`,
       url: `${window.location.origin}${window.location.pathname}#agenda`
     });
-    updateAgendaFeedback('Compartiste tu cita correctamente. ¡Nos vemos pronto!', 'success');
+    updateAgendaFeedback('Compartiste tu cita correctamente. Nos vemos pronto.', 'success');
   } catch (error) {
     if (error.name !== 'AbortError') {
       updateAgendaFeedback('No pudimos compartir la confirmación. Intenta nuevamente.', 'warning');
@@ -420,6 +393,7 @@ function setupShareButton() {
   elements.actionsContainer.hidden = true;
 }
 
+// === Historial en localStorage + panel mini-app ==============================
 function getStoredAppointments() {
   try {
     return JSON.parse(localStorage.getItem(STORAGE_KEYS.appointments) || '[]');
@@ -441,6 +415,7 @@ function persistHistory(entry) {
 }
 
 function renderHistory() {
+  if (!elements.history) return;
   const history = getStoredAppointments();
   elements.history.innerHTML = '';
   if (history.length === 0) {
@@ -451,12 +426,12 @@ function renderHistory() {
 
   history.forEach((item) => {
     const date = new Date(item.dateTime);
-    const listItem = document.createElement('li');
-    listItem.innerHTML = `
+    const li = document.createElement('li');
+    li.innerHTML = `
       <strong>${item.professional}</strong><br>
       ${formatters.history.format(date)} · ${item.specialty}
     `;
-    elements.history.append(listItem);
+    elements.history.append(li);
   });
   renderClientAppointments(history);
 }
@@ -475,15 +450,16 @@ function renderClientAppointments(history) {
 
   history.slice(0, 3).forEach((item) => {
     const date = new Date(item.dateTime);
-    const element = document.createElement('li');
-    element.innerHTML = `
+    const el = document.createElement('li');
+    el.innerHTML = `
       <span><strong>${formatters.shortDate.format(date)}</strong> · ${item.specialty}</span>
       <span>${formatters.time.format(date)} · ${item.professional}</span>
     `;
-    elements.clientAppointments.append(element);
+    elements.clientAppointments.append(el);
   });
 }
 
+// === Envío del formulario de agenda =========================================
 function handleFormSubmit(event) {
   event.preventDefault();
   updateAgendaFeedback();
@@ -505,6 +481,7 @@ function handleFormSubmit(event) {
   }
 
   const [hours, minutes] = state.selectedSlot.split(':');
+  // Nota: zona horaria fija -05:00. Ajusta si tu backend requiere UTC u otra TZ.
   const startDate = new Date(`${dateString}T${hours}:${minutes}:00-05:00`);
   const professionalName = state.selectedProfessional.name;
 
@@ -522,7 +499,7 @@ function handleFormSubmit(event) {
 
   elements.summary.innerHTML = `
     <p><strong>¡Cita agendada!</strong></p>
-    <p>${name}, te esperamos el ${formattedDateTime} con ${professionalName}.</p>
+    <p>${name || 'Paciente'}, te esperamos el ${formattedDateTime} con ${professionalName}.</p>
     <p>Te enviaremos confirmación y recordatorios automáticos por WhatsApp y correo.</p>
   `;
 
@@ -544,6 +521,7 @@ function handleFormSubmit(event) {
     dateTime: startDate.toISOString()
   });
 
+  // Reset de formulario y estado de selección
   elements.form.reset();
   elements.specialtySelect.value = '';
   elements.dateInput.value = '';
@@ -552,9 +530,9 @@ function handleFormSubmit(event) {
   state.selectedDate = null;
   state.selectedProfessional = null;
   elements.slotsContainer.innerHTML = '';
-
   updateAgendaFeedback('Te enviamos la confirmación a tu correo y WhatsApp.', 'success');
 
+  // Liberar URL del blob al cabo de 60s
   setTimeout(() => {
     if (actionState.downloadUrl === url) {
       URL.revokeObjectURL(url);
@@ -565,12 +543,14 @@ function handleFormSubmit(event) {
   }, 60_000);
 }
 
+// === Cambios de fecha ========================================================
 function handleDateChange(event) {
   state.selectedDate = event.target.value || null;
   renderSlots();
   updateSummary();
 }
 
+// === Modal de recordatorio personalizado (.ics rápido) =======================
 function initReminderModal() {
   if (!elements.reminderButton || !elements.reminderModal) return;
 
@@ -585,23 +565,17 @@ function initReminderModal() {
     elements.reminderResult.textContent = '';
     elements.reminderForm.reset();
     const firstField = elements.reminderForm.querySelector('input, textarea');
-    if (firstField) {
-      firstField.focus();
-    }
+    if (firstField) firstField.focus();
   });
 
-  elements.reminderModal.querySelector('.reminder-modal__close').addEventListener('click', closeModal);
+  elements.reminderModal.querySelector('.reminder-modal__close')?.addEventListener('click', closeModal);
 
-  elements.reminderModal.addEventListener('click', (event) => {
-    if (event.target === elements.reminderModal) {
-      closeModal();
-    }
+  elements.reminderModal.addEventListener('click', (e) => {
+    if (e.target === elements.reminderModal) closeModal();
   });
 
-  document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape' && !elements.reminderModal.hidden) {
-      closeModal();
-    }
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !elements.reminderModal.hidden) closeModal();
   });
 
   elements.reminderForm.addEventListener('submit', (event) => {
@@ -624,8 +598,7 @@ function initReminderModal() {
     const url = URL.createObjectURL(blob);
     elements.reminderResult.innerHTML = `
       <p>Recordatorio programado para <strong>${new Intl.DateTimeFormat('es-CO', {
-        dateStyle: 'full',
-        timeStyle: 'short'
+        dateStyle: 'full', timeStyle: 'short'
       }).format(reminderDate)}</strong>.</p>
       <p>Guárdalo en tu calendario:</p>
     `;
@@ -641,25 +614,20 @@ function initReminderModal() {
   });
 }
 
+// === Notificaciones locales (permiso y preferencia) ==========================
 function updateNotificationStatus({ enabled, message }) {
   if (!elements.notificationToggle || !elements.notificationStatus) return;
   elements.notificationToggle.classList.toggle('is-active', enabled);
   elements.notificationToggle.textContent = enabled ? 'Activadas' : 'Activar';
   elements.notificationToggle.setAttribute('aria-pressed', String(enabled));
-  if (message) {
-    elements.notificationStatus.textContent = message;
-  }
+  if (message) elements.notificationStatus.textContent = message;
 }
 
 async function requestNotificationPermission() {
-  if (!('Notification' in window)) {
-    return 'unsupported';
-  }
-
+  if (!('Notification' in window)) return 'unsupported';
   if (Notification.permission === 'granted' || Notification.permission === 'denied') {
     return Notification.permission;
   }
-
   try {
     return await Notification.requestPermission();
   } catch (error) {
@@ -746,7 +714,7 @@ function initNotifications() {
     } else {
       updateNotificationStatus({
         enabled: false,
-        message: 'No se completó la activación. Puedes intentarlo nuevamente cuando estés listo.'
+        message: 'No se completó la activación. Puedes intentarlo nuevamente.'
       });
     }
 
@@ -754,27 +722,21 @@ function initNotifications() {
   });
 }
 
+// === Tabs del portal y formularios simulados =================================
 function initPortalTabs() {
   if (!portalTabs.length || !portalPanels.length) return;
-
   portalTabs.forEach((tab) => {
     tab.addEventListener('click', () => {
       const target = tab.dataset.portalTab;
-      portalTabs.forEach((item) => {
-        item.classList.toggle('is-active', item === tab);
-        item.setAttribute('aria-selected', String(item === tab));
+      portalTabs.forEach((t) => {
+        t.classList.toggle('is-active', t === tab);
+        t.setAttribute('aria-selected', String(t === tab));
       });
-
       portalPanels.forEach((panel) => {
         const isTarget = panel.dataset.portalPanel === target;
         panel.hidden = !isTarget;
         panel.classList.toggle('is-active', isTarget);
-        if (!isTarget) {
-          const feedback = panel.querySelector('.portal__feedback');
-          if (feedback) {
-            feedback.textContent = '';
-          }
-        }
+        if (!isTarget) panel.querySelector('.portal__feedback')?.textContent = '';
       });
     });
   });
@@ -786,33 +748,29 @@ function initPortalForms() {
     form.addEventListener('submit', (event) => {
       event.preventDefault();
       const panel = form.closest('.portal__panel');
-      const feedback = panel ? panel.querySelector('.portal__feedback') : null;
+      const feedback = panel?.querySelector('.portal__feedback');
       if (!feedback) return;
 
       const role = panel?.dataset.portalPanel;
       let message = '';
-
-      if (role === 'pacientes') {
-        message = 'Listo, autenticamos tu cuenta y puedes continuar con la gestión de turnos.';
-      } else if (role === 'equipo') {
-        message = 'Acceso verificado. Carga tus evoluciones y consulta tu agenda en tiempo real.';
-      } else if (role === 'admin') {
-        message = 'Bienvenida/o al centro de operaciones. Los dashboards están listos.';
-      }
-
+      if (role === 'pacientes') message = 'Listo, autenticamos tu cuenta y puedes continuar con la gestión de turnos.';
+      else if (role === 'equipo') message = 'Acceso verificado. Carga tus evoluciones y consulta tu agenda en tiempo real.';
+      else if (role === 'admin') message = 'Bienvenida/o al centro de operaciones. Los dashboards están listos.';
       feedback.textContent = message;
     });
   });
 }
 
+// === PWA: registro de service worker (opcional) ===============================
 function registerServiceWorker() {
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker
-      .register('sw.js')
-      .catch((error) => console.warn('No fue posible registrar el service worker', error));
+    navigator.serviceWorker.register('sw.js').catch((e) =>
+      console.warn('No fue posible registrar el service worker', e)
+    );
   }
 }
 
+// === Inicialización ===========================================================
 function init() {
   initNavigation();
   populateSpecialties();
@@ -821,17 +779,17 @@ function init() {
   setupShareButton();
   resetAgendaActions();
 
-  elements.specialtySelect.addEventListener('change', (event) => {
-    populateProfessionals(event.target.value);
+  elements.specialtySelect?.addEventListener('change', (e) => {
+    populateProfessionals(e.target.value);
     updateSummary();
   });
 
-  elements.professionalSelect.addEventListener('change', (event) => {
-    updateProfessionalDetail(event.target.value);
+  elements.professionalSelect?.addEventListener('change', (e) => {
+    updateProfessionalDetail(e.target.value);
   });
 
-  elements.dateInput.addEventListener('change', handleDateChange);
-  elements.form.addEventListener('submit', handleFormSubmit);
+  elements.dateInput?.addEventListener('change', handleDateChange);
+  elements.form?.addEventListener('submit', handleFormSubmit);
 
   initReminderModal();
   initNotifications();
