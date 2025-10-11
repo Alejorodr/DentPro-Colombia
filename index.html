@@ -1,177 +1,487 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Pagina con informacion general de la empresa, productos y servicios brindados">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
-    <link rel="stylesheet" href="./css/style.css">
-    <link rel="icon" type="image/png" href="./images/logo.jpg">
-    <title>Inicio</title>
+    <meta name="description" content="Dent Pro, clínica odontológica de alta tecnología en Chía, Cundinamarca. Agenda tu cita por especialidad, conoce nuestros servicios y especialistas.">
+    <title>Dent Pro | Clínica Odontológica Digital en Chía</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" type="image/svg+xml" href="images/dentpro-logo.svg">
 </head>
+<body>
+    <a class="skip-link" href="#contenido-principal">Ir al contenido principal</a>
 
-<body class="c-rosabg">
-    <header>
-        <nav class="navbar navbar-expand-md">
-            <div class="container">
-                <a class="navbar-brand" href="./index.html"><img src="./images/logo.jpg"
-                        alt="Logo de la empresa Leidy Abello con letra cursiva y de fondo la letra L y A en mayuscula"></a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-                    data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false"
-                    aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="collapse navbar-collapse justify-content-end" id="navbarNavDropdown">
-                    <ul class="navbar-nav justify-content-end">
-                        <li class="nav-item">
-                            <a class="nav-link active" aria-current="page" href="./index.html">INICIO</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="./pages/productos.html">SERVICIOS</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="./pages/aboutme.html">ACERCA DE MI</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="./pages/contacto.html">CONTACTO</a>
-                        </li>
-                    </ul>
-                </div>
-                <nav class="navbar bg">
-                    <form class="container justify-content-end">
-                        <a class="btn btn-primary" href="./pages/login.html" role="button">LOGIN</a>
-                    </form>
-                </nav>
-            </div>
-        </nav>
+    <header class="topbar">
+        <div class="topbar__left">
+            <span class="topbar__badge">Chía, Cundinamarca</span>
+            <span><i class="ri-time-line" aria-hidden="true"></i> Lunes a Sábado 7:00 a.m. - 8:00 p.m.</span>
+            <a href="https://wa.me/573212345678" class="topbar__link" target="_blank" rel="noopener">
+                <i class="ri-whatsapp-line" aria-hidden="true"></i>
+                +57 321 234 5678
+            </a>
+        </div>
+        <div class="topbar__right">
+            <a href="mailto:agenda@dentprocol.com" class="topbar__link">
+                <i class="ri-mail-send-line" aria-hidden="true"></i>
+                agenda@dentprocol.com
+            </a>
+            <a href="https://www.instagram.com/dentprocol/" target="_blank" rel="noopener" class="topbar__social" aria-label="Instagram Dent Pro">
+                <i class="ri-instagram-line" aria-hidden="true"></i>
+            </a>
+            <a href="https://www.facebook.com/" target="_blank" rel="noopener" class="topbar__social" aria-label="Facebook Dent Pro">
+                <i class="ri-facebook-circle-line" aria-hidden="true"></i>
+            </a>
+        </div>
     </header>
 
-    <main>
-        <section class="container">
-            <div class="row">
-                <div>
-                    <a href="./pages/productos.html"><img src="./images/Banner-principal-home.png"
-                            alt="Mujer de cabello rojo y sombrero sosteniendo un closet con ropa colgada de fondo"
-                            class="img-fluid rounded-4"></a>
-                </div>
-                <div class="my-3 text-center c-rosahl">
-                    <h1 class="fw-bold display-6 c-blancotx">FashionFinder: Encuentra tu Estilo con Nuestro Sistema de
-                        Imagen Consciente.</h1>
-                </div>
+    <nav class="main-nav" aria-label="Navegación principal">
+        <div class="main-nav__brand">
+            <img src="images/dentpro-logo.svg" alt="Dent Pro logo" class="main-nav__logo">
+            <div class="main-nav__identity">
+                <span class="main-nav__title">Dent Pro</span>
+                <span class="main-nav__subtitle">Clínica Odontológica Digital</span>
+            </div>
+        </div>
+        <button class="main-nav__toggle" aria-expanded="false" aria-controls="menu-principal">
+            <span class="main-nav__toggle-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Abrir menú</span>
+        </button>
+        <div class="main-nav__links" id="menu-principal">
+            <a href="#inicio">Inicio</a>
+            <a href="#servicios">Servicios</a>
+            <a href="#especialistas">Especialistas</a>
+            <a href="#agenda">Agenda inteligente</a>
+            <a href="#experiencia">Experiencia Digital</a>
+            <a href="#contacto">Contacto</a>
+        </div>
+        <a href="#agenda" class="main-nav__cta">Agenda tu cita</a>
+    </nav>
 
+    <main id="contenido-principal">
+        <section class="hero" id="inicio">
+            <div class="hero__content">
+                <h1>La clínica odontológica <span>más tecnológica</span> de Chía</h1>
+                <p>
+                    En Dent Pro combinamos especialistas certificados, experiencias digitales inmersivas y automatizaciones inteligentes para cuidar tu sonrisa de forma precisa, humana y memorable.
+                </p>
+                <div class="hero__actions">
+                    <a href="#agenda" class="btn btn--primary">Agendar ahora</a>
+                    <a href="#experiencia" class="btn btn--ghost">Explorar innovación</a>
+                </div>
+                <div class="hero__chips">
+                    <span><i class="ri-shield-check-line" aria-hidden="true"></i> Clínica certificada ICONTEC</span>
+                    <span><i class="ri-sparkling-line" aria-hidden="true"></i> Odontología digital 3D</span>
+                    <span><i class="ri-customer-service-2-line" aria-hidden="true"></i> Concierge dental 24/7</span>
+                </div>
+            </div>
+            <div class="hero__media" aria-hidden="true">
+                <div class="hero__orb"></div>
+                <img src="https://images.unsplash.com/photo-1588774069160-27b2c045efd7?auto=format&fit=crop&w=900&q=80" alt="Odontóloga atendiendo paciente" loading="lazy">
+                <div class="hero__stat-card">
+                    <p>+12.000</p>
+                    <span>Sonrisas transformadas</span>
+                </div>
             </div>
         </section>
 
-        <section class="container">
-            <div class="row">
-                <div class="col-lg-6">
-                    <a href="./pages/productos.html"><img src="./images/asesoria-personal-mini-banner.png"
-                            alt="Mujer con el cabello rojo sonriendo" class="img-fluid rounded-3"></a>
-                </div>
-                <div class="text-center col-lg-6 text-lg-start">
-                    <h2>Descubre tu estilo auténtico con nuestra asesoría de imagen</h2>
-                    <hr>
-                    <p>Nos dedicamos a resaltar tu belleza interior y exterior a través de una asesoría de imagen
-                        personalizada. Nuestro equipo de expertos en moda y estilo está listo para guiarte en un viaje
-                        de transformación que te empoderará y te hará brillar en todas las ocasiones. ¡Comencemos a
-                        descubrir tu mejor versión juntos!</p>
-                </div>
+        <section class="metrics" aria-label="Indicadores de confianza">
+            <article>
+                <h2>15+</h2>
+                <p>Años creando experiencias memorables en odontología integral.</p>
+            </article>
+            <article>
+                <h2>98%</h2>
+                <p>Índice de satisfacción gracias a tratamientos personalizados y seguimiento digital.</p>
+            </article>
+            <article>
+                <h2>3</h2>
+                <p>Consultorios inteligentes con escaneo intraoral, radiología digital y diseño CAD/CAM.</p>
+            </article>
+            <article>
+                <h2>24/7</h2>
+                <p>Plataforma de agendamiento y acompañamiento continuo por WhatsApp.</p>
+            </article>
+        </section>
+
+        <section class="services" id="servicios">
+            <header class="section-header">
+                <span class="section-kicker">Catálogo de servicios</span>
+                <h2>Especialidades y tratamientos que combinan ciencia y calidez</h2>
+                <p>Selecciona la categoría que necesitas y descubre los protocolos inteligentes con los que transformamos tu sonrisa.</p>
+            </header>
+
+            <div class="services__grid">
+                <article class="service-card">
+                    <div class="service-card__icon">
+                        <i class="ri-hearts-line" aria-hidden="true"></i>
+                    </div>
+                    <h3>Odontología Preventiva</h3>
+                    <p>Valoraciones digitales, profilaxis con ultrasonido, sellantes de fosas y fisuras y educación personalizada para cada etapa de la vida.</p>
+                    <ul>
+                        <li>Chequeos con cámara intraoral HD</li>
+                        <li>Diagnóstico guiado por IA</li>
+                        <li>Plan dental familiar</li>
+                    </ul>
+                </article>
+                <article class="service-card">
+                    <div class="service-card__icon">
+                        <i class="ri-magic-line" aria-hidden="true"></i>
+                    </div>
+                    <h3>Estética y Diseño de Sonrisa</h3>
+                    <p>Carillas, blanqueamiento láser y simulaciones 3D para que veas el resultado antes de iniciar tu tratamiento.</p>
+                    <ul>
+                        <li>Mockups digitales en 24 horas</li>
+                        <li>Laboratorio CAD/CAM in house</li>
+                        <li>Fotografía profesional post-tratamiento</li>
+                    </ul>
+                </article>
+                <article class="service-card">
+                    <div class="service-card__icon">
+                        <i class="ri-user-smile-line" aria-hidden="true"></i>
+                    </div>
+                    <h3>Ortodoncia Inteligente</h3>
+                    <p>Ortodoncia invisible con alineadores, brackets autoligables y ortopedia funcional para niños y adolescentes.</p>
+                    <ul>
+                        <li>Seguimiento remoto con escaneo mensual</li>
+                        <li>Plan de pagos automatizado</li>
+                        <li>Reporte de progreso en tu correo</li>
+                    </ul>
+                </article>
+                <article class="service-card">
+                    <div class="service-card__icon">
+                        <i class="ri-hospital-line" aria-hidden="true"></i>
+                    </div>
+                    <h3>Rehabilitación Oral</h3>
+                    <p>Implantes guiados por computadora, prótesis sobre implantes y rehabilitación con diseño digital.</p>
+                    <ul>
+                        <li>Cirugías mínimamente invasivas</li>
+                        <li>Impresión 3D de guías quirúrgicas</li>
+                        <li>Digitalización de oclusión en tiempo real</li>
+                    </ul>
+                </article>
+                <article class="service-card">
+                    <div class="service-card__icon">
+                        <i class="ri-team-line" aria-hidden="true"></i>
+                    </div>
+                    <h3>Odontopediatría</h3>
+                    <p>Ambientes inmersivos, sedación consciente y educación lúdica para acompañar a los más pequeños.</p>
+                    <ul>
+                        <li>Realidad aumentada anti-ansiedad</li>
+                        <li>Planes de prevención escolar</li>
+                        <li>Club Sonrisas Dent Pro</li>
+                    </ul>
+                </article>
+                <article class="service-card">
+                    <div class="service-card__icon">
+                        <i class="ri-service-line" aria-hidden="true"></i>
+                    </div>
+                    <h3>Urgencias 24/7</h3>
+                    <p>Equipo de respuesta inmediata, tele-orientación y coordinación con aseguradoras.</p>
+                    <ul>
+                        <li>Chatbot de triage clínico</li>
+                        <li>Unidades móviles aliadas</li>
+                        <li>Farmacia digital recetada</li>
+                    </ul>
+                </article>
             </div>
         </section>
 
-        <section class="container-fluid c-blancobg">
-            <div class="container">
-                <h3 class="my-3 text-center display-6 c-goldtx">Elige entre nuestros servicios el que mas te guste y se
-                    ajuste a tu necesidad.</h3>
-                <div class="row">
-                    <div class="card my-1 text-center col-lg-4">
-                        <a href="./pages/asesoriaEventual.html"><img src="./images/Imagen-ref-Asesoria-de-imagen.png"
-                                alt="Mujer de cabello rojo con un vestido beige elegante y una ciudad de fondo"
-                                class="w-100 rounded-4 my-3 card-img-top"></a>
-                        <div class="card-body">
-                            <h4 class="card-title">Asesoria de imagen eventual</h4>
-                            <p class="card-text">Nuestra Asesoría de Imagen Eventual está diseñada para que luzcas
-                                radiante y con estilo en
-                                ocasiones especiales. Te ofrecemos un servicio personalizado donde nos reuniremos
-                                contigo
-                                para conocer tus preferencias y objetivos para el evento. Nuestro equipo de expertos en
-                                moda
-                                te ayudará a seleccionar el atuendo perfecto, asesorarte en maquillaje y peinado,
-                                prestando
-                                atención a los detalles para que te sientas seguro/a y confiado/a en cualquier ocasión.
-                            </p>
-                            <a href="./pages/asesoriaEventual.html" class="btn btn-primary">Saber mas</a>
-                        </div>
+        <section class="specialists" id="especialistas">
+            <header class="section-header">
+                <span class="section-kicker">Equipo interdisciplinario</span>
+                <h2>Profesionales que combinan talento clínico y visión humana</h2>
+                <p>Conoce a los especialistas que lideran cada línea de servicio y reserva tu cita directamente con su agenda disponible.</p>
+            </header>
+
+            <div class="specialists__slider" role="list">
+                <article class="specialist-card" role="listitem">
+                    <img src="https://images.unsplash.com/photo-1527613426441-4da17471b66d?auto=format&fit=crop&w=600&q=80" alt="Odontóloga sonriendo" loading="lazy">
+                    <div class="specialist-card__body">
+                        <h3>Dra. Laura Martínez</h3>
+                        <p class="specialist-card__role">Directora Odontología Estética</p>
+                        <p>Especialista en diseño de sonrisa digital y certificada en protocolos Smile Design.</p>
+                        <ul>
+                            <li>Tratamientos disponibles: Carillas, diseño 3D, blanqueamiento láser.</li>
+                            <li>Idiomas: Español, Inglés.</li>
+                            <li>Agenda virtual con seguimiento fotográfico.</li>
+                        </ul>
                     </div>
-                    <div class="card my-1 text-center col-lg-4">
-                        <a href="./pages/coaching.html"><img src="./images/Imagen-ref-Coach-personal.png"
-                                alt="dos mujeres de cabello rojo hablando entre ellas en una cafeteria una sonrie y la otra escucha"
-                                class="w-100 rounded-4 my-3 card-img-top"></a>
-                        <div class="card-body">
-                            <h4 class="card-title">Coach personal</h4>
-                            <p class="card-text">¿Sientes que estás estancado/a en algún aspecto de tu vida? ¿Deseas
-                                alcanzar tus metas y maximizar tu potencial, pero no sabes por dónde empezar? Nuestro
-                                servicio de Coach Personal está diseñado para ayudarte a superar obstáculos, identificar
-                                tus fortalezas y brindarte el apoyo necesario para lograr un crecimiento significativo
-                                en todas las áreas de tu vida.</p>
-                            <a href="./pages/coaching.html" class="btn btn-primary">Saber mas</a>
-                        </div>
+                </article>
+                <article class="specialist-card" role="listitem">
+                    <img src="https://images.unsplash.com/photo-1530023367847-a683933f4177?auto=format&fit=crop&w=600&q=80" alt="Odontólogo atendiendo" loading="lazy">
+                    <div class="specialist-card__body">
+                        <h3>Dr. Camilo Rodríguez</h3>
+                        <p class="specialist-card__role">Rehabilitación Oral & Implantología</p>
+                        <p>Experto en cirugía guiada y rehabilitación digital con más de 1.500 implantes exitosos.</p>
+                        <ul>
+                            <li>Protocolos guiados por navegación dinámica.</li>
+                            <li>Atención interdisciplinaria con fisioterapeuta maxilofacial.</li>
+                            <li>Sesiones híbridas: presencial + telecontrol.</li>
+                        </ul>
                     </div>
-                    <div class="card my-1 text-center col-lg-4">
-                        <a href="./pages/asesoriaPersonal.html"><img src="./images/Imagen-ref-Asesoria-de-estilo.png"
-                                alt="mujer de cabello rojo con los brazos cruzados y una montaña de ropa de fondo"
-                                class="w-100 rounded-4 my-3 card-img-top"></a>
-                        <div class="card-body">
-                            <h4 class="card-title">Coach personal</h4>
-                            <p class="card-text">Nuestra Asesoría de Imagen y Closet te ofrece una experiencia completa
-                                para descubrir tu estilo auténtico y organizar tu vestuario con elegancia. Nuestro
-                                equipo de expertos en moda y asesores de imagen te guiará en un emocionante viaje de
-                                transformación para proyectar la mejor versión de ti mismo/a en todas las situaciones.
-                            </p>
-                            <a href="./pages/asesoriaPersonal.html" class="btn btn-primary">Saber mas</a>
-                        </div>
+                </article>
+                <article class="specialist-card" role="listitem">
+                    <img src="https://images.unsplash.com/photo-1524492412937-b28074a5d7da?auto=format&fit=crop&w=600&q=80" alt="Odontopediatra con paciente" loading="lazy">
+                    <div class="specialist-card__body">
+                        <h3>Dra. Natalia Gómez</h3>
+                        <p class="specialist-card__role">Odontopediatría & Neurodesarrollo</p>
+                        <p>Certificada en manejo de ansiedad dental infantil y rehabilitación temprana.</p>
+                        <ul>
+                            <li>Consultorio inmersivo y neuroamigable.</li>
+                            <li>Protocolos preventivos escolarizados.</li>
+                            <li>Reportes digitales a padres en tiempo real.</li>
+                        </ul>
                     </div>
-                    <hr>
-                    <div class="text-center">
-                        <p class="display-5"> Conoce todos nuestros servicios.</p>
-                        <a class="btn btn-primary" href="./pages/productos.html" role="button">Saber mas</a>
-                    </div>
-                    <hr class="my-3">
+                </article>
+            </div>
+            <div class="specialists__automation">
+                <h3>Automatizaciones que simplifican tu atención</h3>
+                <ul>
+                    <li>Asignación automática de citas según especialidad, profesional y disponibilidad.</li>
+                    <li>Recordatorios inteligentes por WhatsApp, correo y SMS.</li>
+                    <li>Dashboard de pacientes para compartir exámenes, autorizaciones y evolución.</li>
+                    <li>Integración con aseguradoras y pagos digitales.</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="agenda" id="agenda" aria-labelledby="agenda-titulo">
+            <header class="section-header">
+                <span class="section-kicker">Agenda inteligente</span>
+                <h2 id="agenda-titulo">Gestiona tu cita por especialidad y profesional</h2>
+                <p>Elige la especialidad que necesitas, revisa la disponibilidad en tiempo real y confirma tu cita en segundos. Te enviaremos un resumen y un archivo para añadirlo a tu calendario.</p>
+            </header>
+
+            <form class="agenda__form" id="form-agenda" autocomplete="off">
+                <div class="form-group">
+                    <label for="especialidad">Especialidad</label>
+                    <select id="especialidad" name="especialidad" required>
+                        <option value="" disabled selected>Selecciona una especialidad</option>
+                    </select>
                 </div>
+                <div class="form-group">
+                    <label for="profesional">Profesional</label>
+                    <select id="profesional" name="profesional" required>
+                        <option value="" disabled selected>Selecciona un profesional</option>
+                    </select>
+                    <p class="form-helper" id="profesional-detalle"></p>
+                </div>
+                <div class="form-group">
+                    <label for="fecha">Fecha</label>
+                    <input type="date" id="fecha" name="fecha" required min="">
+                </div>
+                <div class="form-group">
+                    <span class="form-label">Horario disponible</span>
+                    <div class="agenda__slots" id="horarios" role="group" aria-label="Horarios disponibles"></div>
+                </div>
+                <div class="form-group">
+                    <label for="paciente">Nombre del paciente</label>
+                    <input type="text" id="paciente" name="paciente" placeholder="Tu nombre completo" required>
+                </div>
+                <div class="form-group">
+                    <label for="contacto">Celular / WhatsApp</label>
+                    <input type="tel" id="contacto" name="contacto" placeholder="Ej. 3212345678" pattern="[0-9]{10}" required>
+                </div>
+                <button type="submit" class="btn btn--primary">Confirmar cita</button>
+            </form>
+
+            <aside class="agenda__summary" aria-live="polite">
+                <h3>Tu cita digital</h3>
+                <div id="agenda-resumen" class="agenda__summary-card">
+                    <p>Selecciona opciones para ver el resumen.</p>
+                </div>
+                <div class="agenda__history">
+                    <h4>Últimas solicitudes</h4>
+                    <ul id="agenda-historial"></ul>
+                </div>
+            </aside>
+        </section>
+
+        <section class="experience" id="experiencia">
+            <header class="section-header">
+                <span class="section-kicker">Experiencia digital Dent Pro</span>
+                <h2>De la primera consulta al seguimiento: todo automatizado</h2>
+                <p>Integramos tecnología clínica, comunicación omnicanal y analítica avanzada para que cada visita sea fluida, segura y memorable.</p>
+            </header>
+            <div class="experience__grid">
+                <article>
+                    <h3><i class="ri-scan-2-line" aria-hidden="true"></i> Diagnóstico 3D integral</h3>
+                    <p>Escaneo intraoral, radiografía panorámica digital y simulador facial en una sola sesión.</p>
+                </article>
+                <article>
+                    <h3><i class="ri-smartphone-line" aria-hidden="true"></i> Portal del paciente</h3>
+                    <p>Acceso a historiales, presupuestos, pagos en línea y alertas de mantenimiento.</p>
+                </article>
+                <article>
+                    <h3><i class="ri-robot-2-line" aria-hidden="true"></i> Asistente virtual</h3>
+                    <p>Chatbot con IA que responde dudas frecuentes, agenda citas y envía instrucciones pre y post tratamiento.</p>
+                </article>
+                <article>
+                    <h3><i class="ri-heart-pulse-line" aria-hidden="true"></i> Seguimiento remoto</h3>
+                    <p>Controles híbridos para ortodoncia y rehabilitación con reportes automáticos al especialista.</p>
+                </article>
+            </div>
+        </section>
+
+        <section class="testimonials" aria-label="Testimonios de pacientes">
+            <header class="section-header">
+                <span class="section-kicker">Historias reales</span>
+                <h2>Lo que dicen nuestros pacientes</h2>
+            </header>
+            <div class="testimonials__grid">
+                <article class="testimonial">
+                    <p>“Dent Pro me permitió visualizar mi sonrisa con realidad aumentada antes del procedimiento. El seguimiento por WhatsApp fue impecable.”</p>
+                    <div class="testimonial__meta">
+                        <span class="testimonial__name">Carolina P.</span>
+                        <span class="testimonial__service">Diseño de sonrisa digital</span>
+                    </div>
+                </article>
+                <article class="testimonial">
+                    <p>“El agendamiento automático es perfecto para mi familia. Recibimos recordatorios personalizados y podemos pagar online.”</p>
+                    <div class="testimonial__meta">
+                        <span class="testimonial__name">Familia Ríos</span>
+                        <span class="testimonial__service">Plan familiar preventivo</span>
+                    </div>
+                </article>
+                <article class="testimonial">
+                    <p>“La Dra. Natalia tiene un trato increíble con los niños. Las experiencias inmersivas quitaron el miedo de mi hijo al odontólogo.”</p>
+                    <div class="testimonial__meta">
+                        <span class="testimonial__name">Laura G.</span>
+                        <span class="testimonial__service">Odontopediatría</span>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <section class="technology" aria-label="Tecnología Dent Pro">
+            <header class="section-header">
+                <span class="section-kicker">Innovación continua</span>
+                <h2>Infraestructura digital que respalda cada tratamiento</h2>
+                <p>Contamos con equipos de última generación y alianzas estratégicas que elevan la precisión y los resultados clínicos.</p>
+            </header>
+            <div class="technology__grid">
+                <article>
+                    <h3>Escáner Intraoral iTero 5D</h3>
+                    <p>Captura en colores reales y simulación de desgaste dental en minutos.</p>
+                </article>
+                <article>
+                    <h3>Laboratorio CAD/CAM</h3>
+                    <p>Fabricación de carillas y coronas en resina híbrida y cerámica en menos de 48 horas.</p>
+                </article>
+                <article>
+                    <h3>Radiología Digital</h3>
+                    <p>Panorámicas y cefalométricas con 80% menos radiación y entrega inmediata.</p>
+                </article>
+                <article>
+                    <h3>Centro de esterilización inteligente</h3>
+                    <p>Monitoreo de ciclos, trazabilidad digital y controles certificados.</p>
+                </article>
+            </div>
+        </section>
+
+        <section class="faq" aria-label="Preguntas frecuentes">
+            <header class="section-header">
+                <span class="section-kicker">Resuelve tus dudas</span>
+                <h2>Preguntas frecuentes</h2>
+            </header>
+            <div class="faq__list" id="faq-list">
+                <details>
+                    <summary>¿Cómo funciona la agenda por especialidad?</summary>
+                    <p>Seleccionas la especialidad y el sistema propone automáticamente a los profesionales disponibles con sus horarios actualizados. Puedes cambiar de profesional en cualquier momento.</p>
+                </details>
+                <details>
+                    <summary>¿Qué incluye la primera valoración?</summary>
+                    <p>Incluye anamnesis digital, escaneo intraoral, radiografía panorámica, plan de tratamiento personalizado y presupuesto con opciones de financiación.</p>
+                </details>
+                <details>
+                    <summary>¿Ofrecen financiamiento?</summary>
+                    <p>Contamos con alianzas con entidades financieras, pago en línea, billeteras digitales y planes personalizados sin interés hasta 6 cuotas.</p>
+                </details>
+                <details>
+                    <summary>¿Cómo recibiré mis recordatorios?</summary>
+                    <p>Te enviaremos recordatorios automáticos por WhatsApp, correo electrónico y SMS 48 y 12 horas antes de tu cita. Además, podrás añadir la cita a tu calendario en un clic.</p>
+                </details>
+            </div>
+        </section>
+
+        <section class="contact" id="contacto">
+            <div class="contact__info">
+                <header class="section-header">
+                    <span class="section-kicker">Estamos en Chía</span>
+                    <h2>Visítanos o agenda una teleconsulta</h2>
+                    <p>Cra. 11 # 10-38, Piso 3, Centro Empresarial Sabana, Chía - Cundinamarca, Colombia.</p>
+                </header>
+                <ul class="contact__list">
+                    <li><i class="ri-phone-line" aria-hidden="true"></i> PBX (601) 890 1234</li>
+                    <li><i class="ri-whatsapp-line" aria-hidden="true"></i> WhatsApp +57 321 234 5678</li>
+                    <li><i class="ri-mail-send-line" aria-hidden="true"></i> agenda@dentprocol.com</li>
+                    <li><i class="ri-calendar-check-line" aria-hidden="true"></i> Teleconsultas y valoración virtual disponibles.</li>
+                </ul>
+                <div class="contact__cta">
+                    <a href="#agenda" class="btn btn--primary">Reservar valoración</a>
+                    <a href="https://wa.me/573212345678" class="btn btn--ghost" target="_blank" rel="noopener">Escríbenos ahora</a>
+                </div>
+            </div>
+            <div class="contact__map" aria-hidden="true">
+                <iframe title="Ubicación Dent Pro" loading="lazy" src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3977.1766228542617!2d-74.05845382561217!3d4.866273540063908!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8e3f8534c9ce60e7%3A0xb82fdfc1fb26a40c!2sCh%C3%ADa%2C%20Cundinamarca!5e0!3m2!1ses-419!2sco!4v1700000000000!5m2!1ses-419!2sco"></iframe>
             </div>
         </section>
     </main>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz"
-        crossorigin="anonymous"></script>
 
-</body>
-<footer class="container my-4">
-    <div class="socialmedia container">
-        <div>
-            <ol>
-                <li><a href="https://www.facebook.com/"><img src="./images/Icon-Facebook.png"
-                            alt="logo de facebook"></a></li>
-                <li><a href="https://www.instagram.com/"><img src="./images/Icon-Instagram.png"
-                            alt="logo de instagram"></a></li>
-                <li><a href="https://www.linkedin.com/"><img src="./images/Icon-Linkedin.png"
-                            alt="logo de linkedin"></a></li>
-            </ol>
+    <footer class="footer">
+        <div class="footer__brand">
+            <img src="images/dentpro-logo.svg" alt="Logo Dent Pro">
+            <div>
+                <p>Dent Pro - Clínica Odontológica Digital</p>
+                <p>Cra. 11 # 10-38, Centro Empresarial Sabana, Chía, Cundinamarca.</p>
+            </div>
+        </div>
+        <div class="footer__links">
+            <a href="#servicios">Servicios</a>
+            <a href="#especialistas">Especialistas</a>
+            <a href="#agenda">Agenda inteligente</a>
+            <a href="#contacto">Contacto</a>
+        </div>
+        <div class="footer__legal">
+            <p>© 2024 Dent Pro Colombia. Todos los derechos reservados.</p>
+            <a href="#">Política de privacidad</a>
+            <a href="#">Tratamiento de datos</a>
+        </div>
+    </footer>
+
+    <div class="floating-actions" aria-label="Acciones rápidas">
+        <a href="https://wa.me/573212345678" target="_blank" rel="noopener" class="floating-actions__item" aria-label="Chatear por WhatsApp">
+            <i class="ri-whatsapp-fill" aria-hidden="true"></i>
+        </a>
+        <button class="floating-actions__item" id="boton-recordatorio" type="button" aria-label="Programar recordatorio">
+            <i class="ri-notification-3-line" aria-hidden="true"></i>
+        </button>
+        <a href="#agenda" class="floating-actions__item" aria-label="Ir a la agenda">
+            <i class="ri-calendar-check-fill" aria-hidden="true"></i>
+        </a>
+    </div>
+
+    <div class="reminder-modal" id="recordatorio-modal" role="dialog" aria-modal="true" aria-labelledby="recordatorio-titulo" hidden>
+        <div class="reminder-modal__content">
+            <button class="reminder-modal__close" type="button" aria-label="Cerrar">&times;</button>
+            <h2 id="recordatorio-titulo">Programa un recordatorio personalizado</h2>
+            <form id="recordatorio-form">
+                <label for="recordatorio-contacto">Correo electrónico</label>
+                <input type="email" id="recordatorio-contacto" required placeholder="tu@correo.com">
+                <label for="recordatorio-mensaje">Mensaje</label>
+                <textarea id="recordatorio-mensaje" rows="3" placeholder="Ej. Recordar cita de control de ortodoncia" required></textarea>
+                <label for="recordatorio-fecha">Fecha del recordatorio</label>
+                <input type="datetime-local" id="recordatorio-fecha" required>
+                <button type="submit" class="btn btn--primary">Generar recordatorio</button>
+            </form>
+            <div id="recordatorio-resultado" class="reminder-modal__result" aria-live="polite"></div>
         </div>
     </div>
-    <div class="navend container text-center">
-        <nav>
-            <ol>
-                <li><a href="./index.html">HOME</a></li>
-                <li><a href="./pages/productos.html">SERVICIOS</a></li>
-                <li><a href="./pages/aboutme.html">ACERCA DE MI</a></li>
-                <li><a href="./pages/contacto.html">CONTACTO</a></li>
-            </ol>
-        </nav>
-    </div>
-</footer>
 
+    <script src="js/app.js" type="module"></script>
+</body>
 </html>
