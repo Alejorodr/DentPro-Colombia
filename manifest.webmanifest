@@ -1,0 +1,19 @@
+{
+  "name": "Dent Pro Colombia",
+  "short_name": "Dent Pro",
+  "description": "Agenda inteligente, portal clínico y web app instalable de Dent Pro en Chía, Cundinamarca.",
+  "lang": "es-CO",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f1f5f9",
+  "theme_color": "#0f7c90",
+  "icons": [
+    {
+      "src": "images/dentpro-logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

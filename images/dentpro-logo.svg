@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 140" role="img" aria-labelledby="dentproTitle dentproDesc">
+  <title id="dentproTitle">Logotipo Dent Pro</title>
+  <desc id="dentproDesc">Monograma estilizado con la letra D y una sonrisa en forma de arco</desc>
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00d4ff"/>
+      <stop offset="100%" stop-color="#0f7c90"/>
+    </linearGradient>
+  </defs>
+  <rect width="140" height="140" rx="32" fill="#0b1f3a"/>
+  <path d="M42 32h34c17.6 0 32 14.4 32 32s-14.4 32-32 32H60" fill="none" stroke="url(#grad)" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M42 96c6 10 18 20 36 20s30-10 36-20" fill="none" stroke="#00d4ff" stroke-width="8" stroke-linecap="round"/>
+  <circle cx="48" cy="48" r="6" fill="#00d4ff"/>
+</svg>
