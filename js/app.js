@@ -27,15 +27,14 @@ function getStoredTheme() {
 
 function updateToggleState(isDark) {
   toggleButtons.forEach((button) => {
-    button.setAttribute('aria-pressed', String(isDark));
-    const labelTarget = button.querySelector('[data-theme-label]');
+    const state = String(isDark);
+    button.setAttribute('aria-checked', state);
+    button.removeAttribute('aria-pressed');
+    button.classList.toggle('theme-toggle--dark', isDark);
+    button.classList.toggle('theme-toggle--light', !isDark);
     const lightLabel = button.dataset.labelLight || 'Activar modo oscuro';
     const darkLabel = button.dataset.labelDark || 'Activar modo claro';
-    const text = isDark ? darkLabel : lightLabel;
-    if (labelTarget) {
-      labelTarget.textContent = text;
-    }
-    button.setAttribute('aria-label', text);
+    button.setAttribute('aria-label', isDark ? darkLabel : lightLabel);
   });
 }
 
