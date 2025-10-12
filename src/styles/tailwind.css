@@ -28,4 +28,28 @@
   .topbar {
     @apply sticky top-0 z-50 w-full border-b border-transparent bg-white/80 backdrop-blur-lg transition dark:border-surface-muted/60 dark:bg-surface-base/90;
   }
+
+  .floating-actions {
+    @apply fixed bottom-6 right-6 z-40 flex flex-col gap-3;
+  }
+
+  .floating-action-btn {
+    @apply flex h-14 w-14 items-center justify-center rounded-full text-white shadow-xl shadow-brand-teal/30 transition hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-indigo dark:shadow-glow-dark;
+  }
+
+  .floating-action-btn .material-symbols-rounded {
+    @apply text-[28px];
+  }
+
+  .floating-action-btn--whatsapp {
+    @apply bg-emerald-500 hover:bg-emerald-600 dark:bg-emerald-400 dark:text-slate-900 dark:hover:bg-emerald-300;
+  }
+
+  .floating-action-btn--booking {
+    @apply bg-brand-teal hover:bg-brand-indigo dark:bg-accent-cyan dark:text-surface-base dark:hover:bg-accent-cyan/90;
+  }
+
+  .floating-action-btn--call {
+    @apply bg-slate-900 hover:bg-slate-700 dark:bg-surface-elevated/90 dark:text-slate-100 dark:hover:bg-surface-muted/90;
+  }
 }
