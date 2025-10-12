@@ -1,4 +1,5 @@
-const html = document.documentElement;
+import { registerThemeToggle } from './app.js';
+
 const mobileMenuBtn = document.getElementById('mobileMenuBtn');
 const mobileMenu = document.getElementById('mobileMenu');
 const darkToggle = document.getElementById('darkModeToggle');
@@ -9,36 +10,8 @@ const nextBtn = document.getElementById('nextSpecialist');
 const yearEl = document.getElementById('year');
 const bookingForm = document.getElementById('bookingForm');
 
-const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
-
-function getStoredTheme() {
-  return localStorage.getItem('dentpro-theme');
-}
-
-function applyTheme(theme) {
-  if (theme === 'dark') {
-    html.classList.add('dark');
-  } else {
-    html.classList.remove('dark');
-  }
-}
-
-function toggleTheme() {
-  const isDark = html.classList.toggle('dark');
-  localStorage.setItem('dentpro-theme', isDark ? 'dark' : 'light');
-}
-
-applyTheme(getStoredTheme() || (prefersDark.matches ? 'dark' : 'light'));
-
-prefersDark.addEventListener('change', (event) => {
-  if (!getStoredTheme()) {
-    applyTheme(event.matches ? 'dark' : 'light');
-  }
-});
-
-[darkToggle, darkToggleMobile].forEach((button) => {
-  button?.addEventListener('click', () => toggleTheme());
-});
+registerThemeToggle(darkToggle);
+registerThemeToggle(darkToggleMobile);
 
 mobileMenuBtn?.addEventListener('click', () => {
   mobileMenu?.classList.toggle('open');
@@ -66,7 +39,36 @@ function createFeedback(message, type = 'success') {
   const existing = bookingForm?.querySelector('.form-feedback');
   existing?.remove();
   const feedback = document.createElement('p');
-  feedback.className = `form-feedback ${type}`;
+  feedback.className = 'form-feedback';
+  feedback.classList.add(
+    'rounded-2xl',
+    'border',
+    'px-4',
+    'py-3',
+    'text-sm',
+    'font-medium',
+    'backdrop-blur',
+    'transition-colors'
+  );
+  if (type === 'error') {
+    feedback.classList.add(
+      'border-rose-400/40',
+      'bg-rose-100/60',
+      'text-rose-700',
+      'dark:border-rose-300/40',
+      'dark:bg-rose-500/20',
+      'dark:text-rose-100'
+    );
+  } else {
+    feedback.classList.add(
+      'border-brand-teal/40',
+      'bg-brand-light/60',
+      'text-brand-indigo',
+      'dark:border-accent-cyan/40',
+      'dark:bg-accent-cyan/10',
+      'dark:text-accent-cyan'
+    );
+  }
   feedback.textContent = message;
   return feedback;
 }
