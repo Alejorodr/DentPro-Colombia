@@ -5,6 +5,13 @@
   --brand-sky: #12b8c7;
   --brand-light: #e6f7f9;
   --brand-navy: #142257;
+  --brand-midnight: #071125;
+  --brand-teal-dark: #0b6b7d;
+  --surface-base: #060b1b;
+  --surface-muted: #0c162d;
+  --surface-elevated: #152346;
+  --accent-cyan: #0ea5e9;
+  --accent-cyan-soft: #22d3ee;
   --slate-50: #f8fafc;
   --slate-100: #f1f5f9;
   --slate-200: #e2e8f0;
@@ -78,7 +85,7 @@ select:focus {
 }
 
 .dark body {
-  background-color: var(--slate-900);
+  background-color: var(--surface-base);
   color: var(--slate-100);
 }
 
@@ -682,16 +689,18 @@ select:focus {
   position: absolute;
   right: 2rem;
   bottom: -3rem;
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.9);
   border-radius: 1.5rem;
   padding: 1.25rem 1.5rem;
-  box-shadow: 0 25px 50px rgba(47, 58, 143, 0.2);
+  box-shadow: 0 20px 45px rgba(15, 124, 144, 0.25);
   width: min(260px, 70vw);
 }
 
 .dark .floating-card {
-  background: rgba(15, 23, 42, 0.92);
+  background: rgba(21, 35, 70, 0.9);
   color: var(--slate-100);
+  border: 1px solid rgba(14, 165, 233, 0.15);
+  box-shadow: 0 35px 65px rgba(14, 165, 233, 0.35);
 }
 
 .icon-circle {
@@ -831,6 +840,16 @@ select:focus {
   transform: translateY(-0.125rem);
 }
 
+.dark .btn-primary {
+  background-color: var(--accent-cyan);
+  color: var(--surface-base);
+  box-shadow: 0 35px 65px rgba(14, 165, 233, 0.35);
+}
+
+.dark .btn-primary:hover {
+  background-color: rgba(14, 165, 233, 0.9);
+}
+
 .btn-secondary {
   display: inline-flex;
   align-items: center;
@@ -848,6 +867,16 @@ select:focus {
   background-color: var(--brand-light);
   color: var(--brand-indigo);
   transform: translateY(-0.125rem);
+}
+
+.dark .btn-secondary {
+  border-color: rgba(14, 165, 233, 0.8);
+  color: var(--accent-cyan);
+}
+
+.dark .btn-secondary:hover {
+  background-color: rgba(12, 22, 45, 0.95);
+  color: #ffffff;
 }
 
 .icon-check,
@@ -1063,12 +1092,13 @@ nav a,
 }
 
 .dark .topbar {
-  background-color: rgba(15, 23, 42, 0.85);
+  background-color: rgba(6, 11, 27, 0.9);
+  border-bottom: 1px solid rgba(12, 22, 45, 0.6);
 }
 
 .dark .mobile-menu {
-  background-color: rgba(15, 23, 42, 0.95);
-  border-color: rgba(15, 124, 144, 0.2);
+  background-color: rgba(6, 11, 27, 0.95);
+  border-color: rgba(14, 165, 233, 0.12);
 }
 
 .dark .slider-btn {
@@ -1077,9 +1107,9 @@ nav a,
 }
 
 .dark .card {
-  background-color: rgba(15, 23, 42, 0.8);
-  border-color: rgba(30, 41, 59, 1);
-  box-shadow: 0 35px 70px rgba(0, 0, 0, 0.3);
+  background-color: rgba(21, 35, 70, 0.8);
+  border-color: rgba(12, 22, 45, 0.7);
+  box-shadow: 0 25px 55px rgba(8, 47, 73, 0.55);
 }
 
 /* Responsive helpers */

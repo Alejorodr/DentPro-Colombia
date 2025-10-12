@@ -1,0 +1,91 @@
+const html = document.documentElement;
+const storageKey = 'dentpro-theme';
+const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+const toggleButtons = new Set();
+
+function safeLocalStorage(action, value) {
+  try {
+    if (action === 'get') {
+      return localStorage.getItem(storageKey);
+    }
+    if (action === 'set') {
+      localStorage.setItem(storageKey, value);
+    }
+    if (action === 'remove') {
+      localStorage.removeItem(storageKey);
+    }
+  } catch (_) {
+    // localStorage might be unavailable (private mode, etc.)
+  }
+  return null;
+}
+
+function getStoredTheme() {
+  const stored = safeLocalStorage('get');
+  return stored === 'dark' || stored === 'light' ? stored : null;
+}
+
+function updateToggleState(isDark) {
+  toggleButtons.forEach((button) => {
+    button.setAttribute('aria-pressed', String(isDark));
+    const labelTarget = button.querySelector('[data-theme-label]');
+    const lightLabel = button.dataset.labelLight || 'Activar modo oscuro';
+    const darkLabel = button.dataset.labelDark || 'Activar modo claro';
+    const text = isDark ? darkLabel : lightLabel;
+    if (labelTarget) {
+      labelTarget.textContent = text;
+    }
+    button.setAttribute('aria-label', text);
+  });
+}
+
+function applyTheme(theme) {
+  const isDark = theme === 'dark';
+  html.classList.toggle('dark', isDark);
+  html.dataset.theme = isDark ? 'dark' : 'light';
+  updateToggleState(isDark);
+}
+
+function resolvePreferredTheme() {
+  const stored = getStoredTheme();
+  if (stored) {
+    return stored;
+  }
+  return prefersDark.matches ? 'dark' : 'light';
+}
+
+function persistTheme(theme) {
+  safeLocalStorage('set', theme);
+}
+
+function setTheme(theme, persist = false) {
+  applyTheme(theme);
+  if (persist) {
+    persistTheme(theme);
+  }
+}
+
+function toggleTheme() {
+  const nextTheme = html.classList.contains('dark') ? 'light' : 'dark';
+  setTheme(nextTheme, true);
+}
+
+prefersDark.addEventListener('change', (event) => {
+  if (getStoredTheme()) {
+    return;
+  }
+  setTheme(event.matches ? 'dark' : 'light');
+});
+
+setTheme(resolvePreferredTheme());
+
+export function registerThemeToggle(button) {
+  if (!button) return;
+  toggleButtons.add(button);
+  button.addEventListener('click', () => toggleTheme());
+  updateToggleState(html.classList.contains('dark'));
+}
+
+export function getCurrentTheme() {
+  return html.classList.contains('dark') ? 'dark' : 'light';
+}

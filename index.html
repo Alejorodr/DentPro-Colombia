@@ -16,9 +16,9 @@
     />
     <link rel="stylesheet" href="css/tailwind.css" />
     <link rel="stylesheet" href="css/style.css" />
-    <script defer src="js/main.js"></script>
+    <script type="module" src="js/main.js"></script>
   </head>
-  <body class="bg-slate-50 font-sans text-slate-800 antialiased dark:bg-slate-900 dark:text-slate-100">
+  <body class="bg-slate-50 font-sans text-slate-800 antialiased transition-colors duration-300 dark:bg-surface-base dark:text-slate-100">
     <header class="topbar">
       <div class="container flex items-center justify-between px-6 py-4">
         <a href="#" class="flex items-center gap-3 text-lg font-semibold text-brand-teal">
@@ -26,15 +26,24 @@
           DentPro Colombia
         </a>
         <nav class="hidden items-center gap-8 text-sm font-semibold text-slate-600 lg:flex dark:text-slate-200">
-          <a href="#servicios" class="transition hover:text-brand-teal">Servicios</a>
-          <a href="#especialistas" class="transition hover:text-brand-teal">Especialistas</a>
-          <a href="#agenda" class="transition hover:text-brand-teal">Agenda tu cita</a>
-          <a href="#contacto" class="transition hover:text-brand-teal">Contacto</a>
+          <a href="#servicios" class="transition hover:text-brand-teal dark:hover:text-accent-cyan">Servicios</a>
+          <a href="#especialistas" class="transition hover:text-brand-teal dark:hover:text-accent-cyan">Especialistas</a>
+          <a href="#agenda" class="transition hover:text-brand-teal dark:hover:text-accent-cyan">Agenda tu cita</a>
+          <a href="#contacto" class="transition hover:text-brand-teal dark:hover:text-accent-cyan">Contacto</a>
         </nav>
         <div class="flex items-center gap-4">
-          <button type="button" class="btn-secondary hidden lg:inline-flex" id="darkModeToggle" aria-label="Cambiar modo">
-            <span class="icon-moon"></span>
-            <span>Modo</span>
+          <button
+            type="button"
+            class="btn-secondary hidden lg:inline-flex text-sm"
+            id="darkModeToggle"
+            aria-pressed="false"
+            aria-label="Alternar modo oscuro"
+            data-label-light="Activar modo oscuro"
+            data-label-dark="Activar modo claro"
+          >
+            <span class="icon-moon text-lg transition dark:hidden"></span>
+            <span class="icon-sun hidden text-lg text-amber-300 transition dark:inline"></span>
+            <span class="font-semibold" data-theme-label>Activar modo oscuro</span>
           </button>
           <a href="#agenda" class="btn-primary hidden lg:inline-flex">Agenda ahora</a>
           <button
@@ -46,23 +55,37 @@
           </button>
         </div>
       </div>
-      <div class="mobile-menu" id="mobileMenu">
+      <div class="mobile-menu dark:bg-surface-base/95" id="mobileMenu">
         <nav class="flex flex-col gap-4 px-6 pb-6 text-base font-semibold text-slate-700 dark:text-slate-100">
-          <a href="#servicios" class="transition hover:text-brand-teal">Servicios</a>
-          <a href="#especialistas" class="transition hover:text-brand-teal">Especialistas</a>
-          <a href="#agenda" class="transition hover:text-brand-teal">Agenda tu cita</a>
-          <a href="#contacto" class="transition hover:text-brand-teal">Contacto</a>
-          <button type="button" class="btn-secondary" id="darkModeToggleMobile">Cambiar modo</button>
+          <a href="#servicios" class="transition hover:text-brand-teal dark:hover:text-accent-cyan">Servicios</a>
+          <a href="#especialistas" class="transition hover:text-brand-teal dark:hover:text-accent-cyan">Especialistas</a>
+          <a href="#agenda" class="transition hover:text-brand-teal dark:hover:text-accent-cyan">Agenda tu cita</a>
+          <a href="#contacto" class="transition hover:text-brand-teal dark:hover:text-accent-cyan">Contacto</a>
+          <button
+            type="button"
+            class="btn-secondary"
+            id="darkModeToggleMobile"
+            aria-pressed="false"
+            aria-label="Alternar modo oscuro"
+            data-label-light="Activar modo oscuro"
+            data-label-dark="Activar modo claro"
+          >
+            <span class="flex items-center gap-2">
+              <span class="icon-moon text-lg transition dark:hidden"></span>
+              <span class="icon-sun hidden text-lg text-amber-300 transition dark:inline"></span>
+              <span class="font-semibold" data-theme-label>Activar modo oscuro</span>
+            </span>
+          </button>
           <a href="#agenda" class="btn-primary">Agenda ahora</a>
         </nav>
       </div>
     </header>
 
     <main>
-      <section class="hero overflow-hidden bg-gradient py-24">
+      <section class="hero overflow-hidden bg-hero-light py-24 transition-colors duration-500 dark:bg-hero-dark">
         <div class="container grid items-center gap-16 px-6 lg:grid-cols-2">
           <div class="space-y-8">
-            <span class="inline-flex items-center gap-2 rounded-full bg-white/70 px-4 py-2 text-sm font-semibold uppercase tracking-wide text-brand-indigo shadow-sm">
+            <span class="inline-flex items-center gap-2 rounded-full bg-white/70 px-4 py-2 text-sm font-semibold uppercase tracking-wide text-brand-indigo shadow-sm dark:bg-surface-elevated/80 dark:text-accent-cyan">
               Calidad internacional
             </span>
             <h1 class="max-w-2xl text-4xl font-bold leading-tight text-slate-900 md:text-5xl dark:text-white">
@@ -91,16 +114,16 @@
             </dl>
           </div>
           <div class="relative">
-            <div class="rounded-3xl border border-white/40 bg-white/80 p-6 shadow-xl shadow-brand-teal/20 backdrop-blur">
-              <div class="aspect-[4/5] overflow-hidden rounded-2xl bg-gradient-to-br from-brand-teal via-brand-sky to-brand-indigo">
+            <div class="rounded-3xl border border-white/40 bg-white/80 p-6 shadow-xl shadow-brand-teal/20 backdrop-blur transition-colors duration-500 dark:border-accent-cyan/10 dark:bg-surface-elevated/70 dark:shadow-surface-dark">
+              <div class="aspect-[4/5] overflow-hidden rounded-2xl bg-gradient-to-br from-brand-teal via-brand-sky to-brand-indigo dark:from-accent-cyan dark:via-brand-teal dark:to-brand-midnight">
                 <img
                   src="https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?auto=format&fit=crop&w=900&q=80"
                   alt="Odontóloga atendiendo a paciente"
                   class="h-full w-full object-cover"
                 />
               </div>
-              <div class="mt-6 grid gap-4 rounded-2xl bg-white/90 p-6 text-sm shadow-lg dark:bg-slate-900/90 dark:text-slate-100">
-                <p class="font-semibold text-brand-teal">Testimonio real</p>
+              <div class="mt-6 grid gap-4 rounded-2xl bg-white/90 p-6 text-sm shadow-lg transition-colors duration-500 dark:bg-surface-muted/90 dark:text-slate-100 dark:shadow-surface-dark">
+                <p class="font-semibold text-brand-teal dark:text-accent-cyan">Testimonio real</p>
                 <p class="text-slate-600 dark:text-slate-200">
                   “Me siento segura y acompañada en cada cita. El equipo de DentPro es cercano y profesional. ¡Mi sonrisa nunca estuvo mejor!”
                 </p>
@@ -119,15 +142,15 @@
                 </div>
               </div>
             </div>
-            <div class="floating-card">
-              <p class="text-xs uppercase tracking-wide text-slate-500">Indicadores clínicos</p>
-              <p class="text-2xl font-bold text-brand-indigo">+4.800 sonrisas rehabilitadas</p>
+            <div class="floating-card rounded-2xl bg-white/90 text-sm text-slate-700 shadow-glow backdrop-blur dark:border dark:border-accent-cyan/15 dark:bg-surface-elevated/90 dark:text-slate-100 dark:shadow-glow-dark">
+              <p class="text-xs uppercase tracking-wide text-slate-500 dark:text-accent-cyan/80">Indicadores clínicos</p>
+              <p class="text-2xl font-bold text-brand-indigo dark:text-accent-cyan">+4.800 sonrisas rehabilitadas</p>
             </div>
           </div>
         </div>
       </section>
 
-      <section id="servicios" class="py-20">
+      <section id="servicios" class="py-20 transition-colors duration-300 dark:bg-surface-base">
         <div class="container px-6">
           <div class="mx-auto max-w-3xl text-center">
             <h2 class="text-3xl font-bold text-slate-900 dark:text-white">Servicios integrales para cada necesidad</h2>
@@ -137,7 +160,7 @@
           </div>
           <div class="mt-12 grid gap-8 md:grid-cols-2 xl:grid-cols-3">
             <article class="card">
-              <div class="icon-circle">
+              <div class="icon-circle dark:bg-accent-cyan/15 dark:text-accent-cyan">
                 <span class="icon-tooth"></span>
               </div>
               <h3 class="text-xl font-semibold text-slate-900 dark:text-white">Odontología preventiva</h3>
@@ -151,7 +174,7 @@
               </ul>
             </article>
             <article class="card">
-              <div class="icon-circle">
+              <div class="icon-circle dark:bg-accent-cyan/15 dark:text-accent-cyan">
                 <span class="icon-align"></span>
               </div>
               <h3 class="text-xl font-semibold text-slate-900 dark:text-white">Ortodoncia avanzada</h3>
@@ -165,7 +188,7 @@
               </ul>
             </article>
             <article class="card">
-              <div class="icon-circle">
+              <div class="icon-circle dark:bg-accent-cyan/15 dark:text-accent-cyan">
                 <span class="icon-implant"></span>
               </div>
               <h3 class="text-xl font-semibold text-slate-900 dark:text-white">Rehabilitación oral</h3>
@@ -182,7 +205,7 @@
         </div>
       </section>
 
-      <section id="especialistas" class="bg-brand-light py-20 dark:bg-slate-950">
+      <section id="especialistas" class="bg-brand-light py-20 transition-colors duration-300 dark:bg-surface-muted">
         <div class="container px-6">
           <div class="flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
             <div>
@@ -250,9 +273,9 @@
         </div>
       </section>
 
-      <section id="agenda" class="py-20">
+      <section id="agenda" class="py-20 transition-colors duration-300 dark:bg-surface-base">
         <div class="container grid gap-12 px-6 lg:grid-cols-[1.2fr_1fr]">
-          <div class="rounded-3xl bg-gradient p-10 text-white shadow-xl dark:bg-slate-800 dark:text-white">
+          <div class="rounded-3xl bg-gradient p-10 text-white shadow-xl transition-colors duration-500 dark:bg-card-dark dark:text-slate-100 dark:shadow-glow-dark">
             <h2 class="text-3xl font-bold">Agenda tu primera valoración</h2>
             <p class="mt-4 text-base text-brand-light">
               Cuéntanos qué necesitas y un asesor de DentPro te contactará en menos de 30 minutos hábiles para asignar tu cita en la sede más cercana.
@@ -260,15 +283,15 @@
             <form class="mt-8 grid gap-6" id="bookingForm">
               <div class="grid gap-2">
                 <label for="name" class="text-sm font-semibold">Nombre completo</label>
-                <input id="name" name="name" type="text" class="input" placeholder="Ej. Mariana López" required />
+                <input id="name" name="name" type="text" class="input dark:bg-surface-muted dark:text-slate-100 dark:placeholder:text-slate-500" placeholder="Ej. Mariana López" required />
               </div>
               <div class="grid gap-2">
                 <label for="phone" class="text-sm font-semibold">Celular</label>
-                <input id="phone" name="phone" type="tel" class="input" placeholder="Ej. 300 123 4567" required />
+                <input id="phone" name="phone" type="tel" class="input dark:bg-surface-muted dark:text-slate-100 dark:placeholder:text-slate-500" placeholder="Ej. 300 123 4567" required />
               </div>
               <div class="grid gap-2">
                 <label for="service" class="text-sm font-semibold">Servicio de interés</label>
-                <select id="service" name="service" class="input" required>
+                <select id="service" name="service" class="input dark:bg-surface-muted dark:text-slate-100" required>
                   <option value="">Selecciona una opción</option>
                   <option value="preventiva">Odontología preventiva</option>
                   <option value="ortodoncia">Ortodoncia</option>
@@ -278,7 +301,7 @@
               </div>
               <div class="grid gap-2">
                 <label for="message" class="text-sm font-semibold">Mensaje</label>
-                <textarea id="message" name="message" rows="4" class="input" placeholder="Cuéntanos cómo podemos ayudarte"></textarea>
+                <textarea id="message" name="message" rows="4" class="input dark:bg-surface-muted dark:text-slate-100 dark:placeholder:text-slate-500" placeholder="Cuéntanos cómo podemos ayudarte"></textarea>
               </div>
               <button type="submit" class="btn-primary justify-center">Solicitar agenda</button>
               <p class="text-xs text-brand-light/80">
@@ -286,31 +309,31 @@
               </p>
             </form>
           </div>
-          <div class="card space-y-6 dark:bg-slate-900">
+          <div class="card space-y-6 dark:bg-surface-elevated/80">
             <h3 class="text-2xl font-semibold text-slate-900 dark:text-white">Beneficios DentPro</h3>
             <ul class="space-y-4 text-sm text-slate-600 dark:text-slate-200">
               <li class="flex gap-3">
-                <span class="icon-check"></span>
+                <span class="icon-check text-brand-teal dark:text-accent-cyan"></span>
                 <span>Diagnóstico digital con radiología de baja dosis y escáner intraoral.</span>
               </li>
               <li class="flex gap-3">
-                <span class="icon-check"></span>
+                <span class="icon-check text-brand-teal dark:text-accent-cyan"></span>
                 <span>Planes de financiación y alianzas empresariales con tarifas preferenciales.</span>
               </li>
               <li class="flex gap-3">
-                <span class="icon-check"></span>
+                <span class="icon-check text-brand-teal dark:text-accent-cyan"></span>
                 <span>Protocolos estrictos de bioseguridad certificados bajo la norma Icontec.</span>
               </li>
             </ul>
-            <div class="rounded-2xl bg-brand-light/70 p-6 text-sm text-slate-700 dark:bg-slate-800/80 dark:text-slate-200">
-              <p class="font-semibold text-brand-indigo">Horario extendido</p>
+            <div class="rounded-2xl bg-brand-light/70 p-6 text-sm text-slate-700 dark:border dark:border-accent-cyan/15 dark:bg-surface-muted/80 dark:text-slate-200">
+              <p class="font-semibold text-brand-indigo dark:text-accent-cyan">Horario extendido</p>
               <p class="mt-2">Lunes a sábado de 7:00 a. m. a 8:00 p. m. Domingos con cita previa.</p>
             </div>
           </div>
         </div>
       </section>
 
-      <section id="contacto" class="bg-slate-900 py-20 text-white dark:bg-black">
+      <section id="contacto" class="bg-slate-900 py-20 text-white transition-colors duration-500 dark:bg-surface-base">
         <div class="container grid gap-12 px-6 lg:grid-cols-3">
           <div class="space-y-6">
             <h2 class="text-3xl font-bold">Visítanos en nuestras sedes</h2>
@@ -319,45 +342,45 @@
             </p>
             <div class="space-y-2 text-sm text-slate-300">
               <p class="flex items-center gap-3">
-                <span class="icon-phone"></span>
+                <span class="icon-phone text-brand-light dark:text-accent-cyan"></span>
                 (601) 540 9876
               </p>
               <p class="flex items-center gap-3">
-                <span class="icon-whatsapp"></span>
+                <span class="icon-whatsapp text-brand-light dark:text-accent-cyan"></span>
                 +57 310 456 7890
               </p>
               <p class="flex items-center gap-3">
-                <span class="icon-mail"></span>
+                <span class="icon-mail text-brand-light dark:text-accent-cyan"></span>
                 contacto@dentpro.co
               </p>
             </div>
             <div class="flex gap-4">
-              <a href="https://www.instagram.com" class="social-link" aria-label="Instagram">IG</a>
-              <a href="https://www.facebook.com" class="social-link" aria-label="Facebook">FB</a>
-              <a href="https://www.youtube.com" class="social-link" aria-label="YouTube">YT</a>
+              <a href="https://www.instagram.com" class="social-link dark:border-accent-cyan/40 dark:text-accent-cyan" aria-label="Instagram">IG</a>
+              <a href="https://www.facebook.com" class="social-link dark:border-accent-cyan/40 dark:text-accent-cyan" aria-label="Facebook">FB</a>
+              <a href="https://www.youtube.com" class="social-link dark:border-accent-cyan/40 dark:text-accent-cyan" aria-label="YouTube">YT</a>
             </div>
           </div>
-          <div class="rounded-3xl bg-white/10 p-8 backdrop-blur">
+          <div class="rounded-3xl bg-white/10 p-8 backdrop-blur transition-colors duration-300 dark:border dark:border-accent-cyan/10 dark:bg-surface-muted/80">
             <h3 class="text-xl font-semibold">Atención preferencial</h3>
             <p class="mt-2 text-sm text-slate-300">
               Nuestro equipo de Patient Care está listo para acompañarte antes, durante y después de cada visita.
             </p>
             <ul class="mt-6 space-y-4 text-sm text-slate-200">
               <li class="flex gap-3">
-                <span class="icon-calendar"></span>
+                <span class="icon-calendar text-brand-light dark:text-accent-cyan"></span>
                 Coordinación de citas y recordatorios automáticos.
               </li>
               <li class="flex gap-3">
-                <span class="icon-heart"></span>
+                <span class="icon-heart text-brand-light dark:text-accent-cyan"></span>
                 Acompañamiento emocional para pacientes pediátricos y con ansiedad.
               </li>
               <li class="flex gap-3">
-                <span class="icon-shield"></span>
+                <span class="icon-shield text-brand-light dark:text-accent-cyan"></span>
                 Cobertura en urgencias odontológicas 24/7.
               </li>
             </ul>
           </div>
-          <div class="rounded-3xl bg-white/10 p-8 backdrop-blur">
+          <div class="rounded-3xl bg-white/10 p-8 backdrop-blur transition-colors duration-300 dark:border dark:border-accent-cyan/10 dark:bg-surface-muted/80">
             <h3 class="text-xl font-semibold">Ubicaciones destacadas</h3>
             <ul class="mt-6 space-y-4 text-sm text-slate-200">
               <li>
@@ -375,13 +398,13 @@
             </ul>
           </div>
         </div>
-        <div class="mt-20 border-t border-white/10">
-          <div class="container flex flex-col gap-4 px-6 py-8 text-sm text-slate-400 md:flex-row md:items-center md:justify-between">
+        <div class="mt-20 border-t border-white/10 dark:border-surface-muted/80">
+          <div class="container flex flex-col gap-4 px-6 py-8 text-sm text-slate-400 transition-colors duration-300 dark:text-slate-500 md:flex-row md:items-center md:justify-between">
             <p>© <span id="year"></span> DentPro Colombia. Todos los derechos reservados.</p>
             <div class="flex gap-6">
-              <a href="#" class="hover:text-white">Política de privacidad</a>
-              <a href="#" class="hover:text-white">Términos y condiciones</a>
-              <a href="#" class="hover:text-white">Mapa del sitio</a>
+              <a href="#" class="hover:text-white dark:hover:text-accent-cyan">Política de privacidad</a>
+              <a href="#" class="hover:text-white dark:hover:text-accent-cyan">Términos y condiciones</a>
+              <a href="#" class="hover:text-white dark:hover:text-accent-cyan">Mapa del sitio</a>
             </div>
           </div>
         </div>
