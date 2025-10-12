@@ -452,6 +452,14 @@ select:focus {
   color: var(--brand-indigo);
 }
 
+.text-brand-light {
+  color: var(--brand-light);
+}
+
+.text-amber-300 {
+  color: #fcd34d;
+}
+
 .text-brand-light\/80 {
   color: rgba(230, 247, 249, 0.8);
 }
@@ -879,18 +887,33 @@ select:focus {
   color: #ffffff;
 }
 
-.icon-check,
-.icon-calendar,
-.icon-phone,
-.icon-whatsapp,
-.icon-mail,
-.icon-heart,
-.icon-shield,
-.icon-tooth,
-.icon-align,
-.icon-implant,
-.icon-moon,
-.icon-menu {
+.material-symbols-rounded {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  font-family: 'Material Symbols Rounded';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 1em;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  color: currentColor;
+  transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+.dark .material-symbols-rounded {
+  color: currentColor;
+}
+
+.icon-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -898,73 +921,12 @@ select:focus {
   height: 1.75rem;
   border-radius: 9999px;
   background: linear-gradient(135deg, rgba(15, 124, 144, 0.2), rgba(47, 58, 143, 0.25));
-  color: var(--brand-indigo);
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: 1.125rem;
+  transition: color 0.2s ease, background-color 0.2s ease;
 }
 
-.icon-arrow {
-  border-radius: 9999px;
-  border: 1px solid rgba(15, 124, 144, 0.4);
-  width: 2rem;
-  height: 2rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--brand-teal);
-  font-size: 1rem;
-}
-
-.icon-arrow::before {
-  content: '➜';
-}
-
-.icon-check::before {
-  content: '✓';
-}
-
-.icon-calendar::before {
-  content: '📅';
-}
-
-.icon-phone::before {
-  content: '📞';
-}
-
-.icon-whatsapp::before {
-  content: '💬';
-}
-
-.icon-mail::before {
-  content: '✉️';
-}
-
-.icon-heart::before {
-  content: '❤';
-}
-
-.icon-shield::before {
-  content: '🛡';
-}
-
-.icon-tooth::before {
-  content: '🦷';
-}
-
-.icon-align::before {
-  content: '😃';
-}
-
-.icon-implant::before {
-  content: '✨';
-}
-
-.icon-moon::before {
-  content: '🌙';
-}
-
-.icon-menu::before {
-  content: '☰';
+.dark .icon-badge {
+  background: rgba(14, 165, 233, 0.15);
 }
 
 .social-link {
