@@ -1,0 +1,21 @@
+{
+  "name": "dentpro-colombia",
+  "version": "1.0.0",
+  "description": "Sitio de DentPro Colombia con Tailwind CSS",
+  "scripts": {
+    "build:css": "npx tailwindcss -i ./src/styles/tailwind.css -o ./css/tailwind.css --minify"
+  },
+  "keywords": [
+    "dentpro",
+    "odontologia",
+    "tailwind"
+  ],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "devDependencies": {
+    "autoprefixer": "^10.4.19",
+    "postcss": "^8.4.38",
+    "tailwindcss": "^3.4.3"
+  }
+}

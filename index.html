@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>DentPro Colombia | Sonrisas que inspiran confianza</title>
+    <meta
+      name="description"
+      content="Clínicas DentPro Colombia: odontología integral, especialistas certificados y tecnología avanzada para cuidar tu sonrisa."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/tailwind.css" />
+    <link rel="stylesheet" href="css/style.css" />
+    <script defer src="js/main.js"></script>
+  </head>
+  <body class="bg-slate-50 font-sans text-slate-800 antialiased dark:bg-slate-900 dark:text-slate-100">
+    <header class="topbar">
+      <div class="container flex items-center justify-between px-6 py-4">
+        <a href="#" class="flex items-center gap-3 text-lg font-semibold text-brand-teal">
+          <span class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-brand-teal text-white">DP</span>
+          DentPro Colombia
+        </a>
+        <nav class="hidden items-center gap-8 text-sm font-semibold text-slate-600 lg:flex dark:text-slate-200">
+          <a href="#servicios" class="transition hover:text-brand-teal">Servicios</a>
+          <a href="#especialistas" class="transition hover:text-brand-teal">Especialistas</a>
+          <a href="#agenda" class="transition hover:text-brand-teal">Agenda tu cita</a>
+          <a href="#contacto" class="transition hover:text-brand-teal">Contacto</a>
+        </nav>
+        <div class="flex items-center gap-4">
+          <button type="button" class="btn-secondary hidden lg:inline-flex" id="darkModeToggle" aria-label="Cambiar modo">
+            <span class="icon-moon"></span>
+            <span>Modo</span>
+          </button>
+          <a href="#agenda" class="btn-primary hidden lg:inline-flex">Agenda ahora</a>
+          <button
+            class="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 lg:hidden"
+            id="mobileMenuBtn"
+            aria-label="Abrir menú"
+          >
+            <span class="icon-menu"></span>
+          </button>
+        </div>
+      </div>
+      <div class="mobile-menu" id="mobileMenu">
+        <nav class="flex flex-col gap-4 px-6 pb-6 text-base font-semibold text-slate-700 dark:text-slate-100">
+          <a href="#servicios" class="transition hover:text-brand-teal">Servicios</a>
+          <a href="#especialistas" class="transition hover:text-brand-teal">Especialistas</a>
+          <a href="#agenda" class="transition hover:text-brand-teal">Agenda tu cita</a>
+          <a href="#contacto" class="transition hover:text-brand-teal">Contacto</a>
+          <button type="button" class="btn-secondary" id="darkModeToggleMobile">Cambiar modo</button>
+          <a href="#agenda" class="btn-primary">Agenda ahora</a>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero overflow-hidden bg-gradient py-24">
+        <div class="container grid items-center gap-16 px-6 lg:grid-cols-2">
+          <div class="space-y-8">
+            <span class="inline-flex items-center gap-2 rounded-full bg-white/70 px-4 py-2 text-sm font-semibold uppercase tracking-wide text-brand-indigo shadow-sm">
+              Calidad internacional
+            </span>
+            <h1 class="max-w-2xl text-4xl font-bold leading-tight text-slate-900 md:text-5xl dark:text-white">
+              Cuidamos tu sonrisa con tecnología de vanguardia y especialistas certificados.
+            </h1>
+            <p class="max-w-xl text-lg text-slate-600 dark:text-slate-200">
+              Vive una experiencia odontológica cálida, humana y precisa. Desde odontología preventiva hasta rehabilitación oral, te acompañamos en cada paso.
+            </p>
+            <div class="flex flex-col gap-4 sm:flex-row">
+              <a href="#agenda" class="btn-primary">Agenda tu valoración</a>
+              <a href="#servicios" class="btn-secondary">Explora servicios</a>
+            </div>
+            <dl class="grid gap-6 text-sm text-slate-600 sm:grid-cols-3 dark:text-slate-200">
+              <div>
+                <dt class="font-semibold text-slate-900 dark:text-white">+20 años</dt>
+                <dd>de experiencia clínica</dd>
+              </div>
+              <div>
+                <dt class="font-semibold text-slate-900 dark:text-white">12 sedes</dt>
+                <dd>en las principales ciudades</dd>
+              </div>
+              <div>
+                <dt class="font-semibold text-slate-900 dark:text-white">98% satisfacción</dt>
+                <dd>según pacientes atendidos</dd>
+              </div>
+            </dl>
+          </div>
+          <div class="relative">
+            <div class="rounded-3xl border border-white/40 bg-white/80 p-6 shadow-xl shadow-brand-teal/20 backdrop-blur">
+              <div class="aspect-[4/5] overflow-hidden rounded-2xl bg-gradient-to-br from-brand-teal via-brand-sky to-brand-indigo">
+                <img
+                  src="https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?auto=format&fit=crop&w=900&q=80"
+                  alt="Odontóloga atendiendo a paciente"
+                  class="h-full w-full object-cover"
+                />
+              </div>
+              <div class="mt-6 grid gap-4 rounded-2xl bg-white/90 p-6 text-sm shadow-lg dark:bg-slate-900/90 dark:text-slate-100">
+                <p class="font-semibold text-brand-teal">Testimonio real</p>
+                <p class="text-slate-600 dark:text-slate-200">
+                  “Me siento segura y acompañada en cada cita. El equipo de DentPro es cercano y profesional. ¡Mi sonrisa nunca estuvo mejor!”
+                </p>
+                <div class="flex items-center gap-4">
+                  <div class="h-12 w-12 overflow-hidden rounded-full">
+                    <img
+                      src="https://images.unsplash.com/photo-1544723795-3fb6469f5b39?auto=format&fit=crop&w=200&q=80"
+                      alt="Paciente satisfecha"
+                      class="h-full w-full object-cover"
+                    />
+                  </div>
+                  <div>
+                    <p class="font-semibold text-slate-900 dark:text-white">Laura Gómez</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-300">Paciente de ortodoncia invisible</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="floating-card">
+              <p class="text-xs uppercase tracking-wide text-slate-500">Indicadores clínicos</p>
+              <p class="text-2xl font-bold text-brand-indigo">+4.800 sonrisas rehabilitadas</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="servicios" class="py-20">
+        <div class="container px-6">
+          <div class="mx-auto max-w-3xl text-center">
+            <h2 class="text-3xl font-bold text-slate-900 dark:text-white">Servicios integrales para cada necesidad</h2>
+            <p class="mt-4 text-lg text-slate-600 dark:text-slate-200">
+              Integramos especialidades odontológicas con equipos de última generación para garantizar diagnósticos precisos y resultados duraderos.
+            </p>
+          </div>
+          <div class="mt-12 grid gap-8 md:grid-cols-2 xl:grid-cols-3">
+            <article class="card">
+              <div class="icon-circle">
+                <span class="icon-tooth"></span>
+              </div>
+              <h3 class="text-xl font-semibold text-slate-900 dark:text-white">Odontología preventiva</h3>
+              <p class="mt-4 text-sm text-slate-600 dark:text-slate-200">
+                Limpiezas profundas, sellantes, fluorizaciones y educación en higiene oral para mantener tus dientes sanos desde la raíz.
+              </p>
+              <ul class="mt-6 space-y-2 text-sm text-slate-500 dark:text-slate-300">
+                <li>✔️ Valoraciones digitales</li>
+                <li>✔️ Planes familiares</li>
+                <li>✔️ Seguimiento personalizado</li>
+              </ul>
+            </article>
+            <article class="card">
+              <div class="icon-circle">
+                <span class="icon-align"></span>
+              </div>
+              <h3 class="text-xl font-semibold text-slate-900 dark:text-white">Ortodoncia avanzada</h3>
+              <p class="mt-4 text-sm text-slate-600 dark:text-slate-200">
+                Alineadores invisibles, ortopedia maxilar y brackets de última generación con planes flexibles y cómodos.
+              </p>
+              <ul class="mt-6 space-y-2 text-sm text-slate-500 dark:text-slate-300">
+                <li>✔️ Escaneo 3D</li>
+                <li>✔️ Simulaciones digitales</li>
+                <li>✔️ Control de progreso en app</li>
+              </ul>
+            </article>
+            <article class="card">
+              <div class="icon-circle">
+                <span class="icon-implant"></span>
+              </div>
+              <h3 class="text-xl font-semibold text-slate-900 dark:text-white">Rehabilitación oral</h3>
+              <p class="mt-4 text-sm text-slate-600 dark:text-slate-200">
+                Implantes, carillas y prótesis de alta estética fabricadas en laboratorio certificado para resultados naturales.
+              </p>
+              <ul class="mt-6 space-y-2 text-sm text-slate-500 dark:text-slate-300">
+                <li>✔️ Diagnóstico interdisciplinar</li>
+                <li>✔️ Laboratorio propio</li>
+                <li>✔️ Garantía extendida</li>
+              </ul>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="especialistas" class="bg-brand-light py-20 dark:bg-slate-950">
+        <div class="container px-6">
+          <div class="flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
+            <div>
+              <span class="badge">Conoce al equipo</span>
+              <h2 class="mt-4 text-3xl font-bold text-slate-900 dark:text-white">Especialistas que se conectan contigo</h2>
+              <p class="mt-4 max-w-2xl text-lg text-slate-700 dark:text-slate-200">
+                Nuestro staff multidisciplinario participa en programas de actualización continua y aplica protocolos internacionales para cada tratamiento.
+              </p>
+            </div>
+            <div class="flex gap-4">
+              <button class="slider-btn" id="prevSpecialist" aria-label="Ver anterior">
+                <span class="icon-arrow"></span>
+              </button>
+              <button class="slider-btn" id="nextSpecialist" aria-label="Ver siguiente">
+                <span class="icon-arrow rotate-180"></span>
+              </button>
+            </div>
+          </div>
+          <div class="slider" data-slider>
+            <div class="slider-track" id="specialistsTrack">
+              <article class="card specialist">
+                <img
+                  src="https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&w=600&q=80"
+                  alt="Odontólogo especialista"
+                  class="specialist-photo"
+                />
+                <div class="mt-4">
+                  <h3 class="text-xl font-semibold text-slate-900 dark:text-white">Dr. Santiago Herrera</h3>
+                  <p class="text-sm text-brand-teal">Rehabilitación oral y estética</p>
+                  <p class="mt-3 text-sm text-slate-600 dark:text-slate-200">
+                    Más de 12 años creando sonrisas funcionales y estéticas con sistemas guiados por computador y sedación asistida.
+                  </p>
+                </div>
+              </article>
+              <article class="card specialist">
+                <img
+                  src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=600&q=80"
+                  alt="Odontóloga especialista"
+                  class="specialist-photo"
+                />
+                <div class="mt-4">
+                  <h3 class="text-xl font-semibold text-slate-900 dark:text-white">Dra. Natalia Rincón</h3>
+                  <p class="text-sm text-brand-teal">Ortodoncia invisible</p>
+                  <p class="mt-3 text-sm text-slate-600 dark:text-slate-200">
+                    Certificada Invisalign Diamond. Combina ortodoncia digital y acompañamiento personalizado para resultados rápidos.
+                  </p>
+                </div>
+              </article>
+              <article class="card specialist">
+                <img
+                  src="https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=600&q=80"
+                  alt="Odontopediatra"
+                  class="specialist-photo"
+                />
+                <div class="mt-4">
+                  <h3 class="text-xl font-semibold text-slate-900 dark:text-white">Dra. Camila Torres</h3>
+                  <p class="text-sm text-brand-teal">Odontopediatría integral</p>
+                  <p class="mt-3 text-sm text-slate-600 dark:text-slate-200">
+                    Experta en acompañar a niños y adolescentes con técnicas de manejo del miedo y programas de prevención temprana.
+                  </p>
+                </div>
+              </article>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="agenda" class="py-20">
+        <div class="container grid gap-12 px-6 lg:grid-cols-[1.2fr_1fr]">
+          <div class="rounded-3xl bg-gradient p-10 text-white shadow-xl dark:bg-slate-800 dark:text-white">
+            <h2 class="text-3xl font-bold">Agenda tu primera valoración</h2>
+            <p class="mt-4 text-base text-brand-light">
+              Cuéntanos qué necesitas y un asesor de DentPro te contactará en menos de 30 minutos hábiles para asignar tu cita en la sede más cercana.
+            </p>
+            <form class="mt-8 grid gap-6" id="bookingForm">
+              <div class="grid gap-2">
+                <label for="name" class="text-sm font-semibold">Nombre completo</label>
+                <input id="name" name="name" type="text" class="input" placeholder="Ej. Mariana López" required />
+              </div>
+              <div class="grid gap-2">
+                <label for="phone" class="text-sm font-semibold">Celular</label>
+                <input id="phone" name="phone" type="tel" class="input" placeholder="Ej. 300 123 4567" required />
+              </div>
+              <div class="grid gap-2">
+                <label for="service" class="text-sm font-semibold">Servicio de interés</label>
+                <select id="service" name="service" class="input" required>
+                  <option value="">Selecciona una opción</option>
+                  <option value="preventiva">Odontología preventiva</option>
+                  <option value="ortodoncia">Ortodoncia</option>
+                  <option value="rehabilitacion">Rehabilitación oral</option>
+                  <option value="estetica">Estética dental</option>
+                </select>
+              </div>
+              <div class="grid gap-2">
+                <label for="message" class="text-sm font-semibold">Mensaje</label>
+                <textarea id="message" name="message" rows="4" class="input" placeholder="Cuéntanos cómo podemos ayudarte"></textarea>
+              </div>
+              <button type="submit" class="btn-primary justify-center">Solicitar agenda</button>
+              <p class="text-xs text-brand-light/80">
+                Al enviar este formulario aceptas nuestro manejo responsable de datos y autorizas el contacto por WhatsApp o llamada.
+              </p>
+            </form>
+          </div>
+          <div class="card space-y-6 dark:bg-slate-900">
+            <h3 class="text-2xl font-semibold text-slate-900 dark:text-white">Beneficios DentPro</h3>
+            <ul class="space-y-4 text-sm text-slate-600 dark:text-slate-200">
+              <li class="flex gap-3">
+                <span class="icon-check"></span>
+                <span>Diagnóstico digital con radiología de baja dosis y escáner intraoral.</span>
+              </li>
+              <li class="flex gap-3">
+                <span class="icon-check"></span>
+                <span>Planes de financiación y alianzas empresariales con tarifas preferenciales.</span>
+              </li>
+              <li class="flex gap-3">
+                <span class="icon-check"></span>
+                <span>Protocolos estrictos de bioseguridad certificados bajo la norma Icontec.</span>
+              </li>
+            </ul>
+            <div class="rounded-2xl bg-brand-light/70 p-6 text-sm text-slate-700 dark:bg-slate-800/80 dark:text-slate-200">
+              <p class="font-semibold text-brand-indigo">Horario extendido</p>
+              <p class="mt-2">Lunes a sábado de 7:00 a. m. a 8:00 p. m. Domingos con cita previa.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="contacto" class="bg-slate-900 py-20 text-white dark:bg-black">
+        <div class="container grid gap-12 px-6 lg:grid-cols-3">
+          <div class="space-y-6">
+            <h2 class="text-3xl font-bold">Visítanos en nuestras sedes</h2>
+            <p class="text-base text-slate-300">
+              Bogotá, Medellín, Cali, Barranquilla, Bucaramanga, Pereira, Manizales y más. Agenda tu cita en la sede que prefieras.
+            </p>
+            <div class="space-y-2 text-sm text-slate-300">
+              <p class="flex items-center gap-3">
+                <span class="icon-phone"></span>
+                (601) 540 9876
+              </p>
+              <p class="flex items-center gap-3">
+                <span class="icon-whatsapp"></span>
+                +57 310 456 7890
+              </p>
+              <p class="flex items-center gap-3">
+                <span class="icon-mail"></span>
+                contacto@dentpro.co
+              </p>
+            </div>
+            <div class="flex gap-4">
+              <a href="https://www.instagram.com" class="social-link" aria-label="Instagram">IG</a>
+              <a href="https://www.facebook.com" class="social-link" aria-label="Facebook">FB</a>
+              <a href="https://www.youtube.com" class="social-link" aria-label="YouTube">YT</a>
+            </div>
+          </div>
+          <div class="rounded-3xl bg-white/10 p-8 backdrop-blur">
+            <h3 class="text-xl font-semibold">Atención preferencial</h3>
+            <p class="mt-2 text-sm text-slate-300">
+              Nuestro equipo de Patient Care está listo para acompañarte antes, durante y después de cada visita.
+            </p>
+            <ul class="mt-6 space-y-4 text-sm text-slate-200">
+              <li class="flex gap-3">
+                <span class="icon-calendar"></span>
+                Coordinación de citas y recordatorios automáticos.
+              </li>
+              <li class="flex gap-3">
+                <span class="icon-heart"></span>
+                Acompañamiento emocional para pacientes pediátricos y con ansiedad.
+              </li>
+              <li class="flex gap-3">
+                <span class="icon-shield"></span>
+                Cobertura en urgencias odontológicas 24/7.
+              </li>
+            </ul>
+          </div>
+          <div class="rounded-3xl bg-white/10 p-8 backdrop-blur">
+            <h3 class="text-xl font-semibold">Ubicaciones destacadas</h3>
+            <ul class="mt-6 space-y-4 text-sm text-slate-200">
+              <li>
+                <p class="font-semibold text-white">Zona T - Bogotá</p>
+                <p>Cra. 13 #83-19 Piso 5. Parqueaderos aliados.</p>
+              </li>
+              <li>
+                <p class="font-semibold text-white">El Poblado - Medellín</p>
+                <p>Calle 8 #43A-89. Torre médica con acceso Smart Parking.</p>
+              </li>
+              <li>
+                <p class="font-semibold text-white">Ciudad Jardín - Cali</p>
+                <p>Av. Pasoancho #105-32. Clínica integral con imagenología.</p>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="mt-20 border-t border-white/10">
+          <div class="container flex flex-col gap-4 px-6 py-8 text-sm text-slate-400 md:flex-row md:items-center md:justify-between">
+            <p>© <span id="year"></span> DentPro Colombia. Todos los derechos reservados.</p>
+            <div class="flex gap-6">
+              <a href="#" class="hover:text-white">Política de privacidad</a>
+              <a href="#" class="hover:text-white">Términos y condiciones</a>
+              <a href="#" class="hover:text-white">Mapa del sitio</a>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>
