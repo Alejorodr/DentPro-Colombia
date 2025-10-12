@@ -14,7 +14,7 @@
 
 @layer components {
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 rounded-full bg-brand-teal px-6 py-3 text-base font-semibold text-white shadow-lg shadow-brand-teal/30 transition hover:-translate-y-0.5 hover:bg-brand-indigo focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-indigo dark:bg-accent-cyan dark:text-surface-base dark:shadow-glow-dark dark:hover:bg-accent-cyan/90 dark:focus-visible:outline-accent-cyan;
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-brand-sky via-brand-teal to-brand-indigo px-7 py-3 text-base font-semibold text-white shadow-lg shadow-brand-teal/40 transition hover:-translate-y-0.5 hover:from-brand-teal hover:via-brand-indigo hover:to-brand-indigo focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-indigo dark:from-accent-cyan dark:via-brand-teal dark:to-brand-indigo dark:shadow-glow-dark dark:hover:from-accent-cyan dark:hover:via-accent-cyan dark:hover:to-brand-teal;
   }
 
   .btn-secondary {
