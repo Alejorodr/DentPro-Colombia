@@ -14,6 +14,10 @@
       href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,400,0,0"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="css/tailwind.css" />
     <link rel="stylesheet" href="css/style.css" />
     <script type="module" src="js/main.js"></script>
@@ -41,8 +45,12 @@
             data-label-light="Activar modo oscuro"
             data-label-dark="Activar modo claro"
           >
-            <span class="icon-moon text-lg transition dark:hidden"></span>
-            <span class="icon-sun hidden text-lg text-amber-300 transition dark:inline"></span>
+            <span class="material-symbols-rounded text-lg transition dark:hidden" aria-hidden="true">dark_mode</span>
+            <span
+              class="material-symbols-rounded hidden text-lg text-amber-300 transition dark:inline"
+              aria-hidden="true"
+              >light_mode</span
+            >
             <span class="font-semibold" data-theme-label>Activar modo oscuro</span>
           </button>
           <a href="#agenda" class="btn-primary hidden lg:inline-flex">Agenda ahora</a>
@@ -51,7 +59,7 @@
             id="mobileMenuBtn"
             aria-label="Abrir menú"
           >
-            <span class="icon-menu"></span>
+            <span class="material-symbols-rounded" aria-hidden="true">menu</span>
           </button>
         </div>
       </div>
@@ -71,8 +79,12 @@
             data-label-dark="Activar modo claro"
           >
             <span class="flex items-center gap-2">
-              <span class="icon-moon text-lg transition dark:hidden"></span>
-              <span class="icon-sun hidden text-lg text-amber-300 transition dark:inline"></span>
+              <span class="material-symbols-rounded text-lg transition dark:hidden" aria-hidden="true">dark_mode</span>
+              <span
+                class="material-symbols-rounded hidden text-lg text-amber-300 transition dark:inline"
+                aria-hidden="true"
+                >light_mode</span
+              >
               <span class="font-semibold" data-theme-label>Activar modo oscuro</span>
             </span>
           </button>
@@ -161,7 +173,7 @@
           <div class="mt-12 grid gap-8 md:grid-cols-2 xl:grid-cols-3">
             <article class="card">
               <div class="icon-circle dark:bg-accent-cyan/15 dark:text-accent-cyan">
-                <span class="icon-tooth"></span>
+                <span class="material-symbols-rounded" aria-hidden="true">dental_services</span>
               </div>
               <h3 class="text-xl font-semibold text-slate-900 dark:text-white">Odontología preventiva</h3>
               <p class="mt-4 text-sm text-slate-600 dark:text-slate-200">
@@ -175,7 +187,7 @@
             </article>
             <article class="card">
               <div class="icon-circle dark:bg-accent-cyan/15 dark:text-accent-cyan">
-                <span class="icon-align"></span>
+                <span class="material-symbols-rounded" aria-hidden="true">orthodontics</span>
               </div>
               <h3 class="text-xl font-semibold text-slate-900 dark:text-white">Ortodoncia avanzada</h3>
               <p class="mt-4 text-sm text-slate-600 dark:text-slate-200">
@@ -189,7 +201,7 @@
             </article>
             <article class="card">
               <div class="icon-circle dark:bg-accent-cyan/15 dark:text-accent-cyan">
-                <span class="icon-implant"></span>
+                <span class="material-symbols-rounded" aria-hidden="true">dentistry</span>
               </div>
               <h3 class="text-xl font-semibold text-slate-900 dark:text-white">Rehabilitación oral</h3>
               <p class="mt-4 text-sm text-slate-600 dark:text-slate-200">
@@ -217,10 +229,10 @@
             </div>
             <div class="flex gap-4">
               <button class="slider-btn" id="prevSpecialist" aria-label="Ver anterior">
-                <span class="icon-arrow"></span>
+                <span class="material-symbols-rounded" aria-hidden="true">arrow_forward</span>
               </button>
               <button class="slider-btn" id="nextSpecialist" aria-label="Ver siguiente">
-                <span class="icon-arrow rotate-180"></span>
+                <span class="material-symbols-rounded rotate-180" aria-hidden="true">arrow_forward</span>
               </button>
             </div>
           </div>
@@ -313,15 +325,21 @@
             <h3 class="text-2xl font-semibold text-slate-900 dark:text-white">Beneficios DentPro</h3>
             <ul class="space-y-4 text-sm text-slate-600 dark:text-slate-200">
               <li class="flex gap-3">
-                <span class="icon-check text-brand-teal dark:text-accent-cyan"></span>
+                <span class="material-symbols-rounded icon-badge text-brand-teal dark:text-accent-cyan" aria-hidden="true"
+                  >check</span
+                >
                 <span>Diagnóstico digital con radiología de baja dosis y escáner intraoral.</span>
               </li>
               <li class="flex gap-3">
-                <span class="icon-check text-brand-teal dark:text-accent-cyan"></span>
+                <span class="material-symbols-rounded icon-badge text-brand-teal dark:text-accent-cyan" aria-hidden="true"
+                  >check</span
+                >
                 <span>Planes de financiación y alianzas empresariales con tarifas preferenciales.</span>
               </li>
               <li class="flex gap-3">
-                <span class="icon-check text-brand-teal dark:text-accent-cyan"></span>
+                <span class="material-symbols-rounded icon-badge text-brand-teal dark:text-accent-cyan" aria-hidden="true"
+                  >check</span
+                >
                 <span>Protocolos estrictos de bioseguridad certificados bajo la norma Icontec.</span>
               </li>
             </ul>
@@ -342,15 +360,21 @@
             </p>
             <div class="space-y-2 text-sm text-slate-300">
               <p class="flex items-center gap-3">
-                <span class="icon-phone text-brand-light dark:text-accent-cyan"></span>
+                <span class="material-symbols-rounded icon-badge text-brand-light dark:text-accent-cyan" aria-hidden="true"
+                  >call</span
+                >
                 (601) 540 9876
               </p>
               <p class="flex items-center gap-3">
-                <span class="icon-whatsapp text-brand-light dark:text-accent-cyan"></span>
+                <span class="material-symbols-rounded icon-badge text-brand-light dark:text-accent-cyan" aria-hidden="true"
+                  >chat</span
+                >
                 +57 310 456 7890
               </p>
               <p class="flex items-center gap-3">
-                <span class="icon-mail text-brand-light dark:text-accent-cyan"></span>
+                <span class="material-symbols-rounded icon-badge text-brand-light dark:text-accent-cyan" aria-hidden="true"
+                  >mail</span
+                >
                 contacto@dentpro.co
               </p>
             </div>
@@ -367,15 +391,21 @@
             </p>
             <ul class="mt-6 space-y-4 text-sm text-slate-200">
               <li class="flex gap-3">
-                <span class="icon-calendar text-brand-light dark:text-accent-cyan"></span>
+                <span class="material-symbols-rounded icon-badge text-brand-light dark:text-accent-cyan" aria-hidden="true"
+                  >calendar_month</span
+                >
                 Coordinación de citas y recordatorios automáticos.
               </li>
               <li class="flex gap-3">
-                <span class="icon-heart text-brand-light dark:text-accent-cyan"></span>
+                <span class="material-symbols-rounded icon-badge text-brand-light dark:text-accent-cyan" aria-hidden="true"
+                  >favorite</span
+                >
                 Acompañamiento emocional para pacientes pediátricos y con ansiedad.
               </li>
               <li class="flex gap-3">
-                <span class="icon-shield text-brand-light dark:text-accent-cyan"></span>
+                <span class="material-symbols-rounded icon-badge text-brand-light dark:text-accent-cyan" aria-hidden="true"
+                  >health_and_safety</span
+                >
                 Cobertura en urgencias odontológicas 24/7.
               </li>
             </ul>
