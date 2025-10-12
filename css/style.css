@@ -58,6 +58,25 @@ footer a:hover {
   .floating-card {
     text-align: center;
   }
+
+  .floating-actions {
+    inset-inline: 0;
+    bottom: 1.25rem;
+    flex-direction: row;
+    justify-content: center;
+    gap: 0.75rem;
+    padding-inline: 1rem;
+    pointer-events: none;
+  }
+
+  .floating-actions > a {
+    pointer-events: auto;
+  }
+
+  .floating-action-btn {
+    height: 3.25rem;
+    width: 3.25rem;
+  }
 }
 
 .form-feedback {
@@ -157,6 +176,22 @@ footer a:hover {
 
 .dark .dark\:bg-accent-cyan\/10 {
   background-color: rgba(14, 165, 233, 0.1) !important;
+}
+
+.floating-action-btn {
+  box-shadow: 0 22px 35px rgba(15, 124, 144, 0.3);
+}
+
+.floating-action-btn--call {
+  box-shadow: 0 22px 35px rgba(15, 23, 42, 0.35);
+}
+
+.dark .floating-action-btn {
+  box-shadow: 0 22px 35px rgba(14, 165, 233, 0.25);
+}
+
+.dark .floating-action-btn--call {
+  box-shadow: 0 22px 35px rgba(15, 23, 42, 0.55);
 }
 
 .dark .dark\:shadow-glow-dark {
