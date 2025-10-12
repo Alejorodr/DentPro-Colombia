@@ -3,7 +3,6 @@ import { registerThemeToggle } from './app.js';
 const mobileMenuBtn = document.getElementById('mobileMenuBtn');
 const mobileMenu = document.getElementById('mobileMenu');
 const darkToggle = document.getElementById('darkModeToggle');
-const darkToggleMobile = document.getElementById('darkModeToggleMobile');
 const track = document.getElementById('specialistsTrack');
 const prevBtn = document.getElementById('prevSpecialist');
 const nextBtn = document.getElementById('nextSpecialist');
@@ -11,7 +10,6 @@ const yearEl = document.getElementById('year');
 const bookingForm = document.getElementById('bookingForm');
 
 registerThemeToggle(darkToggle);
-registerThemeToggle(darkToggleMobile);
 
 function setMobileMenuState(isOpen) {
   if (!mobileMenu || !mobileMenuBtn) {
