@@ -13,17 +13,33 @@ const bookingForm = document.getElementById('bookingForm');
 registerThemeToggle(darkToggle);
 registerThemeToggle(darkToggleMobile);
 
+function setMobileMenuState(isOpen) {
+  if (!mobileMenu || !mobileMenuBtn) {
+    return;
+  }
+  mobileMenu.classList.toggle('open', isOpen);
+  mobileMenuBtn.setAttribute('aria-expanded', String(isOpen));
+  mobileMenuBtn.setAttribute('aria-label', isOpen ? 'Cerrar menú' : 'Abrir menú');
+}
+
+function toggleMobileMenu() {
+  const isOpen = !mobileMenu?.classList.contains('open');
+  setMobileMenuState(isOpen);
+}
+
+setMobileMenuState(false);
+
 mobileMenuBtn?.addEventListener('click', () => {
-  mobileMenu?.classList.toggle('open');
+  toggleMobileMenu();
 });
 
 mobileMenu?.querySelectorAll('a').forEach((link) => {
-  link.addEventListener('click', () => mobileMenu.classList.remove('open'));
+  link.addEventListener('click', () => setMobileMenuState(false));
 });
 
 document.addEventListener('keydown', (event) => {
   if (event.key === 'Escape') {
-    mobileMenu?.classList.remove('open');
+    setMobileMenuState(false);
   }
 });
 
