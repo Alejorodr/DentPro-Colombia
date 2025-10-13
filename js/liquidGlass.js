@@ -5,6 +5,8 @@ const fallbackController = {
   onLowFps: () => noop,
   onMetrics: () => noop,
   isActive: () => false,
+  pause: noop,
+  resume: noop,
 };
 
 function hasWebGLSupport() {
@@ -339,6 +341,7 @@ export function mountLiquidGlass({
   let lowFpsCounter = 0;
   const lowFpsHandlers = new Set();
   const metricsHandlers = new Set();
+  let paused = false;
 
   const cleanMotionListener = attachMediaListener(motionQuery, (event) => {
     if (event.matches) {
@@ -349,6 +352,10 @@ export function mountLiquidGlass({
   function triggerLowFps(fps) {
     if (lowFpsTriggered) return;
     lowFpsTriggered = true;
+    if (rafId) {
+      window.cancelAnimationFrame(rafId);
+      rafId = 0;
+    }
     lowFpsHandlers.forEach((handler) => {
       try {
         handler({ fps });
@@ -356,6 +363,14 @@ export function mountLiquidGlass({
         console.error('[liquidGlass] low FPS handler failed', error);
       }
     });
+  }
+
+  function scheduleRender() {
+    if (destroyed || lowFpsTriggered || paused) {
+      rafId = 0;
+      return;
+    }
+    rafId = window.requestAnimationFrame(render);
   }
 
   function updateIcons(now) {
@@ -401,7 +416,7 @@ export function mountLiquidGlass({
   }
 
   function render(now) {
-    if (destroyed || lowFpsTriggered) {
+    if (destroyed || lowFpsTriggered || paused) {
       return;
     }
 
@@ -446,15 +461,16 @@ export function mountLiquidGlass({
       }
     });
 
-    rafId = window.requestAnimationFrame(render);
+    scheduleRender();
   }
 
-  rafId = window.requestAnimationFrame(render);
+  scheduleRender();
 
   function destroy() {
     if (destroyed) return;
     destroyed = true;
     window.cancelAnimationFrame(rafId);
+    rafId = 0;
     targetEl.removeEventListener('pointermove', pointerListener);
     targetEl.removeEventListener('pointerleave', pointerLeave);
     cleanMotionListener();
@@ -501,5 +517,22 @@ export function mountLiquidGlass({
     onLowFps,
     onMetrics,
     isActive: () => !destroyed && !lowFpsTriggered,
+    pause: () => {
+      if (destroyed || lowFpsTriggered || paused) {
+        return;
+      }
+      paused = true;
+      if (rafId) {
+        window.cancelAnimationFrame(rafId);
+        rafId = 0;
+      }
+    },
+    resume: () => {
+      if (destroyed || lowFpsTriggered || !paused) {
+        return;
+      }
+      paused = false;
+      scheduleRender();
+    },
   };
 }
