@@ -169,6 +169,7 @@ button:focus-visible,
   font-size: 1.1rem;
   color: inherit;
   opacity: 0.78;
+  transform: scale(0.92);
   transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
@@ -188,11 +189,13 @@ button:focus-visible,
 .theme-toggle[aria-checked='false'] .theme-toggle-icon[data-theme-icon='sun'],
 .theme-toggle[aria-checked='true'] .theme-toggle-icon[data-theme-icon='moon'] {
   opacity: 1;
+  transform: scale(1.08);
 }
 
 .theme-toggle[aria-checked='true'] .theme-toggle-icon[data-theme-icon='sun'],
 .theme-toggle[aria-checked='false'] .theme-toggle-icon[data-theme-icon='moon'] {
   opacity: 0.32;
+  transform: scale(0.84);
 }
 
 .theme-toggle[aria-checked='true'] .theme-toggle-rail {
