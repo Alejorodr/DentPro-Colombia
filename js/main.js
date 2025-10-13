@@ -1,4 +1,5 @@
 import { registerThemeToggle } from './app.js';
+import { mountLiquidGlass } from './liquidGlass.js';
 
 const mobileMenuBtn = document.getElementById('mobileMenuBtn');
 const mobileMenu = document.getElementById('mobileMenu');
@@ -8,6 +9,8 @@ const prevBtn = document.getElementById('prevSpecialist');
 const nextBtn = document.getElementById('nextSpecialist');
 const yearEl = document.getElementById('year');
 const bookingForm = document.getElementById('bookingForm');
+const heroLiquidHost = document.getElementById('heroLiquidHost');
+const heroTextPanel = document.querySelector('[data-hero-text-panel]');
 
 registerThemeToggle(darkToggle);
 
@@ -48,6 +51,19 @@ function setYear() {
 }
 
 setYear();
+
+function detectStagingEnvironment() {
+  const htmlEnv = document.documentElement.dataset.environment;
+  if (htmlEnv) {
+    return htmlEnv.toLowerCase() === 'staging';
+  }
+  const metaEnv = document.querySelector('meta[name="app:environment"]')?.getAttribute('content');
+  if (metaEnv) {
+    return metaEnv.toLowerCase() === 'staging';
+  }
+  const host = window.location.hostname;
+  return host.includes('staging') || host.includes('localhost') || host.startsWith('127.');
+}
 
 function createFeedback(message, type = 'success') {
   const existing = bookingForm?.querySelector('.form-feedback');
@@ -95,6 +111,46 @@ bookingForm?.addEventListener('submit', (event) => {
   window.scrollTo({ top: bookingForm.offsetTop - 120, behavior: 'smooth' });
 });
 
+function setupHeroLiquidGlass() {
+  if (!heroLiquidHost) {
+    return;
+  }
+
+  if (heroTextPanel) {
+    heroTextPanel.classList.add('relative');
+    heroTextPanel.style.zIndex = heroTextPanel.style.zIndex || '2';
+  }
+
+  const isStaging = detectStagingEnvironment();
+  if (isStaging) {
+    heroLiquidHost.dataset.liquidExperiment = 'hero-v1';
+  }
+
+  if (heroLiquidHost.dataset.liquidExperiment !== 'hero-v1') {
+    return;
+  }
+
+  heroLiquidHost.dataset.liquidStatus = 'initializing';
+  const instance = mountLiquidGlass({
+    targetEl: heroLiquidHost,
+    iconsEl: heroLiquidHost,
+    backgroundSrc: heroLiquidHost.dataset.liquidBackground || null,
+  });
+
+  const isActive = instance.isActive();
+  heroLiquidHost.dataset.liquidStatus = isActive ? 'running' : 'disabled';
+
+  if (!isActive) {
+    return;
+  }
+
+  instance.onLowFps(({ fps }) => {
+    instance.destroy();
+    heroLiquidHost.dataset.liquidStatus = 'suspended';
+    heroLiquidHost.dataset.liquidFps = String(Math.round(fps));
+  });
+}
+
 function setupSlider() {
   if (!track) return;
   const slides = Array.from(track.children);
@@ -135,3 +191,4 @@ function setupSlider() {
 }
 
 setupSlider();
+setupHeroLiquidGlass();
