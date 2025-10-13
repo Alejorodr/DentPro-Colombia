@@ -24,6 +24,7 @@
     <script type="module" src="js/main.js"></script>
   </head>
   <body class="bg-slate-50 font-sans text-slate-800 antialiased transition-colors duration-300 dark:bg-surface-base dark:text-slate-100">
+    <!-- Barra informativa -->
     <div class="border-b border-white/60 bg-white/80 text-sm text-slate-600 backdrop-blur-sm transition-colors duration-300 dark:border-surface-muted/60 dark:bg-surface-base/90 dark:text-slate-200">
       <div class="container flex flex-col gap-3 px-6 py-3 lg:flex-row lg:items-center lg:justify-between">
         <div class="flex flex-wrap items-center gap-x-6 gap-y-2">
@@ -76,6 +77,8 @@
         </div>
       </div>
     </div>
+    <!-- Fin barra informativa -->
+    <!-- Header principal -->
     <header class="topbar">
       <div class="container flex items-center justify-between px-6 py-4">
         <a href="#" class="flex items-center gap-3 text-lg font-semibold text-brand-teal dark:text-accent-cyan">
@@ -125,8 +128,10 @@
         </nav>
       </div>
     </header>
+    <!-- Fin header principal -->
 
     <main>
+      <!-- Sección hero principal -->
       <section class="hero overflow-hidden bg-hero-light py-24 transition-colors duration-500 dark:bg-hero-dark">
         <div class="container grid items-center gap-16 px-6 lg:grid-cols-2">
           <div class="relative z-10 space-y-8" data-hero-text-panel>
@@ -196,7 +201,9 @@
           </div>
         </div>
       </section>
+      <!-- Fin sección hero principal -->
 
+      <!-- Sección de servicios -->
       <section id="servicios" class="py-20 transition-colors duration-300 dark:bg-surface-base">
         <div class="container px-6">
           <div class="mx-auto max-w-3xl text-center">
@@ -251,7 +258,9 @@
           </div>
         </div>
       </section>
+      <!-- Fin sección de servicios -->
 
+      <!-- Carrusel de especialistas -->
       <section id="especialistas" class="bg-brand-light py-20 transition-colors duration-300 dark:bg-surface-muted">
         <div class="container px-6">
           <div class="flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
@@ -319,7 +328,9 @@
           </div>
         </div>
       </section>
+      <!-- Fin carrusel de especialistas -->
 
+      <!-- Formulario de agenda -->
       <section id="agenda" class="py-20 transition-colors duration-300 dark:bg-surface-base">
         <div class="container grid gap-12 px-6 lg:grid-cols-[1.2fr_1fr]">
           <div class="rounded-3xl bg-gradient p-10 text-white shadow-xl transition-colors duration-500 dark:bg-card-dark dark:text-slate-100 dark:shadow-glow-dark">
@@ -385,7 +396,9 @@
           </div>
         </div>
       </section>
+      <!-- Fin formulario de agenda -->
 
+      <!-- Sección de contacto -->
       <section id="contacto" class="bg-slate-900 py-20 text-white transition-colors duration-500 dark:bg-surface-base">
         <div class="container grid gap-12 px-6 lg:grid-cols-3">
           <div class="space-y-6">
@@ -474,7 +487,9 @@
           </div>
         </div>
       </section>
+      <!-- Fin sección de contacto -->
     </main>
+    <!-- Botones flotantes -->
     <div class="floating-actions" role="region" aria-label="Accesos rápidos">
       <a
         href="https://wa.me/573104567890?text=Hola%20DentPro%2C%20quiero%20más%20información%20sobre%20sus%20servicios"
@@ -495,5 +510,6 @@
         <span class="sr-only">Llamar a DentPro</span>
       </a>
     </div>
+    <!-- Fin botones flotantes -->
   </body>
 </html>
