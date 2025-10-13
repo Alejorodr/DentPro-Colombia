@@ -3,6 +3,7 @@ const storageKey = 'dentpro-theme';
 const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
 const toggleButtons = new Set();
 
+// Maneja el acceso a localStorage y permite una degradación silenciosa cuando no está disponible.
 function safeLocalStorage(action, value) {
   try {
     if (action === 'get') {
@@ -20,11 +21,13 @@ function safeLocalStorage(action, value) {
   return null;
 }
 
+// Recupera el tema almacenado validando que sea un valor reconocido.
 function getStoredTheme() {
   const stored = safeLocalStorage('get');
   return stored === 'dark' || stored === 'light' ? stored : null;
 }
 
+// Sincroniza los toggles registrados con el estado actual y mantiene etiquetas accesibles.
 function updateToggleState(isDark) {
   toggleButtons.forEach((button) => {
     const state = String(isDark);
@@ -38,6 +41,7 @@ function updateToggleState(isDark) {
   });
 }
 
+// Aplica la clase y atributos que consumen los estilos del tema.
 function applyTheme(theme) {
   const isDark = theme === 'dark';
   html.classList.toggle('dark', isDark);
@@ -45,6 +49,7 @@ function applyTheme(theme) {
   updateToggleState(isDark);
 }
 
+// Determina el tema inicial priorizando la preferencia guardada y luego la del sistema.
 function resolvePreferredTheme() {
   const stored = getStoredTheme();
   if (stored) {
@@ -53,10 +58,12 @@ function resolvePreferredTheme() {
   return prefersDark.matches ? 'dark' : 'light';
 }
 
+// Persiste el tema elegido solo cuando el almacenamiento está disponible.
 function persistTheme(theme) {
   safeLocalStorage('set', theme);
 }
 
+// Centraliza la aplicación del tema y su persistencia opcional.
 function setTheme(theme, persist = false) {
   applyTheme(theme);
   if (persist) {
@@ -64,6 +71,7 @@ function setTheme(theme, persist = false) {
   }
 }
 
+// Alterna entre modos claro y oscuro, actualizando también la preferencia almacenada.
 function toggleTheme() {
   const nextTheme = html.classList.contains('dark') ? 'light' : 'dark';
   setTheme(nextTheme, true);
@@ -78,6 +86,7 @@ prefersDark.addEventListener('change', (event) => {
 
 setTheme(resolvePreferredTheme());
 
+// Registra un botón de cambio de tema y garantiza que comunique su estado vía ARIA.
 export function registerThemeToggle(button) {
   if (!button) return;
   toggleButtons.add(button);
@@ -85,6 +94,7 @@ export function registerThemeToggle(button) {
   updateToggleState(html.classList.contains('dark'));
 }
 
+// Expone el tema actual para otros módulos que necesiten reaccionar a él.
 export function getCurrentTheme() {
   return html.classList.contains('dark') ? 'dark' : 'light';
 }
