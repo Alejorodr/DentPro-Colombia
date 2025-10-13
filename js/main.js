@@ -11,6 +11,10 @@ const bookingForm = document.getElementById('bookingForm');
 
 registerThemeToggle(darkToggle);
 
+/*
+ * Menú móvil: gestiona apertura/cierre mediante clics en el botón, enlaces internos
+ * y tecla Escape para asegurar accesibilidad con aria-expanded/label.
+ */
 function setMobileMenuState(isOpen) {
   if (!mobileMenu || !mobileMenuBtn) {
     return;
@@ -41,6 +45,9 @@ document.addEventListener('keydown', (event) => {
   }
 });
 
+/*
+ * Año dinámico: actualiza el pie con el año actual en la carga inicial.
+ */
 function setYear() {
   if (yearEl) {
     yearEl.textContent = new Date().getFullYear();
@@ -49,6 +56,10 @@ function setYear() {
 
 setYear();
 
+/*
+ * Formulario de agenda: muestra mensajes de retroalimentación y evita recarga
+ * al interceptar el submit, manteniendo la experiencia en una sola página.
+ */
 function createFeedback(message, type = 'success') {
   const existing = bookingForm?.querySelector('.form-feedback');
   existing?.remove();
@@ -88,13 +99,17 @@ function createFeedback(message, type = 'success') {
 }
 
 bookingForm?.addEventListener('submit', (event) => {
-  event.preventDefault();
+  event.preventDefault(); // Evita la recarga para poder mostrar el mensaje en la misma vista.
   const feedback = createFeedback('¡Gracias! Un asesor se comunicará contigo muy pronto.');
   bookingForm.appendChild(feedback);
   bookingForm.reset();
-  window.scrollTo({ top: bookingForm.offsetTop - 120, behavior: 'smooth' });
+  window.scrollTo({ top: bookingForm.offsetTop - 120, behavior: 'smooth' }); // Ajuste para no ocultar el feedback bajo la cabecera fija.
 });
 
+/*
+ * Slider de especialistas: controla la traslación horizontal con eventos click en
+ * prev/next y reajusta límites en el evento resize del viewport.
+ */
 function setupSlider() {
   if (!track) return;
   const slides = Array.from(track.children);
@@ -112,7 +127,7 @@ function setupSlider() {
     const slideWidth = slides[0]?.getBoundingClientRect().width || 0;
     const styles = getComputedStyle(track);
     const gap = parseFloat(styles.columnGap) || parseFloat(styles.gap) || 0;
-    const offset = index * (slideWidth + gap);
+    const offset = index * (slideWidth + gap); // Considera el gap para alinear correctamente el desplazamiento.
     track.style.transform = `translateX(-${offset}px)`;
     if (prevBtn) {
       prevBtn.disabled = index === 0;
