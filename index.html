@@ -24,6 +24,40 @@
     <script type="module" src="js/main.js"></script>
   </head>
   <body class="bg-slate-50 font-sans text-slate-800 antialiased transition-colors duration-300 dark:bg-surface-base dark:text-slate-100">
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="0"
+      height="0"
+      style="position: absolute"
+      aria-hidden="true"
+    >
+      <defs>
+        <filter
+          id="glass-distortion"
+          x="-25%"
+          y="-25%"
+          width="150%"
+          height="150%"
+          color-interpolation-filters="sRGB"
+        >
+          <feTurbulence
+            type="fractalNoise"
+            baseFrequency="0.9"
+            numOctaves="2"
+            seed="11"
+            result="noise"
+          />
+          <feGaussianBlur in="noise" stdDeviation="0.75" result="blurredNoise" />
+          <feDisplacementMap
+            in="SourceGraphic"
+            in2="blurredNoise"
+            scale="12"
+            xChannelSelector="R"
+            yChannelSelector="G"
+          />
+        </filter>
+      </defs>
+    </svg>
     <!-- Barra informativa -->
     <div class="border-b border-white/60 bg-white/80 text-sm text-slate-600 backdrop-blur-sm transition-colors duration-300 dark:border-surface-muted/60 dark:bg-surface-base/90 dark:text-slate-200">
       <div class="container flex flex-col gap-3 px-6 py-3 lg:flex-row lg:items-center lg:justify-between">
@@ -103,9 +137,18 @@
             data-label-dark="Activar modo claro"
           >
             <span class="theme-toggle-track" aria-hidden="true">
-              <span class="theme-toggle-icon" data-theme-icon="sun" aria-hidden="true">light_mode</span>
-              <span class="theme-toggle-thumb"></span>
-              <span class="theme-toggle-icon" data-theme-icon="moon" aria-hidden="true">dark_mode</span>
+              <span class="theme-toggle-rail">
+                <span class="glass-filter" aria-hidden="true"></span>
+                <span class="glass-overlay" aria-hidden="true"></span>
+                <span class="glass-specular" aria-hidden="true"></span>
+                <span class="theme-toggle-icon" data-theme-icon="sun" aria-hidden="true">light_mode</span>
+                <span class="theme-toggle-icon" data-theme-icon="moon" aria-hidden="true">dark_mode</span>
+              </span>
+              <span class="theme-toggle-thumb">
+                <span class="glass-filter" aria-hidden="true"></span>
+                <span class="glass-overlay" aria-hidden="true"></span>
+                <span class="glass-specular" aria-hidden="true"></span>
+              </span>
             </span>
           </button>
           <a href="#agenda" class="btn-primary hidden lg:inline-flex">Agenda ahora</a>
