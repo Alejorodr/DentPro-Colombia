@@ -3,6 +3,7 @@ const noop = () => {};
 const fallbackController = {
   destroy: noop,
   onLowFps: () => noop,
+  onMetrics: () => noop,
   isActive: () => false,
 };
 
@@ -70,7 +71,7 @@ function applyDprSize(canvas, gl, host) {
     canvas.style.height = `${rect.height}px`;
     gl.viewport(0, 0, width, height);
   }
-  return { width, height };
+  return { width, height, dpr };
 }
 
 function attachMediaListener(mediaQuery, handler) {
@@ -90,7 +91,12 @@ function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
 }
 
-export function mountLiquidGlass({ targetEl, iconsEl = null, backgroundSrc = null } = {}) {
+export function mountLiquidGlass({
+  targetEl,
+  iconsEl = null,
+  backgroundSrc = null,
+  settings = {},
+} = {}) {
   if (!targetEl) {
     return fallbackController;
   }
@@ -99,6 +105,21 @@ export function mountLiquidGlass({ targetEl, iconsEl = null, backgroundSrc = nul
   if (motionQuery?.matches || !hasWebGLSupport()) {
     return fallbackController;
   }
+
+  const config = {
+    blurRadius: typeof settings.blurRadius === 'number' ? settings.blurRadius : 4.5,
+    refractionIntensity:
+      typeof settings.refractionIntensity === 'number' ? settings.refractionIntensity : 0.08,
+    textureMix: typeof settings.textureMix === 'number' ? settings.textureMix : 0.65,
+    patternStrength: typeof settings.patternStrength === 'number' ? settings.patternStrength : 0.45,
+    alpha: typeof settings.alpha === 'number' ? settings.alpha : 0.6,
+  };
+
+  config.blurRadius = Math.max(0, config.blurRadius);
+  config.refractionIntensity = clamp(config.refractionIntensity, 0, 1);
+  config.textureMix = clamp(config.textureMix, 0, 1);
+  config.patternStrength = clamp(config.patternStrength, 0, 1);
+  config.alpha = clamp(config.alpha, 0, 1);
 
   const canvas = document.createElement('canvas');
   canvas.className = 'liquid-glass-canvas';
@@ -150,6 +171,10 @@ export function mountLiquidGlass({ targetEl, iconsEl = null, backgroundSrc = nul
     uniform vec2 u_pointer;
     uniform sampler2D u_texture;
     uniform float u_textureMix;
+    uniform float u_blurRadius;
+    uniform float u_refractionIntensity;
+    uniform float u_patternStrength;
+    uniform float u_alpha;
 
     float hash(vec2 p) {
       return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
@@ -177,16 +202,39 @@ export function mountLiquidGlass({ targetEl, iconsEl = null, backgroundSrc = nul
       float wave = sin((uv.y + time * 0.6) * 12.0) * 0.035;
 
       float highlight = smoothstep(0.45, 0.0, distance(uv, u_pointer));
+      float patternMix = clamp(u_patternStrength, 0.0, 1.0);
+
+      vec2 distortion = vec2(
+        sin((centered.y + time) * 4.5),
+        cos((centered.x + time * 0.8) * 3.2)
+      ) * 0.015 * u_refractionIntensity;
+
+      distortion += centered * 0.02 * u_refractionIntensity;
+      vec2 refractedUv = uv + distortion;
+
       vec3 baseA = vec3(0.08, 0.62, 0.78);
       vec3 baseB = vec3(0.25, 0.28, 0.65);
       vec3 grad = mix(baseA, baseB, uv.y + ripple + wave);
       vec3 glow = vec3(0.25, 0.65, 0.9) * highlight * 0.6;
-      vec3 pattern = grad + glow + swirl * 0.08;
+      vec3 pattern = mix(grad, grad + glow + swirl * 0.08, patternMix);
 
-      vec3 texColor = texture2D(u_texture, uv).rgb;
-      vec3 finalColor = mix(pattern, texColor, u_textureMix);
+      vec2 clampedUv = clamp(refractedUv, 0.0, 1.0);
+      vec3 texColor = texture2D(u_texture, clampedUv).rgb;
 
-      gl_FragColor = vec4(finalColor, 0.55 + highlight * 0.25);
+      if (u_blurRadius > 0.0) {
+        vec2 blur = vec2(u_blurRadius) / u_resolution.xy;
+        vec3 blurSample = texColor;
+        blurSample += texture2D(u_texture, clampedUv + vec2(blur.x, 0.0)).rgb;
+        blurSample += texture2D(u_texture, clampedUv - vec2(blur.x, 0.0)).rgb;
+        blurSample += texture2D(u_texture, clampedUv + vec2(0.0, blur.y)).rgb;
+        blurSample += texture2D(u_texture, clampedUv - vec2(0.0, blur.y)).rgb;
+        texColor = blurSample / 5.0;
+      }
+
+      vec3 combined = mix(pattern, texColor, clamp(0.35 + patternMix * 0.65, 0.0, 1.0));
+      vec3 finalColor = mix(combined, texColor, clamp(u_textureMix, 0.0, 1.0));
+
+      gl_FragColor = vec4(finalColor, clamp(u_alpha + highlight * 0.25, 0.0, 1.0));
     }
   `;
 
@@ -209,6 +257,10 @@ export function mountLiquidGlass({ targetEl, iconsEl = null, backgroundSrc = nul
   const pointerUniform = gl.getUniformLocation(program, 'u_pointer');
   const textureUniform = gl.getUniformLocation(program, 'u_texture');
   const textureMixUniform = gl.getUniformLocation(program, 'u_textureMix');
+  const blurUniform = gl.getUniformLocation(program, 'u_blurRadius');
+  const refractionUniform = gl.getUniformLocation(program, 'u_refractionIntensity');
+  const patternUniform = gl.getUniformLocation(program, 'u_patternStrength');
+  const alphaUniform = gl.getUniformLocation(program, 'u_alpha');
 
   const buffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
@@ -286,6 +338,7 @@ export function mountLiquidGlass({ targetEl, iconsEl = null, backgroundSrc = nul
   const frameIntervals = [];
   let lowFpsCounter = 0;
   const lowFpsHandlers = new Set();
+  const metricsHandlers = new Set();
 
   const cleanMotionListener = attachMediaListener(motionQuery, (event) => {
     if (event.matches) {
@@ -323,27 +376,28 @@ export function mountLiquidGlass({ targetEl, iconsEl = null, backgroundSrc = nul
   function updateFps(now) {
     if (!lastFrame) {
       lastFrame = now;
-      return { fps: 60, low: false };
+      return { fps: 60, average: 60, low: false };
     }
     const delta = now - lastFrame;
     lastFrame = now;
     frameIntervals.push(delta);
-    if (frameIntervals.length > 60) {
+    if (frameIntervals.length > 120) {
       frameIntervals.shift();
     }
     const total = frameIntervals.reduce((sum, value) => sum + value, 0);
     const averageDelta = total / frameIntervals.length || 16.67;
-    const fps = 1000 / averageDelta;
-    const low = frameIntervals.length >= 20 && fps < 30;
+    const averageFps = 1000 / averageDelta;
+    const fps = delta > 0 ? 1000 / delta : averageFps;
+    const low = frameIntervals.length >= 20 && averageFps < 30;
     if (low) {
       lowFpsCounter += 1;
     } else {
       lowFpsCounter = 0;
     }
     if (lowFpsCounter > 15) {
-      triggerLowFps(fps);
+      triggerLowFps(averageFps);
     }
-    return { fps, low };
+    return { fps, average: averageFps, low };
   }
 
   function render(now) {
@@ -353,9 +407,9 @@ export function mountLiquidGlass({ targetEl, iconsEl = null, backgroundSrc = nul
 
     updatePointer();
     updateIcons(now);
-    updateFps(now);
+    const fpsSnapshot = updateFps(now);
 
-    const { width, height } = applyDprSize(canvas, gl, targetEl);
+    const { width, height, dpr } = applyDprSize(canvas, gl, targetEl);
     gl.clearColor(0, 0, 0, 0);
     gl.clear(gl.COLOR_BUFFER_BIT);
 
@@ -363,17 +417,35 @@ export function mountLiquidGlass({ targetEl, iconsEl = null, backgroundSrc = nul
     gl.uniform1f(timeUniform, now * 0.001);
     gl.uniform2f(resolutionUniform, width, height);
     gl.uniform2f(pointerUniform, pointer.x, pointer.y);
+    gl.uniform1f(blurUniform, config.blurRadius * dpr);
+    gl.uniform1f(refractionUniform, config.refractionIntensity);
+    gl.uniform1f(patternUniform, config.patternStrength);
+    gl.uniform1f(alphaUniform, config.alpha);
 
     if (hasTexture && texture) {
       gl.activeTexture(gl.TEXTURE0);
       gl.bindTexture(gl.TEXTURE_2D, texture);
       gl.uniform1i(textureUniform, 0);
-      gl.uniform1f(textureMixUniform, 0.35);
+      gl.uniform1f(textureMixUniform, config.textureMix);
     } else {
       gl.uniform1f(textureMixUniform, 0.0);
     }
 
     gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+    metricsHandlers.forEach((handler) => {
+      try {
+        handler({
+          fps: fpsSnapshot.fps,
+          average: fpsSnapshot.average,
+          low: fpsSnapshot.low,
+          timestamp: now,
+        });
+      } catch (error) {
+        console.error('[liquidGlass] metrics handler failed', error);
+      }
+    });
+
     rafId = window.requestAnimationFrame(render);
   }
 
@@ -401,6 +473,7 @@ export function mountLiquidGlass({ targetEl, iconsEl = null, backgroundSrc = nul
     }
     gl.deleteBuffer(buffer);
     gl.deleteProgram(program);
+    metricsHandlers.clear();
   }
 
   function onLowFps(handler) {
@@ -413,9 +486,20 @@ export function mountLiquidGlass({ targetEl, iconsEl = null, backgroundSrc = nul
     };
   }
 
+  function onMetrics(handler) {
+    if (typeof handler !== 'function') {
+      return () => {};
+    }
+    metricsHandlers.add(handler);
+    return () => {
+      metricsHandlers.delete(handler);
+    };
+  }
+
   return {
     destroy,
     onLowFps,
+    onMetrics,
     isActive: () => !destroyed && !lowFpsTriggered,
   };
 }

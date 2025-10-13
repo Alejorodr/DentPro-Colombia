@@ -1,5 +1,6 @@
 import { registerThemeToggle } from './app.js';
 import { mountLiquidGlass } from './liquidGlass.js';
+import { initLiquidMetricsPanel, isLiquidMetricsEnabled } from './liquidMetrics.js';
 
 const LIQUID_GLASS_PREF_KEY = 'dentpro:liquid-glass-preference';
 
@@ -194,39 +195,173 @@ function setupHeroLiquidGlass() {
     return;
   }
 
-  const storedPreference = getStoredLiquidGlassPreference();
-  const isPreferenceEnabled = storedPreference !== 'disabled';
-  const canRunLiquidGlass = isPreferenceEnabled && shouldEnableLiquidGlass();
+  const metricsEnabled = isLiquidMetricsEnabled(heroLiquidHost);
+  const metricsPanel = metricsEnabled
+    ? initLiquidMetricsPanel({
+        host: heroLiquidHost,
+        reduceMotion: prefersReducedMotion(),
+      })
+    : null;
 
-  heroLiquidHost.dataset.liquidEnabled = String(canRunLiquidGlass);
-  heroLiquidHost.dataset.liquidPreference = storedPreference || 'auto';
+  const parseSetting = (value, fallback, min, max) => {
+    const numeric = Number.parseFloat(value);
+    if (Number.isFinite(numeric)) {
+      if (Number.isFinite(min) && numeric < min) {
+        return min;
+      }
+      if (Number.isFinite(max) && numeric > max) {
+        return max;
+      }
+      return numeric;
+    }
+    return fallback;
+  };
 
-  if (!canRunLiquidGlass) {
-    heroLiquidHost.dataset.liquidStatus = 'disabled';
-    return;
-  }
-
-  heroLiquidHost.dataset.liquidStatus = 'initializing';
-  const instance = mountLiquidGlass({
-    targetEl: heroLiquidHost,
-    iconsEl: heroLiquidHost,
-    backgroundSrc: heroLiquidHost.dataset.liquidBackground || null,
+  const readSettings = () => ({
+    blurRadius: parseSetting(heroLiquidHost.dataset.liquidBlur, 4.5, 0, 18),
+    refractionIntensity: parseSetting(heroLiquidHost.dataset.liquidRefraction, 0.08, 0, 0.6),
+    textureMix: parseSetting(heroLiquidHost.dataset.liquidTexture, 0.65, 0, 1),
+    patternStrength: parseSetting(heroLiquidHost.dataset.liquidPattern, 0.45, 0, 1),
+    alpha: parseSetting(heroLiquidHost.dataset.liquidAlpha, 0.6, 0.1, 0.9),
   });
 
-  const isActive = instance.isActive();
-  heroLiquidHost.dataset.liquidStatus = isActive ? 'running' : 'disabled';
-  heroLiquidHost.dataset.liquidEnabled = String(isActive);
+  metricsPanel?.updateSettings(readSettings());
 
-  if (!isActive) {
-    return;
-  }
+  let storedPreference = getStoredLiquidGlassPreference();
+  let instance = null;
+  let unsubscribeMetrics = null;
 
-  instance.onLowFps(({ fps }) => {
-    instance.destroy();
-    heroLiquidHost.dataset.liquidStatus = 'suspended';
+  const updatePreferenceDataset = () => {
+    heroLiquidHost.dataset.liquidPreference = storedPreference || 'auto';
+    metricsPanel?.updatePreference(heroLiquidHost.dataset.liquidPreference);
+  };
+
+  const updateEligibility = () => {
+    const eligible = shouldEnableLiquidGlass();
+    heroLiquidHost.dataset.liquidEligibility = String(eligible);
+    metricsPanel?.updateEligibility(eligible);
+    return eligible;
+  };
+
+  const destroyInstance = () => {
+    if (typeof unsubscribeMetrics === 'function') {
+      unsubscribeMetrics();
+    }
+    unsubscribeMetrics = null;
+    if (instance) {
+      instance.destroy();
+      instance = null;
+    }
+    delete heroLiquidHost.dataset.liquidFps;
+  };
+
+  const setDisabledState = (status, reason) => {
+    destroyInstance();
     heroLiquidHost.dataset.liquidEnabled = 'false';
-    heroLiquidHost.dataset.liquidFps = String(Math.round(fps));
-  });
+    heroLiquidHost.dataset.liquidStatus = status;
+    if (reason) {
+      heroLiquidHost.dataset.liquidReason = reason;
+    } else {
+      delete heroLiquidHost.dataset.liquidReason;
+    }
+    metricsPanel?.updateState(false, reason || status);
+  };
+
+  const attachMetrics = () => {
+    if (!metricsPanel || typeof instance?.onMetrics !== 'function') {
+      return;
+    }
+    unsubscribeMetrics = instance.onMetrics((payload) => {
+      metricsPanel.updateMetrics(payload);
+      heroLiquidHost.dataset.liquidFps = String(Math.round(payload.average));
+    });
+  };
+
+  const activate = (origin = 'auto') => {
+    destroyInstance();
+    const eligible = updateEligibility();
+    if (storedPreference === 'disabled') {
+      setDisabledState('disabled', 'preferencia-usuario');
+      return;
+    }
+    if (!eligible) {
+      setDisabledState('blocked', 'dispositivo-no-elegible');
+      return;
+    }
+
+    heroLiquidHost.dataset.liquidStatus = 'initializing';
+    delete heroLiquidHost.dataset.liquidReason;
+    heroLiquidHost.dataset.liquidEnabled = 'true';
+
+    const settings = readSettings();
+    metricsPanel?.updateSettings(settings);
+
+    instance = mountLiquidGlass({
+      targetEl: heroLiquidHost,
+      iconsEl: heroLiquidHost,
+      backgroundSrc: heroLiquidHost.dataset.liquidBackground || null,
+      settings,
+    });
+
+    const active = instance.isActive();
+    heroLiquidHost.dataset.liquidEnabled = String(active);
+    heroLiquidHost.dataset.liquidStatus = active ? 'running' : 'disabled';
+
+    if (!active) {
+      setDisabledState('disabled', 'webgl-no-disponible');
+      return;
+    }
+
+    metricsPanel?.updateState(true, origin);
+    attachMetrics();
+
+    instance.onLowFps(({ fps }) => {
+      setDisabledState('suspended', 'low-fps');
+      heroLiquidHost.dataset.liquidFps = String(Math.round(fps));
+      metricsPanel?.pushEvent({ type: 'lowFps', fps });
+    });
+  };
+
+  const deactivate = (reason = 'manual') => {
+    setDisabledState('disabled', reason);
+  };
+
+  updatePreferenceDataset();
+  const eligible = updateEligibility();
+
+  if (storedPreference === 'disabled') {
+    setDisabledState('disabled', 'preferencia-usuario');
+  } else if (!eligible) {
+    setDisabledState('blocked', 'dispositivo-no-elegible');
+  } else {
+    activate('initial');
+  }
+
+  if (metricsPanel) {
+    metricsPanel.bindControls({
+      onEnable() {
+        setLiquidGlassPreference(true);
+        storedPreference = 'enabled';
+        updatePreferenceDataset();
+        metricsPanel.pushEvent({ type: 'preference', message: 'Shader activado manualmente.' });
+        activate('manual');
+      },
+      onDisable() {
+        setLiquidGlassPreference(false);
+        storedPreference = 'disabled';
+        updatePreferenceDataset();
+        metricsPanel.pushEvent({ type: 'preference', message: 'Shader desactivado manualmente.' });
+        deactivate('manual');
+      },
+      onReset() {
+        setLiquidGlassPreference(null);
+        storedPreference = getStoredLiquidGlassPreference();
+        updatePreferenceDataset();
+        metricsPanel.pushEvent({ type: 'preference', message: 'Preferencia restablecida.' });
+        activate('reset');
+      },
+    });
+  }
 }
 
 function setupSlider() {
