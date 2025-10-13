@@ -218,10 +218,6 @@ footer a:hover {
 }
 
 @media (max-width: 640px) {
-  .floating-card {
-    text-align: center;
-  }
-
   .floating-actions {
     inset-inline: 0;
     bottom: 1.25rem;
@@ -696,7 +692,6 @@ footer a:hover {
   .theme-toggle,
   .btn-primary,
   .btn-secondary,
-  .floating-card,
   .floating-action-btn,
   .metrics-panel {
     transition: none !important;
