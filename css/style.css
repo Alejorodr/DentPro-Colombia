@@ -166,7 +166,7 @@ button:focus-visible,
 }
 
 .theme-toggle-icon[data-theme-icon='sun'] {
-  color: #fde047;
+  color: #f59e0b;
 }
 
 .theme-toggle-icon[data-theme-icon='moon'] {
@@ -217,7 +217,7 @@ button:focus-visible,
 }
 
 .dark .theme-toggle-icon[data-theme-icon='sun'] {
-  color: #fcd34d;
+  color: #fbbf24;
 }
 
 .dark .theme-toggle[aria-checked='true'] .theme-toggle-rail {
