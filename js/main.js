@@ -1,3 +1,7 @@
+/**
+ * @module js/main
+ * @description Gestiona las interacciones principales del sitio, como menú móvil, slider de especialistas y formulario de agendamiento, coordinándose con los elementos definidos en el HTML.
+ */
 import { registerThemeToggle } from './app.js';
 
 const mobileMenuBtn = document.getElementById('mobileMenuBtn');
@@ -11,9 +15,11 @@ const bookingForm = document.getElementById('bookingForm');
 
 registerThemeToggle(darkToggle);
 
-/*
- * Menú móvil: gestiona apertura/cierre mediante clics en el botón, enlaces internos
- * y tecla Escape para asegurar accesibilidad con aria-expanded/label.
+/**
+ * Establece el estado del menú móvil y sincroniza atributos de accesibilidad.
+ * @param {boolean} isOpen - Indica si el menú debe mostrarse abierto.
+ * @returns {void}
+ * @sideeffects Modifica clases y atributos aria en el DOM del menú móvil y el botón.
  */
 function setMobileMenuState(isOpen) {
   if (!mobileMenu || !mobileMenuBtn) {
@@ -24,6 +30,11 @@ function setMobileMenuState(isOpen) {
   mobileMenuBtn.setAttribute('aria-label', isOpen ? 'Cerrar menú' : 'Abrir menú');
 }
 
+/**
+ * Alterna el estado del menú móvil entre abierto y cerrado.
+ * @returns {void}
+ * @sideeffects Invoca {@link setMobileMenuState} para actualizar el DOM y los atributos aria.
+ */
 function toggleMobileMenu() {
   const isOpen = !mobileMenu?.classList.contains('open');
   setMobileMenuState(isOpen);
@@ -45,8 +56,10 @@ document.addEventListener('keydown', (event) => {
   }
 });
 
-/*
- * Año dinámico: actualiza el pie con el año actual en la carga inicial.
+/**
+ * Actualiza el elemento de año con el año actual.
+ * @returns {void}
+ * @sideeffects Modifica el texto del nodo asociado al pie de página.
  */
 function setYear() {
   if (yearEl) {
@@ -56,9 +69,12 @@ function setYear() {
 
 setYear();
 
-/*
- * Formulario de agenda: muestra mensajes de retroalimentación y evita recarga
- * al interceptar el submit, manteniendo la experiencia en una sola página.
+/**
+ * Crea un nodo de retroalimentación para el formulario de agendamiento.
+ * @param {string} message - Mensaje a mostrar al usuario.
+ * @param {('success'|'error')} [type='success'] - Tipo de mensaje que define el estilo visual.
+ * @returns {HTMLParagraphElement} Nodo listo para insertar en el formulario.
+ * @sideeffects Elimina cualquier mensaje previo presente en el formulario.
  */
 function createFeedback(message, type = 'success') {
   const existing = bookingForm?.querySelector('.form-feedback');
@@ -106,9 +122,10 @@ bookingForm?.addEventListener('submit', (event) => {
   window.scrollTo({ top: bookingForm.offsetTop - 120, behavior: 'smooth' }); // Ajuste para no ocultar el feedback bajo la cabecera fija.
 });
 
-/*
- * Slider de especialistas: controla la traslación horizontal con eventos click en
- * prev/next y reajusta límites en el evento resize del viewport.
+/**
+ * Inicializa la interacción del slider de especialistas.
+ * @returns {void}
+ * @sideeffects Registra listeners de clic y resize y manipula estilos inline del track.
  */
 function setupSlider() {
   if (!track) return;
@@ -117,12 +134,21 @@ function setupSlider() {
 
   let index = 0;
 
+  /**
+   * Determina la cantidad de diapositivas visibles según el ancho del viewport.
+   * @returns {number} Número de tarjetas visibles.
+   */
   function visibleSlides() {
     if (window.innerWidth >= 1280) return 3;
     if (window.innerWidth >= 1024) return 2;
     return 1;
   }
 
+  /**
+   * Recalcula la posición del track y actualiza los botones de navegación.
+   * @returns {void}
+   * @sideeffects Ajusta transformaciones CSS y estados disabled de los controles.
+   */
   function update() {
     const slideWidth = slides[0]?.getBoundingClientRect().width || 0;
     const styles = getComputedStyle(track);
