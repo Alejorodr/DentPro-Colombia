@@ -36,6 +36,14 @@
     @apply overflow-hidden relative;
   }
 
+  .slider-btn {
+    @apply inline-flex h-12 w-12 items-center justify-center rounded-full border border-brand-teal bg-brand-light text-brand-indigo shadow-lg shadow-brand-teal/25 transition hover:-translate-y-0.5 hover:bg-white hover:text-brand-teal focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-indigo disabled:shadow-none dark:border-accent-cyan dark:bg-accent-cyan/10 dark:text-accent-cyan dark:shadow-glow-dark dark:hover:bg-accent-cyan/20 dark:hover:text-surface-base dark:focus-visible:outline-accent-cyan;
+  }
+
+  .slider-btn .material-symbols-rounded {
+    @apply text-2xl;
+  }
+
   .slider-track {
     @apply flex gap-6 transition-transform duration-500 ease-out will-change-transform;
   }
