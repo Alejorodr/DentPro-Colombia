@@ -14,6 +14,22 @@
 
 @layer components {
   /* === Botones === */
+  .badge {
+    @apply inline-flex items-center gap-2 rounded-full bg-brand-light px-4 py-1 text-xs font-semibold uppercase tracking-wide text-brand-teal shadow-inner shadow-brand-teal/10 transition duration-300 dark:bg-surface-muted/70 dark:text-accent-cyan;
+  }
+
+  .icon-circle {
+    @apply flex h-14 w-14 transform items-center justify-center rounded-2xl bg-brand-light text-brand-teal shadow-lg shadow-brand-teal/20 transition duration-300 hover:-translate-y-0.5 hover:shadow-brand-teal/30 dark:bg-surface-muted/80 dark:text-accent-cyan dark:shadow-glow-dark;
+  }
+
+  .icon-badge {
+    @apply inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-light/90 text-lg font-semibold text-brand-teal shadow-inner shadow-brand-teal/10 dark:bg-surface-muted/80 dark:text-accent-cyan;
+  }
+
+  .social-link {
+    @apply inline-flex h-11 w-11 transform items-center justify-center rounded-full border border-brand-teal/50 text-xs font-semibold uppercase tracking-wide text-brand-teal transition duration-300 hover:-translate-y-0.5 hover:bg-brand-teal hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-indigo dark:border-accent-cyan/40 dark:text-accent-cyan dark:hover:bg-accent-cyan dark:hover:text-surface-base;
+  }
+
   .btn-primary {
     @apply inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-brand-sky via-brand-teal to-brand-indigo px-7 py-3 text-base font-semibold text-white shadow-lg shadow-brand-teal/40 transition hover:-translate-y-0.5 hover:from-brand-teal hover:via-brand-indigo hover:to-brand-indigo focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-indigo dark:from-accent-cyan dark:via-brand-teal dark:to-brand-indigo dark:shadow-glow-dark dark:hover:from-accent-cyan dark:hover:via-accent-cyan dark:hover:to-brand-teal;
   }
