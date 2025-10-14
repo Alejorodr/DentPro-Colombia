@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useSpecialistsCarousel } from "@/hooks/useSpecialistsCarousel";
 
 interface SpecialistCard {
   name: string;
@@ -20,44 +20,9 @@ interface SpecialistsSliderProps {
 }
 
 export function SpecialistsSlider({ badge, title, description, specialists }: SpecialistsSliderProps) {
-  const trackRef = useRef<HTMLDivElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [metrics, setMetrics] = useState({ width: 0, gap: 0, visible: 1 });
-
-  useEffect(() => {
-    const updateMetrics = () => {
-      if (!trackRef.current || !containerRef.current) return;
-      const firstSlide = trackRef.current.querySelector<HTMLElement>("[data-slide]");
-      if (!firstSlide) return;
-
-      const style = window.getComputedStyle(trackRef.current);
-      const gapValue = parseFloat(style.columnGap || style.gap || "0");
-      const slideRect = firstSlide.getBoundingClientRect();
-      const containerRect = containerRef.current.getBoundingClientRect();
-      const slideWidth = slideRect.width;
-      const visible = Math.max(1, Math.round((containerRect.width + gapValue) / (slideWidth + gapValue)));
-
-      setMetrics({ width: slideWidth, gap: gapValue, visible });
-    };
-
-    updateMetrics();
-    window.addEventListener("resize", updateMetrics);
-    return () => window.removeEventListener("resize", updateMetrics);
-  }, [specialists.length]);
-
-  const maxIndex = useMemo(() => {
-    return Math.max(0, specialists.length - metrics.visible);
-  }, [metrics.visible, specialists.length]);
-
-  useEffect(() => {
-    setCurrentIndex((prev) => Math.min(prev, maxIndex));
-  }, [maxIndex]);
-
-  const goPrev = () => setCurrentIndex((prev) => Math.max(prev - 1, 0));
-  const goNext = () => setCurrentIndex((prev) => Math.min(prev + 1, maxIndex));
-
-  const translateX = metrics.width ? -(currentIndex * (metrics.width + metrics.gap)) : 0;
+  const { containerRef, trackRef, currentIndex, maxIndex, goNext, goPrev, translateX } = useSpecialistsCarousel(
+    specialists.length,
+  );
 
   return (
     <section id="especialistas" className="bg-brand-light py-20 transition-colors duration-300 dark:bg-surface-muted">

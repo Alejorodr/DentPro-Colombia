@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { useBookingForm } from "@/hooks/useBookingForm";
 
 interface SelectOption {
   value: string;
@@ -33,13 +33,7 @@ export function BookingFormSection({
   scheduleNote,
   consentNote,
 }: BookingFormProps) {
-  const [status, setStatus] = useState<"idle" | "success">("idle");
-
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setStatus("success");
-    event.currentTarget.reset();
-  };
+  const { handleSubmit, isSuccess, isPending } = useBookingForm();
 
   return (
     <section id="agenda" className="py-20 transition-colors duration-300 dark:bg-surface-base">
@@ -107,12 +101,12 @@ export function BookingFormSection({
                 placeholder="Cuéntanos cómo podemos ayudarte"
               ></textarea>
             </div>
-            <button type="submit" className="btn-primary justify-center">
-              Solicitar agenda
+            <button type="submit" className="btn-primary justify-center" disabled={isPending}>
+              {isPending ? "Enviando..." : "Solicitar agenda"}
             </button>
             <p className="text-xs text-brand-light/80">{consentNote}</p>
             <p className="form-feedback text-sm font-semibold text-white" role="status" aria-live="polite">
-              {status === "success" ? "¡Gracias! Te contactaremos muy pronto." : ""}
+              {isSuccess ? "¡Gracias! Te contactaremos muy pronto." : ""}
             </p>
           </form>
         </div>
