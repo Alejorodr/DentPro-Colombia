@@ -49,7 +49,11 @@
 
   /* === Slider === */
   .slider {
-    @apply overflow-hidden relative;
+    --slider-edge-space: clamp(1rem, 4vw, 1.5rem);
+    @apply relative;
+    overflow: hidden;
+    margin-inline: calc(var(--slider-edge-space) * -1);
+    padding-inline: var(--slider-edge-space);
   }
 
   .slider-btn {
