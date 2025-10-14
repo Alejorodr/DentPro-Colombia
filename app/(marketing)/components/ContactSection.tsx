@@ -1,0 +1,137 @@
+interface ContactChannel {
+  icon: string;
+  label: string;
+  value: string;
+  href?: string;
+}
+
+interface SocialLink {
+  href: string;
+  label: string;
+  text: string;
+}
+
+interface ServiceSupportItem {
+  icon: string;
+  text: string;
+}
+
+interface LocationItem {
+  name: string;
+  description: string;
+}
+
+interface LegalLink {
+  href: string;
+  label: string;
+}
+
+interface ContactSectionProps {
+  title: string;
+  description: string;
+  channels: ContactChannel[];
+  socials: SocialLink[];
+  supportTitle: string;
+  supportItems: ServiceSupportItem[];
+  locationsTitle: string;
+  locations: LocationItem[];
+  legalLinks: LegalLink[];
+  brand: string;
+}
+
+export function ContactSection({
+  title,
+  description,
+  channels,
+  socials,
+  supportTitle,
+  supportItems,
+  locationsTitle,
+  locations,
+  legalLinks,
+  brand,
+}: ContactSectionProps) {
+  const currentYear = new Date().getFullYear();
+
+  return (
+    <section id="contacto" className="bg-slate-900 py-20 text-white transition-colors duration-500 dark:bg-surface-base">
+      <div className="container grid gap-12 px-6 lg:grid-cols-3">
+        <div className="space-y-6">
+          <h2 className="text-3xl font-bold">{title}</h2>
+          <p className="text-base text-slate-300">{description}</p>
+          <div className="space-y-2 text-sm text-slate-300">
+            {channels.map((channel) => (
+              <p key={channel.label} className="flex items-center gap-3">
+                <span className="material-symbols-rounded icon-badge text-brand-light dark:text-accent-cyan" aria-hidden="true">
+                  {channel.icon}
+                </span>
+                {channel.href ? (
+                  <a href={channel.href} className="hover:text-white dark:hover:text-accent-cyan">
+                    {channel.value}
+                  </a>
+                ) : (
+                  channel.value
+                )}
+              </p>
+            ))}
+          </div>
+          <div className="flex gap-4">
+            {socials.map((social) => (
+              <a
+                key={social.href}
+                href={social.href}
+                className="social-link dark:border-accent-cyan/40 dark:text-accent-cyan"
+                aria-label={social.label}
+                target="_blank"
+                rel="noopener"
+              >
+                {social.text}
+              </a>
+            ))}
+          </div>
+        </div>
+        <div className="rounded-3xl bg-white/10 p-8 backdrop-blur transition-colors duration-300 dark:border dark:border-accent-cyan/10 dark:bg-surface-muted/80">
+          <h3 className="text-xl font-semibold">{supportTitle}</h3>
+          <p className="mt-2 text-sm text-slate-300">
+            Nuestro equipo de Patient Care está listo para acompañarte antes, durante y después de cada visita.
+          </p>
+          <ul className="mt-6 space-y-4 text-sm text-slate-200">
+            {supportItems.map((item) => (
+              <li key={item.text} className="flex gap-3">
+                <span className="material-symbols-rounded icon-badge text-brand-light dark:text-accent-cyan" aria-hidden="true">
+                  {item.icon}
+                </span>
+                {item.text}
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className="rounded-3xl bg-white/10 p-8 backdrop-blur transition-colors duration-300 dark:border dark:border-accent-cyan/10 dark:bg-surface-muted/80">
+          <h3 className="text-xl font-semibold">{locationsTitle}</h3>
+          <ul className="mt-6 space-y-4 text-sm text-slate-200">
+            {locations.map((location) => (
+              <li key={location.name}>
+                <p className="font-semibold text-white">{location.name}</p>
+                <p>{location.description}</p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+      <div className="mt-20 border-t border-white/10 dark:border-surface-muted/80">
+        <div className="container flex flex-col gap-4 px-6 py-8 text-sm text-slate-400 transition-colors duration-300 dark:text-slate-500 md:flex-row md:items-center md:justify-between">
+          <p>
+            © {currentYear} {brand}. Todos los derechos reservados.
+          </p>
+          <div className="flex gap-6">
+            {legalLinks.map((link) => (
+              <a key={link.href} href={link.href} className="hover:text-white dark:hover:text-accent-cyan">
+                {link.label}
+              </a>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
