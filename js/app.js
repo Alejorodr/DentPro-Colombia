@@ -1,9 +1,24 @@
+/**
+ * Módulo central encargado de coordinar el tema visual de la aplicación.
+ * Gestiona la sincronización entre los estilos de Tailwind, los componentes
+ * interactivos que alternan el modo de color y otros scripts que necesitan
+ * conocer el estado del tema. Implementa degradaciones silenciosas para entornos
+ * sin `localStorage` y respeta la preferencia del sistema cuando no hay datos
+ * persistidos.
+ */
 const html = document.documentElement;
 const storageKey = 'dentpro-theme';
 const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
 const toggleButtons = new Set();
 
-// Maneja el acceso a localStorage y permite una degradación silenciosa cuando no está disponible.
+/**
+ * Gestiona el acceso seguro a `localStorage`, aplicando degradación silenciosa
+ * cuando la API no está disponible o lanza errores (p. ej. modo incógnito).
+ *
+ * @param {'get'|'set'|'remove'} action Acción a ejecutar sobre el almacenamiento.
+ * @param {string} [value] Valor a guardar cuando la acción es `set`.
+ * @returns {string|null} Valor almacenado o `null` cuando la operación no es posible.
+ */
 function safeLocalStorage(action, value) {
   try {
     if (action === 'get') {
@@ -21,13 +36,24 @@ function safeLocalStorage(action, value) {
   return null;
 }
 
-// Recupera el tema almacenado validando que sea un valor reconocido.
+/**
+ * Obtiene y valida el tema guardado, descartando valores corruptos o
+ * desconocidos.
+ *
+ * @returns {'dark'|'light'|null} Tema almacenado válido o `null` si no existe.
+ */
 function getStoredTheme() {
   const stored = safeLocalStorage('get');
   return stored === 'dark' || stored === 'light' ? stored : null;
 }
 
-// Sincroniza los toggles registrados con el estado actual y mantiene etiquetas accesibles.
+/**
+ * Sincroniza los controles de interfaz registrados para reflejar el estado del
+ * tema actual, actualizando clases y atributos accesibles.
+ *
+ * @param {boolean} isDark Indica si el modo oscuro está activo.
+ * @returns {void}
+ */
 function updateToggleState(isDark) {
   toggleButtons.forEach((button) => {
     const state = String(isDark);
@@ -41,7 +67,13 @@ function updateToggleState(isDark) {
   });
 }
 
-// Aplica la clase y atributos que consumen los estilos del tema.
+/**
+ * Aplica el tema indicado al elemento raíz y comunica el cambio a los toggles
+ * registrados.
+ *
+ * @param {'dark'|'light'} theme Tema que debe activarse.
+ * @returns {void}
+ */
 function applyTheme(theme) {
   const isDark = theme === 'dark';
   html.classList.toggle('dark', isDark);
@@ -49,7 +81,12 @@ function applyTheme(theme) {
   updateToggleState(isDark);
 }
 
-// Determina el tema inicial priorizando la preferencia guardada y luego la del sistema.
+/**
+ * Determina el tema preferido priorizando la configuración guardada. Cuando no
+ * hay datos válidos recurre a la preferencia del sistema operativo.
+ *
+ * @returns {'dark'|'light'} Tema que debe aplicarse inicialmente.
+ */
 function resolvePreferredTheme() {
   const stored = getStoredTheme();
   if (stored) {
@@ -58,12 +95,26 @@ function resolvePreferredTheme() {
   return prefersDark.matches ? 'dark' : 'light';
 }
 
-// Persiste el tema elegido solo cuando el almacenamiento está disponible.
+/**
+ * Intenta persistir el tema elegido en `localStorage`. Si la operación falla
+ * el error se omite para mantener la experiencia sin interrupciones.
+ *
+ * @param {'dark'|'light'} theme Tema que debe guardarse.
+ * @returns {void}
+ */
 function persistTheme(theme) {
   safeLocalStorage('set', theme);
 }
 
-// Centraliza la aplicación del tema y su persistencia opcional.
+/**
+ * Aplica el tema indicado y opcionalmente lo guarda para futuras visitas.
+ * Cuando `persist` es falso la función funciona de manera efímera, útil en
+ * contextos donde `localStorage` no está disponible.
+ *
+ * @param {'dark'|'light'} theme Tema que se debe aplicar.
+ * @param {boolean} [persist=false] Define si el tema se persiste.
+ * @returns {void}
+ */
 function setTheme(theme, persist = false) {
   applyTheme(theme);
   if (persist) {
@@ -71,7 +122,13 @@ function setTheme(theme, persist = false) {
   }
 }
 
-// Alterna entre modos claro y oscuro, actualizando también la preferencia almacenada.
+/**
+ * Alterna entre modo claro y oscuro, persistiendo la decisión del usuario cuando
+ * es posible. Si `localStorage` falla la UI sigue actualizándose gracias a la
+ * degradación implementada en `setTheme`.
+ *
+ * @returns {void}
+ */
 function toggleTheme() {
   const nextTheme = html.classList.contains('dark') ? 'light' : 'dark';
   setTheme(nextTheme, true);
@@ -86,7 +143,13 @@ prefersDark.addEventListener('change', (event) => {
 
 setTheme(resolvePreferredTheme());
 
-// Registra un botón de cambio de tema y garantiza que comunique su estado vía ARIA.
+/**
+ * Registra un botón alternador de tema, actualizando su estado ARIA y
+ * manteniéndolo sincronizado con los cambios globales.
+ *
+ * @param {HTMLButtonElement} button Botón que activa el cambio de tema.
+ * @returns {void}
+ */
 export function registerThemeToggle(button) {
   if (!button) return;
   toggleButtons.add(button);
@@ -94,7 +157,12 @@ export function registerThemeToggle(button) {
   updateToggleState(html.classList.contains('dark'));
 }
 
-// Expone el tema actual para otros módulos que necesiten reaccionar a él.
+/**
+ * Expone el tema activo para que otros módulos puedan reaccionar sin acceder
+ * directamente al DOM.
+ *
+ * @returns {'dark'|'light'} Tema actualmente aplicado.
+ */
 export function getCurrentTheme() {
   return html.classList.contains('dark') ? 'dark' : 'light';
 }
