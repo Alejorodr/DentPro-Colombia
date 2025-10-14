@@ -174,9 +174,19 @@
     <!-- Fin header principal -->
 
     <main>
+      <!--
+        Hero principal: destaca la propuesta de valor y combina utilidades Tailwind con variantes personalizadas
+        (bg-hero-light/dark definidas en css/style.css) para el fondo. No recibe mutaciones directas del JavaScript,
+        pero los botones enlazan con el formulario y el listado de servicios gestionados en js/main.js.
+      -->
       <!-- Sección hero principal -->
       <section class="hero overflow-hidden bg-hero-light py-24 transition-colors duration-500 dark:bg-hero-dark">
         <div class="container grid items-center gap-16 px-6 lg:grid-cols-2">
+          <!--
+            Panel de texto del hero (`data-hero-text-panel`): agrupa la narrativa principal y permite enlazar
+            potenciales animaciones o efectos progresivos desde CSS/JS sin acoplarse al DOM. Se posiciona sobre el
+            fondo y conserva el espaciado responsivo mediante utilidades Tailwind.
+          -->
           <div class="relative z-10 space-y-8" data-hero-text-panel>
             <span class="inline-flex items-center gap-2 rounded-full bg-white/70 px-4 py-2 text-sm font-semibold uppercase tracking-wide text-brand-indigo shadow-sm dark:bg-surface-elevated/80 dark:text-accent-cyan">
               Calidad internacional
@@ -246,6 +256,11 @@
       </section>
       <!-- Fin sección hero principal -->
 
+      <!--
+        Bloque de tarjetas de servicios: utiliza el grid responsivo de Tailwind y la clase utilitaria `.card`
+        definida en css/style.css para los contenedores. No requiere scripts, pero los enlaces conectan con el
+        formulario de agenda y otros anclajes internos.
+      -->
       <!-- Sección de servicios -->
       <section id="servicios" class="py-20 transition-colors duration-300 dark:bg-surface-base">
         <div class="container px-6">
@@ -303,6 +318,11 @@
       </section>
       <!-- Fin sección de servicios -->
 
+      <!--
+        Carrusel de especialistas: estructura necesaria para que js/main.js controle la traslación horizontal
+        (`setupSlider`). La pista con id `specialistsTrack` se desplaza mediante transformaciones inline mientras
+        css/style.css aporta los estilos de tarjetas y transiciones.
+      -->
       <!-- Carrusel de especialistas -->
       <section id="especialistas" class="bg-brand-light py-20 transition-colors duration-300 dark:bg-surface-muted">
         <div class="container px-6">
@@ -325,6 +345,11 @@
           </div>
           <div class="slider" data-slider>
             <div class="slider-track" id="specialistsTrack">
+              <!--
+                Tarjeta `card specialist`: combina la apariencia base de `.card` con ajustes específicos para las
+                fotografías (`.specialist-photo` en css/style.css). El slider las interpreta como slides individuales,
+                calculando su ancho y separación al navegar con los botones prev/next del script principal.
+              -->
               <article class="card specialist">
                 <img
                   src="https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&w=600&q=80"
@@ -373,6 +398,11 @@
       </section>
       <!-- Fin carrusel de especialistas -->
 
+      <!--
+        Formulario de agenda: receptáculo para la lógica de validación ligera de js/main.js (manejo del submit y
+        mensaje de retroalimentación). El panel utiliza gradientes configurados en css/style.css y depende de las
+        utilidades `.input` y `.btn-primary` generadas por Tailwind.
+      -->
       <!-- Formulario de agenda -->
       <section id="agenda" class="py-20 transition-colors duration-300 dark:bg-surface-base">
         <div class="container grid gap-12 px-6 lg:grid-cols-[1.2fr_1fr]">
@@ -441,6 +471,11 @@
       </section>
       <!-- Fin formulario de agenda -->
 
+      <!--
+        Bloque de contacto y pie: reúne la información de sedes, accesos a redes sociales y el pie dinámico cuyo
+        año se establece desde js/main.js. Las tarjetas usan fondos translúcidos definidos en css/style.css para
+        mantener la legibilidad sobre el fondo oscuro.
+      -->
       <!-- Sección de contacto -->
       <section id="contacto" class="bg-slate-900 py-20 text-white transition-colors duration-500 dark:bg-surface-base">
         <div class="container grid gap-12 px-6 lg:grid-cols-3">
@@ -532,6 +567,12 @@
       </section>
       <!-- Fin sección de contacto -->
     </main>
+    <!--
+      Región de accesos flotantes (`floating-actions`): anclada en la esquina inferior mediante reglas en
+      css/style.css, con variaciones para móviles. No requiere JavaScript adicional; solo proporciona atajos a
+      WhatsApp, agenda y llamada. Se marca como región ARIA para accesibilidad y cada botón utiliza estilos
+      específicos (`floating-action-btn--*`).
+    -->
     <!-- Botones flotantes -->
     <div class="floating-actions" role="region" aria-label="Accesos rápidos">
       <a
