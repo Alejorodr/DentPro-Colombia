@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { Material_Symbols_Rounded, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
+import { AppProviders } from "./providers";
 
 const plusJakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -32,7 +33,7 @@ export default function RootLayout({
       <body
         className={`${plusJakarta.variable} ${materialSymbols.variable} bg-slate-50 font-sans text-slate-900 antialiased transition-colors duration-300 dark:bg-surface-base dark:text-slate-100`}
       >
-        {children}
+        <AppProviders>{children}</AppProviders>
       </body>
     </html>
   );
