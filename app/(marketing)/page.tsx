@@ -28,6 +28,7 @@ export default function MarketingPage() {
           { href: "#agenda", label: "Agenda tu cita" },
           { href: "#contacto", label: "Contacto" },
         ]}
+        login={{ href: "/login", label: "Ingresar al portal" }}
         cta={{ href: "#agenda", label: "Agenda ahora" }}
       />
       <main>
