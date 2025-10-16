@@ -1,39 +1,30 @@
+// app/layout.tsx
 import type { Metadata } from "next";
-import type { ReactNode } from "react";
-import { Material_Symbols_Rounded, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
-import { AppProviders } from "./providers";
-
-const plusJakarta = Plus_Jakarta_Sans({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-plus-jakarta",
-  display: "swap",
-});
-
-const materialSymbols = Material_Symbols_Rounded({
-  subsets: ["latin"],
-  weight: "400",
-  variable: "--font-material-symbols",
-  display: "block",
-});
+import { AppProviders } from "./providers"; // si no existe, quita esta línea y el wrapper
 
 export const metadata: Metadata = {
-  title: "DentPro Colombia",
-  description: "Sitio oficial de DentPro Colombia",
+  title: "Dent Pro | Clínica Odontológica Digital en Chía",
+  description:
+    "Agenda tu cita por especialidad, conoce nuestros servicios y especialistas.",
 };
 
 export default function RootLayout({
   children,
 }: {
-  children: ReactNode;
+  children: React.ReactNode;
 }) {
   return (
-    <html lang="es" className="scroll-smooth" suppressHydrationWarning>
-      <body
-        className={`${plusJakarta.variable} ${materialSymbols.variable} bg-slate-50 font-sans text-slate-900 antialiased transition-colors duration-300 dark:bg-surface-base dark:text-slate-100`}
-      >
+    <html lang="es">
+      <head>
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+        />
+      </head>
+      <body>
         <AppProviders>{children}</AppProviders>
+        {/* Si no usas AppProviders, deja solo {children} */}
       </body>
     </html>
   );
