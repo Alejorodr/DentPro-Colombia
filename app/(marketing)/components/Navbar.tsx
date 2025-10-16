@@ -19,9 +19,13 @@ interface NavbarProps {
     href: string;
     label: string;
   };
+  login?: {
+    href: string;
+    label: string;
+  };
 }
 
-export function Navbar({ brand, links, cta }: NavbarProps) {
+export function Navbar({ brand, links, cta, login }: NavbarProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
@@ -62,6 +66,14 @@ export function Navbar({ brand, links, cta }: NavbarProps) {
         </nav>
         <div className="flex items-center gap-4">
           <ThemeToggle />
+          {login && (
+            <a href={login.href} className="btn-secondary hidden lg:inline-flex">
+              <span className="material-symbols-rounded text-base" aria-hidden="true">
+                login
+              </span>
+              {login.label}
+            </a>
+          )}
           <a href={cta.href} className="btn-primary hidden lg:inline-flex">
             {cta.label}
           </a>
@@ -91,6 +103,11 @@ export function Navbar({ brand, links, cta }: NavbarProps) {
               {link.label}
             </a>
           ))}
+          {login && (
+            <a href={login.href} className="btn-secondary" onClick={closeMenu}>
+              {login.label}
+            </a>
+          )}
           <a href={cta.href} className="btn-primary" onClick={closeMenu}>
             {cta.label}
           </a>
