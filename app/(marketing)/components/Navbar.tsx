@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ThemeToggle } from "./ThemeToggle";
+import { LoginModal } from "./LoginModal";
 
 interface NavLink {
   href: string;
@@ -27,10 +28,14 @@ interface NavbarProps {
 
 export function Navbar({ brand, links, cta, login }: NavbarProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const profileButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (typeof document === "undefined") return;
-    if (isOpen) {
+    const shouldLockScroll = isOpen || isLoginOpen;
+
+    if (shouldLockScroll) {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "";
@@ -39,10 +44,20 @@ export function Navbar({ brand, links, cta, login }: NavbarProps) {
     return () => {
       document.body.style.overflow = "";
     };
-  }, [isOpen]);
+  }, [isOpen, isLoginOpen]);
 
   const toggleMenu = () => setIsOpen((prev) => !prev);
   const closeMenu = () => setIsOpen(false);
+  const openLoginModal = () => {
+    closeMenu();
+    setIsLoginOpen(true);
+  };
+  const closeLoginModal = () => {
+    setIsLoginOpen(false);
+    if (profileButtonRef.current) {
+      profileButtonRef.current.focus();
+    }
+  };
 
   return (
     <header className="topbar">
@@ -79,6 +94,20 @@ export function Navbar({ brand, links, cta, login }: NavbarProps) {
           </a>
           <button
             type="button"
+            ref={profileButtonRef}
+            className="hidden h-11 w-11 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition hover:border-brand-teal hover:text-brand-teal focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-indigo dark:border-surface-muted dark:text-slate-200 dark:hover:border-accent-cyan dark:hover:text-accent-cyan lg:inline-flex"
+            aria-haspopup="dialog"
+            aria-expanded={isLoginOpen}
+            aria-controls="loginModal"
+            onClick={openLoginModal}
+          >
+            <span className="material-symbols-rounded" aria-hidden="true">
+              account_circle
+            </span>
+            <span className="sr-only">Abrir panel de ingreso</span>
+          </button>
+          <button
+            type="button"
             className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 lg:hidden"
             id="mobileMenuBtn"
             aria-label={isOpen ? "Cerrar menú" : "Abrir menú"}
@@ -111,8 +140,21 @@ export function Navbar({ brand, links, cta, login }: NavbarProps) {
           <a href={cta.href} className="btn-primary" onClick={closeMenu}>
             {cta.label}
           </a>
+          <button
+            type="button"
+            className="btn-secondary inline-flex items-center justify-center gap-2"
+            onClick={openLoginModal}
+          >
+            <span className="material-symbols-rounded text-base" aria-hidden="true">
+              account_circle
+            </span>
+            Iniciar sesión
+          </button>
         </nav>
       </div>
+      {isLoginOpen && (
+        <LoginModal open={isLoginOpen} onClose={closeLoginModal} />
+      )}
     </header>
   );
 }
