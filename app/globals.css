@@ -136,7 +136,7 @@
   }
 
   .floating-action-btn--call {
-    @apply bg-slate-900 hover:bg-slate-700 dark:bg-surface-elevated/90 dark:text-slate-100 dark:hover:bg-surface-muted/90;
+    @apply bg-gradient-to-br from-brand-sky via-brand-teal to-brand-indigo text-white hover:from-brand-teal hover:via-brand-indigo hover:to-brand-navy dark:from-accent-cyan/90 dark:via-accent-cyan dark:to-brand-teal dark:hover:from-accent-cyan dark:hover:via-brand-teal dark:hover:to-brand-indigo;
   }
 }
 
