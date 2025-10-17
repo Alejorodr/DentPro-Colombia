@@ -58,7 +58,9 @@
     @apply relative;
     overflow: hidden;
     margin-inline: calc(var(--slider-edge-space) * -1);
+    margin-block: calc(var(--slider-edge-space) * -1);
     padding-inline: var(--slider-edge-space);
+    padding-block: var(--slider-edge-space);
   }
 
   .slider-btn {
