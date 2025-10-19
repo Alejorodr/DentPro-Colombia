@@ -2,7 +2,7 @@ interface FloatingAction {
   href: string;
   label: string;
   icon: string;
-  className: string;
+  className?: string;
   external?: boolean;
 }
 
@@ -17,10 +17,10 @@ export function FloatingActions({ actions }: FloatingActionsProps) {
         <a
           key={action.href}
           href={action.href}
-          className={`floating-action-btn ${action.className}`}
+          className={`floating-action-btn ${action.className ?? ""}`.trim()}
           aria-label={action.label}
           target={action.external ? "_blank" : undefined}
-          rel={action.external ? "noopener" : undefined}
+          rel={action.external ? "noopener noreferrer" : undefined}
         >
           <span className="material-symbols-rounded" aria-hidden="true">
             {action.icon}
