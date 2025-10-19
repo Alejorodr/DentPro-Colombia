@@ -4,7 +4,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 import { ThemeToggle } from "./ThemeToggle";
-import { LoginPopover } from "./LoginPopover";
+import { LoginModal } from "./LoginModal";
 
 interface NavLink {
   href: string;
@@ -30,7 +30,7 @@ interface NavbarProps {
 
 export function Navbar({ brand, links, cta, login }: NavbarProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const profileButtonRef = useRef<HTMLButtonElement>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -52,8 +52,8 @@ export function Navbar({ brand, links, cta, login }: NavbarProps) {
 
   const toggleMenu = () => setIsOpen((prev) => !prev);
   const closeMenu = () => setIsOpen(false);
-  const toggleLoginPopover = () => {
-    setIsLoginOpen((prev) => {
+  const toggleLoginModal = () => {
+    setIsLoginModalOpen((prev) => {
       const next = !prev;
       if (next) {
         closeMenu();
@@ -61,20 +61,20 @@ export function Navbar({ brand, links, cta, login }: NavbarProps) {
       return next;
     });
   };
-  const closeLoginPopover = () => {
-    setIsLoginOpen(false);
+  const closeLoginModal = () => {
+    setIsLoginModalOpen(false);
     if (profileButtonRef.current) {
       profileButtonRef.current.focus();
     }
   };
-  const openLoginFromMobile = () => {
-    setIsLoginOpen(true);
+  const openLoginModalFromMobile = () => {
+    setIsLoginModalOpen(true);
     closeMenu();
   };
 
   useEffect(() => {
     if (isOpen) {
-      setIsLoginOpen(false);
+      setIsLoginModalOpen(false);
     }
   }, [isOpen]);
 
@@ -85,7 +85,7 @@ export function Navbar({ brand, links, cta, login }: NavbarProps) {
       return;
     }
 
-    setIsLoginOpen(true);
+    setIsLoginModalOpen(true);
     setIsOpen(false);
 
     const params = new URLSearchParams(searchParams.toString());
@@ -124,16 +124,16 @@ export function Navbar({ brand, links, cta, login }: NavbarProps) {
                 ref={profileButtonRef}
                 className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition hover:border-brand-teal hover:text-brand-teal focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-indigo dark:border-surface-muted dark:text-slate-200 dark:hover:border-accent-cyan dark:hover:text-accent-cyan"
                 aria-haspopup="dialog"
-                aria-expanded={isLoginOpen}
-                aria-controls="loginPopover"
-                onClick={toggleLoginPopover}
+                aria-expanded={isLoginModalOpen}
+                aria-controls="loginModal"
+                onClick={toggleLoginModal}
               >
                 <span className="material-symbols-rounded" aria-hidden="true">
                   account_circle
                 </span>
                 <span className="sr-only">Abrir panel de ingreso</span>
               </button>
-              <LoginPopover open={isLoginOpen} anchorRef={profileButtonRef} onClose={closeLoginPopover} />
+              <LoginModal open={isLoginModalOpen} onClose={closeLoginModal} />
             </div>
           )}
           <a href={cta.href} className="btn-primary hidden lg:inline-flex">
@@ -171,7 +171,7 @@ export function Navbar({ brand, links, cta, login }: NavbarProps) {
           <button
             type="button"
             className="btn-secondary inline-flex items-center justify-center gap-2"
-            onClick={openLoginFromMobile}
+            onClick={openLoginModalFromMobile}
           >
             <span className="material-symbols-rounded text-base" aria-hidden="true">
               account_circle
