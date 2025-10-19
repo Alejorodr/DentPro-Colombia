@@ -53,7 +53,13 @@ export function Navbar({ brand, links, cta, login }: NavbarProps) {
   const toggleMenu = () => setIsOpen((prev) => !prev);
   const closeMenu = () => setIsOpen(false);
   const toggleLoginPopover = () => {
-    setIsLoginOpen((prev) => !prev);
+    setIsLoginOpen((prev) => {
+      const next = !prev;
+      if (next) {
+        closeMenu();
+      }
+      return next;
+    });
   };
   const closeLoginPopover = () => {
     setIsLoginOpen(false);
@@ -72,20 +78,22 @@ export function Navbar({ brand, links, cta, login }: NavbarProps) {
     }
   }, [isOpen]);
 
+  const authParam = searchParams.get("auth");
+
   useEffect(() => {
-    const authParam = searchParams.get("auth");
-
-    if (authParam === "1") {
-      setIsLoginOpen(true);
-      setIsOpen(false);
-
-      const params = new URLSearchParams(searchParams.toString());
-      params.delete("auth");
-
-      const nextUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
-      router.replace(nextUrl, { scroll: false });
+    if (authParam !== "1") {
+      return;
     }
-  }, [pathname, router, searchParams]);
+
+    setIsLoginOpen(true);
+    setIsOpen(false);
+
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("auth");
+
+    const nextUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
+    router.replace(nextUrl, { scroll: false });
+  }, [authParam, pathname, router, searchParams]);
 
   return (
     <header className="topbar">

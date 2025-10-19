@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
-  title: "Ingreso a portales DentPro",
+  title: "Acceso DentPro",
   description:
-    "Accede a los portales de pacientes, profesionales o administración de DentPro Colombia desde un único punto de entrada.",
+    "Inicia sesión desde cualquier página con la burbuja flotante: detectamos tu rol automáticamente para llevarte al tablero correcto.",
 };
 
 export default function LoginPage() {
