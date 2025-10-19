@@ -1,3 +1,5 @@
+import { Suspense } from "react";
+
 import { BookingFormSection } from "./components/BookingForm";
 import { ContactSection } from "./components/ContactSection";
 import { FloatingActions } from "./components/FloatingActions";
@@ -20,17 +22,19 @@ export default function MarketingPage() {
           { href: "https://www.facebook.com/", label: "Facebook DentPro", icon: "thumb_up" },
         ]}
       />
-      <Navbar
-        brand={{ href: "#", name: "DentPro Colombia", initials: "DP" }}
-        links={[
-          { href: "#servicios", label: "Servicios" },
-          { href: "#especialistas", label: "Especialistas" },
-          { href: "#agenda", label: "Agenda tu cita" },
-          { href: "#contacto", label: "Contacto" },
-        ]}
-        login={{ href: "/?auth=1", label: "Ingresar al portal" }}
-        cta={{ href: "#agenda", label: "Agenda ahora" }}
-      />
+      <Suspense fallback={<div className="h-20" aria-hidden="true" />}>
+        <Navbar
+          brand={{ href: "#", name: "DentPro Colombia", initials: "DP" }}
+          links={[
+            { href: "#servicios", label: "Servicios" },
+            { href: "#especialistas", label: "Especialistas" },
+            { href: "#agenda", label: "Agenda tu cita" },
+            { href: "#contacto", label: "Contacto" },
+          ]}
+          login={{ href: "/?auth=1", label: "Ingresar al portal" }}
+          cta={{ href: "#agenda", label: "Agenda ahora" }}
+        />
+      </Suspense>
       <main>
         <Hero
           badge="Calidad internacional"
