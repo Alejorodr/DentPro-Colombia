@@ -31,7 +31,7 @@ interface NavbarProps {
 export function Navbar({ brand, links, cta, login }: NavbarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const profileButtonRef = useRef<HTMLButtonElement>(null);
+  const loginButtonRef = useRef<HTMLButtonElement>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
@@ -63,8 +63,8 @@ export function Navbar({ brand, links, cta, login }: NavbarProps) {
   };
   const closeLoginModal = () => {
     setIsLoginModalOpen(false);
-    if (profileButtonRef.current) {
-      profileButtonRef.current.focus();
+    if (loginButtonRef.current) {
+      loginButtonRef.current.focus();
     }
   };
   const openLoginModalFromMobile = () => {
@@ -117,25 +117,25 @@ export function Navbar({ brand, links, cta, login }: NavbarProps) {
         </nav>
         <div className="flex items-center gap-4">
           <ThemeToggle />
-          {login && (
+          {login ? (
             <div className="relative">
               <button
                 type="button"
-                ref={profileButtonRef}
-                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition hover:border-brand-teal hover:text-brand-teal focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-indigo dark:border-surface-muted dark:text-slate-200 dark:hover:border-accent-cyan dark:hover:text-accent-cyan"
+                ref={loginButtonRef}
+                className="btn-secondary text-sm"
                 aria-haspopup="dialog"
                 aria-expanded={isLoginModalOpen}
                 aria-controls="loginModal"
                 onClick={toggleLoginModal}
               >
-                <span className="material-symbols-rounded" aria-hidden="true">
+                <span className="material-symbols-rounded text-base" aria-hidden="true">
                   account_circle
                 </span>
-                <span className="sr-only">Abrir panel de ingreso</span>
+                {login.label}
               </button>
               <LoginModal open={isLoginModalOpen} onClose={closeLoginModal} />
             </div>
-          )}
+          ) : null}
           <a href={cta.href} className="btn-primary hidden lg:inline-flex">
             {cta.label}
           </a>
