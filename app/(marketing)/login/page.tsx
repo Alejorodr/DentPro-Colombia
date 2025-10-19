@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 const rolePortals = [
   {
@@ -31,7 +32,7 @@ export default function LoginPage() {
   return (
     <main className="min-h-screen bg-gradient-to-b from-brand-light/40 via-white to-brand-light/30 py-20 dark:from-surface-base dark:via-surface-base dark:to-surface-base">
       <div className="mx-auto w-full max-w-6xl px-6">
-        <a
+        <Link
           href="/"
           className="mb-8 inline-flex items-center gap-2 text-sm font-semibold text-brand-teal transition hover:text-brand-indigo dark:text-accent-cyan dark:hover:text-white"
         >
@@ -39,7 +40,7 @@ export default function LoginPage() {
             arrow_back
           </span>
           Volver a DentPro Colombia
-        </a>
+        </Link>
 
         <div className="grid gap-12 lg:grid-cols-[1.05fr,0.95fr]">
           <section className="card space-y-8 dark:bg-surface-elevated/80">
@@ -61,7 +62,7 @@ export default function LoginPage() {
               </p>
               <div className="mt-6 grid gap-4 md:grid-cols-3">
                 {rolePortals.map((role) => (
-                  <a
+                  <Link
                     key={role.name}
                     href={role.href}
                     className="group flex h-full flex-col justify-between rounded-2xl border border-brand-light/60 bg-white/80 p-5 transition hover:-translate-y-1 hover:border-brand-teal hover:shadow-xl hover:shadow-brand-teal/20 dark:border-surface-muted/70 dark:bg-surface-base/90 dark:hover:border-accent-cyan dark:hover:shadow-glow-dark"
@@ -81,7 +82,7 @@ export default function LoginPage() {
                         arrow_outward
                       </span>
                     </span>
-                  </a>
+                  </Link>
                 ))}
               </div>
             </div>
@@ -123,9 +124,12 @@ export default function LoginPage() {
                   autoComplete="current-password"
                 />
                 <div className="flex justify-end">
-                  <a href="/recuperar" className="text-sm font-semibold text-brand-teal transition hover:text-brand-indigo dark:text-accent-cyan dark:hover:text-white">
+                  <Link
+                    href="/recuperar"
+                    className="text-sm font-semibold text-brand-teal transition hover:text-brand-indigo dark:text-accent-cyan dark:hover:text-white"
+                  >
                     ¿Olvidaste tu contraseña?
-                  </a>
+                  </Link>
                 </div>
               </div>
               <div className="space-y-2">
