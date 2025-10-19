@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 interface HeroStat {
   label: string;
   description: string;
@@ -78,15 +80,28 @@ export function Hero({
         <div className="relative isolate lg:max-h-[640px] lg:scale-[0.98] xl:max-h-[680px] xl:scale-100">
           <div className="relative z-10">
             <div className="card border-white/40 bg-white/80 p-6 shadow-xl shadow-brand-teal/20 backdrop-blur transition-colors duration-500 hover:!translate-y-0 hover:!shadow-xl dark:!border-accent-cyan/10 dark:!bg-surface-elevated/70 dark:shadow-surface-dark lg:p-8">
-              <div className="aspect-[4/5] overflow-hidden rounded-2xl bg-gradient-to-br from-brand-teal via-brand-sky to-brand-indigo dark:from-accent-cyan dark:via-brand-teal dark:to-brand-midnight">
-                <img src={image.src} alt={image.alt} className="h-full w-full object-cover" />
+              <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-gradient-to-br from-brand-teal via-brand-sky to-brand-indigo dark:from-accent-cyan dark:via-brand-teal dark:to-brand-midnight">
+                <Image
+                  src={image.src}
+                  alt={image.alt}
+                  fill
+                  priority
+                  sizes="(min-width: 1280px) 28rem, (min-width: 1024px) 26rem, 90vw"
+                  className="h-full w-full object-cover"
+                />
               </div>
               <div className="card mt-6 grid gap-4 rounded-2xl bg-white/90 p-6 text-sm !shadow-lg transition-colors duration-500 hover:!translate-y-0 hover:!shadow-lg dark:!bg-surface-muted/90 dark:text-slate-100">
                 <p className="font-semibold text-brand-teal dark:text-accent-cyan">Testimonio real</p>
                 <p className="text-slate-600 dark:text-slate-200">“{testimonial.quote}”</p>
                 <div className="flex items-center gap-4">
-                  <div className="h-12 w-12 overflow-hidden rounded-full">
-                    <img src={testimonial.avatar} alt={testimonial.author} className="h-full w-full object-cover" />
+                  <div className="relative h-12 w-12 overflow-hidden rounded-full">
+                    <Image
+                      src={testimonial.avatar}
+                      alt={testimonial.author}
+                      fill
+                      sizes="48px"
+                      className="h-full w-full object-cover"
+                    />
                   </div>
                   <div>
                     <p className="font-semibold text-slate-900 dark:text-white">{testimonial.author}</p>

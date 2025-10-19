@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+
 import { useSpecialistsCarousel } from "@/hooks/useSpecialistsCarousel";
 
 interface SpecialistCard {
@@ -61,7 +63,14 @@ export function SpecialistsSlider({ badge, title, description, specialists }: Sp
           >
             {specialists.map((specialist) => (
               <article key={specialist.name} className="card specialist" data-slide>
-                <img src={specialist.image.src} alt={specialist.image.alt} className="specialist-photo" />
+                <Image
+                  src={specialist.image.src}
+                  alt={specialist.image.alt}
+                  width={600}
+                  height={750}
+                  className="specialist-photo"
+                  sizes="(min-width: 1280px) calc((100vw - 3rem) / 3), (min-width: 768px) calc((100vw - 2rem) / 2), 90vw"
+                />
                 <div className="mt-4">
                   <h3 className="text-xl font-semibold text-slate-900 dark:text-white">{specialist.name}</h3>
                   <p className="text-sm text-brand-teal dark:text-accent-cyan">{specialist.specialty}</p>

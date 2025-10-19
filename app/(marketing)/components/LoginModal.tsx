@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState, type MouseEventHandler } from "react";
 import { createPortal } from "react-dom";
 
@@ -141,7 +142,7 @@ export function LoginModal({ open, onClose }: LoginModalProps) {
               </p>
               <div className="mt-4 grid gap-3 md:grid-cols-3">
                 {rolePortals.map((role) => (
-                  <a
+                  <Link
                     key={role.name}
                     href={role.href}
                     className="group flex h-full flex-col justify-between rounded-2xl border border-brand-light/60 bg-white/80 p-4 transition hover:-translate-y-1 hover:border-brand-teal hover:shadow-xl hover:shadow-brand-teal/20 dark:border-surface-muted/70 dark:bg-surface-base/90 dark:hover:border-accent-cyan dark:hover:shadow-glow-dark"
@@ -161,7 +162,7 @@ export function LoginModal({ open, onClose }: LoginModalProps) {
                         arrow_outward
                       </span>
                     </span>
-                  </a>
+                  </Link>
                 ))}
               </div>
             </div>
@@ -205,12 +206,12 @@ export function LoginModal({ open, onClose }: LoginModalProps) {
                   autoComplete="current-password"
                 />
                 <div className="flex justify-end">
-                  <a
+                  <Link
                     href="/recuperar"
                     className="text-sm font-semibold text-brand-teal transition hover:text-brand-indigo dark:text-accent-cyan dark:hover:text-white"
                   >
                     ¿Olvidaste tu contraseña?
-                  </a>
+                  </Link>
                 </div>
               </div>
               <div className="space-y-2">
