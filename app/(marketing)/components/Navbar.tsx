@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+
 import { ThemeToggle } from "./ThemeToggle";
-import { LoginModal } from "./LoginModal";
+import { LoginPopover } from "./LoginPopover";
 
 interface NavLink {
   href: string;
@@ -33,9 +34,8 @@ export function Navbar({ brand, links, cta, login }: NavbarProps) {
 
   useEffect(() => {
     if (typeof document === "undefined") return;
-    const shouldLockScroll = isOpen || isLoginOpen;
 
-    if (shouldLockScroll) {
+    if (isOpen) {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "";
@@ -44,20 +44,29 @@ export function Navbar({ brand, links, cta, login }: NavbarProps) {
     return () => {
       document.body.style.overflow = "";
     };
-  }, [isOpen, isLoginOpen]);
+  }, [isOpen]);
 
   const toggleMenu = () => setIsOpen((prev) => !prev);
   const closeMenu = () => setIsOpen(false);
-  const openLoginModal = () => {
-    closeMenu();
-    setIsLoginOpen(true);
+  const toggleLoginPopover = () => {
+    setIsLoginOpen((prev) => !prev);
   };
-  const closeLoginModal = () => {
+  const closeLoginPopover = () => {
     setIsLoginOpen(false);
     if (profileButtonRef.current) {
       profileButtonRef.current.focus();
     }
   };
+  const openLoginFromMobile = () => {
+    setIsLoginOpen(true);
+    closeMenu();
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      setIsLoginOpen(false);
+    }
+  }, [isOpen]);
 
   return (
     <header className="topbar">
@@ -82,30 +91,27 @@ export function Navbar({ brand, links, cta, login }: NavbarProps) {
         <div className="flex items-center gap-4">
           <ThemeToggle />
           {login && (
-            <a href={login.href} className="btn-secondary hidden lg:inline-flex">
-              <span className="material-symbols-rounded text-base" aria-hidden="true">
-                login
-              </span>
-              {login.label}
-            </a>
+            <div className="relative">
+              <button
+                type="button"
+                ref={profileButtonRef}
+                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition hover:border-brand-teal hover:text-brand-teal focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-indigo dark:border-surface-muted dark:text-slate-200 dark:hover:border-accent-cyan dark:hover:text-accent-cyan"
+                aria-haspopup="dialog"
+                aria-expanded={isLoginOpen}
+                aria-controls="loginPopover"
+                onClick={toggleLoginPopover}
+              >
+                <span className="material-symbols-rounded" aria-hidden="true">
+                  account_circle
+                </span>
+                <span className="sr-only">Abrir panel de ingreso</span>
+              </button>
+              <LoginPopover open={isLoginOpen} anchorRef={profileButtonRef} onClose={closeLoginPopover} />
+            </div>
           )}
           <a href={cta.href} className="btn-primary hidden lg:inline-flex">
             {cta.label}
           </a>
-          <button
-            type="button"
-            ref={profileButtonRef}
-            className="hidden h-11 w-11 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition hover:border-brand-teal hover:text-brand-teal focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-indigo dark:border-surface-muted dark:text-slate-200 dark:hover:border-accent-cyan dark:hover:text-accent-cyan lg:inline-flex"
-            aria-haspopup="dialog"
-            aria-expanded={isLoginOpen}
-            aria-controls="loginModal"
-            onClick={openLoginModal}
-          >
-            <span className="material-symbols-rounded" aria-hidden="true">
-              account_circle
-            </span>
-            <span className="sr-only">Abrir panel de ingreso</span>
-          </button>
           <button
             type="button"
             className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 lg:hidden"
@@ -132,29 +138,21 @@ export function Navbar({ brand, links, cta, login }: NavbarProps) {
               {link.label}
             </a>
           ))}
-          {login && (
-            <a href={login.href} className="btn-secondary" onClick={closeMenu}>
-              {login.label}
-            </a>
-          )}
           <a href={cta.href} className="btn-primary" onClick={closeMenu}>
             {cta.label}
           </a>
           <button
             type="button"
             className="btn-secondary inline-flex items-center justify-center gap-2"
-            onClick={openLoginModal}
+            onClick={openLoginFromMobile}
           >
             <span className="material-symbols-rounded text-base" aria-hidden="true">
               account_circle
             </span>
-            Iniciar sesión
+            {login?.label ?? "Iniciar sesión"}
           </button>
         </nav>
       </div>
-      {isLoginOpen && (
-        <LoginModal open={isLoginOpen} onClose={closeLoginModal} />
-      )}
     </header>
   );
 }
