@@ -73,7 +73,7 @@ export const authOptions: NextAuthOptions = {
     },
   },
   pages: {
-    signIn: "/api/auth/signin",
+    signIn: "/login",
   },
   secret: process.env.NEXTAUTH_SECRET ?? "dentpro-secret",
 };

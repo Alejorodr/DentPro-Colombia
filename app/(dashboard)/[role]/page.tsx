@@ -100,7 +100,7 @@ export default async function RoleDashboardPage({ params }: { params: { role: st
 
   const session = await getServerSession(authOptions);
   if (!session) {
-    redirect(`/api/auth/signin?callbackUrl=${encodeURIComponent(getDefaultDashboardPath(requestedRole))}`);
+    redirect(`/login?callbackUrl=${encodeURIComponent(getDefaultDashboardPath(requestedRole))}`);
   }
 
   const userRole = session.user.role;
