@@ -24,6 +24,15 @@ node scripts/seed.cjs
 - Puedes sobreescribir la contraseña usada por el seed exportando `SEED_PASSWORD`.
 - Si trabajas con una ruta de base de datos personalizada, exporta `AUTH_DATABASE_URL` antes de ejecutar el script.
 
+### Usuario administrador por defecto
+
+Al ejecutar el seed se crea (o sincroniza) el usuario administrador principal:
+
+- **Correo:** `admin@dentpro.co`
+- **Contraseña:** valor de `SEED_PASSWORD` (por defecto `demo123`)
+
+Puedes iniciar sesión con estas credenciales en el panel (`/admin`). Recuerda cambiarlas en producción exportando `SEED_PASSWORD` antes de correr el script.
+
 ## Actualizar catálogos de roles y permisos
 
 1. Añade o modifica los valores en la tabla correspondiente mediante una nueva migración SQL.
