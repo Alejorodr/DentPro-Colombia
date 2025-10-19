@@ -1,5 +1,6 @@
 "use client";
 
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 import { ThemeToggle } from "./ThemeToggle";
@@ -31,6 +32,9 @@ export function Navbar({ brand, links, cta, login }: NavbarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const profileButtonRef = useRef<HTMLButtonElement>(null);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
 
   useEffect(() => {
     if (typeof document === "undefined") return;
@@ -67,6 +71,21 @@ export function Navbar({ brand, links, cta, login }: NavbarProps) {
       setIsLoginOpen(false);
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    const authParam = searchParams.get("auth");
+
+    if (authParam === "1") {
+      setIsLoginOpen(true);
+      setIsOpen(false);
+
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete("auth");
+
+      const nextUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
+      router.replace(nextUrl, { scroll: false });
+    }
+  }, [pathname, router, searchParams]);
 
   return (
     <header className="topbar">
