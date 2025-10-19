@@ -1,51 +1,62 @@
-import { UserRole } from "./roles";
+import { compare } from "bcryptjs";
 
-export interface MockUser {
+import { db } from "../db";
+import { isUserRole, type UserRole } from "./roles";
+
+interface UserRow {
   id: string;
-  name: string;
+  name: string | null;
+  email: string;
+  password_hash: string;
+  primary_role_id: string;
+}
+
+export interface DatabaseUser {
+  id: string;
+  name: string | null;
   email: string;
   role: UserRole;
-  password: string;
 }
 
-const users: MockUser[] = [
-  {
-    id: "u1",
-    name: "Laura Gómez",
-    email: "laura@dentpro.co",
-    role: "patient",
-    password: "demo123",
-  },
-  {
-    id: "u2",
-    name: "Dr. Santiago Herrera",
-    email: "santiago@dentpro.co",
-    role: "professional",
-    password: "demo123",
-  },
-  {
-    id: "u3",
-    name: "Coordinación Chía",
-    email: "recepcion@dentpro.co",
-    role: "reception",
-    password: "demo123",
-  },
-  {
-    id: "u4",
-    name: "Ana María Pérez",
-    email: "admin@dentpro.co",
-    role: "admin",
-    password: "demo123",
-  },
-];
+function mapRowToUser(row: UserRow): DatabaseUser | null {
+  if (!isUserRole(row.primary_role_id)) {
+    return null;
+  }
 
-export async function authenticateUser(email: string, password: string): Promise<MockUser | null> {
-  await new Promise((resolve) => setTimeout(resolve, 150));
+  return {
+    id: row.id,
+    name: row.name,
+    email: row.email,
+    role: row.primary_role_id,
+  };
+}
+
+export async function authenticateUser(email: string, password: string): Promise<DatabaseUser | null> {
   const normalizedEmail = email.toLowerCase();
-  const user = users.find((candidate) => candidate.email === normalizedEmail && candidate.password === password);
-  return user ?? null;
+  const statement = db.prepare(
+    `SELECT id, name, email, password_hash, primary_role_id FROM users WHERE lower(email) = ?`
+  );
+  const row = statement.get(normalizedEmail) as UserRow | undefined;
+  if (!row) {
+    return null;
+  }
+
+  const passwordsMatch = await compare(password, row.password_hash);
+  if (!passwordsMatch) {
+    return null;
+  }
+
+  return mapRowToUser(row);
 }
 
-export function findUserById(id: string): MockUser | undefined {
-  return users.find((user) => user.id === id);
+export function findUserById(id: string): DatabaseUser | null {
+  const statement = db.prepare(
+    `SELECT id, name, email, password_hash, primary_role_id FROM users WHERE id = ?`
+  );
+  const row = statement.get(id) as UserRow | undefined;
+  if (!row) {
+    return null;
+  }
+
+  return mapRowToUser(row);
 }
