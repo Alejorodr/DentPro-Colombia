@@ -16,12 +16,13 @@ const RoleContext = createContext<RoleContextValue | undefined>(undefined);
 
 function RoleProvider({ children }: { children: ReactNode }) {
   const { data: session, status } = useSession();
+  const userRole = ((session?.user ?? null) as { role?: UserRole } | null)?.role ?? null;
   const value = useMemo<RoleContextValue>(
     () => ({
-      role: session?.user.role ?? null,
+      role: userRole,
       isLoading: status === "loading",
     }),
-    [session?.user.role, status],
+    [userRole, status],
   );
 
   return <RoleContext.Provider value={value}>{children}</RoleContext.Provider>;

@@ -1,11 +1,13 @@
-import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import NextAuth, { getServerSession as nextGetServerSession } from "next-auth/next";
 
 import { sqliteAdapter } from "./adapter";
 import { authenticateUser, findUserById } from "./users";
 import type { UserRole } from "./roles";
 
-export const authOptions: NextAuthOptions = {
+export type NextAuthConfig = Parameters<typeof NextAuth>[2];
+
+export const authOptions: NextAuthConfig = {
   adapter: sqliteAdapter,
   providers: [
     CredentialsProvider({
@@ -34,7 +36,7 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   session: {
-    strategy: "database",
+    strategy: "database" as const,
   },
   callbacks: {
     async jwt({ token, user }) {
@@ -52,21 +54,27 @@ export const authOptions: NextAuthOptions = {
         sub?: string;
         role?: UserRole;
       };
-      const userId = (user as { id?: string } | null)?.id ?? tokenData.sub ?? session.user.id ?? "";
+      const sessionUser = (session.user ?? (session.user = {})) as {
+        id?: string;
+        role?: UserRole;
+        name?: string | null;
+        email?: string | null;
+      };
+      const userId = (user as { id?: string } | null)?.id ?? tokenData.sub ?? sessionUser.id ?? "";
       if (!userId) {
-        session.user.role = tokenData.role ?? "patient";
+        sessionUser.role = tokenData.role ?? "patient";
         return session;
       }
 
       const dbUser = findUserById(userId);
       if (dbUser) {
-        session.user.id = dbUser.id;
-        session.user.role = dbUser.role;
-        session.user.name = dbUser.name ?? undefined;
-        session.user.email = dbUser.email;
+        sessionUser.id = dbUser.id;
+        sessionUser.role = dbUser.role;
+        sessionUser.name = dbUser.name ?? undefined;
+        sessionUser.email = dbUser.email;
       } else {
-        session.user.id = userId;
-        session.user.role = tokenData.role ?? "patient";
+        sessionUser.id = userId;
+        sessionUser.role = tokenData.role ?? sessionUser.role ?? "patient";
       }
 
       return session;
@@ -77,3 +85,7 @@ export const authOptions: NextAuthOptions = {
   },
   secret: process.env.NEXTAUTH_SECRET ?? "dentpro-secret",
 };
+
+export async function getServerAuthSession() {
+  return nextGetServerSession(authOptions);
+}
