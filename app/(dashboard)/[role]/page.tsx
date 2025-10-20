@@ -1,7 +1,8 @@
-import { getServerSession } from "next-auth";
+import type { Session } from "next-auth";
 import { notFound, redirect } from "next/navigation";
 
-import { authOptions } from "@/lib/auth/options";
+import { authOptions, getServerAuthSession } from "@/lib/auth/options";
+import type { NextAuthConfig } from "@/lib/auth/options";
 import { listAppointments } from "@/lib/api/appointments";
 import { listPatients } from "@/lib/api/patients";
 import { listSchedules } from "@/lib/api/schedules";
@@ -92,13 +93,26 @@ async function buildSections(role: RoleParam): Promise<DashboardSection[]> {
   ];
 }
 
-export default async function RoleDashboardPage({ params }: { params: { role: string } }) {
-  const requestedRole = params.role;
+type RolePageProps = {
+  params?: Promise<{ role: string }>;
+};
+
+type SessionWithRole = Session & {
+  user: NonNullable<Session["user"]> & { role: RoleParam };
+};
+
+export default async function RoleDashboardPage({ params }: RolePageProps) {
+  const resolvedParams = params ? await params : null;
+  if (!resolvedParams) {
+    notFound();
+  }
+
+  const requestedRole = resolvedParams.role;
   if (!isUserRole(requestedRole)) {
     notFound();
   }
 
-  const session = await getServerSession(authOptions);
+  const session = (await getServerAuthSession()) as SessionWithRole | null;
   if (!session) {
     redirect(`/login?callbackUrl=${encodeURIComponent(getDefaultDashboardPath(requestedRole))}`);
   }

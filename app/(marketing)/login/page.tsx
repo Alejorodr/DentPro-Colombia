@@ -7,8 +7,13 @@ export const metadata: Metadata = {
     "Inicia sesión desde cualquier página con la burbuja flotante: detectamos tu rol automáticamente para llevarte al tablero correcto.",
 };
 
-export default function LoginPage({ searchParams }: { searchParams: { callbackUrl?: string } }) {
-  const callbackUrl = searchParams.callbackUrl;
+type LoginPageProps = {
+  searchParams?: Promise<{ callbackUrl?: string }>;
+};
+
+export default async function LoginPage({ searchParams }: LoginPageProps) {
+  const resolvedSearchParams = searchParams ? await searchParams : {};
+  const callbackUrl = resolvedSearchParams.callbackUrl;
   const destination = callbackUrl
     ? `/?auth=1&callbackUrl=${encodeURIComponent(callbackUrl)}`
     : "/?auth=1";

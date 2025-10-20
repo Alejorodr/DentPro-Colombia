@@ -17,16 +17,16 @@ type ResourceMap = {
 
 type ResourceName = keyof ResourceMap;
 
+const resourceFetchers: { [K in ResourceName]: () => ResourceMap[K] } = {
+  appointments: () => [...mockAppointments],
+  schedules: () => [...mockSchedules],
+  patients: () => [...mockPatients],
+};
+
 export const apiClient = {
   async get<T extends ResourceName>(resource: T): Promise<MockResponse<ResourceMap[T]>> {
     await delay(200);
-    if (resource === "appointments") {
-      return { data: [...mockAppointments] };
-    }
-    if (resource === "schedules") {
-      return { data: [...mockSchedules] };
-    }
-    return { data: [...mockPatients] };
+    return { data: resourceFetchers[resource]() };
   },
   async post(resource: "appointments", payload: AppointmentRequestPayload): Promise<MockResponse<AppointmentSummary>> {
     await delay(300);
