@@ -1,9 +1,5 @@
-node_modules
-.next
-out
+node_modules/
+.next/
+out/
 .env*
 .DS_Store
-*.db
-
-# testing artifacts
-coverage
