@@ -1,12 +1,8 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 
-export const {
-  handlers,
-  auth,
-  signIn,
-  signOut,
-} = NextAuth({
+// Cast para evitar el error "no call signatures" en TS
+const nextAuth: any = (NextAuth as any)({
   session: { strategy: "jwt" },
   providers: [
     Credentials({
@@ -24,3 +20,5 @@ export const {
     async session({ session, token }) { (session as any).role = (token as any).role ?? "user"; return session; },
   },
 });
+
+export const { handlers, auth, signIn, signOut } = nextAuth;
