@@ -1,7 +1,9 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import type { JWT } from "next-auth/jwt";
+import type { Session } from "next-auth";
 
-// Cast para evitar el error "no call signatures" en TS
+// Cast para evitar el "no call signatures"
 const nextAuth: any = (NextAuth as any)({
   session: { strategy: "jwt" },
   providers: [
@@ -16,8 +18,14 @@ const nextAuth: any = (NextAuth as any)({
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) { if (user) (token as any).role = (user as any).role ?? "user"; return token; },
-    async session({ session, token }) { (session as any).role = (token as any).role ?? "user"; return session; },
+    async jwt({ token, user }: { token: JWT; user?: any }) {
+      if (user) (token as any).role = (user as any).role ?? "user";
+      return token;
+    },
+    async session({ session, token }: { session: Session; token: JWT }) {
+      (session as any).role = (token as any).role ?? "user";
+      return session;
+    },
   },
 });
 
