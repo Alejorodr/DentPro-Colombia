@@ -112,7 +112,7 @@ export default async function RoleDashboardPage({ params }: RolePageProps) {
     notFound();
   }
 
-  const session = (await getServerAuthSession()) as SessionWithRole | null;
+  const session = (await auth()) as SessionWithRole | null;
   if (!session) {
     redirect(`/login?callbackUrl=${encodeURIComponent(getDefaultDashboardPath(requestedRole))}`);
   }
@@ -161,3 +161,4 @@ export default async function RoleDashboardPage({ params }: RolePageProps) {
     </div>
   );
 }
+
