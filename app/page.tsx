@@ -1,9 +1,5 @@
 export const dynamic = "force-dynamic";
-import MarketingPage from "./(marketing)/page";
 
-export default function Page() {
-  return <MarketingPage />;
+export default function Home() {
+  return <main style={{ padding: 24 }}><h1>DentPro</h1></main>;
 }
-
-
-
