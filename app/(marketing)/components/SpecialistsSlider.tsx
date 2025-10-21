@@ -84,3 +84,4 @@ export function SpecialistsSlider({ badge, title, description, specialists }: Sp
     </section>
   );
 }
+

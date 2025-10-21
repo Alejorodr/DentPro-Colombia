@@ -31,3 +31,4 @@ export interface PatientSummary {
   email: string;
   phone: string;
 }
+

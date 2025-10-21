@@ -9,3 +9,4 @@ export async function listPatients() {
 export const patientsKeys = {
   all: ["patients"] as const,
 };
+

@@ -60,3 +60,4 @@ export function findUserById(id: string): DatabaseUser | null {
 
   return mapRowToUser(row);
 }
+

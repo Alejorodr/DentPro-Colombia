@@ -17,3 +17,4 @@ function createDatabase(): BetterSqlite3Database {
 export const db = globalForDb.dentproDb ?? (globalForDb.dentproDb = createDatabase());
 
 export type DatabaseClient = typeof db;
+

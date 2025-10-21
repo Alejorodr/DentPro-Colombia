@@ -183,3 +183,4 @@ export function Navbar({ brand, links, cta, login }: NavbarProps) {
     </header>
   );
 }
+

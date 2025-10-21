@@ -22,3 +22,4 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
 
   return null;
 }
+

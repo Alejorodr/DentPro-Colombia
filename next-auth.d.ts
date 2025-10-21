@@ -30,3 +30,4 @@ declare module "next-auth/jwt" {
     role?: import("./lib/auth/roles").UserRole;
   }
 }
+

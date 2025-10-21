@@ -16,3 +16,4 @@ export function isUserRole(role: string): role is UserRole {
 export function getDefaultDashboardPath(role: UserRole): string {
   return `/${role}`;
 }
+

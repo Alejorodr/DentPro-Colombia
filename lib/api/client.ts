@@ -36,3 +36,4 @@ export const apiClient = {
     return { data: appointment };
   },
 };
+

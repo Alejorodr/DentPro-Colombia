@@ -56,3 +56,4 @@ export function useBookingForm({ onSuccess }: UseBookingFormOptions = {}) {
     error: mutation.error,
   };
 }
+

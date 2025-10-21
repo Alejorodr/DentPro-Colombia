@@ -76,3 +76,4 @@ export function InfoBar({ location, schedule, whatsapp, email, socials }: InfoBa
     </div>
   );
 }
+

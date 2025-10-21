@@ -30,3 +30,4 @@ const nextAuth: any = (NextAuth as any)({
 });
 
 export const { handlers, auth, signIn, signOut } = nextAuth;
+

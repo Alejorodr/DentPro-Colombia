@@ -55,3 +55,4 @@ export function useSpecialistsCarousel(totalItems: number) {
     translateX,
   };
 }
+

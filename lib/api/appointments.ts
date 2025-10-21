@@ -14,3 +14,4 @@ export async function createAppointmentRequest(payload: AppointmentRequestPayloa
 export const appointmentsKeys = {
   all: ["appointments"] as const,
 };
+

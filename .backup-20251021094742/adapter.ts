@@ -404,3 +404,4 @@ export const sqliteAdapter: Adapter = {
     return mapVerificationTokenRow(row);
   },
 };
+

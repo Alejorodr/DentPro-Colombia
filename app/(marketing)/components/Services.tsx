@@ -41,3 +41,4 @@ export function ServicesSection({ title, description, services }: ServicesProps)
     </section>
   );
 }
+

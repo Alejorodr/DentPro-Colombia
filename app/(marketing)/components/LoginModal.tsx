@@ -300,3 +300,4 @@ export function LoginModal({ open, onClose }: LoginModalProps) {
     </div>
   );
 }
+
