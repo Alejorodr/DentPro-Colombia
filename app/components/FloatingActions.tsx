@@ -1,34 +1,10 @@
-interface FloatingAction {
-  href: string;
-  label: string;
-  icon: string;
-  className?: string;
-  external?: boolean;
-}
-
-interface FloatingActionsProps {
-  actions: FloatingAction[];
-}
-
-export function FloatingActions({ actions }: FloatingActionsProps) {
+"use client";
+export default function FloatingActions() {
   return (
-    <div className="floating-actions" role="region" aria-label="Accesos r├ípidos">
-      {actions.map((action) => (
-        <a
-          key={action.href}
-          href={action.href}
-          className={`floating-action-btn ${action.className ?? ""}`.trim()}
-          aria-label={action.label}
-          target={action.external ? "_blank" : undefined}
-          rel={action.external ? "noopener noreferrer" : undefined}
-        >
-          <span className="material-symbols-rounded" aria-hidden="true">
-            {action.icon}
-          </span>
-          <span className="sr-only">{action.label}</span>
-        </a>
-      ))}
+    <div className="floaters">
+      <a className="fab" href="https://wa.me/573001112233" target="_blank" rel="noreferrer" title="WhatsApp"><i className="ri-whatsapp-line"></i></a>
+      <a className="fab" href="#booking" title="Agenda"><i className="ri-calendar-line"></i></a>
+      <a className="fab" href="tel:+573001112233" title="Llamar"><i className="ri-phone-line"></i></a>
     </div>
   );
 }
-

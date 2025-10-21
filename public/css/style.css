@@ -1,0 +1,30 @@
+:root { --bg:#0b0f14; --fg:#e8eef6; --muted:#9fb3c8; --brand:#28c0a5; --card:#121824; --line:#1f2a3a; font-synthesis-weight:none }
+*{box-sizing:border-box} html,body{height:100%} body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 Inter,system-ui,Arial}
+a{color:inherit;text-decoration:none} img{max-width:100%;height:auto}
+.container{max-width:1100px;margin:0 auto;padding:24px}
+.row{display:flex;gap:24px;flex-wrap:wrap}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:10px;border:1px solid var(--line);background:#182233;color:var(--fg);cursor:pointer}
+.btn-primary{background:var(--brand);border-color:var(--brand);color:#05221b}
+.badge{display:inline-block;background:#16202f;border:1px solid var(--line);padding:4px 8px;border-radius:999px;color:var(--muted);font-size:12px}
+.nav{position:sticky;top:0;z-index:20;background:rgba(8,12,18,.8);backdrop-filter:saturate(140%) blur(8px);border-bottom:1px solid var(--line)}
+.nav .inner{display:flex;align-items:center;justify-content:space-between;padding:12px 24px;max-width:1100px;margin:0 auto}
+.nav .links{display:flex;gap:16px;align-items:center}
+.infobar{background:#0f1624;border-bottom:1px solid var(--line);color:var(--muted)}
+.hero{padding:56px 0}
+.grid{display:grid;gap:16px}
+.grid-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media (max-width:900px){.grid-3,.grid-2{grid-template-columns:1fr}}
+.specialists{position:relative;overflow:hidden}
+.track{display:flex;gap:16px;transition:transform .4s ease}
+.dotbar{display:flex;gap:8px;justify-content:center;margin-top:8px}
+.dot{width:8px;height:8px;border-radius:999px;background:#334;opacity:.5}
+.dot.active{opacity:1;background:var(--brand)}
+.floaters{position:fixed;right:16px;bottom:16px;display:flex;flex-direction:column;gap:10px;z-index:50}
+.fab{width:52px;height:52px;border-radius:999px;display:flex;align-items:center;justify-content:center;background:var(--brand);color:#05221b;border:none;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.35)}
+footer{margin-top:48px;padding:24px;border-top:1px solid var(--line);color:var(--muted)}
+input,select,textarea{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:#0f1624;color:var(--fg)}
+label{display:block;margin:8px 0 4px;color:#b7c7d9}
+form .row{gap:12px}
+small.muted{color:var(--muted)}
