@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { Suspense } from "react";
 
 import { BookingFormSection } from "./components/BookingForm";
@@ -213,3 +214,4 @@ export default function MarketingPage() {
     </>
   );
 }
+
