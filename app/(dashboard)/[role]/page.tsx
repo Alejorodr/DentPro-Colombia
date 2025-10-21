@@ -1,8 +1,8 @@
 import type { Session } from "next-auth";
 import { notFound, redirect } from "next/navigation";
 
-import { authOptions, getServerAuthSession } from "@/auth";
-import type { NextAuthConfig } from "@/auth";
+import { auth } from "@/auth";
+
 import { listAppointments } from "@/lib/api/appointments";
 import { listPatients } from "@/lib/api/patients";
 import { listSchedules } from "@/lib/api/schedules";
