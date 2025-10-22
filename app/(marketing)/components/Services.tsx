@@ -14,7 +14,7 @@ interface ServicesProps {
 export function ServicesSection({ title, description, services }: ServicesProps) {
   return (
     <section id="servicios" className="py-20 transition-colors duration-300 dark:bg-surface-base">
-      <div className="container px-6">
+      <div className="container mx-auto px-6">
         <div className="mx-auto max-w-3xl text-center">
           <h2 className="text-3xl font-bold text-slate-900 dark:text-white">{title}</h2>
           <p className="mt-4 text-lg text-slate-600 dark:text-slate-200">{description}</p>

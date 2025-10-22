@@ -37,7 +37,7 @@ export function BookingFormSection({
 
   return (
     <section id="agenda" className="py-20 transition-colors duration-300 dark:bg-surface-base">
-      <div className="container grid gap-12 px-6 lg:grid-cols-[1.2fr_1fr]">
+      <div className="container mx-auto grid gap-12 px-6 lg:grid-cols-[1.2fr_1fr]">
         <div className="rounded-3xl bg-gradient p-10 text-white shadow-xl transition-colors duration-500 dark:bg-card-dark dark:text-slate-100 dark:shadow-glow-dark">
           <h2 className="text-3xl font-bold">{title}</h2>
           <p className="mt-4 text-base text-brand-light">{description}</p>

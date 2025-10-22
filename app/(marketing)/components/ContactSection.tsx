@@ -55,7 +55,7 @@ export function ContactSection({
 
   return (
     <section id="contacto" className="bg-slate-900 py-20 text-white transition-colors duration-500 dark:bg-surface-base">
-      <div className="container grid gap-12 px-6 lg:grid-cols-3">
+      <div className="container mx-auto grid gap-12 px-6 lg:grid-cols-3">
         <div className="space-y-6">
           <h2 className="text-3xl font-bold">{title}</h2>
           <p className="text-base text-slate-300">{description}</p>
@@ -119,7 +119,7 @@ export function ContactSection({
         </div>
       </div>
       <div className="mt-20 border-t border-white/10 dark:border-surface-muted/80">
-        <div className="container flex flex-col gap-4 px-6 py-8 text-sm text-slate-400 transition-colors duration-300 dark:text-slate-500 md:flex-row md:items-center md:justify-between">
+        <div className="container mx-auto flex flex-col gap-4 px-6 py-8 text-sm text-slate-400 transition-colors duration-300 dark:text-slate-500 md:flex-row md:items-center md:justify-between">
           <p>
             © {currentYear} {brand}. Todos los derechos reservados.
           </p>
