@@ -2,14 +2,48 @@
 
 import { useEffect, useState } from "react";
 
-function getStoredTheme(): "light" | "dark" {
+type SafeStorageResult = {
+  value: string | null;
+  hasError: boolean;
+};
+
+function safeStorageGet(key: string): SafeStorageResult {
   if (typeof window === "undefined") {
+    return { value: null, hasError: false };
+  }
+
+  try {
+    return { value: window.localStorage.getItem(key), hasError: false };
+  } catch {
+    return { value: null, hasError: true };
+  }
+}
+
+function safeStorageSet(key: string, value: string): boolean {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  try {
+    window.localStorage.setItem(key, value);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function getStoredTheme(): "light" | "dark" {
+  const { value: stored, hasError } = safeStorageGet("dentpro-theme");
+  if (hasError) {
     return "light";
   }
 
-  const stored = window.localStorage.getItem("dentpro-theme");
   if (stored === "light" || stored === "dark") {
     return stored;
+  }
+
+  if (typeof window === "undefined") {
+    return "light";
   }
 
   const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
@@ -34,7 +68,7 @@ export function ThemeToggle() {
       root.classList.remove("dark");
     }
 
-    window.localStorage.setItem("dentpro-theme", isDark ? "dark" : "light");
+    safeStorageSet("dentpro-theme", isDark ? "dark" : "light");
   }, [isDark]);
 
   const toggle = () => {
