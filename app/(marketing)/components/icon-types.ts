@@ -10,6 +10,7 @@ export type MarketingIconName =
   | "FacebookLogo"
   | "Headset"
   | "InstagramLogo"
+  | "TiktokLogo"
   | "LinkedinLogo"
   | "MapPin"
   | "Medal"

@@ -36,25 +36,25 @@ const marketingContent: MarketingContent = {
       icon: "ChatCircleDots",
     },
     email: {
-      href: "mailto:info@dentpro.co",
-      label: "info@dentpro.co",
+      href: "mailto:dentprocolombia@gmail.com",
+      label: "dentprocolombia@gmail.com",
       icon: "EnvelopeSimple",
     },
     socials: [
       {
-        href: "https://www.instagram.com/dentpro",
+        href: "https://www.instagram.com/dentprocol",
         label: "Instagram",
         icon: "InstagramLogo",
       },
       {
-        href: "https://www.facebook.com/dentpro",
+        href: "https://www.facebook.com/dentprocol",
         label: "Facebook",
         icon: "FacebookLogo",
       },
       {
-        href: "https://www.linkedin.com/company/dentpro",
-        label: "LinkedIn",
-        icon: "LinkedinLogo",
+        href: "https://www.tiktok.com/@dentprocol",
+        label: "TikTok",
+        icon: "TiktokLogo",
       },
     ],
   },
@@ -277,8 +277,8 @@ const marketingContent: MarketingContent = {
       {
         icon: "EnvelopeSimple",
         label: "Email",
-        value: "info@dentpro.co",
-        href: "mailto:info@dentpro.co",
+        value: "dentprocolombia@gmail.com",
+        href: "mailto:dentprocolombia@gmail.com",
       },
       {
         icon: "MapPin",
@@ -288,19 +288,19 @@ const marketingContent: MarketingContent = {
     ],
     socials: [
       {
-        href: "https://www.instagram.com/dentpro",
+        href: "https://www.instagram.com/dentprocol",
         label: "Instagram",
         text: "IG",
       },
       {
-        href: "https://www.facebook.com/dentpro",
+        href: "https://www.facebook.com/dentprocol",
         label: "Facebook",
         text: "FB",
       },
       {
-        href: "https://www.linkedin.com/company/dentpro",
-        label: "LinkedIn",
-        text: "IN",
+        href: "https://www.tiktok.com/@dentprocol",
+        label: "TikTok",
+        text: "TT",
       },
     ],
     supportTitle: "Patient Care DentPro",
