@@ -1,8 +1,9 @@
 import Script from "next/script";
-import "./legacy.css";
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+
+import { AppProviders } from "./providers";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -18,7 +19,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link href="https://cdn.jsdelivr.net/npm/remixicon@4.3.0/fonts/remixicon.css" rel="stylesheet"/>
       </head>
       <body>
-        {children}
+        <AppProviders>
+          {children}
+          <Analytics />
+          <SpeedInsights />
+        </AppProviders>
         <Script src="/js/main.js" strategy="afterInteractive" />
       </body>
     </html>
