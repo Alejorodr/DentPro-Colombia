@@ -1,7 +1,9 @@
+import type { Icon } from "@phosphor-icons/react";
+
 interface FloatingAction {
   href: string;
   label: string;
-  icon: string;
+  icon: Icon;
   className?: string;
   external?: boolean;
 }
@@ -13,21 +15,23 @@ interface FloatingActionsProps {
 export function FloatingActions({ actions }: FloatingActionsProps) {
   return (
     <div className="floating-actions" role="region" aria-label="Accesos rápidos">
-      {actions.map((action) => (
-        <a
-          key={action.href}
-          href={action.href}
-          className={`floating-action-btn ${action.className ?? ""}`.trim()}
-          aria-label={action.label}
-          target={action.external ? "_blank" : undefined}
-          rel={action.external ? "noopener noreferrer" : undefined}
-        >
-          <span className="material-symbols-rounded" aria-hidden="true">
-            {action.icon}
-          </span>
-          <span className="sr-only">{action.label}</span>
-        </a>
-      ))}
+      {actions.map((action) => {
+        const ActionIcon = action.icon;
+
+        return (
+          <a
+            key={action.href}
+            href={action.href}
+            className={`floating-action-btn ${action.className ?? ""}`.trim()}
+            aria-label={action.label}
+            target={action.external ? "_blank" : undefined}
+            rel={action.external ? "noopener noreferrer" : undefined}
+          >
+            <ActionIcon className="h-6 w-6" weight="bold" aria-hidden="true" />
+            <span className="sr-only">{action.label}</span>
+          </a>
+        );
+      })}
     </div>
   );
 }

@@ -2,6 +2,8 @@
 
 import Image from "next/image";
 
+import { CaretLeft, CaretRight } from "@phosphor-icons/react";
+
 import { useSpecialistsCarousel } from "@/hooks/useSpecialistsCarousel";
 
 interface SpecialistCard {
@@ -37,9 +39,7 @@ export function SpecialistsSlider({ badge, title, description, specialists }: Sp
           </div>
           <div className="flex gap-4">
             <button className="slider-btn" id="prevSpecialist" aria-label="Ver anterior" onClick={goPrev} disabled={currentIndex === 0}>
-              <span className="material-symbols-rounded" aria-hidden="true">
-                arrow_back
-              </span>
+              <CaretLeft className="h-5 w-5" weight="bold" aria-hidden="true" />
             </button>
             <button
               className="slider-btn"
@@ -48,9 +48,7 @@ export function SpecialistsSlider({ badge, title, description, specialists }: Sp
               onClick={goNext}
               disabled={currentIndex >= maxIndex}
             >
-              <span className="material-symbols-rounded" aria-hidden="true">
-                arrow_forward
-              </span>
+              <CaretRight className="h-5 w-5" weight="bold" aria-hidden="true" />
             </button>
           </div>
         </div>

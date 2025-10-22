@@ -1,5 +1,30 @@
 export const dynamic = "force-dynamic";
 
+import {
+  Baby,
+  CalendarCheck,
+  ChartLineUp,
+  ChatCircleDots,
+  Clock,
+  CreditCard,
+  DiamondsFour,
+  EnvelopeSimple,
+  FacebookLogo,
+  Headset,
+  InstagramLogo,
+  LinkedinLogo,
+  MapPin,
+  Medal,
+  Phone,
+  ShieldCheck,
+  Smiley,
+  Sparkle,
+  Stethoscope,
+  Tooth,
+  UsersThree,
+  WhatsappLogo,
+} from "@phosphor-icons/react";
+
 import { InfoBar } from "./(marketing)/components/InfoBar";
 import { Navbar } from "./(marketing)/components/Navbar";
 import { Hero } from "./(marketing)/components/Hero";
@@ -22,31 +47,39 @@ type MarketingContent = {
 
 const marketingContent: MarketingContent = {
   infoBar: {
-    location: "📍 Av. Principal 123, Bogotá",
-    schedule: "⏰ Lun–Vie 9:00-18:00 · Sáb 9:00-13:00",
+    location: {
+      text: "Av. Principal 123, Bogotá",
+      icon: MapPin,
+    },
+    schedule: {
+      text: "Lun–Vie 9:00-18:00 · Sáb 9:00-13:00",
+      icon: Clock,
+    },
     whatsapp: {
       href: "https://wa.me/573001112233",
       label: "Escríbenos por WhatsApp",
+      icon: ChatCircleDots,
     },
     email: {
       href: "mailto:info@dentpro.co",
       label: "info@dentpro.co",
+      icon: EnvelopeSimple,
     },
     socials: [
       {
         href: "https://www.instagram.com/dentpro",
         label: "Instagram",
-        icon: "camera_alt",
+        icon: InstagramLogo,
       },
       {
         href: "https://www.facebook.com/dentpro",
         label: "Facebook",
-        icon: "thumb_up",
+        icon: FacebookLogo,
       },
       {
         href: "https://www.linkedin.com/company/dentpro",
         label: "LinkedIn",
-        icon: "public",
+        icon: LinkedinLogo,
       },
     ],
   },
@@ -113,7 +146,7 @@ const marketingContent: MarketingContent = {
       {
         title: "Limpieza y profilaxis",
         description: "Higiene profesional con ultrasonido y pulido remineralizante.",
-        icon: "sparkles",
+        icon: Sparkle,
         highlights: [
           "Profilaxis guiada por imagen",
           "Educación en hábitos de cuidado",
@@ -123,7 +156,7 @@ const marketingContent: MarketingContent = {
       {
         title: "Ortodoncia digital",
         description: "Alineadores invisibles y brackets autoligables según tus objetivos.",
-        icon: "sentiment_satisfied",
+        icon: Smiley,
         highlights: [
           "Escaneo 3D en la primera visita",
           "Planificación con simulación virtual",
@@ -133,7 +166,7 @@ const marketingContent: MarketingContent = {
       {
         title: "Implantes y cirugía",
         description: "Rehabilitación fija con implantes guiados por computadora.",
-        icon: "health_metrics",
+        icon: Stethoscope,
         highlights: [
           "Guías quirúrgicas impresas en 3D",
           "Implantes certificados internacionales",
@@ -143,7 +176,7 @@ const marketingContent: MarketingContent = {
       {
         title: "Estética dental",
         description: "Carillas cerámicas, blanqueamiento y diseño de sonrisa armónico.",
-        icon: "diamond",
+        icon: DiamondsFour,
         highlights: [
           "Mockup digital previo al tratamiento",
           "Laboratorio especializado premium",
@@ -153,7 +186,7 @@ const marketingContent: MarketingContent = {
       {
         title: "Endodoncia avanzada",
         description: "Tratamientos de conducto con microscopio y obturación termoplástica.",
-        icon: "psychology",
+        icon: Tooth,
         highlights: [
           "Diagnóstico por CBCT",
           "Instrumentación rotatoria",
@@ -163,7 +196,7 @@ const marketingContent: MarketingContent = {
       {
         title: "Odontopediatría",
         description: "Prevención y tratamientos amigables para los más pequeños.",
-        icon: "toys",
+        icon: Baby,
         highlights: [
           "Ambientes adaptados para niños",
           "Sellantes y flúor profesional",
@@ -231,19 +264,19 @@ const marketingContent: MarketingContent = {
     benefitsTitle: "Beneficios de agendar con nosotros",
     benefits: [
       {
-        icon: "calendar_month",
+        icon: CalendarCheck,
         text: "Horarios extendidos y recordatorios automáticos",
       },
       {
-        icon: "verified",
+        icon: ShieldCheck,
         text: "Especialistas certificados por asociaciones internacionales",
       },
       {
-        icon: "groups",
+        icon: UsersThree,
         text: "Acompañamiento del equipo de Patient Care en todo momento",
       },
       {
-        icon: "payments",
+        icon: CreditCard,
         text: "Planes de financiación y convenios empresariales",
       },
     ],
@@ -255,25 +288,25 @@ const marketingContent: MarketingContent = {
     description: "Comunícate con nosotros por el canal que prefieras o visítanos en nuestra sede central.",
     channels: [
       {
-        icon: "call",
+        icon: Phone,
         label: "Teléfono",
         value: "+57 300 111 2233",
         href: "tel:+573001112233",
       },
       {
-        icon: "chat",
+        icon: WhatsappLogo,
         label: "WhatsApp",
         value: "+57 300 111 2233",
         href: "https://wa.me/573001112233",
       },
       {
-        icon: "mail",
+        icon: EnvelopeSimple,
         label: "Email",
         value: "info@dentpro.co",
         href: "mailto:info@dentpro.co",
       },
       {
-        icon: "pin_drop",
+        icon: MapPin,
         label: "Ubicación",
         value: "Av. Principal 123, Bogotá",
       },
@@ -297,9 +330,9 @@ const marketingContent: MarketingContent = {
     ],
     supportTitle: "Patient Care DentPro",
     supportItems: [
-      { icon: "support_agent", text: "Coordinación de citas y especialistas" },
-      { icon: "insights", text: "Seguimiento de tu evolución clínica" },
-      { icon: "workspace_premium", text: "Garantía extendida en tratamientos" },
+      { icon: Headset, text: "Coordinación de citas y especialistas" },
+      { icon: ChartLineUp, text: "Seguimiento de tu evolución clínica" },
+      { icon: Medal, text: "Garantía extendida en tratamientos" },
     ],
     locationsTitle: "Nuestras sedes",
     locations: [
@@ -323,20 +356,20 @@ const marketingContent: MarketingContent = {
       {
         href: "https://wa.me/573001112233",
         label: "Chat en WhatsApp",
-        icon: "chat",
+        icon: WhatsappLogo,
         className: "whatsapp",
         external: true,
       },
       {
         href: "tel:+573001112233",
         label: "Llamar a DentPro",
-        icon: "call",
+        icon: Phone,
         className: "phone",
       },
       {
         href: "#agenda",
         label: "Ir a agenda",
-        icon: "calendar_month",
+        icon: CalendarCheck,
       },
     ],
   },

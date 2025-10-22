@@ -3,6 +3,8 @@
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
+import { List, UserCircle, X } from "@phosphor-icons/react";
+
 import { ThemeToggle } from "./ThemeToggle";
 import { LoginModal } from "./LoginModal";
 
@@ -128,9 +130,7 @@ export function Navbar({ brand, links, cta, login }: NavbarProps) {
                 aria-controls="loginModal"
                 onClick={toggleLoginModal}
               >
-                <span className="material-symbols-rounded text-base" aria-hidden="true">
-                  account_circle
-                </span>
+                <UserCircle className="h-5 w-5" weight="bold" aria-hidden="true" />
                 {login.label}
               </button>
               <LoginModal open={isLoginModalOpen} onClose={closeLoginModal} />
@@ -147,9 +147,11 @@ export function Navbar({ brand, links, cta, login }: NavbarProps) {
             aria-expanded={isOpen}
             onClick={toggleMenu}
           >
-            <span className="material-symbols-rounded" aria-hidden="true">
-              {isOpen ? "close" : "menu"}
-            </span>
+            {isOpen ? (
+              <X className="h-6 w-6" weight="bold" aria-hidden="true" />
+            ) : (
+              <List className="h-6 w-6" weight="bold" aria-hidden="true" />
+            )}
           </button>
         </div>
       </div>
@@ -173,9 +175,7 @@ export function Navbar({ brand, links, cta, login }: NavbarProps) {
             className="btn-secondary inline-flex items-center justify-center gap-2"
             onClick={openLoginModalFromMobile}
           >
-            <span className="material-symbols-rounded text-base" aria-hidden="true">
-              account_circle
-            </span>
+            <UserCircle className="h-5 w-5" weight="bold" aria-hidden="true" />
             {login?.label ?? "Iniciar sesión"}
           </button>
         </nav>
