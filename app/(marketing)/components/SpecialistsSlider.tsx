@@ -28,7 +28,7 @@ export function SpecialistsSlider({ badge, title, description, specialists }: Sp
 
   return (
     <section id="especialistas" className="bg-brand-light py-20 transition-colors duration-300 dark:bg-surface-muted">
-      <div className="container px-6">
+      <div className="container mx-auto px-6">
         <div className="flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
           <div>
             <span className="badge">{badge}</span>

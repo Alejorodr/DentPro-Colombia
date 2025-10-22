@@ -51,7 +51,7 @@ export function Hero({
 }: HeroContent) {
   return (
     <section className="hero overflow-hidden bg-hero-light py-12 transition-colors duration-500 dark:bg-hero-dark sm:py-12 md:py-16 lg:py-20">
-      <div className="container grid items-center gap-12 px-6 md:gap-14 lg:grid-cols-2 lg:gap-16">
+      <div className="container mx-auto grid items-center gap-12 px-6 md:gap-14 lg:grid-cols-2 lg:gap-16">
         <div className="relative z-10 space-y-8" data-hero-text-panel>
           <span className="inline-flex items-center gap-2 rounded-full bg-white/70 px-4 py-2 text-sm font-semibold uppercase tracking-wide text-brand-indigo shadow-sm dark:bg-surface-elevated/80 dark:text-accent-cyan">
             {badge}
