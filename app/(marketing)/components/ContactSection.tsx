@@ -1,5 +1,7 @@
+import type { Icon } from "@phosphor-icons/react";
+
 interface ContactChannel {
-  icon: string;
+  icon: Icon;
   label: string;
   value: string;
   href?: string;
@@ -12,7 +14,7 @@ interface SocialLink {
 }
 
 interface ServiceSupportItem {
-  icon: string;
+  icon: Icon;
   text: string;
 }
 
@@ -60,20 +62,24 @@ export function ContactSection({
           <h2 className="text-3xl font-bold">{title}</h2>
           <p className="text-base text-slate-300">{description}</p>
           <div className="space-y-2 text-sm text-slate-300">
-            {channels.map((channel) => (
-              <p key={channel.label} className="flex items-center gap-3">
-                <span className="material-symbols-rounded icon-badge text-brand-light dark:text-accent-cyan" aria-hidden="true">
-                  {channel.icon}
-                </span>
-                {channel.href ? (
-                  <a href={channel.href} className="hover:text-white dark:hover:text-accent-cyan">
-                    {channel.value}
-                  </a>
-                ) : (
-                  channel.value
-                )}
-              </p>
-            ))}
+            {channels.map((channel) => {
+              const ChannelIcon = channel.icon;
+
+              return (
+                <p key={channel.label} className="flex items-center gap-3">
+                  <span className="icon-badge text-brand-light dark:text-accent-cyan">
+                    <ChannelIcon className="h-5 w-5" weight="bold" aria-hidden="true" />
+                  </span>
+                  {channel.href ? (
+                    <a href={channel.href} className="hover:text-white dark:hover:text-accent-cyan">
+                      {channel.value}
+                    </a>
+                  ) : (
+                    channel.value
+                  )}
+                </p>
+              );
+            })}
           </div>
           <div className="flex gap-4">
             {socials.map((social) => (
@@ -96,14 +102,18 @@ export function ContactSection({
             Nuestro equipo de Patient Care está listo para acompañarte antes, durante y después de cada visita.
           </p>
           <ul className="mt-6 space-y-4 text-sm text-slate-200">
-            {supportItems.map((item) => (
-              <li key={item.text} className="flex gap-3">
-                <span className="material-symbols-rounded icon-badge text-brand-light dark:text-accent-cyan" aria-hidden="true">
-                  {item.icon}
-                </span>
-                {item.text}
-              </li>
-            ))}
+            {supportItems.map((item) => {
+              const SupportIcon = item.icon;
+
+              return (
+                <li key={item.text} className="flex gap-3">
+                  <span className="icon-badge text-brand-light dark:text-accent-cyan">
+                    <SupportIcon className="h-5 w-5" weight="bold" aria-hidden="true" />
+                  </span>
+                  {item.text}
+                </li>
+              );
+            })}
           </ul>
         </div>
         <div className="rounded-3xl bg-white/10 p-8 backdrop-blur transition-colors duration-300 dark:border dark:border-accent-cyan/10 dark:bg-surface-muted/80">

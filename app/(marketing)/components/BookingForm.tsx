@@ -2,13 +2,15 @@
 
 import { useBookingForm } from "@/hooks/useBookingForm";
 
+import type { Icon } from "@phosphor-icons/react";
+
 interface SelectOption {
   value: string;
   label: string;
 }
 
 interface BenefitItem {
-  icon: string;
+  icon: Icon;
   text: string;
 }
 
@@ -113,14 +115,18 @@ export function BookingFormSection({
         <div className="card space-y-6 dark:bg-surface-elevated/80">
           <h3 className="text-2xl font-semibold text-slate-900 dark:text-white">{benefitsTitle}</h3>
           <ul className="space-y-4 text-sm text-slate-600 dark:text-slate-200">
-            {benefits.map((benefit) => (
-              <li key={benefit.text} className="flex gap-3">
-                <span className="material-symbols-rounded icon-badge text-brand-teal dark:text-accent-cyan" aria-hidden="true">
-                  {benefit.icon}
-                </span>
-                <span>{benefit.text}</span>
-              </li>
-            ))}
+            {benefits.map((benefit) => {
+              const BenefitIcon = benefit.icon;
+
+              return (
+                <li key={benefit.text} className="flex gap-3">
+                  <span className="icon-badge text-brand-teal dark:text-accent-cyan">
+                    <BenefitIcon className="h-5 w-5" weight="bold" aria-hidden="true" />
+                  </span>
+                  <span>{benefit.text}</span>
+                </li>
+              );
+            })}
           </ul>
           <div className="rounded-2xl bg-brand-light/70 p-6 text-sm text-slate-700 transition-colors duration-300 dark:border dark:border-accent-cyan/15 dark:bg-surface-muted/80 dark:text-slate-200">
             <p className="font-semibold text-brand-indigo dark:text-accent-cyan">Horario extendido</p>

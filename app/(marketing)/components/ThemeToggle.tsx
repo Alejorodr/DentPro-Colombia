@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 
+import { Moon, Sun } from "@phosphor-icons/react";
+
 type SafeStorageResult = {
   value: string | null;
   hasError: boolean;
@@ -90,12 +92,18 @@ export function ThemeToggle() {
           <span className="glass-filter" aria-hidden="true"></span>
           <span className="glass-overlay" aria-hidden="true"></span>
           <span className="glass-specular" aria-hidden="true"></span>
-          <span className="theme-toggle-icon material-symbols-rounded" data-theme-icon="sun" aria-hidden="true">
-            light_mode
-          </span>
-          <span className="theme-toggle-icon material-symbols-rounded" data-theme-icon="moon" aria-hidden="true">
-            dark_mode
-          </span>
+          <Sun
+            className="theme-toggle-icon h-4 w-4"
+            data-theme-icon="sun"
+            aria-hidden="true"
+            weight="fill"
+          />
+          <Moon
+            className="theme-toggle-icon h-4 w-4"
+            data-theme-icon="moon"
+            aria-hidden="true"
+            weight="fill"
+          />
         </span>
         <span className="theme-toggle-thumb">
           <span className="glass-filter" aria-hidden="true"></span>

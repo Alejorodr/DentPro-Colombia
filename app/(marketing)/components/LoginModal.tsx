@@ -10,6 +10,8 @@ import {
   type MouseEvent,
 } from "react";
 
+import { ChartLineUp, Lock, X } from "@phosphor-icons/react";
+
 import { getDefaultDashboardPath, type UserRole } from "@/lib/auth/roles";
 
 interface LoginModalProps {
@@ -176,17 +178,13 @@ export function LoginModal({ open, onClose }: LoginModalProps) {
           onClick={onClose}
           aria-label="Cerrar panel de ingreso"
         >
-          <span className="material-symbols-rounded" aria-hidden="true">
-            close
-          </span>
+          <X className="h-5 w-5" weight="bold" aria-hidden="true" />
         </button>
         <div className="modal-grid items-stretch">
           <section className="modal-card space-y-6">
             <header className="space-y-2">
               <div className="inline-flex items-center gap-2 rounded-full bg-brand-light/60 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-brand-teal dark:bg-surface-muted/70 dark:text-accent-cyan">
-                <span className="material-symbols-rounded text-base" aria-hidden="true">
-                  lock
-                </span>
+                <Lock className="h-4 w-4" weight="bold" aria-hidden="true" />
                 Acceso seguro
               </div>
               <div className="space-y-1">
@@ -273,9 +271,7 @@ export function LoginModal({ open, onClose }: LoginModalProps) {
           >
             <div className="space-y-4">
               <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15 shadow-lg shadow-brand-teal/30">
-                <span className="material-symbols-rounded text-2xl" aria-hidden="true">
-                  insights
-                </span>
+                <ChartLineUp className="h-6 w-6" weight="bold" aria-hidden="true" />
               </div>
               <div className="space-y-2">
                 <h3 className="text-xl font-semibold">Control total de tu clínica</h3>
