@@ -1,14 +1,13 @@
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@/auth";
-
-const VALID_ROLES = ["admin","user","staff","patient"];
+import { isUserRole } from "@/lib/auth/roles";
 
 export default async function RoleDashboardPage({
   params,
 }: { params: Promise<{ role: string }> }) {
   const { role: requestedRole } = await params;
 
-  if (!VALID_ROLES.includes(requestedRole)) {
+  if (!isUserRole(requestedRole)) {
     notFound();
   }
 
