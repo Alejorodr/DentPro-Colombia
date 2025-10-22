@@ -11,7 +11,7 @@ Este proyecto utiliza SQLite (mediante `better-sqlite3`) para persistir usuarios
 sqlite3 ${AUTH_DATABASE_URL:-dentpro.db} < migrations/001_create_auth_tables.sql
 ```
 
-> 💡 El fichero crea las tablas `roles`, `permissions`, `role_permissions`, `users`, `user_roles`, `user_permissions`, así como las tablas necesarias para almacenar sesiones y cuentas de NextAuth.
+> **Nota:** El fichero crea las tablas `roles`, `permissions`, `role_permissions`, `users`, `user_roles`, `user_permissions`, así como las tablas necesarias para almacenar sesiones y cuentas de NextAuth.
 
 ## Cargar datos semilla
 
