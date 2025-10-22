@@ -1,20 +1,23 @@
-import type { Icon } from "@phosphor-icons/react";
+"use client";
+
+import type { MarketingIconName } from "./icon-types";
+import { resolveMarketingIcon } from "./icon-registry";
 
 type IconText = {
   text: string;
-  icon: Icon;
+  icon: MarketingIconName;
 };
 
 type IconLink = {
   href: string;
   label: string;
-  icon: Icon;
+  icon: MarketingIconName;
 };
 
 type SocialLink = {
   href: string;
   label: string;
-  icon: Icon;
+  icon: MarketingIconName;
 };
 
 interface InfoBarProps {
@@ -26,10 +29,10 @@ interface InfoBarProps {
 }
 
 export function InfoBar({ location, schedule, whatsapp, email, socials }: InfoBarProps) {
-  const LocationIcon = location.icon;
-  const ScheduleIcon = schedule.icon;
-  const WhatsappIcon = whatsapp.icon;
-  const EmailIcon = email.icon;
+  const LocationIcon = resolveMarketingIcon(location.icon);
+  const ScheduleIcon = resolveMarketingIcon(schedule.icon);
+  const WhatsappIcon = resolveMarketingIcon(whatsapp.icon);
+  const EmailIcon = resolveMarketingIcon(email.icon);
 
   return (
     <div className="border-b border-white/60 bg-white/80 text-sm text-slate-600 backdrop-blur-sm transition-colors duration-300 dark:border-surface-muted/60 dark:bg-surface-base/90 dark:text-slate-200">
@@ -62,8 +65,8 @@ export function InfoBar({ location, schedule, whatsapp, email, socials }: InfoBa
             {email.label}
           </a>
           <div className="flex items-center gap-2 text-slate-400">
-            {socials.map((social) => {
-              const SocialIcon = social.icon;
+          {socials.map((social) => {
+            const SocialIcon = resolveMarketingIcon(social.icon);
 
               return (
                 <a

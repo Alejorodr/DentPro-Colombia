@@ -2,7 +2,8 @@
 
 import { useBookingForm } from "@/hooks/useBookingForm";
 
-import type { Icon } from "@phosphor-icons/react";
+import type { MarketingIconName } from "./icon-types";
+import { resolveMarketingIcon } from "./icon-registry";
 
 interface SelectOption {
   value: string;
@@ -10,7 +11,7 @@ interface SelectOption {
 }
 
 interface BenefitItem {
-  icon: Icon;
+  icon: MarketingIconName;
   text: string;
 }
 
@@ -115,8 +116,8 @@ export function BookingFormSection({
         <div className="card space-y-6 dark:bg-surface-elevated/80">
           <h3 className="text-2xl font-semibold text-slate-900 dark:text-white">{benefitsTitle}</h3>
           <ul className="space-y-4 text-sm text-slate-600 dark:text-slate-200">
-            {benefits.map((benefit) => {
-              const BenefitIcon = benefit.icon;
+        {benefits.map((benefit) => {
+          const BenefitIcon = resolveMarketingIcon(benefit.icon);
 
               return (
                 <li key={benefit.text} className="flex gap-3">

@@ -1,10 +1,14 @@
+"use client";
+
 import { CheckCircle } from "@phosphor-icons/react";
-import type { Icon } from "@phosphor-icons/react";
+
+import type { MarketingIconName } from "./icon-types";
+import { resolveMarketingIcon } from "./icon-registry";
 
 interface ServiceItem {
   title: string;
   description: string;
-  icon: Icon;
+  icon: MarketingIconName;
   highlights: string[];
 }
 
@@ -24,7 +28,7 @@ export function ServicesSection({ title, description, services }: ServicesProps)
         </div>
         <div className="mt-12 grid gap-8 md:grid-cols-2 xl:grid-cols-3">
           {services.map((service) => {
-            const ServiceIcon = service.icon;
+            const ServiceIcon = resolveMarketingIcon(service.icon);
 
             return (
               <article key={service.title} className="card">

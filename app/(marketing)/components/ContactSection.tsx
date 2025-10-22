@@ -1,7 +1,10 @@
-import type { Icon } from "@phosphor-icons/react";
+"use client";
+
+import type { MarketingIconName } from "./icon-types";
+import { resolveMarketingIcon } from "./icon-registry";
 
 interface ContactChannel {
-  icon: Icon;
+  icon: MarketingIconName;
   label: string;
   value: string;
   href?: string;
@@ -14,7 +17,7 @@ interface SocialLink {
 }
 
 interface ServiceSupportItem {
-  icon: Icon;
+  icon: MarketingIconName;
   text: string;
 }
 
@@ -62,8 +65,8 @@ export function ContactSection({
           <h2 className="text-3xl font-bold">{title}</h2>
           <p className="text-base text-slate-300">{description}</p>
           <div className="space-y-2 text-sm text-slate-300">
-            {channels.map((channel) => {
-              const ChannelIcon = channel.icon;
+          {channels.map((channel) => {
+            const ChannelIcon = resolveMarketingIcon(channel.icon);
 
               return (
                 <p key={channel.label} className="flex items-center gap-3">
@@ -102,8 +105,8 @@ export function ContactSection({
             Nuestro equipo de Patient Care está listo para acompañarte antes, durante y después de cada visita.
           </p>
           <ul className="mt-6 space-y-4 text-sm text-slate-200">
-            {supportItems.map((item) => {
-              const SupportIcon = item.icon;
+              {supportItems.map((item) => {
+                const SupportIcon = resolveMarketingIcon(item.icon);
 
               return (
                 <li key={item.text} className="flex gap-3">
