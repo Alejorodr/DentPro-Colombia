@@ -1,5 +1,7 @@
 "use client";
 
+import { Copyright } from "@phosphor-icons/react";
+
 import type { MarketingIconName } from "./icon-types";
 import { resolveMarketingIcon } from "./icon-registry";
 
@@ -133,8 +135,13 @@ export function ContactSection({
       </div>
       <div className="mt-20 border-t border-white/10 dark:border-surface-muted/80">
         <div className="container mx-auto flex flex-col gap-4 px-6 py-8 text-sm text-slate-400 transition-colors duration-300 dark:text-slate-500 md:flex-row md:items-center md:justify-between">
-          <p>
-            © {currentYear} {brand}. Todos los derechos reservados.
+          <p className="flex items-center gap-2">
+            <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-white/10 text-white dark:bg-surface-muted/50">
+              <Copyright className="h-4 w-4" weight="bold" aria-hidden="true" />
+            </span>
+            <span>
+              {currentYear} {brand}. Todos los derechos reservados.
+            </span>
           </p>
           <div className="flex gap-6">
             {legalLinks.map((link) => (
