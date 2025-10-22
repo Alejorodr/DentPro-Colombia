@@ -1,9 +1,12 @@
-import type { Icon } from "@phosphor-icons/react";
+"use client";
+
+import type { MarketingIconName } from "./icon-types";
+import { resolveMarketingIcon } from "./icon-registry";
 
 interface FloatingAction {
   href: string;
   label: string;
-  icon: Icon;
+  icon: MarketingIconName;
   className?: string;
   external?: boolean;
 }
@@ -16,7 +19,7 @@ export function FloatingActions({ actions }: FloatingActionsProps) {
   return (
     <div className="floating-actions" role="region" aria-label="Accesos rápidos">
       {actions.map((action) => {
-        const ActionIcon = action.icon;
+        const ActionIcon = resolveMarketingIcon(action.icon);
 
         return (
           <a
