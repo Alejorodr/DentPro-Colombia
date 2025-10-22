@@ -1,4 +1,216 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-/* aquí puedes agregar utilidades globales si quieres */
+
+/*
+  Marketing UI custom classes used across app/(marketing)/components:
+  hero, bg-hero-light, bg-hero-dark, topbar, mobile-menu, badge, card,
+  icon-circle, icon-badge, btn-primary, btn-secondary, floating-actions,
+  floating-action-btn, slider, slider-track, slider-btn, specialist,
+  specialist-photo, input, form-feedback, modal-backdrop, modal-content,
+  modal-grid, modal-card, modal-close, social-link, bg-gradient,
+  floating-action, theme-toggle*, glass-*, icon-badge, shadow-glow,
+  shadow-glow-dark and related utility helpers.
+*/
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  :root.dark {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-slate-50 text-slate-900 antialiased transition-colors duration-300 dark:bg-surface-base dark:text-slate-100;
+  }
+
+  .material-symbols-rounded {
+    font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+  }
+}
+
+@layer components {
+  .hero {
+    @apply relative isolate overflow-hidden;
+  }
+
+  .topbar {
+    @apply sticky top-0 z-40 border-b border-white/70 bg-white/80 backdrop-blur-lg transition-colors duration-300 dark:border-surface-muted/60 dark:bg-surface-base/85;
+  }
+
+  .mobile-menu {
+    @apply pointer-events-none absolute inset-x-0 top-[4.75rem] z-30 origin-top translate-y-4 scale-95 opacity-0 shadow-2xl shadow-slate-900/10 transition-all duration-300 ease-out dark:shadow-surface-dark lg:hidden;
+  }
+
+  .mobile-menu.open {
+    @apply pointer-events-auto translate-y-0 scale-100 opacity-100;
+  }
+
+  .badge {
+    @apply inline-flex items-center gap-2 rounded-full border border-brand-teal/20 bg-brand-light/70 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-brand-indigo shadow-sm shadow-brand-teal/10 transition-colors duration-300 dark:border-accent-cyan/30 dark:bg-surface-muted/60 dark:text-accent-cyan;
+  }
+
+  .card {
+    @apply relative overflow-hidden rounded-[1.75rem] border border-white/70 bg-white/90 p-6 shadow-xl shadow-slate-900/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl dark:border-surface-muted/60 dark:bg-surface-base/85 dark:shadow-surface-dark;
+  }
+
+  .icon-circle {
+    @apply inline-flex h-14 w-14 items-center justify-center rounded-2xl border border-brand-teal/20 bg-brand-light/80 text-brand-teal shadow-inner shadow-brand-teal/25 transition-colors duration-300 dark:border-accent-cyan/30 dark:bg-surface-muted/60 dark:text-accent-cyan;
+  }
+
+  .icon-badge {
+    @apply inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-brand-teal/15 bg-brand-light/70 text-brand-teal shadow-sm shadow-brand-teal/15 transition-colors duration-300 dark:border-accent-cyan/25 dark:bg-accent-cyan/15 dark:text-accent-cyan;
+  }
+
+  .social-link {
+    @apply inline-flex h-12 w-12 items-center justify-center rounded-full border border-white/30 text-sm font-semibold uppercase tracking-wide text-white/80 transition-all duration-300 hover:-translate-y-0.5 hover:border-white/60 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-white/70 dark:border-accent-cyan/40 dark:text-accent-cyan dark:hover:border-accent-cyan dark:hover:text-surface-base dark:focus-visible:ring-accent-cyan/60;
+  }
+
+  .slider {
+    @apply relative mt-10 overflow-hidden rounded-3xl border border-white/70 bg-white/70 p-4 shadow-xl shadow-slate-900/10 transition-colors duration-300 dark:border-surface-muted/70 dark:bg-surface-base/70 dark:shadow-surface-dark;
+  }
+
+  .slider-track {
+    @apply flex gap-6 transition-transform duration-500 ease-out will-change-transform;
+  }
+
+  .slider-btn {
+    @apply inline-flex h-12 w-12 items-center justify-center rounded-full border border-brand-teal/40 bg-white text-brand-teal shadow-sm shadow-brand-teal/20 transition-all duration-300 hover:-translate-y-0.5 hover:bg-brand-teal hover:text-white disabled:cursor-not-allowed disabled:opacity-40 dark:border-accent-cyan/40 dark:bg-surface-base/70 dark:text-accent-cyan dark:hover:bg-accent-cyan dark:hover:text-slate-900;
+  }
+
+  .specialist {
+    @apply card !bg-white w-[min(320px,80vw)] flex-shrink-0 text-left dark:!bg-surface-elevated/85;
+  }
+
+  .specialist-photo {
+    @apply h-72 w-full rounded-3xl object-cover shadow-inner shadow-slate-900/10;
+  }
+
+  .floating-actions {
+    @apply fixed bottom-6 right-6 z-40 flex flex-col gap-3 md:right-10;
+  }
+
+  .floating-action-btn {
+    @apply inline-flex h-14 w-14 items-center justify-center rounded-full bg-brand-teal text-white shadow-xl shadow-brand-teal/30 transition-transform duration-300 hover:-translate-y-1 hover:shadow-glow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-brand-teal/70 dark:bg-accent-cyan dark:text-slate-900 dark:shadow-glow-dark dark:hover:shadow-glow-dark;
+  }
+
+  .form-feedback {
+    @apply min-h-[1.5rem] text-brand-light/80 transition-opacity duration-300 dark:text-accent-cyan;
+  }
+
+  .input {
+    @apply w-full rounded-2xl border border-slate-200/70 bg-white/80 px-4 py-3 text-sm text-slate-700 shadow-sm shadow-slate-900/5 outline-none transition-all duration-200 placeholder:text-slate-400 focus:border-brand-teal focus:ring-2 focus:ring-brand-teal/30 dark:border-surface-muted/70 dark:bg-surface-base/80 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-accent-cyan dark:focus:ring-accent-cyan/40;
+  }
+
+  .btn,
+  .btn-primary,
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-full border px-6 py-3 text-sm font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-brand-teal/70 disabled:pointer-events-none disabled:opacity-60 dark:focus-visible:ring-accent-cyan/60;
+  }
+
+  .btn-primary {
+    @apply !border-transparent !bg-brand-teal text-white shadow-lg shadow-brand-teal/30 hover:-translate-y-0.5 hover:shadow-glow dark:!bg-accent-cyan dark:text-slate-900 dark:hover:shadow-glow-dark;
+  }
+
+  .btn-secondary {
+    @apply border-brand-teal/40 bg-white/80 text-brand-teal hover:-translate-y-0.5 hover:bg-brand-teal/10 hover:text-brand-indigo dark:border-accent-cyan/40 dark:bg-surface-base/70 dark:text-accent-cyan dark:hover:bg-accent-cyan/15 dark:hover:text-surface-base;
+  }
+
+  .bg-gradient {
+    @apply !bg-gradient !text-white shadow-lg shadow-brand-teal/25;
+  }
+
+  .modal-backdrop {
+    @apply fixed inset-0 z-[90] flex items-center justify-center bg-slate-900/70 p-4 backdrop-blur-sm transition-opacity duration-200 dark:bg-surface-base/80;
+  }
+
+  .modal-content {
+    @apply relative w-full max-w-5xl;
+  }
+
+  .modal-grid {
+    @apply grid gap-0 overflow-hidden rounded-[2.25rem] border border-white/70 bg-white/95 shadow-[0_40px_120px_-45px_rgba(15,23,42,0.5)] transition-colors duration-500 md:grid-cols-[1.1fr_0.9fr] dark:border-surface-muted/70 dark:bg-surface-base/95 dark:shadow-surface-dark;
+  }
+
+  .modal-grid > * {
+    @apply min-h-full;
+  }
+
+  .modal-card {
+    @apply flex flex-col gap-6 rounded-[2rem] bg-white/95 p-8 text-slate-700 shadow-lg shadow-slate-900/10 backdrop-blur-sm transition-colors duration-300 dark:bg-surface-base/80 dark:text-slate-100 dark:shadow-surface-dark;
+  }
+
+  .modal-close {
+    @apply absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full border border-transparent bg-white/85 text-slate-600 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-brand-teal/70 dark:bg-surface-muted/80 dark:text-slate-200 dark:hover:text-white dark:focus-visible:ring-accent-cyan/60;
+  }
+
+  .theme-toggle {
+    @apply relative inline-flex h-11 w-20 items-center justify-start rounded-full border border-slate-200/70 bg-white/90 px-1 shadow-sm shadow-slate-900/10 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-brand-teal/60 dark:border-surface-muted/70 dark:bg-surface-base/80 dark:focus-visible:ring-accent-cyan/60;
+  }
+
+  .theme-toggle-track {
+    @apply relative flex h-full w-full items-center overflow-hidden rounded-full bg-gradient-to-r from-white/65 via-white/35 to-white/55 dark:from-surface-base/60 dark:via-surface-muted/50 dark:to-surface-base/60;
+  }
+
+  .theme-toggle-rail {
+    @apply relative flex h-6 w-full items-center justify-between px-3 text-[0.65rem] font-semibold uppercase tracking-[0.1em] text-slate-400 dark:text-slate-500;
+  }
+
+  .theme-toggle-thumb {
+    @apply absolute left-1 top-1 flex h-9 w-9 items-center justify-center rounded-full border border-white/60 bg-white text-brand-teal shadow-lg shadow-slate-900/10 transition-all duration-300 dark:border-surface-muted/70 dark:bg-surface-muted/80 dark:text-accent-cyan;
+  }
+
+  .theme-toggle-icon {
+    @apply relative inline-flex items-center justify-center text-base text-slate-500 opacity-80 transition-all duration-300 dark:text-slate-300;
+  }
+
+  .glass-filter,
+  .glass-overlay,
+  .glass-specular {
+    pointer-events: none;
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+  }
+
+  .glass-filter {
+    @apply bg-white/40 blur-xl mix-blend-screen dark:bg-accent-cyan/15;
+  }
+
+  .glass-overlay {
+    @apply bg-gradient-to-b from-white/35 via-white/15 to-transparent opacity-80 dark:from-surface-muted/50 dark:via-transparent dark:to-transparent;
+  }
+
+  .glass-specular {
+    @apply left-1/2 top-0 h-full w-[55%] -translate-x-1/2 rounded-full bg-white/50 opacity-50 blur-lg dark:bg-accent-cyan/30;
+  }
+}
+
+@layer utilities {
+  .theme-toggle:not([aria-checked="true"]) .theme-toggle-icon[data-theme-icon="sun"] {
+    @apply opacity-100 translate-y-0;
+  }
+
+  .theme-toggle:not([aria-checked="true"]) .theme-toggle-icon[data-theme-icon="moon"] {
+    @apply opacity-0 translate-y-1;
+  }
+
+  .theme-toggle[aria-checked="true"] .theme-toggle-thumb {
+    transform: translateX(44px);
+    @apply border-accent-cyan/50 bg-surface-muted/80 text-accent-cyan;
+  }
+
+  .theme-toggle[aria-checked="true"] .theme-toggle-icon[data-theme-icon="sun"] {
+    @apply opacity-0 -translate-y-1;
+  }
+
+  .theme-toggle[aria-checked="true"] .theme-toggle-icon[data-theme-icon="moon"] {
+    @apply opacity-100 translate-y-0;
+  }
+
+  .theme-toggle[aria-checked="true"] .theme-toggle-track {
+    @apply bg-gradient-to-r from-brand-midnight/60 via-surface-base/60 to-brand-midnight/60;
+  }
+}
