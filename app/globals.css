@@ -119,7 +119,8 @@
   }
 
   .bg-gradient {
-    @apply !bg-gradient !text-white shadow-lg shadow-brand-teal/25;
+    background-image: theme('backgroundImage.gradient') !important;
+    @apply text-white shadow-lg shadow-brand-teal/25;
   }
 
   .modal-backdrop {
