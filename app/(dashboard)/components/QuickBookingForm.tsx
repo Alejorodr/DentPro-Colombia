@@ -11,7 +11,7 @@ const services = [
 
 export function QuickBookingForm() {
   const { role } = useAuthRole();
-  const { handleSubmit, isPending, isSuccess } = useBookingForm();
+  const { handleSubmit, isPending, isSuccess, error } = useBookingForm();
 
   return (
     <form className="grid gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-surface-elevated" onSubmit={handleSubmit}>
@@ -77,9 +77,15 @@ export function QuickBookingForm() {
       <button type="submit" className="btn-primary justify-center" disabled={isPending}>
         {isPending ? "Enviando..." : "Enviar solicitud"}
       </button>
-      {isSuccess ? (
-        <p className="text-sm font-medium text-brand-teal dark:text-accent-cyan">Solicitud recibida. Te contactaremos pronto.</p>
-      ) : null}
+      <div aria-live={error ? "assertive" : "polite"} role={error ? "alert" : "status"}>
+        {error ? (
+          <p className="text-sm font-medium text-red-600 dark:text-red-400">{error}</p>
+        ) : isSuccess ? (
+          <p className="text-sm font-medium text-brand-teal dark:text-accent-cyan">
+            Solicitud recibida. Te contactaremos pronto.
+          </p>
+        ) : null}
+      </div>
     </form>
   );
 }

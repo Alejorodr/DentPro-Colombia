@@ -36,7 +36,14 @@ export function BookingFormSection({
   scheduleNote,
   consentNote,
 }: BookingFormProps) {
-  const { handleSubmit, isSuccess, isPending } = useBookingForm();
+  const { handleSubmit, isSuccess, isPending, error } = useBookingForm();
+
+  const feedbackMessage = error ?? (isSuccess ? "¡Gracias! Te contactaremos muy pronto." : "");
+  const feedbackRole = error ? "alert" : "status";
+  const feedbackAriaLive = error ? "assertive" : "polite";
+  const feedbackClasses = `form-feedback text-sm font-semibold ${
+    error ? "text-red-100 dark:text-red-300" : "text-white"
+  }`;
 
   return (
     <section id="agenda" className="py-20 transition-colors duration-300 dark:bg-surface-base">
@@ -108,8 +115,8 @@ export function BookingFormSection({
               {isPending ? "Enviando..." : "Solicitar agenda"}
             </button>
             <p className="text-xs text-brand-light/80">{consentNote}</p>
-            <p className="form-feedback text-sm font-semibold text-white" role="status" aria-live="polite">
-              {isSuccess ? "¡Gracias! Te contactaremos muy pronto." : ""}
+            <p className={feedbackClasses} role={feedbackRole} aria-live={feedbackAriaLive}>
+              {feedbackMessage}
             </p>
           </form>
         </div>

@@ -1,10 +1,11 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import type { FormEvent } from "react";
 import { useMutation } from "@tanstack/react-query";
 
 import { createAppointmentRequest } from "@/lib/api/appointments";
+import type { AppointmentSummary } from "@/lib/api/types";
 
 export type BookingFormStatus = "idle" | "pending" | "success" | "error";
 
@@ -19,9 +20,34 @@ interface UseBookingFormOptions {
   onSuccess?: () => void;
 }
 
+function getReadableError(error: unknown) {
+  if (!error) {
+    return "No se pudo enviar la solicitud. Intenta nuevamente.";
+  }
+
+  if (typeof error === "string" && error.trim().length > 0) {
+    return error;
+  }
+
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+
+  if (typeof error === "object" && "message" in error && typeof error.message === "string") {
+    return error.message;
+  }
+
+  return "No se pudo enviar la solicitud. Intenta nuevamente.";
+}
+
 export function useBookingForm({ onSuccess }: UseBookingFormOptions = {}) {
-  const mutation = useMutation({
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const mutation = useMutation<AppointmentSummary, unknown, BookingFormValues>({
     mutationFn: createAppointmentRequest,
+    onError: (error) => {
+      setErrorMessage(getReadableError(error));
+    },
   });
 
   const handleSubmit = useCallback(
@@ -36,9 +62,12 @@ export function useBookingForm({ onSuccess }: UseBookingFormOptions = {}) {
         message: String(formData.get("message") ?? ""),
       };
 
+      setErrorMessage(null);
+
       mutation.mutate(payload, {
         onSuccess: () => {
           form.reset();
+          setErrorMessage(null);
           onSuccess?.();
         },
       });
@@ -53,7 +82,7 @@ export function useBookingForm({ onSuccess }: UseBookingFormOptions = {}) {
     status,
     isSuccess: mutation.isSuccess,
     isPending: mutation.isPending,
-    error: mutation.error,
+    error: errorMessage,
   };
 }
 
