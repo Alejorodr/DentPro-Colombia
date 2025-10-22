@@ -15,7 +15,7 @@ interface ContactChannel {
 interface SocialLink {
   href: string;
   label: string;
-  text: string;
+  icon: MarketingIconName;
 }
 
 interface ServiceSupportItem {
@@ -89,18 +89,22 @@ export function ContactSection({
             })}
           </div>
           <div className="flex gap-4">
-            {socials.map((social) => (
-              <a
-                key={social.href}
-                href={social.href}
-                className="social-link dark:border-accent-cyan/40 dark:text-accent-cyan"
-                aria-label={social.label}
-                target="_blank"
-                rel="noopener"
-              >
-                {social.text}
-              </a>
-            ))}
+            {socials.map((social) => {
+              const SocialIcon = resolveMarketingIcon(social.icon);
+
+              return (
+                <a
+                  key={social.href}
+                  href={social.href}
+                  className="social-link dark:border-accent-cyan/40 dark:text-accent-cyan"
+                  aria-label={social.label}
+                  target="_blank"
+                  rel="noopener"
+                >
+                  <SocialIcon className="h-5 w-5" weight="fill" aria-hidden="true" />
+                </a>
+              );
+            })}
           </div>
           {mapEmbed ? (
             <div className="contact-map mt-8">

@@ -290,17 +290,17 @@ const marketingContent: MarketingContent = {
       {
         href: "https://www.instagram.com/dentprocol",
         label: "Instagram",
-        text: "IG",
+        icon: "InstagramLogo",
       },
       {
         href: "https://www.facebook.com/dentprocol",
         label: "Facebook",
-        text: "FB",
+        icon: "FacebookLogo",
       },
       {
         href: "https://www.tiktok.com/@dentprocol",
         label: "TikTok",
-        text: "TT",
+        icon: "TiktokLogo",
       },
     ],
     supportTitle: "Patient Care DentPro",
