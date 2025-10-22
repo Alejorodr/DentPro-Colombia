@@ -23,7 +23,11 @@ const nextAuth: any = (NextAuth as any)({
       return token;
     },
     async session({ session, token }: { session: Session; token: JWT }) {
-      (session as any).role = (token as any).role ?? "user";
+      const role = (token as any).role ?? "user";
+      (session as any).role = role;
+      if (session.user) {
+        (session.user as any).role = role;
+      }
       return session;
     },
   },

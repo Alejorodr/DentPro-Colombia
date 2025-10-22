@@ -123,10 +123,11 @@ export function LoginModal({ open, onClose }: LoginModalProps) {
     }
 
     const session = (await response.json()) as {
+      role?: UserRole | null;
       user?: { role?: UserRole | null } | null;
     };
 
-    const userRole = (session.user?.role ?? "patient") as UserRole;
+    const userRole = (session.role ?? session.user?.role ?? "patient") as UserRole;
     onClose();
     router.push(getDefaultDashboardPath(userRole));
     router.refresh();
