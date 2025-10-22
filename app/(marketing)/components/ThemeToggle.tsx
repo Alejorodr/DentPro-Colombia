@@ -90,10 +90,10 @@ export function ThemeToggle() {
           <span className="glass-filter" aria-hidden="true"></span>
           <span className="glass-overlay" aria-hidden="true"></span>
           <span className="glass-specular" aria-hidden="true"></span>
-          <span className="theme-toggle-icon" data-theme-icon="sun" aria-hidden="true">
+          <span className="theme-toggle-icon material-symbols-rounded" data-theme-icon="sun" aria-hidden="true">
             light_mode
           </span>
-          <span className="theme-toggle-icon" data-theme-icon="moon" aria-hidden="true">
+          <span className="theme-toggle-icon material-symbols-rounded" data-theme-icon="moon" aria-hidden="true">
             dark_mode
           </span>
         </span>
