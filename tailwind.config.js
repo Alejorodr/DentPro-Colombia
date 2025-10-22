@@ -10,14 +10,14 @@ module.exports = {
     extend: {
       colors: {
         brand: {
-          teal: "#0d9488",
-          indigo: "#4338ca",
-          sky: "#0ea5e9",
-          light: "#e0f2fe",
-          midnight: "#0b1120",
+          teal: "#0a3d91",
+          indigo: "#1f6cd3",
+          sky: "#4cc3f1",
+          light: "#e6f4ff",
+          midnight: "#031536",
         },
         accent: {
-          cyan: "#22d3ee",
+          cyan: "#5bd0ff",
         },
         surface: {
           base: "#0f172a",
@@ -29,17 +29,17 @@ module.exports = {
         },
       },
       boxShadow: {
-        glow: "0 28px 70px -25px rgba(13, 148, 136, 0.45)",
-        "glow-dark": "0 30px 80px -30px rgba(34, 211, 238, 0.38)",
-        "surface-dark": "0 36px 90px -35px rgba(15, 23, 42, 0.65)",
+        glow: "0 28px 70px -25px rgba(10, 61, 145, 0.45)",
+        "glow-dark": "0 30px 80px -30px rgba(91, 208, 255, 0.38)",
+        "surface-dark": "0 36px 90px -35px rgba(3, 21, 54, 0.65)",
       },
       backgroundImage: {
         "hero-light":
-          "radial-gradient(circle at top left, rgba(13,148,136,0.12), transparent 45%), radial-gradient(circle at top right, rgba(14,165,233,0.15), transparent 55%), linear-gradient(180deg, #f8fafc 0%, #eff6ff 100%)",
+          "radial-gradient(circle at top left, rgba(10,61,145,0.14), transparent 45%), radial-gradient(circle at top right, rgba(76,195,241,0.18), transparent 55%), linear-gradient(180deg, #f8fbff 0%, #e6f2ff 100%)",
         "hero-dark":
-          "radial-gradient(circle at top left, rgba(34,211,238,0.18), transparent 45%), radial-gradient(circle at bottom right, rgba(79,70,229,0.24), transparent 55%), linear-gradient(180deg, #0b1120 0%, #111827 100%)",
+          "radial-gradient(circle at top left, rgba(91,208,255,0.22), transparent 45%), radial-gradient(circle at bottom right, rgba(31,108,211,0.25), transparent 55%), linear-gradient(180deg, #031536 0%, #0b1f46 100%)",
         gradient:
-          "linear-gradient(135deg, rgba(13,148,136,1) 0%, rgba(34,211,238,1) 32%, rgba(67,56,202,1) 100%)",
+          "linear-gradient(135deg, rgba(10,61,145,1) 0%, rgba(31,108,211,1) 32%, rgba(76,195,241,1) 100%)",
       },
     },
   },

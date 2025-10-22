@@ -56,7 +56,7 @@
   }
 
   .badge {
-    @apply inline-flex items-center gap-2 rounded-full border border-brand-teal/20 bg-brand-light/70 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-brand-indigo shadow-sm shadow-brand-teal/10 transition-colors duration-300 dark:border-accent-cyan/30 dark:bg-surface-muted/60 dark:text-accent-cyan;
+    @apply inline-flex items-center gap-2 rounded-full border border-brand-indigo/25 bg-brand-light/80 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-brand-indigo shadow-sm shadow-brand-indigo/15 transition-colors duration-300 dark:border-accent-cyan/30 dark:bg-surface-muted/60 dark:text-accent-cyan;
   }
 
   .card {
@@ -64,11 +64,11 @@
   }
 
   .icon-circle {
-    @apply inline-flex h-14 w-14 items-center justify-center rounded-2xl border border-brand-teal/20 bg-brand-light/80 text-brand-teal shadow-inner shadow-brand-teal/25 transition-colors duration-300 dark:border-accent-cyan/30 dark:bg-surface-muted/60 dark:text-accent-cyan;
+    @apply inline-flex h-14 w-14 items-center justify-center rounded-2xl border border-brand-indigo/25 bg-brand-light/90 text-brand-teal shadow-inner shadow-brand-teal/20 transition-colors duration-300 dark:border-accent-cyan/30 dark:bg-surface-muted/60 dark:text-accent-cyan;
   }
 
   .icon-badge {
-    @apply inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-brand-teal/15 bg-brand-light/70 text-brand-teal shadow-sm shadow-brand-teal/15 transition-colors duration-300 dark:border-accent-cyan/25 dark:bg-accent-cyan/15 dark:text-accent-cyan;
+    @apply inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-brand-indigo/20 bg-brand-light/80 text-brand-teal shadow-sm shadow-brand-teal/15 transition-colors duration-300 dark:border-accent-cyan/25 dark:bg-accent-cyan/15 dark:text-accent-cyan;
   }
 
   .social-link {
@@ -84,7 +84,7 @@
   }
 
   .slider-btn {
-    @apply inline-flex h-12 w-12 items-center justify-center rounded-full border border-brand-teal/40 bg-white text-brand-teal shadow-sm shadow-brand-teal/20 transition-all duration-300 hover:-translate-y-0.5 hover:bg-brand-teal hover:text-white disabled:cursor-not-allowed disabled:opacity-40 dark:border-accent-cyan/40 dark:bg-surface-base/70 dark:text-accent-cyan dark:hover:bg-accent-cyan dark:hover:text-slate-900;
+    @apply inline-flex h-12 w-12 items-center justify-center rounded-full border border-brand-indigo/40 bg-white text-brand-teal shadow-sm shadow-brand-teal/20 transition-all duration-300 hover:-translate-y-0.5 hover:bg-brand-teal hover:text-white disabled:cursor-not-allowed disabled:opacity-40 dark:border-accent-cyan/40 dark:bg-surface-base/70 dark:text-accent-cyan dark:hover:bg-accent-cyan dark:hover:text-slate-900;
   }
 
   .specialist {
@@ -100,11 +100,11 @@
   }
 
   .floating-action-btn {
-    @apply inline-flex h-14 w-14 items-center justify-center rounded-full bg-brand-teal text-white shadow-xl shadow-brand-teal/30 transition-transform duration-300 hover:-translate-y-1 hover:shadow-glow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-brand-teal/70 dark:bg-accent-cyan dark:text-slate-900 dark:shadow-glow-dark dark:hover:shadow-glow-dark;
+    @apply inline-flex h-14 w-14 items-center justify-center rounded-full bg-brand-teal text-white shadow-xl shadow-brand-teal/30 transition-transform duration-300 hover:-translate-y-1 hover:shadow-glow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-brand-indigo/70 dark:bg-accent-cyan dark:text-slate-900 dark:shadow-glow-dark dark:hover:shadow-glow-dark;
   }
 
   .form-feedback {
-    @apply min-h-[1.5rem] text-brand-light/80 transition-opacity duration-300 dark:text-accent-cyan;
+    @apply min-h-[1.5rem] text-brand-sky/80 transition-opacity duration-300 dark:text-accent-cyan;
   }
 
   .input {
@@ -114,7 +114,7 @@
   .btn,
   .btn-primary,
   .btn-secondary {
-    @apply inline-flex items-center justify-center gap-2 rounded-full border px-6 py-3 text-sm font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-brand-teal/70 disabled:pointer-events-none disabled:opacity-60 dark:focus-visible:ring-accent-cyan/60;
+    @apply inline-flex items-center justify-center gap-2 rounded-full border px-6 py-3 text-sm font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-brand-indigo/70 disabled:pointer-events-none disabled:opacity-60 dark:focus-visible:ring-accent-cyan/60;
   }
 
   .btn-primary {
@@ -122,12 +122,12 @@
   }
 
   .btn-secondary {
-    @apply border-brand-teal/40 bg-white/80 text-brand-teal hover:-translate-y-0.5 hover:bg-brand-teal/10 hover:text-brand-indigo dark:border-accent-cyan/40 dark:bg-surface-base/70 dark:text-accent-cyan dark:hover:bg-accent-cyan/15 dark:hover:text-surface-base;
+    @apply border-brand-indigo/35 bg-white/80 text-brand-teal hover:-translate-y-0.5 hover:bg-brand-light/60 hover:text-brand-indigo dark:border-accent-cyan/40 dark:bg-surface-base/70 dark:text-accent-cyan dark:hover:bg-accent-cyan/15 dark:hover:text-surface-base;
   }
 
   .bg-gradient {
     background-image: theme('backgroundImage.gradient') !important;
-    @apply text-white shadow-lg shadow-brand-teal/25;
+    @apply text-white shadow-lg shadow-brand-indigo/25;
   }
 
   .modal-backdrop {
@@ -167,7 +167,7 @@
   }
 
   .theme-toggle-thumb {
-    @apply absolute left-1 top-1 flex h-9 w-9 items-center justify-center rounded-full border border-white/60 bg-white text-brand-teal shadow-lg shadow-slate-900/10 transition-all duration-300 dark:border-surface-muted/70 dark:bg-surface-muted/80 dark:text-accent-cyan;
+    @apply absolute left-1 top-1 flex h-9 w-9 items-center justify-center rounded-full border border-white/60 bg-white text-brand-sky shadow-lg shadow-slate-900/10 transition-all duration-300 dark:border-surface-muted/70 dark:bg-surface-muted/80 dark:text-accent-cyan;
   }
 
   .theme-toggle-icon {
@@ -193,6 +193,14 @@
 
   .glass-specular {
     @apply left-1/2 top-0 h-full w-[55%] -translate-x-1/2 rounded-full bg-white/50 opacity-50 blur-lg dark:bg-accent-cyan/30;
+  }
+
+  .contact-map {
+    @apply overflow-hidden rounded-3xl border border-white/10 bg-white/5 shadow-xl shadow-slate-900/20 transition-colors duration-300 dark:border-accent-cyan/15 dark:bg-surface-muted/70;
+  }
+
+  .contact-map iframe {
+    @apply h-full w-full;
   }
 }
 

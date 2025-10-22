@@ -23,16 +23,16 @@ type MarketingContent = {
 const marketingContent: MarketingContent = {
   infoBar: {
     location: {
-      text: "Av. Principal 123, Bogotá",
+      text: "Cra. 7 #13-180, Chía, Cundinamarca",
       icon: "MapPin",
     },
     schedule: {
-      text: "Lun–Vie 9:00-18:00 · Sáb 9:00-13:00",
+      text: "Lun–Sáb 8:00-19:00 · Domingos y festivos con cita previa",
       icon: "Clock",
     },
     whatsapp: {
-      href: "https://wa.me/573001112233",
-      label: "Escríbenos por WhatsApp",
+      href: "https://wa.me/573237968435",
+      label: "Agenda por WhatsApp",
       icon: "ChatCircleDots",
     },
     email: {
@@ -61,7 +61,7 @@ const marketingContent: MarketingContent = {
   navbar: {
     brand: {
       href: "#inicio",
-      name: "DentPro",
+      name: "DentPro Colombia",
       initials: "DP",
     },
     links: [
@@ -72,7 +72,7 @@ const marketingContent: MarketingContent = {
     ],
     cta: {
       href: "#agenda",
-      label: "Agenda ahora",
+      label: "Agenda tu cita",
     },
     login: {
       href: "/login",
@@ -80,37 +80,37 @@ const marketingContent: MarketingContent = {
     },
   },
   hero: {
-    badge: "Odontología integral en Bogotá",
-    title: "Sonrisas sanas con tecnología de última generación",
+    badge: "Odontología general y especializada en Chía",
+    title: "Cuidamos tu sonrisa con tecnología y calidez humana",
     description:
-      "Diagnóstico digital, especialistas certificados y acompañamiento personalizado en cada etapa del tratamiento.",
+      "Agenda tu valoración en DentPro Colombia y accede a tratamientos preventivos y especializados sin salir de Chía.",
     primaryCta: {
       href: "#agenda",
-      label: "Reservar valoración",
+      label: "Agenda tu cita",
     },
     secondaryCta: {
-      href: "#servicios",
-      label: "Ver servicios",
+      href: "#contacto",
+      label: "Cómo llegar",
     },
     stats: [
-      { label: "+1.200 pacientes", description: "confían en DentPro cada año" },
-      { label: "98% satisfacción", description: "en tratamientos completados" },
-      { label: "12 especialistas", description: "con subespecialidades clínicas" },
+      { label: "+2.500 sonrisas", description: "atendidas en Cundinamarca" },
+      { label: "98% satisfacción", description: "de nuestros pacientes" },
+      { label: "Horario extendido", description: "Lun–Sáb 8:00 am a 7:00 pm" },
     ],
     image: {
       src: "https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?auto=format&fit=crop&w=1200&q=80",
-      alt: "Paciente sonriente recibiendo atención dental",
+      alt: "Paciente sonriente recibiendo atención dental en DentPro Chía",
     },
     testimonial: {
       quote:
-        "Me acompañaron desde la valoración inicial hasta la retención. La atención es cálida y muy profesional.",
+        "Desde que llegué a DentPro Chía me guiaron en todo el proceso. El equipo es cercano y muy profesional.",
       author: "Mariana López",
       role: "Paciente de ortodoncia",
       avatar: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=200&q=80",
     },
     highlight: {
-      title: "97% seguimiento efectivo",
-      description: "Monitorización continua de casos complejos",
+      title: "Seguimiento personalizado",
+      description: "Control clínico y acompañamiento en cada etapa",
     },
   },
   services: {
@@ -226,7 +226,7 @@ const marketingContent: MarketingContent = {
   },
   booking: {
     title: "Agenda tu valoración integral",
-    description: "Responde este formulario y nuestro equipo de Patient Care te contactará en menos de 30 minutos hábiles.",
+    description: "Responde este formulario y nuestro equipo de Patient Care se comunicará contigo en minutos para confirmar tu cita.",
     selectLabel: "¿Qué tratamiento te interesa?",
     options: [
       { value: "limpieza", label: "Limpieza y profilaxis" },
@@ -255,24 +255,24 @@ const marketingContent: MarketingContent = {
         text: "Planes de financiación y convenios empresariales",
       },
     ],
-    scheduleNote: "Disponibilidad de lunes a viernes de 9:00 a 18:00 y sábados de 9:00 a 13:00 en nuestra sede principal.",
+    scheduleNote: "Disponibilidad de lunes a sábado de 8:00 a 19:00 y domingos o festivos con cita previa en nuestra sede de Chía.",
     consentNote: "Al enviar este formulario autorizas el tratamiento de tus datos según nuestra política de privacidad.",
   },
   contact: {
     title: "Estamos para ayudarte",
-    description: "Comunícate con nosotros por el canal que prefieras o visítanos en nuestra sede central.",
+    description: "Comunícate con nuestro equipo y programa tu cita en la sede DentPro Colombia de Chía.",
     channels: [
       {
         icon: "Phone",
         label: "Teléfono",
-        value: "+57 300 111 2233",
-        href: "tel:+573001112233",
+        value: "+57 323 796 8435",
+        href: "tel:+573237968435",
       },
       {
         icon: "WhatsappLogo",
         label: "WhatsApp",
-        value: "+57 300 111 2233",
-        href: "https://wa.me/573001112233",
+        value: "323 796 8435",
+        href: "https://wa.me/573237968435",
       },
       {
         icon: "EnvelopeSimple",
@@ -283,7 +283,7 @@ const marketingContent: MarketingContent = {
       {
         icon: "MapPin",
         label: "Ubicación",
-        value: "Av. Principal 123, Bogotá",
+        value: "Cra. 7 #13-180, Chía, Cundinamarca",
       },
     ],
     socials: [
@@ -309,15 +309,11 @@ const marketingContent: MarketingContent = {
       { icon: "ChartLineUp", text: "Seguimiento de tu evolución clínica" },
       { icon: "Medal", text: "Garantía extendida en tratamientos" },
     ],
-    locationsTitle: "Nuestras sedes",
+    locationsTitle: "Nuestra sede",
     locations: [
       {
-        name: "Sede Chico Norte",
-        description: "Av. Principal 123, consultorio 502. Parqueadero para pacientes.",
-      },
-      {
-        name: "Sede Cedritos",
-        description: "Calle 140 #12-45. Atención previa cita.",
+        name: "Chía - Cundinamarca",
+        description: "Cra. 7 #13-180. Domingos y festivos con cita previa.",
       },
     ],
     legalLinks: [
@@ -325,18 +321,20 @@ const marketingContent: MarketingContent = {
       { href: "/terminos-y-condiciones", label: "Términos y condiciones" },
     ],
     brand: "DentPro",
+    mapEmbed:
+      '<iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3975.459116389726!2d-74.06081971538144!3d4.862466127650842!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8e3f87c4f73bb481%3A0x4fe68db55a29fdf4!2sOdontolog%C3%ADa%20chia%20DENTPRO!5e0!3m2!1ses!2sar!4v1761166520702!5m2!1ses!2sar" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>',
   },
   floatingActions: {
     actions: [
       {
-        href: "https://wa.me/573001112233",
+        href: "https://wa.me/573237968435",
         label: "Chat en WhatsApp",
         icon: "WhatsappLogo",
         className: "whatsapp",
         external: true,
       },
       {
-        href: "tel:+573001112233",
+        href: "tel:+573237968435",
         label: "Llamar a DentPro",
         icon: "Phone",
         className: "phone",
