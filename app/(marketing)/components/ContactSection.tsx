@@ -44,6 +44,7 @@ interface ContactSectionProps {
   locations: LocationItem[];
   legalLinks: LegalLink[];
   brand: string;
+  mapEmbed?: string;
 }
 
 export function ContactSection({
@@ -57,6 +58,7 @@ export function ContactSection({
   locations,
   legalLinks,
   brand,
+  mapEmbed,
 }: ContactSectionProps) {
   const currentYear = new Date().getFullYear();
 
@@ -67,8 +69,8 @@ export function ContactSection({
           <h2 className="text-3xl font-bold">{title}</h2>
           <p className="text-base text-slate-300">{description}</p>
           <div className="space-y-2 text-sm text-slate-300">
-          {channels.map((channel) => {
-            const ChannelIcon = resolveMarketingIcon(channel.icon);
+            {channels.map((channel) => {
+              const ChannelIcon = resolveMarketingIcon(channel.icon);
 
               return (
                 <p key={channel.label} className="flex items-center gap-3">
@@ -100,6 +102,14 @@ export function ContactSection({
               </a>
             ))}
           </div>
+          {mapEmbed ? (
+            <div className="contact-map mt-8">
+              <div
+                className="aspect-[4/3]"
+                dangerouslySetInnerHTML={{ __html: mapEmbed }}
+              />
+            </div>
+          ) : null}
         </div>
         <div className="rounded-3xl bg-white/10 p-8 backdrop-blur transition-colors duration-300 dark:border dark:border-accent-cyan/10 dark:bg-surface-muted/80">
           <h3 className="text-xl font-semibold">{supportTitle}</h3>
@@ -107,8 +117,8 @@ export function ContactSection({
             Nuestro equipo de Patient Care está listo para acompañarte antes, durante y después de cada visita.
           </p>
           <ul className="mt-6 space-y-4 text-sm text-slate-200">
-              {supportItems.map((item) => {
-                const SupportIcon = resolveMarketingIcon(item.icon);
+            {supportItems.map((item) => {
+              const SupportIcon = resolveMarketingIcon(item.icon);
 
               return (
                 <li key={item.text} className="flex gap-3">
