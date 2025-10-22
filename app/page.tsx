@@ -9,7 +9,18 @@ import { BookingFormSection } from "./(marketing)/components/BookingForm";
 import { ContactSection } from "./(marketing)/components/ContactSection";
 import { FloatingActions } from "./(marketing)/components/FloatingActions";
 
-const marketingContent = {
+type MarketingContent = {
+  infoBar: Parameters<typeof InfoBar>[0];
+  navbar: Parameters<typeof Navbar>[0];
+  hero: Parameters<typeof Hero>[0];
+  services: Parameters<typeof ServicesSection>[0];
+  specialists: Parameters<typeof SpecialistsSlider>[0];
+  booking: Parameters<typeof BookingFormSection>[0];
+  contact: Parameters<typeof ContactSection>[0];
+  floatingActions: Parameters<typeof FloatingActions>[0];
+};
+
+const marketingContent: MarketingContent = {
   infoBar: {
     location: "📍 Av. Principal 123, Bogotá",
     schedule: "⏰ Lun–Vie 9:00-18:00 · Sáb 9:00-13:00",
@@ -329,7 +340,7 @@ const marketingContent = {
       },
     ],
   },
-} as const;
+};
 
 export default function Home() {
   return (
