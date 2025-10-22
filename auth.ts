@@ -3,6 +3,8 @@ import Credentials from "next-auth/providers/credentials";
 import type { JWT } from "next-auth/jwt";
 import type { Session } from "next-auth";
 
+import { authenticateUser } from "@/lib/auth/users";
+
 // Cast para evitar el "no call signatures"
 const nextAuth: any = (NextAuth as any)({
   session: { strategy: "jwt" },
@@ -10,10 +12,16 @@ const nextAuth: any = (NextAuth as any)({
     Credentials({
       credentials: { email: { type: "email" }, password: { type: "password" } },
       async authorize(c) {
-        if (c?.email === "admin@dentpro.co" && c?.password === "demo123") {
-          return { id: "1", name: "Admin", email: "admin@dentpro.co", role: "admin" };
+        if (!c?.email || !c?.password) {
+          return null;
         }
-        return null;
+
+        const user = await authenticateUser(c.email, c.password);
+        if (!user) {
+          return null;
+        }
+
+        return { id: user.id, name: user.name, email: user.email, role: user.role };
       },
     }),
   ],
