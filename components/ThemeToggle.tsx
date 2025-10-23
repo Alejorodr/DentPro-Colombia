@@ -6,27 +6,33 @@ import { Moon, Sun } from "@phosphor-icons/react";
 
 type Theme = "light" | "dark";
 
+type ThemeState = {
+  theme: Theme;
+  isManual: boolean;
+};
+
 const STORAGE_KEY = "theme";
 
-function resolveInitialTheme(): Theme {
+function resolveInitialState(): ThemeState {
   if (typeof window === "undefined" || typeof document === "undefined") {
-    return "light";
+    return { theme: "light", isManual: false };
   }
 
   try {
     const stored = window.localStorage.getItem(STORAGE_KEY);
     if (stored === "dark" || stored === "light") {
-      return stored;
+      return { theme: stored, isManual: true };
     }
   } catch {
     // localStorage might be unavailable. Fall back to system preference below.
   }
 
   if (document.documentElement.classList.contains("dark")) {
-    return "dark";
+    return { theme: "dark", isManual: false };
   }
 
-  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+  return { theme: prefersDark ? "dark" : "light", isManual: false };
 }
 
 function applyTheme(theme: Theme) {
@@ -40,7 +46,7 @@ function applyTheme(theme: Theme) {
 }
 
 export function ThemeToggle() {
-  const [theme, setTheme] = useState<Theme>(() => resolveInitialTheme());
+  const [{ theme, isManual }, setState] = useState<ThemeState>(() => resolveInitialState());
 
   useEffect(() => {
     applyTheme(theme);
@@ -50,15 +56,67 @@ export function ThemeToggle() {
     }
 
     try {
-      window.localStorage.setItem(STORAGE_KEY, theme);
+      if (isManual) {
+        window.localStorage.setItem(STORAGE_KEY, theme);
+      } else {
+        window.localStorage.removeItem(STORAGE_KEY);
+      }
     } catch {
       // Ignore storage errors (private mode, etc.)
     }
-  }, [theme]);
+  }, [theme, isManual]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+
+    const handleChange = (event: MediaQueryListEvent) => {
+      setState((prev) => {
+        if (prev.isManual) {
+          return prev;
+        }
+
+        const nextTheme = event.matches ? "dark" : "light";
+        if (prev.theme === nextTheme) {
+          return prev;
+        }
+
+        return { theme: nextTheme, isManual: false };
+      });
+    };
+
+    const addListener = typeof mediaQuery.addEventListener === "function"
+      ? mediaQuery.addEventListener.bind(mediaQuery, "change")
+      : mediaQuery.addListener.bind(mediaQuery);
+    const removeListener = typeof mediaQuery.removeEventListener === "function"
+      ? mediaQuery.removeEventListener.bind(mediaQuery, "change")
+      : mediaQuery.removeListener.bind(mediaQuery);
+
+    addListener(handleChange);
+
+    return () => {
+      removeListener(handleChange);
+    };
+  }, []);
+
+  const setTheme = useCallback((updater: Theme | ((prev: Theme) => Theme), manual: boolean) => {
+    setState((prev) => {
+      const nextTheme = typeof updater === "function" ? updater(prev.theme) : updater;
+
+      if (prev.theme === nextTheme && prev.isManual === manual) {
+        return prev;
+      }
+
+      return { theme: nextTheme, isManual: manual };
+    });
+  }, []);
 
   const handleToggle = useCallback(() => {
-    setTheme((prev) => (prev === "dark" ? "light" : "dark"));
-  }, []);
+    setTheme((prev) => (prev === "dark" ? "light" : "dark"), true);
+  }, [setTheme]);
 
   const isDark = theme === "dark";
   const label = isDark ? "Activar modo claro" : "Activar modo oscuro";
