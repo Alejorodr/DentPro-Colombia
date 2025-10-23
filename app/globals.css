@@ -167,7 +167,7 @@
   }
 
   .theme-toggle-thumb {
-    @apply absolute left-1.5 top-1.5 flex h-7 w-7 items-center justify-center rounded-full border border-white/60 bg-white text-brand-sky shadow-lg shadow-slate-900/10 transition-all duration-300 dark:border-surface-muted/70 dark:bg-surface-muted/80 dark:text-accent-cyan;
+    @apply absolute left-1.5 top-1.5 flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 bg-gradient-to-br from-white via-slate-50 to-slate-200 text-brand-sky shadow-lg shadow-slate-900/10 transition-all duration-300 dark:border-surface-muted/70 dark:bg-surface-muted/80 dark:bg-none dark:text-accent-cyan;
   }
 
   .theme-toggle-icon {
