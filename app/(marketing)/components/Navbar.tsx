@@ -119,14 +119,14 @@ export function Navbar({ brand, links, cta, login }: NavbarProps) {
               <button
                 type="button"
                 ref={loginButtonRef}
-                className="btn-secondary text-sm"
+                className="btn-secondary inline-flex h-11 w-11 items-center justify-center rounded-full"
                 aria-haspopup="dialog"
                 aria-expanded={isLoginModalOpen}
                 aria-controls="loginModal"
+                aria-label={login.label}
                 onClick={toggleLoginModal}
               >
                 <UserCircle className="h-5 w-5" weight="bold" aria-hidden="true" />
-                {login.label}
               </button>
               <LoginModal open={isLoginModalOpen} onClose={closeLoginModal} />
             </div>
