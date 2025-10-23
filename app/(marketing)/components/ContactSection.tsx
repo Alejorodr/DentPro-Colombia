@@ -106,14 +106,6 @@ export function ContactSection({
               );
             })}
           </div>
-          {mapEmbed ? (
-            <div className="contact-map mt-8">
-              <div
-                className="aspect-[4/3]"
-                dangerouslySetInnerHTML={{ __html: mapEmbed }}
-              />
-            </div>
-          ) : null}
         </div>
         <div className="rounded-3xl bg-white/10 p-8 backdrop-blur transition-colors duration-300 dark:border dark:border-accent-cyan/10 dark:bg-surface-muted/80">
           <h3 className="text-xl font-semibold">{supportTitle}</h3>
@@ -145,6 +137,14 @@ export function ContactSection({
               </li>
             ))}
           </ul>
+          {mapEmbed ? (
+            <div className="contact-map mt-8">
+              <div
+                className="aspect-[4/3]"
+                dangerouslySetInnerHTML={{ __html: mapEmbed }}
+              />
+            </div>
+          ) : null}
         </div>
       </div>
       <div className="mt-20 border-t border-white/10 dark:border-surface-muted/80">
