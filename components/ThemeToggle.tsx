@@ -88,17 +88,18 @@ export function ThemeToggle() {
       });
     };
 
-    const addListener = typeof mediaQuery.addEventListener === "function"
-      ? mediaQuery.addEventListener.bind(mediaQuery, "change")
-      : mediaQuery.addListener.bind(mediaQuery);
-    const removeListener = typeof mediaQuery.removeEventListener === "function"
-      ? mediaQuery.removeEventListener.bind(mediaQuery, "change")
-      : mediaQuery.removeListener.bind(mediaQuery);
+    if (typeof mediaQuery.addEventListener === "function") {
+      mediaQuery.addEventListener("change", handleChange);
 
-    addListener(handleChange);
+      return () => {
+        mediaQuery.removeEventListener("change", handleChange);
+      };
+    }
+
+    mediaQuery.addListener(handleChange);
 
     return () => {
-      removeListener(handleChange);
+      mediaQuery.removeListener(handleChange);
     };
   }, []);
 
