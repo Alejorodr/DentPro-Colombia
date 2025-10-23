@@ -12,6 +12,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Script id="theme" strategy="beforeInteractive">
           {`
             try {
+              const root = document.documentElement;
               const storedTheme = window.localStorage.getItem("theme");
               const isStoredTheme = storedTheme === "light" || storedTheme === "dark";
               const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
