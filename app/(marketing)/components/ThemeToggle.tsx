@@ -92,6 +92,11 @@ export function ThemeToggle() {
           <span className="glass-filter" aria-hidden="true"></span>
           <span className="glass-overlay" aria-hidden="true"></span>
           <span className="glass-specular" aria-hidden="true"></span>
+        </span>
+        <span className="theme-toggle-thumb">
+          <span className="glass-filter" aria-hidden="true"></span>
+          <span className="glass-overlay" aria-hidden="true"></span>
+          <span className="glass-specular" aria-hidden="true"></span>
           <Sun
             className="theme-toggle-icon h-4 w-4"
             data-theme-icon="sun"
@@ -104,11 +109,6 @@ export function ThemeToggle() {
             aria-hidden="true"
             weight="fill"
           />
-        </span>
-        <span className="theme-toggle-thumb">
-          <span className="glass-filter" aria-hidden="true"></span>
-          <span className="glass-overlay" aria-hidden="true"></span>
-          <span className="glass-specular" aria-hidden="true"></span>
         </span>
       </span>
     </button>
