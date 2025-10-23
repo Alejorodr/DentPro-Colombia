@@ -14,7 +14,8 @@ function getJwtSecretKey(): Uint8Array {
 }
 
 export async function GET() {
-  const token = cookies().get("auth_token")?.value;
+  const cookieStore = await cookies();
+  const token = cookieStore.get("auth_token")?.value;
   if (!token) {
     return NextResponse.json({ authenticated: false });
   }
