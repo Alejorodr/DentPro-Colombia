@@ -5,36 +5,28 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 
 import { AppProviders } from "./providers";
 
-const initThemeScript = `(() => {
-  const storageKey = "dentpro-theme";
-  const classList = document.documentElement.classList;
-  const mediaQuery = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
-  let theme = "light";
-
-  try {
-    const stored = window.localStorage.getItem(storageKey);
-    if (stored === "light" || stored === "dark") {
-      theme = stored;
-    } else if (mediaQuery?.matches) {
-      theme = "dark";
-    }
-  } catch (_error) {
-    if (mediaQuery?.matches) {
-      theme = "dark";
-    }
-  }
-
-  if (theme === "dark") {
-    classList.add("dark");
-  } else {
-    classList.remove("dark");
-  }
-})();`;
-
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es">
+    <html lang="es" className="h-full">
       <head>
+        <Script id="theme" strategy="beforeInteractive">
+          {`
+            try {
+              const storedTheme = window.localStorage.getItem("theme");
+              const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+              const theme = storedTheme ?? (prefersDark ? "dark" : "light");
+
+              document.documentElement.classList.toggle("dark", theme === "dark");
+              window.localStorage.setItem("theme", theme);
+            } catch (_error) {
+              if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+                document.documentElement.classList.add("dark");
+              } else {
+                document.documentElement.classList.remove("dark");
+              }
+            }
+          `}
+        </Script>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
@@ -42,8 +34,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           rel="stylesheet"
         />
       </head>
-      <body>
-        <Script id="init-theme" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: initThemeScript }} />
+      <body className="min-h-screen bg-white dark:bg-neutral-900">
         <AppProviders>
           {children}
           <Analytics />
