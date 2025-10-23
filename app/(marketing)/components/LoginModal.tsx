@@ -103,7 +103,8 @@ export function LoginModal({ open, onClose }: LoginModalProps) {
       }
 
       const userRole = data.user?.role;
-      const role: UserRole = isUserRole(userRole) ? userRole : "patient";
+      const role: UserRole =
+        typeof userRole === "string" && isUserRole(userRole) ? userRole : "patient";
       onClose();
       router.push(getDefaultDashboardPath(role));
       router.refresh();
