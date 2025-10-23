@@ -155,7 +155,7 @@
   }
 
   .theme-toggle {
-    @apply relative inline-flex h-11 w-20 items-center justify-start rounded-full border border-slate-200/70 bg-white/90 px-1 shadow-sm shadow-slate-900/10 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-brand-teal/60 dark:border-surface-muted/70 dark:bg-surface-base/80 dark:focus-visible:ring-accent-cyan/60;
+    @apply relative inline-flex h-10 w-16 items-center justify-start rounded-full border border-slate-200/70 bg-white/90 px-1.5 shadow-sm shadow-slate-900/10 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-brand-teal/60 dark:border-surface-muted/70 dark:bg-surface-base/80 dark:focus-visible:ring-accent-cyan/60;
   }
 
   .theme-toggle-track {
@@ -163,15 +163,24 @@
   }
 
   .theme-toggle-rail {
-    @apply relative flex h-6 w-full items-center justify-between px-3 text-[0.65rem] font-semibold uppercase tracking-[0.1em] text-slate-400 dark:text-slate-500;
+    @apply pointer-events-none relative grid h-full w-full place-items-center text-[0.65rem] font-semibold uppercase tracking-[0.1em] text-slate-400 dark:text-slate-500;
   }
 
   .theme-toggle-thumb {
-    @apply absolute left-1 top-1 flex h-9 w-9 items-center justify-center rounded-full border border-white/60 bg-white text-brand-sky shadow-lg shadow-slate-900/10 transition-all duration-300 dark:border-surface-muted/70 dark:bg-surface-muted/80 dark:text-accent-cyan;
+    @apply absolute left-1.5 top-1.5 flex h-7 w-7 items-center justify-center rounded-full border border-white/60 bg-white text-brand-sky shadow-lg shadow-slate-900/10 transition-all duration-300 dark:border-surface-muted/70 dark:bg-surface-muted/80 dark:text-accent-cyan;
   }
 
   .theme-toggle-icon {
-    @apply relative inline-flex items-center justify-center text-base text-slate-500 opacity-80 transition-all duration-300 dark:text-slate-300;
+    @apply absolute inset-0 inline-flex items-center justify-center text-base text-slate-500 opacity-80 transition-all duration-300 dark:text-slate-200;
+  }
+
+  .theme-toggle-icon[data-theme-icon="sun"] {
+    color: #f7b500;
+    filter: drop-shadow(0 0 6px rgba(247, 181, 0, 0.35));
+  }
+
+  .dark .theme-toggle-icon[data-theme-icon="sun"] {
+    color: #ffdd6a;
   }
 
   .glass-filter,
@@ -214,7 +223,7 @@
   }
 
   .theme-toggle[aria-checked="true"] .theme-toggle-thumb {
-    transform: translateX(44px);
+    transform: translateX(1.5rem);
     @apply border-accent-cyan/50 bg-surface-muted/80 text-accent-cyan;
   }
 
