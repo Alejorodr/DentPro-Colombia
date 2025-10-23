@@ -171,7 +171,7 @@
   }
 
   .theme-toggle-icon {
-    @apply absolute inset-0 inline-flex items-center justify-center text-base text-slate-500 opacity-80 transition-all duration-300 dark:text-slate-200;
+    @apply inline-flex items-center justify-center text-base text-slate-500 opacity-80 transition-all duration-300 dark:text-slate-200;
   }
 
   .theme-toggle-icon[data-theme-icon="sun"] {
@@ -223,7 +223,7 @@
   }
 
   .theme-toggle[aria-checked="true"] .theme-toggle-thumb {
-    transform: translateX(1.5rem);
+    transform: translateX(0.75rem);
     @apply border-accent-cyan/50 bg-surface-muted/80 text-accent-cyan;
   }
 
