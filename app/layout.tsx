@@ -12,17 +12,29 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Script id="theme" strategy="beforeInteractive">
           {`
             try {
+              const root = document.documentElement;
               const storedTheme = window.localStorage.getItem("theme");
-              const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-              const theme = storedTheme ?? (prefersDark ? "dark" : "light");
 
-              document.documentElement.classList.toggle("dark", theme === "dark");
-              window.localStorage.setItem("theme", theme);
+              if (storedTheme === "dark" || storedTheme === "light") {
+                root.classList.toggle("dark", storedTheme === "dark");
+                root.dataset.theme = storedTheme;
+              } else {
+                const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+                const theme = prefersDark ? "dark" : "light";
+
+                root.classList.toggle("dark", theme === "dark");
+                root.dataset.theme = theme;
+                window.localStorage.removeItem("theme");
+              }
             } catch (_error) {
-              if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+              const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+
+              if (prefersDark) {
                 document.documentElement.classList.add("dark");
+                document.documentElement.dataset.theme = "dark";
               } else {
                 document.documentElement.classList.remove("dark");
+                document.documentElement.dataset.theme = "light";
               }
             }
           `}
