@@ -12,6 +12,7 @@ type ThemeState = {
 };
 
 const STORAGE_KEY = "theme";
+const STORAGE_SOURCE_KEY = "theme-source";
 
 function resolveInitialState(): ThemeState {
   if (typeof window === "undefined" || typeof document === "undefined") {
@@ -20,9 +21,14 @@ function resolveInitialState(): ThemeState {
 
   try {
     const stored = window.localStorage.getItem(STORAGE_KEY);
-    if (stored === "dark" || stored === "light") {
+    const source = window.localStorage.getItem(STORAGE_SOURCE_KEY);
+
+    if (source === "manual" && (stored === "dark" || stored === "light")) {
       return { theme: stored, isManual: true };
     }
+
+    window.localStorage.removeItem(STORAGE_KEY);
+    window.localStorage.removeItem(STORAGE_SOURCE_KEY);
   } catch {
     // localStorage might be unavailable. Fall back to system preference below.
   }
@@ -58,8 +64,10 @@ export function ThemeToggle() {
     try {
       if (isManual) {
         window.localStorage.setItem(STORAGE_KEY, theme);
+        window.localStorage.setItem(STORAGE_SOURCE_KEY, "manual");
       } else {
         window.localStorage.removeItem(STORAGE_KEY);
+        window.localStorage.removeItem(STORAGE_SOURCE_KEY);
       }
     } catch {
       // Ignore storage errors (private mode, etc.)
