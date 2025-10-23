@@ -1,15 +1,17 @@
-import { compare } from "bcryptjs";
+import bcrypt from "bcrypt";
+import type { Prisma } from "@prisma/client";
 
-import { db } from "../db";
+import { prisma } from "@/lib/prisma";
 import { isUserRole, type UserRole } from "./roles";
 
-interface UserRow {
-  id: string;
-  name: string | null;
-  email: string;
-  password_hash: string;
-  primary_role_id: string;
-}
+type UserWithoutPassword = Prisma.UserGetPayload<{
+  select: {
+    id: true;
+    name: true;
+    email: true;
+    primaryRole: true;
+  };
+}>;
 
 export interface DatabaseUser {
   id: string;
@@ -18,46 +20,50 @@ export interface DatabaseUser {
   role: UserRole;
 }
 
-function mapRowToUser(row: UserRow): DatabaseUser | null {
-  if (!isUserRole(row.primary_role_id)) {
+function mapUser(user: UserWithoutPassword | null): DatabaseUser | null {
+  if (!user) {
+    return null;
+  }
+
+  if (!isUserRole(user.primaryRole)) {
     return null;
   }
 
   return {
-    id: row.id,
-    name: row.name,
-    email: row.email,
-    role: row.primary_role_id,
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    role: user.primaryRole,
   };
 }
 
 export async function authenticateUser(email: string, password: string): Promise<DatabaseUser | null> {
   const normalizedEmail = email.toLowerCase();
-  const statement = db.prepare(
-    `SELECT id, name, email, password_hash, primary_role_id FROM users WHERE lower(email) = ?`
-  );
-  const row = statement.get(normalizedEmail) as UserRow | undefined;
-  if (!row) {
+
+  const user = await prisma.user.findUnique({
+    where: { email: normalizedEmail },
+    select: { id: true, name: true, email: true, passwordHash: true, primaryRole: true },
+  });
+
+  if (!user) {
     return null;
   }
 
-  const passwordsMatch = await compare(password, row.password_hash);
+  const passwordsMatch = await bcrypt.compare(password, user.passwordHash);
   if (!passwordsMatch) {
     return null;
   }
 
-  return mapRowToUser(row);
+  const { passwordHash: _passwordHash, ...safeUser } = user;
+
+  return mapUser(safeUser as UserWithoutPassword);
 }
 
-export function findUserById(id: string): DatabaseUser | null {
-  const statement = db.prepare(
-    `SELECT id, name, email, password_hash, primary_role_id FROM users WHERE id = ?`
-  );
-  const row = statement.get(id) as UserRow | undefined;
-  if (!row) {
-    return null;
-  }
+export async function findUserById(id: string): Promise<DatabaseUser | null> {
+  const user = await prisma.user.findUnique({
+    where: { id },
+    select: { id: true, name: true, email: true, primaryRole: true },
+  });
 
-  return mapRowToUser(row);
+  return mapUser(user);
 }
-

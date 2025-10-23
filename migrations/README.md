@@ -1,28 +1,29 @@
 # Migraciones y datos semilla
 
-Este proyecto utiliza SQLite (mediante `better-sqlite3`) para persistir usuarios, roles y sesiones de NextAuth.
+Este proyecto utiliza Prisma con SQLite para persistir usuarios, roles y sesiones de NextAuth.
 
 ## Ejecutar migraciones
 
 1. Asegúrate de haber instalado las dependencias (`npm install`).
-2. Ejecuta el script SQL sobre la base de datos configurada en `AUTH_DATABASE_URL` (por defecto `./dentpro.db`):
+2. Configura la variable `DATABASE_URL` en tu entorno (consulta `.env.example`).
+3. Aplica las migraciones usando Prisma:
 
 ```bash
-sqlite3 ${AUTH_DATABASE_URL:-dentpro.db} < migrations/001_create_auth_tables.sql
+npm run prisma migrate dev
 ```
 
-> **Nota:** El fichero crea las tablas `roles`, `permissions`, `role_permissions`, `users`, `user_roles`, `user_permissions`, así como las tablas necesarias para almacenar sesiones y cuentas de NextAuth.
+> Prisma generará automáticamente el cliente y aplicará las migraciones a la base de datos indicada en `DATABASE_URL`.
 
 ## Cargar datos semilla
 
-El repositorio incluye `scripts/seed.cjs`, que inserta usuarios demo y asegura que los roles base (`patient`, `professional`, `reception`, `admin`) queden asignados.
+El comando `npm run db:seed` ejecuta `prisma/seed.js`, que inserta usuarios demo y asegura que los roles base (`patient`, `professional`, `reception`, `admin`) queden asignados.
 
 ```bash
-node scripts/seed.cjs
+npm run db:seed
 ```
 
 - Puedes sobreescribir la contraseña usada por el seed exportando `SEED_PASSWORD`.
-- Si trabajas con una ruta de base de datos personalizada, exporta `AUTH_DATABASE_URL` antes de ejecutar el script.
+- Si trabajas con una ruta de base de datos personalizada, exporta `DATABASE_URL` antes de ejecutar el script.
 
 ### Usuario administrador por defecto
 
@@ -35,8 +36,8 @@ Puedes iniciar sesión con estas credenciales en el panel (`/admin`). Recuerda c
 
 ## Actualizar catálogos de roles y permisos
 
-1. Añade o modifica los valores en la tabla correspondiente mediante una nueva migración SQL.
+1. Añade o modifica los valores en la tabla correspondiente mediante una nueva migración generada con Prisma.
 2. Opcionalmente, crea un script de seed adicional que inserte los nuevos slugs.
 3. Ejecuta de nuevo las migraciones con el comando descrito arriba y vuelve a correr el seed para reflejar los cambios en usuarios existentes.
 
-Mantener los catálogos bajo control de versiones (nuevos archivos dentro de `migrations/`) garantiza que los entornos de desarrollo y producción permanezcan sincronizados.
+Mantener los catálogos bajo control de versiones (archivos dentro de `prisma/migrations/`) garantiza que los entornos de desarrollo y producción permanezcan sincronizados.
