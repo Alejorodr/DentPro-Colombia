@@ -16,23 +16,22 @@ npm run prisma migrate dev
 
 ## Cargar datos semilla
 
-El comando `npm run db:seed` ejecuta `prisma/seed.js`, que inserta usuarios demo y asegura que los roles base (`patient`, `professional`, `reception`, `admin`) queden asignados.
+El comando `npm run db:seed` ejecuta `prisma/seed.js`, que inserta usuarios base y asegura que los roles (`patient`, `professional`, `reception`, `admin`) queden asignados.
 
 ```bash
 npm run db:seed
 ```
 
-- Puedes sobreescribir la contraseña usada por el seed exportando `SEED_PASSWORD`.
+- Debes definir una contraseña segura para los usuarios iniciales exportando `SEED_PASSWORD` antes de ejecutar el script. El valor no se registrará ni se mostrará en consola.
 - Si trabajas con una ruta de base de datos personalizada, exporta `DATABASE_URL` antes de ejecutar el script.
 
 ### Usuario administrador por defecto
 
-Al ejecutar el seed se crea (o sincroniza) el usuario administrador principal:
+Al ejecutar el seed se crea (o sincroniza) el usuario administrador principal (`admin@dentpro.co`).
 
-- **Correo:** `admin@dentpro.co`
-- **Contraseña:** valor de `SEED_PASSWORD` (por defecto `demo123`)
+- **Contraseña:** definida por la variable de entorno `SEED_PASSWORD`.
 
-Puedes iniciar sesión con estas credenciales en el panel (`/admin`). Recuerda cambiarlas en producción exportando `SEED_PASSWORD` antes de correr el script.
+Configura un valor robusto en `SEED_PASSWORD` para cada entorno (desarrollo, pruebas y producción) antes de correr el comando. Una vez ejecutado, comparte la contraseña únicamente por canales seguros y cámbiala si sospechas que se ha filtrado.
 
 ## Actualizar catálogos de roles y permisos
 
