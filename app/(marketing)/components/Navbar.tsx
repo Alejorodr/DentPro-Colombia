@@ -69,11 +69,6 @@ export function Navbar({ brand, links, cta, login }: NavbarProps) {
       loginButtonRef.current.focus();
     }
   };
-  const openLoginModalFromMobile = () => {
-    setIsLoginModalOpen(true);
-    closeMenu();
-  };
-
   useEffect(() => {
     if (isOpen) {
       setIsLoginModalOpen(false);
@@ -170,14 +165,6 @@ export function Navbar({ brand, links, cta, login }: NavbarProps) {
           <a href={cta.href} className="btn-primary" onClick={closeMenu}>
             {cta.label}
           </a>
-          <button
-            type="button"
-            className="btn-secondary inline-flex items-center justify-center gap-2"
-            onClick={openLoginModalFromMobile}
-          >
-            <UserCircle className="h-5 w-5" weight="bold" aria-hidden="true" />
-            {login?.label ?? "Iniciar sesión"}
-          </button>
         </nav>
       </div>
     </header>
