@@ -7,7 +7,7 @@
  * persistidos.
  */
 const html = document.documentElement;
-const storageKey = 'dentpro-theme';
+const storageKey = 'theme';
 const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
 const toggleButtons = new Set();
 
@@ -59,8 +59,6 @@ function updateToggleState(isDark) {
     const state = String(isDark);
     button.setAttribute('aria-checked', state);
     button.removeAttribute('aria-pressed');
-    button.classList.toggle('theme-toggle--dark', isDark);
-    button.classList.toggle('theme-toggle--light', !isDark);
     const lightLabel = button.dataset.labelLight || 'Activar modo oscuro';
     const darkLabel = button.dataset.labelDark || 'Activar modo claro';
     button.setAttribute('aria-label', isDark ? darkLabel : lightLabel);

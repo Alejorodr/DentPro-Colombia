@@ -11,7 +11,6 @@ La siguiente tabla resume las utilidades y componentes CSS personalizados utiliz
 | `btn-primary`, `btn-secondary` | Variantes principales/secundarias de botones. | `Hero.tsx`, `Navbar.tsx`, `BookingForm.tsx`, `LoginModal.tsx` |
 | `topbar` | Estilos sticky y con blur para el header. | `Navbar.tsx` |
 | `mobile-menu` (+ `open`) | Panel desplegable para navegación móvil. | `Navbar.tsx` |
-| `theme-toggle`, `theme-toggle-*`, `glass-*` | Toggle de tema con efecto de vidrio y track personalizado. | `ThemeToggle.tsx` |
 | `floating-actions`, `floating-action-btn` | Grupo de accesos rápidos flotantes. | `FloatingActions.tsx` |
 | `icon-badge`, `icon-circle` | Contenedores para íconos con borde y fondo translúcido. | `ContactSection.tsx`, `BookingForm.tsx`, `Services.tsx` |
 | `social-link` | Botones circulares para redes sociales. | `ContactSection.tsx` |

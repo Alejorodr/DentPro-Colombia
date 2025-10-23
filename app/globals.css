@@ -9,7 +9,7 @@
   floating-action-btn, slider, slider-track, slider-btn, specialist,
   specialist-photo, input, form-feedback, modal-backdrop, modal-content,
   modal-grid, modal-card, modal-close, social-link, bg-gradient,
-  floating-action, theme-toggle*, glass-*, icon-badge, shadow-glow,
+  floating-action, icon-badge, shadow-glow,
   shadow-glow-dark and related utility helpers.
 */
 
@@ -154,88 +154,11 @@
     @apply absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full border border-transparent bg-white/85 text-slate-600 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-brand-teal/70 dark:bg-surface-muted/80 dark:text-slate-200 dark:hover:text-white dark:focus-visible:ring-accent-cyan/60;
   }
 
-  .theme-toggle {
-    @apply relative inline-flex h-10 w-16 items-center justify-start rounded-full border border-slate-200/70 bg-white/90 px-1.5 shadow-sm shadow-slate-900/10 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-brand-teal/60 dark:border-surface-muted/70 dark:bg-surface-base/80 dark:focus-visible:ring-accent-cyan/60;
-  }
-
-  .theme-toggle-track {
-    @apply relative flex h-full w-full items-center overflow-hidden rounded-full bg-gradient-to-r from-white/65 via-white/35 to-white/55 dark:from-surface-base/60 dark:via-surface-muted/50 dark:to-surface-base/60;
-  }
-
-  .theme-toggle-rail {
-    @apply pointer-events-none relative grid h-full w-full place-items-center text-[0.65rem] font-semibold uppercase tracking-[0.1em] text-slate-400 dark:text-slate-500;
-  }
-
-  .theme-toggle-thumb {
-    @apply absolute left-1.5 top-1.5 flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 bg-gradient-to-br from-white via-slate-50 to-slate-200 text-brand-sky shadow-lg shadow-slate-900/10 transition-all duration-300 dark:border-surface-muted/70 dark:bg-surface-muted/80 dark:bg-none dark:text-accent-cyan;
-  }
-
-  .theme-toggle-icon {
-    @apply inline-flex items-center justify-center text-base text-slate-500 opacity-80 transition-all duration-300 dark:text-slate-200;
-  }
-
-  .theme-toggle-icon[data-theme-icon="sun"] {
-    color: #f7b500;
-    filter: drop-shadow(0 0 6px rgba(247, 181, 0, 0.35));
-  }
-
-  .dark .theme-toggle-icon[data-theme-icon="sun"] {
-    color: #ffdd6a;
-  }
-
-  .glass-filter,
-  .glass-overlay,
-  .glass-specular {
-    pointer-events: none;
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-  }
-
-  .glass-filter {
-    @apply bg-white/40 blur-xl mix-blend-screen dark:bg-accent-cyan/15;
-  }
-
-  .glass-overlay {
-    @apply bg-gradient-to-b from-white/35 via-white/15 to-transparent opacity-80 dark:from-surface-muted/50 dark:via-transparent dark:to-transparent;
-  }
-
-  .glass-specular {
-    @apply left-1/2 top-0 h-full w-[55%] -translate-x-1/2 rounded-full bg-white/50 opacity-50 blur-lg dark:bg-accent-cyan/30;
-  }
-
   .contact-map {
     @apply overflow-hidden rounded-3xl border border-white/10 bg-white/5 shadow-xl shadow-slate-900/20 transition-colors duration-300 dark:border-accent-cyan/15 dark:bg-surface-muted/70;
   }
 
   .contact-map iframe {
     @apply h-full w-full;
-  }
-}
-
-@layer utilities {
-  .theme-toggle:not([aria-checked="true"]) .theme-toggle-icon[data-theme-icon="sun"] {
-    @apply opacity-100 translate-y-0;
-  }
-
-  .theme-toggle:not([aria-checked="true"]) .theme-toggle-icon[data-theme-icon="moon"] {
-    @apply opacity-0 translate-y-1;
-  }
-
-  .theme-toggle[aria-checked="true"] .theme-toggle-thumb {
-    transform: translateX(1.5rem);
-    @apply border-accent-cyan/50 bg-surface-muted/80 text-accent-cyan;
-  }
-
-  .theme-toggle[aria-checked="true"] .theme-toggle-icon[data-theme-icon="sun"] {
-    @apply opacity-0 -translate-y-1;
-  }
-
-  .theme-toggle[aria-checked="true"] .theme-toggle-icon[data-theme-icon="moon"] {
-    @apply opacity-100 translate-y-0;
-  }
-
-  .theme-toggle[aria-checked="true"] .theme-toggle-track {
-    @apply bg-gradient-to-r from-brand-midnight/60 via-surface-base/60 to-brand-midnight/60;
   }
 }
