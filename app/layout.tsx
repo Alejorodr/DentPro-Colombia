@@ -14,28 +14,23 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             try {
               const root = document.documentElement;
               const storedTheme = window.localStorage.getItem("theme");
+              const isStoredTheme = storedTheme === "light" || storedTheme === "dark";
+              const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+              const theme = isStoredTheme ? storedTheme : prefersDark ? "dark" : "light";
+              const root = document.documentElement;
 
-              if (storedTheme === "dark" || storedTheme === "light") {
-                root.classList.toggle("dark", storedTheme === "dark");
-                root.dataset.theme = storedTheme;
-              } else {
-                const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-                const theme = prefersDark ? "dark" : "light";
+              root.classList.toggle("dark", theme === "dark");
+              root.dataset.theme = theme;
 
-                root.classList.toggle("dark", theme === "dark");
-                root.dataset.theme = theme;
+              if (!isStoredTheme) {
                 window.localStorage.removeItem("theme");
               }
             } catch (_error) {
+              const root = document.documentElement;
               const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
 
-              if (prefersDark) {
-                document.documentElement.classList.add("dark");
-                document.documentElement.dataset.theme = "dark";
-              } else {
-                document.documentElement.classList.remove("dark");
-                document.documentElement.dataset.theme = "light";
-              }
+              root.classList.toggle("dark", prefersDark);
+              root.dataset.theme = prefersDark ? "dark" : "light";
             }
           `}
         </Script>
