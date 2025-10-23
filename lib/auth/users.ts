@@ -1,17 +1,13 @@
-import bcrypt from "bcrypt";
-import type { Prisma } from "@prisma/client";
-
+import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { isUserRole, type UserRole } from "./roles";
 
-type UserWithoutPassword = Prisma.UserGetPayload<{
-  select: {
-    id: true;
-    name: true;
-    email: true;
-    primaryRole: true;
-  };
-}>;
+type UserRecord = {
+  id: string;
+  name: string | null;
+  email: string;
+  primaryRole: string;
+};
 
 export interface DatabaseUser {
   id: string;
@@ -20,7 +16,7 @@ export interface DatabaseUser {
   role: UserRole;
 }
 
-function mapUser(user: UserWithoutPassword | null): DatabaseUser | null {
+function mapUser(user: UserRecord | null): DatabaseUser | null {
   if (!user) {
     return null;
   }
@@ -56,7 +52,7 @@ export async function authenticateUser(email: string, password: string): Promise
 
   const { passwordHash: _passwordHash, ...safeUser } = user;
 
-  return mapUser(safeUser as UserWithoutPassword);
+  return mapUser(safeUser as UserRecord);
 }
 
 export async function findUserById(id: string): Promise<DatabaseUser | null> {
