@@ -12,18 +12,45 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Script id="theme" strategy="beforeInteractive">
           {`
             try {
-              const storedTheme = window.localStorage.getItem("theme");
-              const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-              const theme = storedTheme ?? (prefersDark ? "dark" : "light");
+              const root = document.documentElement;
+              const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+              const applyTheme = (theme) => {
+                root.classList.toggle("dark", theme === "dark");
+                root.dataset.theme = theme;
+              };
+              const readStoredTheme = () => {
+                try {
+                  const value = window.localStorage.getItem("theme");
+                  return value === "dark" || value === "light" ? value : null;
+                } catch (_storageError) {
+                  return null;
+                }
+              };
+              const hasManualPreference = () => readStoredTheme() !== null;
 
-              document.documentElement.classList.toggle("dark", theme === "dark");
-              window.localStorage.setItem("theme", theme);
-            } catch (_error) {
-              if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
-                document.documentElement.classList.add("dark");
-              } else {
-                document.documentElement.classList.remove("dark");
+              const initialTheme = readStoredTheme() ?? (mediaQuery.matches ? "dark" : "light");
+              applyTheme(initialTheme);
+
+              if (!hasManualPreference()) {
+                const handleChange = (event) => {
+                  if (hasManualPreference()) {
+                    return;
+                  }
+
+                  applyTheme(event.matches ? "dark" : "light");
+                };
+
+                if (typeof mediaQuery.addEventListener === "function") {
+                  mediaQuery.addEventListener("change", handleChange);
+                } else if (typeof mediaQuery.addListener === "function") {
+                  mediaQuery.addListener(handleChange);
+                }
               }
+            } catch (_error) {
+              const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+              const theme = prefersDark ? "dark" : "light";
+              document.documentElement.classList.toggle("dark", prefersDark);
+              document.documentElement.dataset.theme = theme;
             }
           `}
         </Script>
