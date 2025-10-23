@@ -13,17 +13,23 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {`
             try {
               const storedTheme = window.localStorage.getItem("theme");
+              const isStoredTheme = storedTheme === "light" || storedTheme === "dark";
               const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-              const theme = storedTheme ?? (prefersDark ? "dark" : "light");
+              const theme = isStoredTheme ? storedTheme : prefersDark ? "dark" : "light";
+              const root = document.documentElement;
 
-              document.documentElement.classList.toggle("dark", theme === "dark");
-              window.localStorage.setItem("theme", theme);
-            } catch (_error) {
-              if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
-                document.documentElement.classList.add("dark");
-              } else {
-                document.documentElement.classList.remove("dark");
+              root.classList.toggle("dark", theme === "dark");
+              root.dataset.theme = theme;
+
+              if (!isStoredTheme) {
+                window.localStorage.removeItem("theme");
               }
+            } catch (_error) {
+              const root = document.documentElement;
+              const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+
+              root.classList.toggle("dark", prefersDark);
+              root.dataset.theme = prefersDark ? "dark" : "light";
             }
           `}
         </Script>
