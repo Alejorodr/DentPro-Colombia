@@ -12,17 +12,22 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Script id="theme" strategy="beforeInteractive">
           {`
             try {
-              const storedTheme = window.localStorage.getItem("theme");
-              const isStoredTheme = storedTheme === "light" || storedTheme === "dark";
+              const THEME_KEY = "theme";
+              const SOURCE_KEY = "theme-source";
+              const storedTheme = window.localStorage.getItem(THEME_KEY);
+              const storedSource = window.localStorage.getItem(SOURCE_KEY);
+              const isKnownTheme = storedTheme === "light" || storedTheme === "dark";
+              const hasManualPreference = storedSource === "manual" && isKnownTheme;
               const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-              const theme = isStoredTheme ? storedTheme : prefersDark ? "dark" : "light";
+              const theme = hasManualPreference ? storedTheme : prefersDark ? "dark" : "light";
               const root = document.documentElement;
 
               root.classList.toggle("dark", theme === "dark");
               root.dataset.theme = theme;
 
-              if (!isStoredTheme) {
-                window.localStorage.removeItem("theme");
+              if (!hasManualPreference) {
+                window.localStorage.removeItem(THEME_KEY);
+                window.localStorage.removeItem(SOURCE_KEY);
               }
             } catch (_error) {
               const root = document.documentElement;

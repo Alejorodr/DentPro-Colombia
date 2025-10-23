@@ -73,12 +73,14 @@ describe("ThemeToggle", () => {
     expect(button.getAttribute("aria-label")).toBe("Activar modo claro");
     expect(document.documentElement.classList.contains("dark")).toBe(true);
     expect(window.localStorage.getItem("theme")).toBe("dark");
+    expect(window.localStorage.getItem("theme-source")).toBe("manual");
 
     await userEvent.click(button);
 
     expect(button.getAttribute("aria-label")).toBe("Activar modo oscuro");
     expect(document.documentElement.classList.contains("dark")).toBe(false);
     expect(window.localStorage.getItem("theme")).toBe("light");
+    expect(window.localStorage.getItem("theme-source")).toBe("manual");
   });
 
   it("applies the system preference on initial render", () => {
@@ -88,6 +90,7 @@ describe("ThemeToggle", () => {
 
     expect(document.documentElement.classList.contains("dark")).toBe(true);
     expect(window.localStorage.getItem("theme")).toBeNull();
+    expect(window.localStorage.getItem("theme-source")).toBeNull();
   });
 
   it("updates the theme when the system preference changes", async () => {
@@ -100,6 +103,7 @@ describe("ThemeToggle", () => {
     await waitFor(() => {
       expect(document.documentElement.classList.contains("dark")).toBe(true);
       expect(window.localStorage.getItem("theme")).toBeNull();
+      expect(window.localStorage.getItem("theme-source")).toBeNull();
     });
   });
 
@@ -111,12 +115,14 @@ describe("ThemeToggle", () => {
 
     expect(document.documentElement.classList.contains("dark")).toBe(true);
     expect(window.localStorage.getItem("theme")).toBe("dark");
+    expect(window.localStorage.getItem("theme-source")).toBe("manual");
 
     mockMediaQuery.setMatches(false);
 
     await waitFor(() => {
       expect(document.documentElement.classList.contains("dark")).toBe(true);
       expect(window.localStorage.getItem("theme")).toBe("dark");
+      expect(window.localStorage.getItem("theme-source")).toBe("manual");
     });
   });
 });
