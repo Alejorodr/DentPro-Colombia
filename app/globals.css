@@ -48,7 +48,7 @@
   }
 
   .mobile-menu {
-    @apply pointer-events-none absolute inset-x-0 top-[4.75rem] z-30 origin-top translate-y-4 scale-95 opacity-0 rounded-3xl border border-white/70 bg-white/95 shadow-2xl shadow-slate-900/10 backdrop-blur-lg transition-all duration-300 ease-out dark:border-surface-muted/60 dark:bg-surface-base/90 dark:shadow-surface-dark lg:hidden;
+    @apply pointer-events-none absolute inset-x-0 top-[4.75rem] z-50 origin-top translate-y-4 scale-95 opacity-0 rounded-3xl border border-white/70 bg-white/95 shadow-2xl shadow-slate-900/10 backdrop-blur-lg transition-all duration-300 ease-out dark:border-surface-muted/60 dark:bg-surface-base/90 dark:shadow-surface-dark lg:hidden;
   }
 
   .mobile-menu.open {
