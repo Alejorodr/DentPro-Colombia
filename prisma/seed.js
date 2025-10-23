@@ -13,7 +13,14 @@ const defaultUsers = [
 ];
 
 async function main() {
-  const defaultPassword = process.env.SEED_PASSWORD ?? "demo123";
+  const defaultPassword = process.env.SEED_PASSWORD;
+
+  if (!defaultPassword) {
+    throw new Error(
+      "SEED_PASSWORD no está definido. Configura una contraseña segura en las variables de entorno antes de ejecutar el seed."
+    );
+  }
+
   const passwordHash = await bcrypt.hash(defaultPassword, 10);
 
   for (const user of defaultUsers) {
@@ -35,7 +42,7 @@ async function main() {
   }
 
   console.log(
-    `Seed completado. Usuarios sincronizados (${defaultUsers.length}) con contraseña "${defaultPassword}".`
+    `Seed completado. Usuarios sincronizados (${defaultUsers.length}) con credenciales protegidas.`
   );
 }
 

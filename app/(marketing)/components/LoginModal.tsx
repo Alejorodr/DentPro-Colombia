@@ -180,7 +180,7 @@ export function LoginModal({ open, onClose }: LoginModalProps) {
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
                   className="input h-12 text-sm"
-                  placeholder="admin@dentpro.co"
+                  placeholder="tu-correo@dentpro.co"
                 />
               </div>
               <div className="space-y-1.5 text-left">
@@ -235,13 +235,10 @@ export function LoginModal({ open, onClose }: LoginModalProps) {
             </div>
             <div className="rounded-2xl bg-white/10 p-4 text-sm backdrop-blur">
               <p className="font-semibold uppercase tracking-wide text-white/80">
-                Acceso demo
+                ¿Necesitas acceso?
               </p>
               <p className="mt-2 text-white/90">
-                Usuario: <span className="font-semibold">admin@dentpro.co</span>
-              </p>
-              <p className="text-white/90">
-                Contraseña: <span className="font-semibold">demo123</span>
+                Utiliza las credenciales proporcionadas por tu clínica o solicita acceso al equipo administrador.
               </p>
             </div>
           </aside>
