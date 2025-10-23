@@ -223,7 +223,7 @@
   }
 
   .theme-toggle[aria-checked="true"] .theme-toggle-thumb {
-    transform: translateX(0.75rem);
+    transform: translateX(1.5rem);
     @apply border-accent-cyan/50 bg-surface-muted/80 text-accent-cyan;
   }
 
