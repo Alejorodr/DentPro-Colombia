@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { List, UserCircle, X } from "@phosphor-icons/react";
 
-import { ThemeToggle } from "./ThemeToggle";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { LoginModal } from "./LoginModal";
 
 interface NavLink {
