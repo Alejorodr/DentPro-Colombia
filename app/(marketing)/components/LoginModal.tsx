@@ -1,18 +1,11 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react";
-import {
-  FormEvent,
-  useEffect,
-  useRef,
-  useState,
-  type MouseEvent,
-} from "react";
+import { FormEvent, useEffect, useRef, useState, type MouseEvent } from "react";
 
 import { ChartLineUp, Lock, X } from "@phosphor-icons/react";
 
-import { getDefaultDashboardPath, type UserRole } from "@/lib/auth/roles";
+import { getDefaultDashboardPath, isUserRole, type UserRole } from "@/lib/auth/roles";
 
 interface LoginModalProps {
   open: boolean;
@@ -25,8 +18,6 @@ export function LoginModal({ open, onClose }: LoginModalProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isRetryingSession, setIsRetryingSession] = useState(false);
-  const [canRetrySession, setCanRetrySession] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -69,8 +60,6 @@ export function LoginModal({ open, onClose }: LoginModalProps) {
       setPassword("");
       setError(null);
       setIsSubmitting(false);
-      setCanRetrySession(false);
-      setIsRetryingSession(false);
     }
   }, [open]);
 
@@ -87,68 +76,42 @@ export function LoginModal({ open, onClose }: LoginModalProps) {
 
     setIsSubmitting(true);
     setError(null);
-    setCanRetrySession(false);
-
-    const result = await signIn("credentials", {
-      email,
-      password,
-      redirect: false,
-    });
-
-    if (!result || result.error) {
-      setError("Credenciales no válidas. Intenta nuevamente.");
-      setIsSubmitting(false);
-      return;
-    }
 
     try {
-      await fetchSessionAndRedirect();
-    } catch (sessionError) {
-      console.error(sessionError);
-      setError(
-        "No se pudo confirmar tu sesión. Verifica tu conexión e inténtalo nuevamente.",
-      );
-      setCanRetrySession(true);
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = (await response.json().catch(() => null)) as
+        | { ok?: boolean; error?: string; user?: { role?: string | null } }
+        | null;
+
+      if (!response.ok || !data?.ok) {
+        const errorCode = data?.error ?? "UNKNOWN_ERROR";
+        if (response.status === 401 || errorCode === "INVALID_CREDENTIALS") {
+          setError("Credenciales no válidas. Intenta nuevamente.");
+        } else if (errorCode === "INVALID_REQUEST") {
+          setError("Debes ingresar tu correo y contraseña.");
+        } else {
+          setError("Ocurrió un error al iniciar sesión. Intenta nuevamente más tarde.");
+        }
+        return;
+      }
+
+      const userRole = data.user?.role;
+      const role: UserRole = isUserRole(userRole) ? userRole : "patient";
+      onClose();
+      router.push(getDefaultDashboardPath(role));
+      router.refresh();
+    } catch (submitError) {
+      console.error(submitError);
+      setError("No pudimos contactar al servidor. Verifica tu conexión e inténtalo nuevamente.");
     } finally {
       setIsSubmitting(false);
-    }
-  };
-
-  const fetchSessionAndRedirect = async () => {
-    const response = await fetch("/api/auth/session", {
-      cache: "no-store",
-      credentials: "include",
-    });
-
-    if (!response.ok) {
-      throw new Error("No se pudo obtener la sesión");
-    }
-
-    const session = (await response.json()) as {
-      role?: UserRole | null;
-      user?: { role?: UserRole | null } | null;
-    };
-
-    const userRole = (session.role ?? session.user?.role ?? "patient") as UserRole;
-    onClose();
-    router.push(getDefaultDashboardPath(userRole));
-    router.refresh();
-  };
-
-  const handleSessionRetry = async () => {
-    setIsRetryingSession(true);
-    setError(null);
-
-    try {
-      await fetchSessionAndRedirect();
-      setCanRetrySession(false);
-    } catch (sessionError) {
-      console.error(sessionError);
-      setError(
-        "Aún no podemos confirmar tu sesión. Verifica tu conexión e inténtalo nuevamente.",
-      );
-    } finally {
-      setIsRetryingSession(false);
     }
   };
 
@@ -244,16 +207,6 @@ export function LoginModal({ open, onClose }: LoginModalProps) {
                   <p className="text-xs font-semibold text-red-600 dark:text-red-400">
                     {error}
                   </p>
-                  {canRetrySession ? (
-                    <button
-                      type="button"
-                      className="btn-secondary w-full justify-center text-xs font-semibold uppercase tracking-wide"
-                      onClick={handleSessionRetry}
-                      disabled={isRetryingSession}
-                    >
-                      {isRetryingSession ? "Reintentando..." : "Reintentar verificación"}
-                    </button>
-                  ) : null}
                 </div>
               ) : null}
               <button
