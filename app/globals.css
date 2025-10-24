@@ -131,11 +131,11 @@
   }
 
   .modal-backdrop {
-    @apply fixed inset-0 z-[90] flex items-center justify-center bg-slate-900/70 p-4 backdrop-blur-sm transition-opacity duration-200 dark:bg-surface-base/80;
+    @apply fixed inset-0 z-[90] flex min-h-screen items-center justify-center overflow-y-auto bg-slate-900/70 px-4 py-10 backdrop-blur-lg transition-opacity duration-200 dark:bg-surface-base/80 md:py-16;
   }
 
   .modal-content {
-    @apply relative w-full max-w-5xl;
+    @apply relative mx-auto my-auto w-full max-w-5xl max-h-[calc(100vh-5rem)] overflow-y-auto;
   }
 
   .modal-grid {
