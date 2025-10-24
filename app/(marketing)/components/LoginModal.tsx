@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useRef, useState, type MouseEvent } from "react";
 
-import { ChartLineUp, Lock, X } from "@phosphor-icons/react";
+import { ChartLineUp, Lock, UserCircle, X } from "@phosphor-icons/react";
 
 import { getDefaultDashboardPath, isUserRole, type UserRole } from "@/lib/auth/roles";
 
@@ -215,7 +215,12 @@ export function LoginModal({ open, onClose }: LoginModalProps) {
                 className="btn-primary w-full justify-center text-sm"
                 disabled={isSubmitting}
               >
-                {isSubmitting ? "Ingresando..." : "Iniciar sesión"}
+                <span className="inline-flex items-center gap-2">
+                  {!isSubmitting ? (
+                    <UserCircle className="h-4 w-4" weight="bold" aria-hidden="true" />
+                  ) : null}
+                  <span>{isSubmitting ? "Ingresando..." : "Iniciar sesión"}</span>
+                </span>
               </button>
             </form>
           </section>
