@@ -1,7 +1,14 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { FormEvent, useEffect, useRef, useState, type MouseEvent } from "react";
+import {
+  FormEvent,
+  useEffect,
+  useRef,
+  useState,
+  type MouseEvent,
+} from "react";
+import { createPortal } from "react-dom";
 
 import { ChartLineUp, Lock, UserCircle, X } from "@phosphor-icons/react";
 
@@ -19,6 +26,15 @@ export function LoginModal({ open, onClose }: LoginModalProps) {
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [portalElement, setPortalElement] = useState<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (typeof document === "undefined") {
+      return;
+    }
+
+    setPortalElement(document.body);
+  }, []);
 
   useEffect(() => {
     if (!open) {
@@ -63,7 +79,7 @@ export function LoginModal({ open, onClose }: LoginModalProps) {
     }
   }, [open]);
 
-  if (!open) {
+  if (!open || !portalElement) {
     return null;
   }
 
@@ -122,7 +138,7 @@ export function LoginModal({ open, onClose }: LoginModalProps) {
     }
   };
 
-  return (
+  return createPortal(
     <div
       className="modal-backdrop"
       onClick={handleBackdropClick}
@@ -250,7 +266,8 @@ export function LoginModal({ open, onClose }: LoginModalProps) {
           </aside>
         </div>
       </div>
-    </div>
+    </div>,
+    portalElement,
   );
 }
 
