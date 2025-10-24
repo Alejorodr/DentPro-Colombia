@@ -1,18 +1,8 @@
 import { NextResponse } from "next/server";
 import { SignJWT } from "jose";
 
+import { getJwtSecretKey } from "@/lib/auth/jwt";
 import { authenticateUser, type DatabaseUser } from "@/lib/auth/users";
-
-const encoder = new TextEncoder();
-
-function getJwtSecretKey(): Uint8Array {
-  const secret = process.env.AUTH_JWT_SECRET;
-  if (!secret) {
-    throw new Error("AUTH_JWT_SECRET is not configured");
-  }
-
-  return encoder.encode(secret);
-}
 
 function buildJwtPayload(user: DatabaseUser) {
   return {
