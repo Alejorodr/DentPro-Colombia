@@ -2,16 +2,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { jwtVerify } from "jose";
 
-const encoder = new TextEncoder();
-
-function getJwtSecretKey(): Uint8Array {
-  const secret = process.env.AUTH_JWT_SECRET;
-  if (!secret) {
-    throw new Error("AUTH_JWT_SECRET is not configured");
-  }
-
-  return encoder.encode(secret);
-}
+import { getJwtSecretKey } from "@/lib/auth/jwt";
 
 export async function GET() {
   const tokenCookie = (await cookies()).get("auth_token");
