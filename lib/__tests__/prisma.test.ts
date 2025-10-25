@@ -1,6 +1,5 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { tmpdir } from "node:os";
 
 import { describe, expect, it, vi } from "vitest";
 
@@ -29,7 +28,7 @@ describe("resolveDatabaseUrl", () => {
     vi.resetModules();
     const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
     await removeFallbackDatabase();
-    const expected = `file:${path.join(tmpdir(), "dentpro-colombia", "dentpro-fallback.db")}`;
+    const expected = `file:${path.join(process.cwd(), "prisma", ".cache", "dentpro-fallback.db")}`;
     process.env = { ...ORIGINAL_ENV };
     delete process.env.DATABASE_URL;
 

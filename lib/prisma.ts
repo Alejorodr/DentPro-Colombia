@@ -2,13 +2,17 @@ import fs from "node:fs";
 import fsp from "node:fs/promises";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
-import { tmpdir } from "node:os";
 
 import bcrypt from "bcryptjs";
 
 import { PrismaClient, UserRole } from "@prisma/client";
 
-const FALLBACK_DATABASE_PATH = path.join(tmpdir(), "dentpro-colombia", "dentpro-fallback.db");
+const FALLBACK_DATABASE_PATH = path.join(
+  process.cwd(),
+  "prisma",
+  ".cache",
+  "dentpro-fallback.db",
+);
 
 const FALLBACK_DATABASE_URL = `file:${FALLBACK_DATABASE_PATH}`;
 
