@@ -57,21 +57,61 @@ function splitSqlStatements(sql: string): string[] {
     .filter(Boolean);
 }
 
-async function applyPendingMigrations(prisma: PrismaClient) {
+async function applyFallbackSchema(prisma: PrismaClient) {
+  const statements = [
+    `CREATE TABLE IF NOT EXISTS "users" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "name" TEXT,
+    "email" TEXT NOT NULL,
+    "password_hash" TEXT NOT NULL,
+    "primary_role_id" TEXT NOT NULL,
+    "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "users_primary_role_id_check" CHECK ("primary_role_id" IN ('patient', 'professional', 'reception', 'admin'))
+  );`,
+    'CREATE UNIQUE INDEX IF NOT EXISTS "users_email_key" ON "users"("email");',
+  ];
+
+  for (const statement of statements) {
+    await prisma.$executeRawUnsafe(statement);
+  }
+}
+
+async function applyPendingMigrations(prisma: PrismaClient): Promise<boolean> {
   const migrationsDir = path.join(process.cwd(), "prisma", "migrations");
   let entries: fs.Dirent[] = [];
 
   try {
     entries = await fsp.readdir(migrationsDir, { withFileTypes: true });
   } catch (error) {
+    const maybeErrno = error as NodeJS.ErrnoException;
+
+    if (maybeErrno?.code === "ENOENT") {
+      console.warn(
+        "No se encontró el directorio de migraciones. Aplicando esquema mínimo incorporado.",
+      );
+      await applyFallbackSchema(prisma);
+      return true;
+    }
+
     console.warn("No se pudo leer el directorio de migraciones", error);
-    return;
+    return false;
   }
 
   const migrationDirs = entries
     .filter((entry) => entry.isDirectory())
     .map((entry) => entry.name)
     .sort();
+
+  if (migrationDirs.length === 0) {
+    console.warn(
+      "No se encontraron migraciones en el directorio. Aplicando esquema mínimo incorporado.",
+    );
+    await applyFallbackSchema(prisma);
+    return true;
+  }
+
+  let appliedAny = false;
 
   for (const directory of migrationDirs) {
     const migrationPath = path.join(migrationsDir, directory, "migration.sql");
@@ -81,11 +121,14 @@ async function applyPendingMigrations(prisma: PrismaClient) {
       for (const statement of statements) {
         await prisma.$executeRawUnsafe(statement);
       }
+      appliedAny = true;
     } catch (error) {
       console.error(`No se pudo aplicar la migración ${directory}`, error);
       throw error;
     }
   }
+
+  return appliedAny;
 }
 
 async function ensureAdminUser(prisma: PrismaClient) {
@@ -131,11 +174,15 @@ async function bootstrapFallbackDatabase() {
 
     const usersTableCount = Number(tableCountResult.at(0)?.count ?? 0);
 
-    if (!Number.isFinite(usersTableCount) || usersTableCount <= 0) {
-      await applyPendingMigrations(prisma);
+    let schemaReady = Number.isFinite(usersTableCount) && usersTableCount > 0;
+
+    if (!schemaReady) {
+      schemaReady = await applyPendingMigrations(prisma);
     }
 
-    await ensureAdminUser(prisma);
+    if (schemaReady) {
+      await ensureAdminUser(prisma);
+    }
   } finally {
     await prisma.$disconnect();
   }
