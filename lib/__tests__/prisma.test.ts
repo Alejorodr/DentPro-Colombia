@@ -95,4 +95,57 @@ describe("fallback bootstrap", () => {
       }
     }
   });
+
+  it("applies newly added migrations when bootstrapping again", async () => {
+    vi.resetModules();
+
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const previousEnv = { ...process.env };
+    process.env = { ...ORIGINAL_ENV };
+    delete process.env.DATABASE_URL;
+
+    const migrationsDir = path.join(process.cwd(), "prisma", "migrations");
+    const syntheticMigrationName = "99999999999999_synthetic_test";
+    const syntheticMigrationDir = path.join(migrationsDir, syntheticMigrationName);
+
+    let prismaModule: typeof import("@/lib/prisma") | null = null;
+    let prisma: import("@prisma/client").PrismaClient | null = null;
+
+    try {
+      await removeFallbackDatabase();
+      await fs.rm(syntheticMigrationDir, { recursive: true, force: true });
+
+      prismaModule = await import("@/lib/prisma");
+      prisma = prismaModule.getPrismaClient();
+      await prismaModule.ensureFallbackDatabaseReady();
+      await prisma.$disconnect();
+      prismaModule.__resetPrismaClientForTests();
+      prisma = null;
+      prismaModule = null;
+
+      await fs.mkdir(syntheticMigrationDir, { recursive: true });
+      await fs.writeFile(
+        path.join(syntheticMigrationDir, "migration.sql"),
+        'CREATE TABLE IF NOT EXISTS "synthetic_table" ( "id" INTEGER PRIMARY KEY AUTOINCREMENT );\n',
+      );
+
+      vi.resetModules();
+      prismaModule = await import("@/lib/prisma");
+      prisma = prismaModule.getPrismaClient();
+      await prismaModule.ensureFallbackDatabaseReady();
+
+      const syntheticTable = await prisma.$queryRawUnsafe<Array<{ name: string }>>(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='synthetic_table';",
+      );
+
+      expect(syntheticTable).toHaveLength(1);
+    } finally {
+      await prisma?.$disconnect().catch(() => {});
+      prismaModule?.__resetPrismaClientForTests();
+      await fs.rm(syntheticMigrationDir, { recursive: true, force: true });
+      await removeFallbackDatabase();
+      process.env = { ...previousEnv };
+      warnSpy.mockRestore();
+    }
+  });
 });
