@@ -4,3 +4,5 @@ out/
 .env
 .env.*
 !.env.example
+*.db
+prisma/.cache/
