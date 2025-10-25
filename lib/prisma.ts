@@ -2,13 +2,17 @@ import fs from "node:fs";
 import fsp from "node:fs/promises";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
-import { tmpdir } from "node:os";
 
 import bcrypt from "bcryptjs";
 
 import { PrismaClient, UserRole } from "@prisma/client";
 
-const FALLBACK_DATABASE_PATH = path.join(tmpdir(), "dentpro-colombia", "dentpro-fallback.db");
+const FALLBACK_DATABASE_PATH = path.join(
+  process.cwd(),
+  "prisma",
+  ".cache",
+  "dentpro-fallback.db",
+);
 
 const FALLBACK_DATABASE_URL = `file:${FALLBACK_DATABASE_PATH}`;
 
@@ -20,65 +24,22 @@ const globalForPrisma = globalThis as unknown as {
   prisma?: PrismaClient;
 };
 
-function resolveSqliteFilePath(databaseUrl: string): string | null {
-  if (!databaseUrl.startsWith("file:")) {
-    return null;
+export function resolveDatabaseUrl(): string {
+  const configuredUrl = process.env.DATABASE_URL?.trim();
+  if (configuredUrl) {
+    return configuredUrl;
   }
 
-  const withoutScheme = databaseUrl.slice("file:".length);
-
-  if (!withoutScheme) {
-    return null;
-  }
-
-  if (withoutScheme.startsWith("//")) {
-    const normalized = withoutScheme.replace(/^\/\//, "");
-    if (path.isAbsolute(normalized)) {
-      return path.normalize(normalized);
-    }
-    return path.normalize(path.join(path.sep, normalized));
-  }
-
-  if (path.isAbsolute(withoutScheme)) {
-    return path.normalize(withoutScheme);
-  }
-
-  return path.normalize(path.join(process.cwd(), withoutScheme));
-}
-
-function useFallbackDatabase(reason: string, error?: unknown): string {
   const fallbackUrl = FALLBACK_DATABASE_URL;
 
-  const message = `${reason} Using temporary SQLite database at ${FALLBACK_DATABASE_PATH}.`;
   if (process.env.NODE_ENV !== "production") {
-    if (error) {
-      console.warn(message, error);
-    } else {
-      console.warn(message);
-    }
+    console.warn(
+      "DATABASE_URL is not configured. Generating a local fallback SQLite database for development.",
+    );
   }
 
   process.env.DATABASE_URL = fallbackUrl;
   return fallbackUrl;
-}
-
-export function resolveDatabaseUrl(): string {
-  const configuredUrl = process.env.DATABASE_URL?.trim();
-  if (configuredUrl) {
-    const sqliteFilePath = resolveSqliteFilePath(configuredUrl);
-
-    if (sqliteFilePath && !fs.existsSync(sqliteFilePath)) {
-      return useFallbackDatabase(
-        `Configured DATABASE_URL points to a missing SQLite database at ${sqliteFilePath}.`,
-      );
-    }
-
-    return configuredUrl;
-  }
-
-  return useFallbackDatabase(
-    "DATABASE_URL is not configured. Generating a local fallback SQLite database for development.",
-  );
 }
 
 function splitSqlStatements(sql: string): string[] {
