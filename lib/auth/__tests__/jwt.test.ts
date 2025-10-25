@@ -1,7 +1,3 @@
-import fs from "node:fs";
-import path from "node:path";
-import { tmpdir } from "node:os";
-
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
@@ -10,11 +6,6 @@ import {
 } from "@/lib/auth/jwt";
 
 const decoder = new TextDecoder();
-const FALLBACK_SECRET_PATH = path.join(
-  tmpdir(),
-  "dentpro-colombia",
-  "auth-jwt-secret.txt",
-);
 
 const ORIGINAL_ENV = { ...process.env };
 const ORIGINAL_NODE_ENV = process.env.NODE_ENV;
@@ -73,24 +64,14 @@ describe("getJwtSecretKey", () => {
     expect(decoder.decode(first)).toHaveLength(128);
     expect(first).toStrictEqual(second);
     expect(warnSpy).toHaveBeenCalled();
-    expect(fs.readFileSync(FALLBACK_SECRET_PATH, "utf8").trim()).toBe(
-      decoder.decode(first),
-    );
   });
 
-  it("persists a fallback secret even in production when nothing is configured", () => {
+  it("throws in production when no secret is configured", () => {
     delete process.env.AUTH_JWT_SECRET;
     delete process.env.NEXTAUTH_SECRET;
     delete process.env.AUTH_SECRET;
     process.env.NODE_ENV = "production";
 
-    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
-
-    const key = getJwtSecretKey();
-    const decoded = decoder.decode(key);
-
-    expect(decoded).toHaveLength(128);
-    expect(warnSpy).toHaveBeenCalled();
-    expect(fs.readFileSync(FALLBACK_SECRET_PATH, "utf8").trim()).toBe(decoded);
+    expect(() => getJwtSecretKey()).toThrowError("AUTH_JWT_SECRET is not configured");
   });
 });
