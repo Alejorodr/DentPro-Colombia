@@ -1,5 +1,5 @@
 import bcrypt from "bcryptjs";
-import { prisma } from "@/lib/prisma";
+import { ensureFallbackDatabaseReady, getPrismaClient } from "@/lib/prisma";
 import { isUserRole, type UserRole } from "./roles";
 
 type UserRecord = {
@@ -35,6 +35,8 @@ function mapUser(user: UserRecord | null): DatabaseUser | null {
 
 export async function authenticateUser(email: string, password: string): Promise<DatabaseUser | null> {
   const normalizedEmail = email.toLowerCase();
+  const prisma = getPrismaClient();
+  await ensureFallbackDatabaseReady();
 
   const user = await prisma.user.findUnique({
     where: { email: normalizedEmail },
@@ -56,6 +58,8 @@ export async function authenticateUser(email: string, password: string): Promise
 }
 
 export async function findUserById(id: string): Promise<DatabaseUser | null> {
+  const prisma = getPrismaClient();
+  await ensureFallbackDatabaseReady();
   const user = await prisma.user.findUnique({
     where: { id },
     select: { id: true, name: true, email: true, primaryRole: true },
