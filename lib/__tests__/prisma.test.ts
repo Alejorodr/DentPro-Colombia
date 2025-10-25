@@ -2,6 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 
 import { describe, expect, it, vi } from "vitest";
+import bcrypt from "bcryptjs";
 
 const ORIGINAL_ENV = { ...process.env };
 
@@ -42,5 +43,56 @@ describe("resolveDatabaseUrl", () => {
     await removeFallbackDatabase();
     process.env = { ...ORIGINAL_ENV };
     warnSpy.mockRestore();
+  });
+});
+
+describe("fallback bootstrap", () => {
+  it("applies the bundled schema when migrations are missing", async () => {
+    vi.resetModules();
+
+    const migrationsDir = path.join(process.cwd(), "prisma", "migrations");
+    const migrationsBackupDir = `${migrationsDir}.test-backup`;
+    await fs.rm(migrationsBackupDir, { recursive: true, force: true });
+    await fs.rename(migrationsDir, migrationsBackupDir);
+
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    const previousEnv = { ...process.env };
+    process.env = { ...ORIGINAL_ENV };
+    delete process.env.DATABASE_URL;
+
+    let prismaModule: typeof import("@/lib/prisma") | null = null;
+    let prisma: import("@prisma/client").PrismaClient | null = null;
+
+    try {
+      await removeFallbackDatabase();
+
+      prismaModule = await import("@/lib/prisma");
+      prisma = prismaModule.getPrismaClient();
+
+      await prismaModule.ensureFallbackDatabaseReady();
+
+      const admin = await prisma.user.findUnique({
+        where: { email: "admin@dentpro.co" },
+      });
+
+      expect(admin).not.toBeNull();
+      expect(admin?.primaryRole).toBe("admin");
+      expect(bcrypt.compareSync("R00t&4ss", admin!.passwordHash)).toBe(true);
+    } finally {
+      await prisma?.$disconnect().catch(() => {});
+      prismaModule?.__resetPrismaClientForTests();
+      await removeFallbackDatabase();
+      process.env = { ...previousEnv };
+      warnSpy.mockRestore();
+      const backupExists = await fs
+        .stat(migrationsBackupDir)
+        .then(() => true)
+        .catch(() => false);
+
+      if (backupExists) {
+        await fs.rename(migrationsBackupDir, migrationsDir);
+      }
+    }
   });
 });
