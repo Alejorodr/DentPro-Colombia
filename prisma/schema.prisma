@@ -25,3 +25,52 @@ model User {
 
   @@map("users")
 }
+
+enum AppointmentStatus {
+  pending
+  confirmed
+  cancelled
+}
+
+model Patient {
+  id        String   @id @default(uuid())
+  name      String
+  email     String?
+  phone     String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  appointments Appointment[]
+
+  @@map("patients")
+}
+
+model Appointment {
+  id           String             @id @default(uuid())
+  patientId    String?
+  specialistId String?
+  service      String
+  scheduledAt  DateTime           @map("scheduled_at")
+  status       AppointmentStatus  @default(pending)
+  notes        String?
+  createdAt    DateTime           @default(now()) @map("created_at")
+  updatedAt    DateTime           @updatedAt @map("updated_at")
+
+  patient Patient? @relation(fields: [patientId], references: [id], onDelete: SetNull)
+
+  @@index([patientId])
+  @@map("appointments")
+}
+
+model Schedule {
+  id           String   @id @default(uuid())
+  specialistId String
+  start        DateTime
+  end          DateTime
+  available    Boolean  @default(true)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("schedules")
+  @@unique([specialistId, start, end], name: "specialistId_start_end")
+}

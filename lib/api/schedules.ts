@@ -1,9 +1,8 @@
-import { apiClient } from "./client";
+import { apiFetch } from "./client";
 import type { ScheduleSlot } from "./types";
 
 export async function listSchedules() {
-  const response = await apiClient.get("schedules");
-  return response.data;
+  return apiFetch<ScheduleSlot[]>("schedules");
 }
 
 export const schedulesKeys = {

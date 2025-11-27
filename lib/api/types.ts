@@ -1,6 +1,7 @@
 export interface AppointmentRequestPayload {
   name: string;
   phone: string;
+  email?: string;
   service: string;
   message?: string;
   preferredDate?: string;
