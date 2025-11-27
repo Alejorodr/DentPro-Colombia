@@ -11,26 +11,45 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <Script id="theme" strategy="beforeInteractive">
           {`
-            try {
-              const root = document.documentElement;
-              const storedTheme = window.localStorage.getItem("theme");
-              const isStoredTheme = storedTheme === "light" || storedTheme === "dark";
-              const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-              const theme = isStoredTheme ? storedTheme : prefersDark ? "dark" : "light";
-              const root = document.documentElement;
+            const root = document.documentElement;
+            const storageKey = "theme";
 
+            const applyTheme = (theme, persist) => {
               root.classList.toggle("dark", theme === "dark");
               root.dataset.theme = theme;
+              root.style.colorScheme = theme;
 
-              if (!isStoredTheme) {
-                window.localStorage.removeItem("theme");
+              if (!persist) {
+                return;
+              }
+
+              try {
+                window.localStorage.setItem(storageKey, theme);
+              } catch (_error) {
+                // Ignore storage errors (e.g., private mode).
+              }
+            };
+
+            try {
+              const storedTheme = window.localStorage.getItem(storageKey);
+
+              if (storedTheme === "light" || storedTheme === "dark") {
+                applyTheme(storedTheme, true);
+                return;
               }
             } catch (_error) {
-              const root = document.documentElement;
-              const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+              // If storage is unavailable, fall back to system preference below.
+            }
 
-              root.classList.toggle("dark", prefersDark);
-              root.dataset.theme = prefersDark ? "dark" : "light";
+            const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+            const theme = prefersDark ? "dark" : "light";
+
+            applyTheme(theme, false);
+
+            try {
+              window.localStorage.removeItem(storageKey);
+            } catch (_error) {
+              // Ignore storage errors (e.g., private mode).
             }
           `}
         </Script>
