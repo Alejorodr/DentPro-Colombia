@@ -11,13 +11,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <Script id="theme" strategy="beforeInteractive">
           {`
+            const root = document.documentElement;
+
             try {
-              const root = document.documentElement;
               const storedTheme = window.localStorage.getItem("theme");
               const isStoredTheme = storedTheme === "light" || storedTheme === "dark";
               const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
               const theme = isStoredTheme ? storedTheme : prefersDark ? "dark" : "light";
-              const root = document.documentElement;
 
               root.classList.toggle("dark", theme === "dark");
               root.dataset.theme = theme;
@@ -26,7 +26,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 window.localStorage.removeItem("theme");
               }
             } catch (_error) {
-              const root = document.documentElement;
               const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
 
               root.classList.toggle("dark", prefersDark);
