@@ -19,17 +19,38 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
               const theme = isStoredTheme ? storedTheme : prefersDark ? "dark" : "light";
 
+            const applyTheme = (theme, persist) => {
               root.classList.toggle("dark", theme === "dark");
               root.dataset.theme = theme;
+              root.style.colorScheme = theme;
 
-              if (!isStoredTheme) {
-                window.localStorage.removeItem("theme");
+              if (!persist) {
+                return;
+              }
+
+              try {
+                window.localStorage.setItem(storageKey, theme);
+              } catch (_error) {
+                // Ignore storage errors (e.g., private mode).
+              }
+            };
+
+            try {
+              const storedTheme = window.localStorage.getItem(storageKey);
+
+              if (storedTheme === "light" || storedTheme === "dark") {
+                applyTheme(storedTheme, true);
+                return;
               }
             } catch (_error) {
               const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
 
-              root.classList.toggle("dark", prefersDark);
-              root.dataset.theme = prefersDark ? "dark" : "light";
+            applyTheme(theme, false);
+
+            try {
+              window.localStorage.removeItem(storageKey);
+            } catch (_error) {
+              // Ignore storage errors (e.g., private mode).
             }
           `}
         </Script>
