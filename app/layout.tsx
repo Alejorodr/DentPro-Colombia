@@ -11,26 +11,74 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <Script id="theme" strategy="beforeInteractive">
           {`
-            try {
-              const root = document.documentElement;
-              const storedTheme = window.localStorage.getItem("theme");
-              const isStoredTheme = storedTheme === "light" || storedTheme === "dark";
-              const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-              const theme = isStoredTheme ? storedTheme : prefersDark ? "dark" : "light";
-              const root = document.documentElement;
+            const root = document.documentElement;
+            const storageKey = "theme";
 
+            const applyTheme = (theme, persist) => {
               root.classList.toggle("dark", theme === "dark");
               root.dataset.theme = theme;
+              root.style.colorScheme = theme;
 
-              if (!isStoredTheme) {
-                window.localStorage.removeItem("theme");
+              if (!persist) {
+                return;
               }
-            } catch (_error) {
-              const root = document.documentElement;
-              const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
 
-              root.classList.toggle("dark", prefersDark);
-              root.dataset.theme = prefersDark ? "dark" : "light";
+              try {
+                window.localStorage.setItem(storageKey, theme);
+              } catch (_error) {
+                // Ignore storage errors (e.g., private mode).
+              }
+            };
+
+            const mediaQuery = window.matchMedia
+              ? window.matchMedia("(prefers-color-scheme: dark)")
+              : null;
+            const getSystemTheme = () =>
+              mediaQuery && mediaQuery.matches ? "dark" : "light";
+
+            const applyStoredOrSystemTheme = () => {
+              try {
+                const storedTheme = window.localStorage.getItem(storageKey);
+
+                if (storedTheme === "light" || storedTheme === "dark") {
+                  applyTheme(storedTheme, true);
+                  return;
+                }
+              } catch (_error) {
+                // If storage is unavailable, fall back to system preference below.
+              }
+
+              applyTheme(getSystemTheme(), false);
+
+              try {
+                window.localStorage.removeItem(storageKey);
+              } catch (_error) {
+                // Ignore storage errors (e.g., private mode).
+              }
+            };
+
+            applyStoredOrSystemTheme();
+
+            const applyMediaChange = (event) => {
+              try {
+                const storedTheme = window.localStorage.getItem(storageKey);
+
+                if (storedTheme === "light" || storedTheme === "dark") {
+                  return;
+                }
+              } catch (_error) {
+                // If storage is unavailable, fall back to system preference below.
+              }
+
+              applyTheme(event.matches ? "dark" : "light", false);
+            };
+
+            if (mediaQuery) {
+              if (typeof mediaQuery.addEventListener === "function") {
+                mediaQuery.addEventListener("change", applyMediaChange);
+              } else if (typeof mediaQuery.addListener === "function") {
+                mediaQuery.addListener(applyMediaChange);
+              }
             }
           `}
         </Script>
