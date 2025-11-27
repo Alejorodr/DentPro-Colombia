@@ -11,26 +11,51 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <Script id="theme" strategy="beforeInteractive">
           {`
-            try {
-              const root = document.documentElement;
-              const storedTheme = window.localStorage.getItem("theme");
-              const isStoredTheme = storedTheme === "light" || storedTheme === "dark";
-              const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-              const theme = isStoredTheme ? storedTheme : prefersDark ? "dark" : "light";
-              const root = document.documentElement;
+            const root = document.documentElement;
+            const storageKey = "theme";
 
+            const applyTheme = (theme, persist) => {
               root.classList.toggle("dark", theme === "dark");
               root.dataset.theme = theme;
+              root.style.colorScheme = theme;
 
-              if (!isStoredTheme) {
-                window.localStorage.removeItem("theme");
+              try {
+                if (persist) {
+                  window.localStorage.setItem(storageKey, theme);
+                } else {
+                  window.localStorage.removeItem(storageKey);
+                }
+              } catch (_error) {
+                // Ignore storage errors (e.g., private mode).
               }
-            } catch (_error) {
-              const root = document.documentElement;
-              const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+            };
 
-              root.classList.toggle("dark", prefersDark);
-              root.dataset.theme = prefersDark ? "dark" : "light";
+            const getStoredTheme = () => {
+              try {
+                const stored = window.localStorage.getItem(storageKey);
+                return stored === "dark" || stored === "light" ? stored : null;
+              } catch (_error) {
+                return null;
+              }
+            };
+
+            const mediaQuery = window.matchMedia?.("(prefers-color-scheme: dark)") ?? null;
+            const getSystemTheme = () => (mediaQuery?.matches ? "dark" : "light");
+
+            const storedTheme = getStoredTheme();
+            applyTheme(storedTheme ?? getSystemTheme(), Boolean(storedTheme));
+
+            const applyMediaChange = (event) => {
+              if (getStoredTheme()) {
+                return;
+              }
+
+              applyTheme(event.matches ? "dark" : "light", false);
+            };
+
+            if (mediaQuery) {
+              const add = mediaQuery.addEventListener ? "addEventListener" : "addListener";
+              mediaQuery[add]("change", applyMediaChange);
             }
           `}
         </Script>
