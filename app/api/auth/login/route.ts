@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { SignJWT } from "jose";
 
 import { getJwtSecretKey } from "@/lib/auth/jwt";
+import { getDefaultDashboardPath } from "@/lib/auth/roles";
 import { authenticateUser, type DatabaseUser } from "@/lib/auth/users";
 
 function buildJwtPayload(user: DatabaseUser) {
@@ -38,6 +39,7 @@ export async function POST(request: Request) {
     }
 
     const payload = buildJwtPayload(user);
+    const defaultDashboardPath = getDefaultDashboardPath(user.role);
 
     const token = await new SignJWT({ ...payload })
       .setProtectedHeader({ alg: "HS256" })
@@ -45,7 +47,10 @@ export async function POST(request: Request) {
       .setExpirationTime("1d")
       .sign(getJwtSecretKey());
 
-    const response = NextResponse.json({ ok: true, user: payload });
+    const response = NextResponse.json({
+      ok: true,
+      user: { role: user.role, defaultDashboardPath },
+    });
     response.cookies.set({
       name: "auth_token",
       value: token,
