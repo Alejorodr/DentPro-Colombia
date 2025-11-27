@@ -12,7 +12,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Script id="theme" strategy="beforeInteractive">
           {`
             const root = document.documentElement;
-            const storageKey = "theme";
+
+            try {
+              const storedTheme = window.localStorage.getItem("theme");
+              const isStoredTheme = storedTheme === "light" || storedTheme === "dark";
+              const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+              const theme = isStoredTheme ? storedTheme : prefersDark ? "dark" : "light";
 
             const applyTheme = (theme, persist) => {
               root.classList.toggle("dark", theme === "dark");
@@ -38,11 +43,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 return;
               }
             } catch (_error) {
-              // If storage is unavailable, fall back to system preference below.
-            }
-
-            const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-            const theme = prefersDark ? "dark" : "light";
+              const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
 
             applyTheme(theme, false);
 
