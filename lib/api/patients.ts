@@ -1,9 +1,8 @@
-import { apiClient } from "./client";
+import { apiFetch } from "./client";
 import type { PatientSummary } from "./types";
 
 export async function listPatients() {
-  const response = await apiClient.get("patients");
-  return response.data;
+  return apiFetch<PatientSummary[]>("patients");
 }
 
 export const patientsKeys = {

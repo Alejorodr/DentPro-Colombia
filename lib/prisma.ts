@@ -70,6 +70,36 @@ async function applyFallbackSchema(prisma: PrismaClient) {
     CONSTRAINT "users_primary_role_id_check" CHECK ("primary_role_id" IN ('patient', 'professional', 'reception', 'admin'))
   );`,
     'CREATE UNIQUE INDEX IF NOT EXISTS "users_email_key" ON "users"("email");',
+    `CREATE TABLE IF NOT EXISTS "patients" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "name" TEXT NOT NULL,
+    "email" TEXT,
+    "phone" TEXT,
+    "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+  );`,
+    `CREATE TABLE IF NOT EXISTS "appointments" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "patientId" TEXT,
+    "specialistId" TEXT,
+    "service" TEXT NOT NULL,
+    "scheduled_at" DATETIME NOT NULL,
+    "status" TEXT NOT NULL DEFAULT 'pending',
+    "notes" TEXT,
+    "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "appointments_patientId_fkey" FOREIGN KEY ("patientId") REFERENCES "patients" ("id") ON DELETE SET NULL ON UPDATE CASCADE
+  );`,
+    'CREATE INDEX IF NOT EXISTS "appointments_patientId_idx" ON "appointments"("patientId");',
+    `CREATE TABLE IF NOT EXISTS "schedules" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "specialistId" TEXT NOT NULL,
+    "start" DATETIME NOT NULL,
+    "end" DATETIME NOT NULL,
+    "available" BOOLEAN NOT NULL DEFAULT TRUE,
+    "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+  );`,
   ];
 
   for (const statement of statements) {

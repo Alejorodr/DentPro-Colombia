@@ -1,14 +1,16 @@
-import { apiClient } from "./client";
+import { apiFetch } from "./client";
 import type { AppointmentRequestPayload, AppointmentSummary } from "./types";
 
 export async function listAppointments() {
-  const response = await apiClient.get("appointments");
-  return response.data;
+  return apiFetch<AppointmentSummary[]>("appointments");
 }
 
 export async function createAppointmentRequest(payload: AppointmentRequestPayload) {
-  const response = await apiClient.post("appointments", payload);
-  return response.data;
+  return apiFetch<AppointmentSummary>("appointments", {
+    method: "POST",
+    body: JSON.stringify(payload),
+    skipAuth: true,
+  });
 }
 
 export const appointmentsKeys = {

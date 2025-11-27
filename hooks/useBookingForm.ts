@@ -6,6 +6,7 @@ import { useMutation } from "@tanstack/react-query";
 
 import { createAppointmentRequest } from "@/lib/api/appointments";
 import type { AppointmentSummary } from "@/lib/api/types";
+import type { ApiError } from "@/lib/api/client";
 
 export type BookingFormStatus = "idle" | "pending" | "success" | "error";
 
@@ -29,12 +30,16 @@ function getReadableError(error: unknown) {
     return error;
   }
 
-  if (error instanceof Error && error.message) {
-    return error.message;
-  }
+  if (typeof error === "object" && error !== null) {
+    const apiError = error as ApiError & { message?: string };
 
-  if (typeof error === "object" && "message" in error && typeof error.message === "string") {
-    return error.message;
+    if (apiError.status === 401) {
+      return "Inicia sesión para enviar solicitudes.";
+    }
+
+    if (typeof apiError.message === "string" && apiError.message.trim().length > 0) {
+      return apiError.message;
+    }
   }
 
   return "No se pudo enviar la solicitud. Intenta nuevamente.";
@@ -43,8 +48,8 @@ function getReadableError(error: unknown) {
 export function useBookingForm({ onSuccess }: UseBookingFormOptions = {}) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const mutation = useMutation<AppointmentSummary, unknown, BookingFormValues>({
-    mutationFn: createAppointmentRequest,
+  const mutation = useMutation<AppointmentSummary, ApiError, BookingFormValues>({
+    mutationFn: async (values) => createAppointmentRequest(values),
     onError: (error) => {
       setErrorMessage(getReadableError(error));
     },
