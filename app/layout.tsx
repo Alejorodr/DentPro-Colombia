@@ -19,66 +19,43 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               root.dataset.theme = theme;
               root.style.colorScheme = theme;
 
-              if (!persist) {
-                return;
-              }
-
               try {
-                window.localStorage.setItem(storageKey, theme);
-              } catch (_error) {
-                // Ignore storage errors (e.g., private mode).
-              }
-            };
-
-            const mediaQuery = window.matchMedia
-              ? window.matchMedia("(prefers-color-scheme: dark)")
-              : null;
-            const getSystemTheme = () =>
-              mediaQuery && mediaQuery.matches ? "dark" : "light";
-
-            const applyStoredOrSystemTheme = () => {
-              try {
-                const storedTheme = window.localStorage.getItem(storageKey);
-
-                if (storedTheme === "light" || storedTheme === "dark") {
-                  applyTheme(storedTheme, true);
-                  return;
+                if (persist) {
+                  window.localStorage.setItem(storageKey, theme);
+                } else {
+                  window.localStorage.removeItem(storageKey);
                 }
               } catch (_error) {
-                // If storage is unavailable, fall back to system preference below.
-              }
-
-              applyTheme(getSystemTheme(), false);
-
-              try {
-                window.localStorage.removeItem(storageKey);
-              } catch (_error) {
                 // Ignore storage errors (e.g., private mode).
               }
             };
 
-            applyStoredOrSystemTheme();
+            const getStoredTheme = () => {
+              try {
+                const stored = window.localStorage.getItem(storageKey);
+                return stored === "dark" || stored === "light" ? stored : null;
+              } catch (_error) {
+                return null;
+              }
+            };
+
+            const mediaQuery = window.matchMedia?.("(prefers-color-scheme: dark)") ?? null;
+            const getSystemTheme = () => (mediaQuery?.matches ? "dark" : "light");
+
+            const storedTheme = getStoredTheme();
+            applyTheme(storedTheme ?? getSystemTheme(), Boolean(storedTheme));
 
             const applyMediaChange = (event) => {
-              try {
-                const storedTheme = window.localStorage.getItem(storageKey);
-
-                if (storedTheme === "light" || storedTheme === "dark") {
-                  return;
-                }
-              } catch (_error) {
-                // If storage is unavailable, fall back to system preference below.
+              if (getStoredTheme()) {
+                return;
               }
 
               applyTheme(event.matches ? "dark" : "light", false);
             };
 
             if (mediaQuery) {
-              if (typeof mediaQuery.addEventListener === "function") {
-                mediaQuery.addEventListener("change", applyMediaChange);
-              } else if (typeof mediaQuery.addListener === "function") {
-                mediaQuery.addListener(applyMediaChange);
-              }
+              const add = mediaQuery.addEventListener ? "addEventListener" : "addListener";
+              mediaQuery[add]("change", applyMediaChange);
             }
           `}
         </Script>
