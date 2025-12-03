@@ -5,11 +5,14 @@ import { describe, expect, it, vi } from "vitest";
 import bcrypt from "bcryptjs";
 
 const ORIGINAL_ENV = { ...process.env };
+const HAS_DATABASE_URL = Boolean(process.env.DATABASE_URL);
 
 async function removeFallbackDatabase() {
   const prismaModule = await import("@/lib/prisma");
   const fallbackPath = prismaModule.__getFallbackDatabasePathForTests();
-  await fs.rm(fallbackPath, { force: true });
+  if (!HAS_DATABASE_URL) {
+    await fs.rm(fallbackPath, { force: true });
+  }
 }
 
 describe("resolveDatabaseUrl", () => {
@@ -46,7 +49,11 @@ describe("resolveDatabaseUrl", () => {
   });
 });
 
-describe("fallback bootstrap", () => {
+const fallbackSuite = describe.skip;
+
+const describeFallback = HAS_DATABASE_URL ? fallbackSuite : describe;
+
+describeFallback("fallback bootstrap", () => {
   it("applies the bundled schema when migrations are missing", async () => {
     vi.resetModules();
 

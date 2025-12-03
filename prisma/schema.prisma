@@ -23,6 +23,8 @@ model User {
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
+  specialist Specialist?
+
   @@map("users")
 }
 
@@ -46,31 +48,56 @@ model Patient {
 }
 
 model Appointment {
-  id           String             @id @default(uuid())
-  patientId    String?
-  specialistId String?
-  service      String
-  scheduledAt  DateTime           @map("scheduled_at")
-  status       AppointmentStatus  @default(pending)
-  notes        String?
-  createdAt    DateTime           @default(now()) @map("created_at")
-  updatedAt    DateTime           @updatedAt @map("updated_at")
+  id            String             @id @default(uuid())
+  patientId     String?
+  specialistId  String?
+  scheduleId    String?
+  service       String
+  scheduledAt   DateTime           @map("scheduled_at")
+  preferredDate DateTime?
+  status        AppointmentStatus  @default(pending)
+  notes         String?
+  createdAt     DateTime           @default(now()) @map("created_at")
+  updatedAt     DateTime           @updatedAt @map("updated_at")
 
   patient Patient? @relation(fields: [patientId], references: [id], onDelete: SetNull)
+  specialist Specialist? @relation(fields: [specialistId], references: [id], onDelete: SetNull)
+  schedule   Schedule?   @relation(fields: [scheduleId], references: [id], onDelete: SetNull)
 
   @@index([patientId])
+  @@index([specialistId])
+  @@index([scheduleId])
   @@map("appointments")
 }
 
 model Schedule {
-  id           String   @id @default(uuid())
-  specialistId String
-  start        DateTime
-  end          DateTime
-  available    Boolean  @default(true)
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  id            String       @id @default(uuid())
+  specialistId  String
+  start         DateTime
+  end           DateTime
+  available     Boolean      @default(true)
+  createdAt     DateTime     @default(now()) @map("created_at")
+  updatedAt     DateTime     @updatedAt @map("updated_at")
+
+  specialist Specialist @relation(fields: [specialistId], references: [id], onDelete: Cascade)
+  appointments Appointment[]
 
   @@map("schedules")
   @@unique([specialistId, start, end], name: "specialistId_start_end")
+}
+
+model Specialist {
+  id        String   @id @default(uuid())
+  name      String
+  specialty String?
+  phone     String?
+  userId    String?  @unique
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user         User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  appointments Appointment[]
+  schedules    Schedule[]
+
+  @@map("specialists")
 }

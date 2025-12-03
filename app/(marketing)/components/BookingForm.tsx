@@ -79,6 +79,18 @@ export function BookingFormSection({
               />
             </div>
             <div className="grid gap-2">
+              <label htmlFor="email" className="text-sm font-semibold">
+                Correo electrónico
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                className="input dark:bg-surface-muted dark:text-slate-100 dark:placeholder:text-slate-500"
+                placeholder="Ej. nombre@correo.com"
+              />
+            </div>
+            <div className="grid gap-2">
               <label htmlFor="service" className="text-sm font-semibold">
                 {selectLabel}
               </label>
@@ -98,6 +110,17 @@ export function BookingFormSection({
                   </option>
                 ))}
               </select>
+            </div>
+            <div className="grid gap-2">
+              <label htmlFor="preferredDate" className="text-sm font-semibold">
+                Fecha preferida
+              </label>
+              <input
+                id="preferredDate"
+                name="preferredDate"
+                type="date"
+                className="input dark:bg-surface-muted dark:text-slate-100 dark:placeholder:text-slate-500"
+              />
             </div>
             <div className="grid gap-2">
               <label htmlFor="message" className="text-sm font-semibold">
