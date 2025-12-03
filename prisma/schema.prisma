@@ -71,19 +71,38 @@ model Appointment {
 }
 
 model Schedule {
-  id           String   @id @default(uuid())
-  specialistId String
-  start        DateTime
-  end          DateTime
-  available    Boolean  @default(true)
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  id            String       @id @default(uuid())
+  specialistId  String
+  start         DateTime
+  end           DateTime
+  available     Boolean      @default(true)
+  createdAt     DateTime     @default(now()) @map("created_at")
+  updatedAt     DateTime     @updatedAt @map("updated_at")
+
+  specialist Specialist @relation(fields: [specialistId], references: [id], onDelete: Cascade)
+  appointments Appointment[]
 
   specialist   Specialist    @relation(fields: [specialistId], references: [id], onDelete: Cascade)
   appointments Appointment[]
 
   @@unique([specialistId, start, end], name: "specialistId_start_end")
   @@map("schedules")
+}
+
+model Specialist {
+  id        String   @id @default(uuid())
+  name      String
+  specialty String?
+  phone     String?
+  userId    String?  @unique
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user         User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  appointments Appointment[]
+  schedules    Schedule[]
+
+  @@map("specialists")
 }
 
 model Specialist {
