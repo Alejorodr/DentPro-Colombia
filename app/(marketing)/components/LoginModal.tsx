@@ -9,10 +9,11 @@ import {
   type MouseEvent,
 } from "react";
 import { createPortal } from "react-dom";
+import { signIn } from "next-auth/react";
 
 import { ChartLineUp, Lock, UserCircle, X } from "@phosphor-icons/react";
 
-import { getDefaultDashboardPath, isUserRole, type UserRole } from "@/lib/auth/roles";
+import { getDefaultDashboardPath, type UserRole } from "@/lib/auth/roles";
 
 interface LoginModalProps {
   open: boolean;
@@ -94,35 +95,21 @@ export function LoginModal({ open, onClose }: LoginModalProps) {
     setError(null);
 
     try {
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
+      const result = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+        callbackUrl: getDefaultDashboardPath("patient"),
       });
 
-      const data = (await response.json().catch(() => null)) as
-        | { ok?: boolean; error?: string; user?: { role?: string | null } }
-        | null;
-
-      if (!response.ok || !data?.ok) {
-        const errorCode = data?.error ?? "UNKNOWN_ERROR";
-        if (response.status === 401 || errorCode === "INVALID_CREDENTIALS") {
-          setError("Credenciales no válidas. Intenta nuevamente.");
-        } else if (errorCode === "INVALID_REQUEST") {
-          setError("Debes ingresar tu correo y contraseña.");
-        } else {
-          setError("Ocurrió un error al iniciar sesión. Intenta nuevamente más tarde.");
-        }
+      if (result?.error) {
+        setError("Credenciales no válidas. Intenta nuevamente.");
         return;
       }
 
-      const userRole = data.user?.role;
-      const role: UserRole =
-        typeof userRole === "string" && isUserRole(userRole) ? userRole : "patient";
+      const role: UserRole = "patient";
       onClose();
-      router.push(getDefaultDashboardPath(role));
+      router.push(result?.url ?? getDefaultDashboardPath(role));
       router.refresh();
     } catch (submitError) {
       console.error(submitError);

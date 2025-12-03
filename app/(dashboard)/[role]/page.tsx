@@ -202,7 +202,8 @@ export default async function RoleDashboardPage(props: any) {
   }
 
   const session = await auth();
-  if (!session) {
+
+  if (!session || !session.user?.role || !isUserRole(session.user.role)) {
     redirect(`/login?callbackUrl=/${requestedRole}`);
   }
 

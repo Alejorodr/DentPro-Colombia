@@ -2,6 +2,10 @@
 
 import { useAuthRole } from "@/app/providers";
 import { useBookingForm } from "@/hooks/useBookingForm";
+import { listPatients } from "@/lib/api/patients";
+import { listSchedules } from "@/lib/api/schedules";
+import type { PatientSummary, ScheduleSlot } from "@/lib/api/types";
+import { useQuery } from "@tanstack/react-query";
 
 const services = [
   { value: "preventiva", label: "Odontología preventiva" },
@@ -12,6 +16,14 @@ const services = [
 export function QuickBookingForm() {
   const { role } = useAuthRole();
   const { handleSubmit, isPending, isSuccess, error } = useBookingForm();
+  const { data: patients, isLoading: isLoadingPatients } = useQuery<PatientSummary[]>({
+    queryKey: ["patients"],
+    queryFn: listPatients,
+  });
+  const { data: schedules, isLoading: isLoadingSchedules } = useQuery<ScheduleSlot[]>({
+    queryKey: ["schedules"],
+    queryFn: listSchedules,
+  });
 
   return (
     <form className="grid gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-surface-elevated" onSubmit={handleSubmit}>
@@ -36,6 +48,19 @@ export function QuickBookingForm() {
           className="input"
           placeholder="Ej. Mariana López"
           required
+          disabled={isPending}
+        />
+      </div>
+      <div className="grid gap-1">
+        <label className="text-xs font-semibold" htmlFor="dashboard-email">
+          Correo electrónico
+        </label>
+        <input
+          id="dashboard-email"
+          name="email"
+          type="email"
+          className="input"
+          placeholder="Ej. nombre@correo.com"
           disabled={isPending}
         />
       </div>
@@ -66,6 +91,68 @@ export function QuickBookingForm() {
             </option>
           ))}
         </select>
+      </div>
+      <div className="grid gap-1">
+        <label className="text-xs font-semibold" htmlFor="dashboard-patient">
+          Paciente existente (opcional)
+        </label>
+        <select
+          id="dashboard-patient"
+          name="patientId"
+          className="input"
+          defaultValue=""
+          disabled={isPending || isLoadingPatients}
+        >
+          <option value="">Nuevo paciente</option>
+          {(patients ?? []).map((patient) => (
+            <option key={patient.id} value={patient.id}>
+              {patient.name} {patient.phone ? `(${patient.phone})` : ""}
+            </option>
+          ))}
+        </select>
+        {isLoadingPatients ? (
+          <p className="text-xs text-slate-500">Cargando pacientes...</p>
+        ) : null}
+      </div>
+      <div className="grid gap-1">
+        <label className="text-xs font-semibold" htmlFor="dashboard-schedule">
+          Horario disponible (opcional)
+        </label>
+        <select
+          id="dashboard-schedule"
+          name="scheduleId"
+          className="input"
+          defaultValue=""
+          disabled={isPending || isLoadingSchedules}
+        >
+          <option value="">Selecciona un horario</option>
+          {(schedules ?? [])
+            .filter((slot) => slot.available)
+            .map((slot) => {
+              const start = new Date(slot.start).toLocaleString();
+              const end = new Date(slot.end).toLocaleTimeString();
+              return (
+                <option key={slot.id} value={slot.id}>
+                  {start} - {end}
+                </option>
+              );
+            })}
+        </select>
+        {isLoadingSchedules ? (
+          <p className="text-xs text-slate-500">Cargando horarios...</p>
+        ) : null}
+      </div>
+      <div className="grid gap-1">
+        <label className="text-xs font-semibold" htmlFor="dashboard-preferred-date">
+          Fecha preferida
+        </label>
+        <input
+          id="dashboard-preferred-date"
+          name="preferredDate"
+          type="date"
+          className="input"
+          disabled={isPending}
+        />
       </div>
       <textarea
         name="message"
