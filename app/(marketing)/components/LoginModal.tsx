@@ -1,19 +1,11 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import {
-  FormEvent,
-  useEffect,
-  useRef,
-  useState,
-  type MouseEvent,
-} from "react";
+import { useEffect, useState, type MouseEvent } from "react";
 import { createPortal } from "react-dom";
-import { signIn } from "next-auth/react";
+import { ChartLineUp, Lock, X } from "@phosphor-icons/react";
 
-import { ChartLineUp, Lock, UserCircle, X } from "@phosphor-icons/react";
-
-import { getDefaultDashboardPath, type UserRole } from "@/lib/auth/roles";
+import { LoginFormCard } from "./LoginFormCard";
 
 interface LoginModalProps {
   open: boolean;
@@ -22,11 +14,6 @@ interface LoginModalProps {
 
 export function LoginModal({ open, onClose }: LoginModalProps) {
   const router = useRouter();
-  const emailRef = useRef<HTMLInputElement>(null);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [portalElement, setPortalElement] = useState<HTMLElement | null>(null);
 
   useEffect(() => {
@@ -59,70 +46,19 @@ export function LoginModal({ open, onClose }: LoginModalProps) {
     };
   }, [open, onClose]);
 
-  useEffect(() => {
-    if (!open) {
-      return;
-    }
-
-    const timer = window.setTimeout(() => {
-      emailRef.current?.focus();
-    }, 40);
-
-    return () => window.clearTimeout(timer);
-  }, [open]);
-
-  useEffect(() => {
-    if (!open) {
-      setEmail("");
-      setPassword("");
-      setError(null);
-      setIsSubmitting(false);
-    }
-  }, [open]);
-
   if (!open || !portalElement) {
     return null;
   }
-
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    if (isSubmitting) {
-      return;
-    }
-
-    setIsSubmitting(true);
-    setError(null);
-
-    try {
-      const result = await signIn("credentials", {
-        email,
-        password,
-        redirect: false,
-        callbackUrl: getDefaultDashboardPath("patient"),
-      });
-
-      if (result?.error) {
-        setError("Credenciales no válidas. Intenta nuevamente.");
-        return;
-      }
-
-      const role: UserRole = "patient";
-      onClose();
-      router.push(result?.url ?? getDefaultDashboardPath(role));
-      router.refresh();
-    } catch (submitError) {
-      console.error(submitError);
-      setError("No pudimos contactar al servidor. Verifica tu conexión e inténtalo nuevamente.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
   const handleBackdropClick = (event: MouseEvent<HTMLDivElement>) => {
     if (event.target === event.currentTarget) {
       onClose();
     }
+  };
+
+  const handleSuccess = () => {
+    onClose();
+    router.refresh();
   };
 
   return createPortal(
@@ -166,66 +102,15 @@ export function LoginModal({ open, onClose }: LoginModalProps) {
                 </p>
               </div>
             </header>
-            <form className="space-y-4" onSubmit={handleSubmit}>
-              <div className="space-y-1.5 text-left">
-                <label
-                  htmlFor="modal-email"
-                  className="text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300"
-                >
-                  Correo electrónico
-                </label>
-                <input
-                  id="modal-email"
-                  ref={emailRef}
-                  name="email"
-                  type="email"
-                  required
-                  autoComplete="email"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  className="input h-12 text-sm"
-                  placeholder="tu-correo@dentpro.co"
-                />
-              </div>
-              <div className="space-y-1.5 text-left">
-                <label
-                  htmlFor="modal-password"
-                  className="text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300"
-                >
-                  Contraseña
-                </label>
-                <input
-                  id="modal-password"
-                  name="password"
-                  type="password"
-                  required
-                  autoComplete="current-password"
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  className="input h-12 text-sm"
-                  placeholder="Ingresa tu contraseña"
-                />
-              </div>
-              {error ? (
-                <div className="space-y-2">
-                  <p className="text-xs font-semibold text-red-600 dark:text-red-400">
-                    {error}
-                  </p>
-                </div>
-              ) : null}
-              <button
-                type="submit"
-                className="btn-primary w-full justify-center text-sm"
-                disabled={isSubmitting}
-              >
-                <span className="inline-flex items-center gap-2">
-                  {!isSubmitting ? (
-                    <UserCircle className="h-4 w-4" weight="bold" aria-hidden="true" />
-                  ) : null}
-                  <span>{isSubmitting ? "Ingresando..." : "Iniciar sesión"}</span>
-                </span>
-              </button>
-            </form>
+
+            <LoginFormCard
+              onSuccess={handleSuccess}
+              showBackLink={false}
+              heading="Accede a tu tablero"
+              description="Comparte tus credenciales para continuar con la gestión de la clínica."
+              callbackUrl="/"
+              autoFocusEmail
+            />
           </section>
           <aside
             className="modal-card flex flex-col justify-between bg-gradient-to-br from-brand-sky/90 via-brand-teal/95 to-brand-indigo/95 text-white"
@@ -238,17 +123,19 @@ export function LoginModal({ open, onClose }: LoginModalProps) {
               <div className="space-y-2">
                 <h3 className="text-xl font-semibold">Control total de tu clínica</h3>
                 <p className="text-sm text-white/90">
-                  Visualiza tu agenda, asigna tratamientos y mantén informados a tus pacientes desde un único lugar.
+                  Consolida la agenda, confirma asistencia y coordina a los especialistas desde un solo panel.
                 </p>
               </div>
             </div>
-            <div className="rounded-2xl bg-white/10 p-4 text-sm backdrop-blur">
-              <p className="font-semibold uppercase tracking-wide text-white/80">
-                ¿Necesitas acceso?
-              </p>
-              <p className="mt-2 text-white/90">
-                Utiliza las credenciales proporcionadas por tu clínica o solicita acceso al equipo administrador.
-              </p>
+            <div className="space-y-2 text-sm text-white/90">
+              <div className="flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-white" aria-hidden="true" />
+                <p>Datos cifrados y sesiones seguras.</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-white" aria-hidden="true" />
+                <p>Atención prioritaria para roles clínicos.</p>
+              </div>
             </div>
           </aside>
         </div>
@@ -257,4 +144,3 @@ export function LoginModal({ open, onClose }: LoginModalProps) {
     portalElement,
   );
 }
-

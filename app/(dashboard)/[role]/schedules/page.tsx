@@ -78,7 +78,7 @@ export default async function SchedulesPage({ params }: DashboardPageProps) {
 
         <div className="mt-4 overflow-x-auto">
           <table className="min-w-full text-left text-sm text-slate-700 dark:text-slate-200">
-            <thead className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500 dark:border-surface-muted dark:text-slate-300">
+            <thead className="sticky top-[4.5rem] z-10 border-b border-slate-200 bg-white/90 text-xs uppercase tracking-wide text-slate-500 backdrop-blur dark:border-surface-muted dark:bg-surface-elevated/90 dark:text-slate-300">
               <tr>
                 <th className="px-3 py-2">Especialista</th>
                 <th className="px-3 py-2">Inicio</th>
@@ -99,7 +99,9 @@ export default async function SchedulesPage({ params }: DashboardPageProps) {
                     key={slot.id}
                     className="border-b border-slate-100 last:border-0 dark:border-surface-muted"
                   >
-                    <td className="px-3 py-3 font-semibold text-slate-900 dark:text-white">{slot.specialistId}</td>
+                    <td className="max-w-[200px] px-3 py-3 font-semibold text-slate-900 dark:text-white">
+                      <span className="line-clamp-2 break-words">{slot.specialistName ?? slot.specialistId}</span>
+                    </td>
                     <td className="px-3 py-3">{formatDate(slot.start)}</td>
                     <td className="px-3 py-3">{formatDate(slot.end)}</td>
                     <td className="px-3 py-3">

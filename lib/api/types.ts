@@ -13,7 +13,9 @@ export interface AppointmentRequestPayload {
 export interface AppointmentSummary {
   id: string;
   patientId: string;
+  patientName?: string;
   specialistId: string;
+  specialistName?: string;
   scheduleId?: string;
   preferredDate?: string;
   service: string;
@@ -24,6 +26,7 @@ export interface AppointmentSummary {
 export interface ScheduleSlot {
   id: string;
   specialistId: string;
+  specialistName?: string;
   start: string;
   end: string;
   available: boolean;

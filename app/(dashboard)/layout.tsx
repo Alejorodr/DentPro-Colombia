@@ -1,10 +1,12 @@
 import type { ReactNode } from "react";
 
-export default function DashboardLayout({ children }: { children: ReactNode }) {
-  return (
-    <div className="min-h-screen bg-slate-100 py-12 transition-colors duration-300 dark:bg-surface-base">
-      <div className="container mx-auto max-w-5xl px-6">{children}</div>
-    </div>
-  );
+import { auth } from "@/auth";
+
+import { DashboardShell } from "./components/DashboardShell";
+
+export default async function DashboardLayout({ children }: { children: ReactNode }) {
+  const session = await auth();
+
+  return <DashboardShell session={session}>{children}</DashboardShell>;
 }
 

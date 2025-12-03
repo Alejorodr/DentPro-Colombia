@@ -56,6 +56,11 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     const updated = await prisma.appointment.update({
       where: { id: appointmentId },
       data: { status: nextStatus },
+      include: {
+        patient: true,
+        specialist: true,
+        schedule: { include: { specialist: true } },
+      },
     });
 
     return NextResponse.json(toAppointmentSummary(updated));

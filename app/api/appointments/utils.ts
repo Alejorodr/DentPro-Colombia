@@ -12,11 +12,16 @@ export function toAppointmentSummary(record: {
   scheduledAt: Date;
   status: AppointmentStatus;
   preferredDate: Date | null;
+  patient?: { name?: string | null } | null;
+  specialist?: { name?: string | null } | null;
+  schedule?: { specialist?: { name?: string | null } | null } | null;
 }): AppointmentSummary {
   return {
     id: record.id,
     patientId: record.patientId ?? "unassigned",
+    patientName: record.patient?.name ?? undefined,
     specialistId: record.specialistId ?? "unassigned",
+    specialistName: record.specialist?.name ?? record.schedule?.specialist?.name ?? undefined,
     scheduleId: record.scheduleId ?? undefined,
     preferredDate: record.preferredDate?.toISOString(),
     service: record.service,

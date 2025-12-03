@@ -5,6 +5,7 @@ import { notFound, redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { getDefaultDashboardPath, isUserRole, roleLabels, type UserRole } from "@/lib/auth/roles";
 import type { PatientSummary } from "@/lib/api/types";
+import { PatientsTable } from "./PatientsTable";
 
 function buildApiUrl(path: string) {
   const host = headers().get("host");
@@ -69,37 +70,7 @@ export default async function PatientsPage({ params }: DashboardPageProps) {
           </Link>
         </div>
 
-        <div className="mt-4 overflow-x-auto">
-          <table className="min-w-full text-left text-sm text-slate-700 dark:text-slate-200">
-            <thead className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500 dark:border-surface-muted dark:text-slate-300">
-              <tr>
-                <th className="px-3 py-2">Nombre</th>
-                <th className="px-3 py-2">Correo</th>
-                <th className="px-3 py-2">Teléfono</th>
-              </tr>
-            </thead>
-            <tbody>
-              {patients.length === 0 ? (
-                <tr>
-                  <td className="px-3 py-4 text-sm text-slate-500 dark:text-slate-300" colSpan={3}>
-                    No hay pacientes registrados todavía.
-                  </td>
-                </tr>
-              ) : (
-                patients.map((patient) => (
-                  <tr
-                    key={patient.id}
-                    className="border-b border-slate-100 last:border-0 dark:border-surface-muted"
-                  >
-                    <td className="px-3 py-3 font-semibold text-slate-900 dark:text-white">{patient.name}</td>
-                    <td className="px-3 py-3">{patient.email || "Sin correo"}</td>
-                    <td className="px-3 py-3">{patient.phone || "Sin teléfono"}</td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+        <PatientsTable patients={patients} />
       </section>
     </main>
   );

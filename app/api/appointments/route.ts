@@ -11,6 +11,15 @@ export async function GET() {
   try {
     const appointments = await prisma.appointment.findMany({
       orderBy: { scheduledAt: "asc" },
+      include: {
+        patient: true,
+        specialist: true,
+        schedule: {
+          include: {
+            specialist: true,
+          },
+        },
+      },
     });
 
     return NextResponse.json(appointments.map(toAppointmentSummary));
@@ -99,6 +108,15 @@ export async function POST(request: Request) {
               },
             },
           },
+      include: {
+        patient: true,
+        specialist: true,
+        schedule: {
+          include: {
+            specialist: true,
+          },
+        },
+      },
     });
 
     return NextResponse.json(toAppointmentSummary(appointment), { status: 201 });

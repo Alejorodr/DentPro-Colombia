@@ -1,5 +1,7 @@
 "use client";
 
+import { useMemo, useState, type FormEvent } from "react";
+
 import { useAuthRole } from "@/app/providers";
 import { useBookingForm } from "@/hooks/useBookingForm";
 import { listPatients } from "@/lib/api/patients";
@@ -16,6 +18,8 @@ const services = [
 export function QuickBookingForm() {
   const { role } = useAuthRole();
   const { handleSubmit, isPending, isSuccess, error } = useBookingForm();
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const minDate = useMemo(() => new Date().toISOString().split("T")[0], []);
   const { data: patients, isLoading: isLoadingPatients } = useQuery<PatientSummary[]>({
     queryKey: ["patients"],
     queryFn: listPatients,
@@ -25,8 +29,48 @@ export function QuickBookingForm() {
     queryFn: listSchedules,
   });
 
+  const validateForm = (form: HTMLFormElement) => {
+    const errors: Record<string, string> = {};
+    const name = (form.elements.namedItem("name") as HTMLInputElement | null)?.value ?? "";
+    const email = (form.elements.namedItem("email") as HTMLInputElement | null)?.value ?? "";
+    const phone = (form.elements.namedItem("phone") as HTMLInputElement | null)?.value ?? "";
+    const preferredDate = (form.elements.namedItem("preferredDate") as HTMLInputElement | null)?.value ?? "";
+
+    if (name.trim().length < 3) {
+      errors.name = "Ingresa el nombre completo.";
+    }
+
+    if (email && !/^\S+@\S+\.\S+$/.test(email)) {
+      errors.email = "Correo inválido.";
+    }
+
+    if (!/^[0-9+()\s-]{7,}$/.test(phone)) {
+      errors.phone = "Incluye un celular válido.";
+    }
+
+    if (preferredDate && preferredDate < minDate) {
+      errors.preferredDate = "Elige una fecha desde hoy.";
+    }
+
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleFormSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!validateForm(event.currentTarget)) {
+      return;
+    }
+
+    handleSubmit(event);
+  };
+
   return (
-    <form className="grid gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-surface-elevated" onSubmit={handleSubmit}>
+    <form
+      className="grid gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-surface-elevated"
+      onSubmit={handleFormSubmit}
+    >
       <div>
         <h3 className="text-lg font-semibold">Solicitar nueva cita</h3>
         <p className="text-sm text-slate-500 dark:text-slate-300">
@@ -45,11 +89,38 @@ export function QuickBookingForm() {
         <input
           id="dashboard-name"
           name="name"
-          className="input"
+          className={`input ${fieldErrors.name ? "border-red-500 ring-1 ring-red-400" : ""}`}
           placeholder="Ej. Mariana López"
           required
           disabled={isPending}
+          aria-invalid={Boolean(fieldErrors.name)}
+          aria-describedby={fieldErrors.name ? "dashboard-name-error" : undefined}
         />
+        {fieldErrors.name ? (
+          <p id="dashboard-name-error" className="text-xs text-red-600">
+            {fieldErrors.name}
+          </p>
+        ) : null}
+      </div>
+      <div className="grid gap-1">
+        <label className="text-xs font-semibold" htmlFor="dashboard-email">
+          Correo electrónico
+        </label>
+        <input
+          id="dashboard-email"
+          name="email"
+          type="email"
+          className={`input ${fieldErrors.email ? "border-red-500 ring-1 ring-red-400" : ""}`}
+          placeholder="Ej. nombre@correo.com"
+          disabled={isPending}
+          aria-invalid={Boolean(fieldErrors.email)}
+          aria-describedby={fieldErrors.email ? "dashboard-email-error" : undefined}
+        />
+        {fieldErrors.email ? (
+          <p id="dashboard-email-error" className="text-xs text-red-600">
+            {fieldErrors.email}
+          </p>
+        ) : null}
       </div>
       <div className="grid gap-1">
         <label className="text-xs font-semibold" htmlFor="dashboard-email">
@@ -71,11 +142,18 @@ export function QuickBookingForm() {
         <input
           id="dashboard-phone"
           name="phone"
-          className="input"
+          className={`input ${fieldErrors.phone ? "border-red-500 ring-1 ring-red-400" : ""}`}
           placeholder="Ej. 300 123 4567"
           required
           disabled={isPending}
+          aria-invalid={Boolean(fieldErrors.phone)}
+          aria-describedby={fieldErrors.phone ? "dashboard-phone-error" : undefined}
         />
+        {fieldErrors.phone ? (
+          <p id="dashboard-phone-error" className="text-xs text-red-600">
+            {fieldErrors.phone}
+          </p>
+        ) : null}
       </div>
       <div className="grid gap-1">
         <label className="text-xs font-semibold" htmlFor="dashboard-service">
@@ -129,11 +207,13 @@ export function QuickBookingForm() {
           {(schedules ?? [])
             .filter((slot) => slot.available)
             .map((slot) => {
-              const start = new Date(slot.start).toLocaleString();
-              const end = new Date(slot.end).toLocaleTimeString();
+              const startDate = new Date(slot.start);
+              const endDate = new Date(slot.end);
+              const start = startDate.toLocaleString();
+              const end = endDate.toLocaleTimeString();
               return (
                 <option key={slot.id} value={slot.id}>
-                  {start} - {end}
+                  {start} - {end} {slot.specialistName ? `· ${slot.specialistName}` : ""}
                 </option>
               );
             })}
@@ -150,9 +230,17 @@ export function QuickBookingForm() {
           id="dashboard-preferred-date"
           name="preferredDate"
           type="date"
-          className="input"
+          className={`input ${fieldErrors.preferredDate ? "border-red-500 ring-1 ring-red-400" : ""}`}
+          min={minDate}
           disabled={isPending}
+          aria-invalid={Boolean(fieldErrors.preferredDate)}
+          aria-describedby={fieldErrors.preferredDate ? "dashboard-preferred-date-error" : undefined}
         />
+        {fieldErrors.preferredDate ? (
+          <p id="dashboard-preferred-date-error" className="text-xs text-red-600">
+            {fieldErrors.preferredDate}
+          </p>
+        ) : null}
       </div>
       <textarea
         name="message"
