@@ -9,11 +9,13 @@ export async function GET() {
   try {
     const schedules = await prisma.schedule.findMany({
       orderBy: { start: "asc" },
+      include: { specialist: true },
     });
 
     const payload: ScheduleSlot[] = schedules.map((slot) => ({
       id: slot.id,
       specialistId: slot.specialistId,
+      specialistName: slot.specialist?.name ?? undefined,
       start: slot.start.toISOString(),
       end: slot.end.toISOString(),
       available: slot.available,

@@ -15,6 +15,11 @@ export interface BookingFormValues {
   phone: string;
   service: string;
   message: string;
+  email?: string;
+  preferredDate?: string;
+  patientId?: string;
+  specialistId?: string;
+  scheduleId?: string;
 }
 
 interface UseBookingFormOptions {
@@ -65,6 +70,11 @@ export function useBookingForm({ onSuccess }: UseBookingFormOptions = {}) {
         phone: String(formData.get("phone") ?? ""),
         service: String(formData.get("service") ?? ""),
         message: String(formData.get("message") ?? ""),
+        email: String(formData.get("email") ?? "").trim() || undefined,
+        preferredDate: String(formData.get("preferredDate") ?? "").trim() || undefined,
+        patientId: String(formData.get("patientId") ?? "").trim() || undefined,
+        specialistId: String(formData.get("specialistId") ?? "").trim() || undefined,
+        scheduleId: String(formData.get("scheduleId") ?? "").trim() || undefined,
       };
 
       setErrorMessage(null);
