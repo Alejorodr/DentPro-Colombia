@@ -2,33 +2,8 @@ import { NextResponse } from "next/server";
 import { AppointmentStatus } from "@prisma/client";
 
 import { getPrismaClient } from "@/lib/prisma";
-import type { AppointmentRequestPayload, AppointmentSummary } from "@/lib/api/types";
-
-function toAppointmentSummary(record: {
-  id: string;
-  patientId: string | null;
-  specialistId: string | null;
-  scheduleId: string | null;
-  service: string;
-  scheduledAt: Date;
-  status: AppointmentStatus;
-  preferredDate: Date | null;
-}): AppointmentSummary {
-  return {
-    id: record.id,
-    patientId: record.patientId ?? "unassigned",
-    specialistId: record.specialistId ?? "unassigned",
-    scheduleId: record.scheduleId ?? undefined,
-    preferredDate: record.preferredDate?.toISOString(),
-    service: record.service,
-    scheduledAt: record.scheduledAt.toISOString(),
-    status: record.status,
-  };
-}
-
-function buildError(message: string, status = 400) {
-  return NextResponse.json({ error: message }, { status });
-}
+import type { AppointmentRequestPayload } from "@/lib/api/types";
+import { buildError, toAppointmentSummary } from "./utils";
 
 export async function GET() {
   const prisma = getPrismaClient();

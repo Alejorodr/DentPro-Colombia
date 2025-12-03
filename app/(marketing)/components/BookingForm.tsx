@@ -51,7 +51,12 @@ export function BookingFormSection({
         <div className="rounded-3xl bg-gradient p-10 text-white shadow-xl transition-colors duration-500 dark:bg-card-dark dark:text-slate-100 dark:shadow-glow-dark">
           <h2 className="text-3xl font-bold">{title}</h2>
           <p className="mt-4 text-base text-brand-light">{description}</p>
-          <form className="mt-8 grid gap-6" id="bookingForm" onSubmit={handleSubmit}>
+          <form
+            className="mt-8 grid gap-6"
+            id="bookingForm"
+            aria-label="Formulario de agendamiento"
+            onSubmit={handleSubmit}
+          >
             <div className="grid gap-2">
               <label htmlFor="name" className="text-sm font-semibold">
                 Nombre completo
