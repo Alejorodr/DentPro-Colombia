@@ -7,7 +7,7 @@ const globalForJwt = globalThis as unknown as {
   __authJwtSecretString?: string;
 };
 
-function resolveSecretString(): string {
+export function getJwtSecretString(): string {
   const candidates = [
     process.env.AUTH_JWT_SECRET,
     process.env.NEXTAUTH_SECRET,
@@ -38,7 +38,7 @@ function resolveSecretString(): string {
 
 export function getJwtSecretKey(): Uint8Array {
   if (!globalForJwt.__authJwtSecret) {
-    const secret = resolveSecretString();
+    const secret = getJwtSecretString();
     globalForJwt.__authJwtSecret = encoder.encode(secret);
   }
 
