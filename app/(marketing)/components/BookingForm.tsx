@@ -51,7 +51,12 @@ export function BookingFormSection({
         <div className="rounded-3xl bg-gradient p-10 text-white shadow-xl transition-colors duration-500 dark:bg-card-dark dark:text-slate-100 dark:shadow-glow-dark">
           <h2 className="text-3xl font-bold">{title}</h2>
           <p className="mt-4 text-base text-brand-light">{description}</p>
-          <form className="mt-8 grid gap-6" id="bookingForm" onSubmit={handleSubmit}>
+          <form
+            className="mt-8 grid gap-6"
+            id="bookingForm"
+            aria-label="Formulario de agendamiento"
+            onSubmit={handleSubmit}
+          >
             <div className="grid gap-2">
               <label htmlFor="name" className="text-sm font-semibold">
                 Nombre completo
@@ -79,6 +84,18 @@ export function BookingFormSection({
               />
             </div>
             <div className="grid gap-2">
+              <label htmlFor="email" className="text-sm font-semibold">
+                Correo electrónico
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                className="input dark:bg-surface-muted dark:text-slate-100 dark:placeholder:text-slate-500"
+                placeholder="Ej. nombre@correo.com"
+              />
+            </div>
+            <div className="grid gap-2">
               <label htmlFor="service" className="text-sm font-semibold">
                 {selectLabel}
               </label>
@@ -98,6 +115,17 @@ export function BookingFormSection({
                   </option>
                 ))}
               </select>
+            </div>
+            <div className="grid gap-2">
+              <label htmlFor="preferredDate" className="text-sm font-semibold">
+                Fecha preferida
+              </label>
+              <input
+                id="preferredDate"
+                name="preferredDate"
+                type="date"
+                className="input dark:bg-surface-muted dark:text-slate-100 dark:placeholder:text-slate-500"
+              />
             </div>
             <div className="grid gap-2">
               <label htmlFor="message" className="text-sm font-semibold">

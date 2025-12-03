@@ -2,29 +2,8 @@ import { NextResponse } from "next/server";
 import { AppointmentStatus } from "@prisma/client";
 
 import { getPrismaClient } from "@/lib/prisma";
-import type { AppointmentRequestPayload, AppointmentSummary } from "@/lib/api/types";
-
-function toAppointmentSummary(record: {
-  id: string;
-  patientId: string | null;
-  specialistId: string | null;
-  service: string;
-  scheduledAt: Date;
-  status: AppointmentStatus;
-}): AppointmentSummary {
-  return {
-    id: record.id,
-    patientId: record.patientId ?? "unassigned",
-    specialistId: record.specialistId ?? "unassigned",
-    service: record.service,
-    scheduledAt: record.scheduledAt.toISOString(),
-    status: record.status,
-  };
-}
-
-function buildError(message: string, status = 400) {
-  return NextResponse.json({ error: message }, { status });
-}
+import type { AppointmentRequestPayload } from "@/lib/api/types";
+import { buildError, toAppointmentSummary } from "./utils";
 
 export async function GET() {
   const prisma = getPrismaClient();
@@ -55,28 +34,61 @@ export async function POST(request: Request) {
     return buildError("Nombre, teléfono y servicio son obligatorios.");
   }
 
-  const scheduledAt = payload.preferredDate ? new Date(payload.preferredDate) : new Date();
-  if (Number.isNaN(scheduledAt.getTime())) {
-    return buildError("La fecha preferida no es válida.");
-  }
-
   const prisma = getPrismaClient();
 
   try {
+    const schedule = payload.scheduleId
+      ? await prisma.schedule.findUnique({
+          where: { id: payload.scheduleId },
+        })
+      : null;
+
+    if (payload.scheduleId && !schedule) {
+      return buildError("El horario seleccionado no existe.");
+    }
+
+    if (schedule?.available === false) {
+      return buildError("El horario seleccionado no está disponible.", 409);
+    }
+
+    if (payload.scheduleId) {
+      const existingBooking = await prisma.appointment.findFirst({
+        where: {
+          scheduleId: payload.scheduleId,
+          status: { in: [AppointmentStatus.pending, AppointmentStatus.confirmed] },
+        },
+      });
+
+      if (existingBooking) {
+        return buildError("El horario ya fue reservado.", 409);
+      }
+    }
+
+    const preferredDate = payload.preferredDate ? new Date(payload.preferredDate) : null;
+    if (preferredDate && Number.isNaN(preferredDate.getTime())) {
+      return buildError("La fecha preferida no es válida.");
+    }
+
+    const scheduledAt = schedule?.start ?? preferredDate ?? new Date();
+
     const appointment = await prisma.appointment.create({
       data: payload.patientId
         ? {
             patientId: payload.patientId,
-            specialistId: payload.specialistId ?? null,
+            specialistId: payload.specialistId ?? schedule?.specialistId ?? null,
+            scheduleId: payload.scheduleId ?? null,
             service: payload.service,
             scheduledAt,
+            preferredDate,
             status: AppointmentStatus.pending,
             notes: payload.message ?? null,
           }
         : {
-            specialistId: payload.specialistId ?? null,
+            specialistId: payload.specialistId ?? schedule?.specialistId ?? null,
+            scheduleId: payload.scheduleId ?? null,
             service: payload.service,
             scheduledAt,
+            preferredDate,
             status: AppointmentStatus.pending,
             notes: payload.message ?? null,
             patient: {
