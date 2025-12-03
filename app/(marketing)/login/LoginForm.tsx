@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
+import { signIn } from "next-auth/react";
 import {
   ArrowRight,
   EnvelopeSimple,
@@ -11,27 +12,13 @@ import {
   WarningCircle,
 } from "@phosphor-icons/react";
 
-import {
-  getDefaultDashboardPath,
-  isUserRole,
-  type UserRole,
-} from "@/lib/auth/roles";
+import { getDefaultDashboardPath } from "@/lib/auth/roles";
 
 const errorMessages: Record<string, string> = {
-  INVALID_CREDENTIALS: "Correo o contraseña incorrectos.",
-  INVALID_REQUEST: "Debes ingresar tu correo y contraseña.",
-  INTERNAL_ERROR: "No pudimos procesar tu solicitud. Inténtalo más tarde.",
+  CredentialsSignin: "Correo o contraseña incorrectos.",
+  InvalidEmail: "Debes ingresar un correo válido.",
+  Default: "No pudimos procesar tu solicitud. Inténtalo más tarde.",
 };
-
-type LoginPayload =
-  | {
-      ok: true;
-      user?: {
-        role?: string | null;
-        defaultDashboardPath?: string | null;
-      };
-    }
-  | { ok: false; error?: string | null };
 
 interface LoginFormProps {
   callbackUrl?: string | null;
@@ -59,48 +46,23 @@ export function LoginForm({ callbackUrl }: LoginFormProps) {
     setIsSubmitting(true);
     setFormError(null);
 
-    try {
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
-      });
+    const result = await signIn("credentials", {
+      email,
+      password,
+      redirect: false,
+      callbackUrl: callbackUrl ?? "/",
+    });
 
-      const payload = (await response.json().catch(() => null)) as LoginPayload | null;
-
-      if (!response.ok || !payload?.ok) {
-        const errorCode = (payload as { error?: string | null } | null)?.error;
-        const errorMessage =
-          (errorCode && errorMessages[errorCode]) ||
-          (response.status === 401
-            ? errorMessages.INVALID_CREDENTIALS
-            : response.status === 400
-              ? errorMessages.INVALID_REQUEST
-              : errorMessages.INTERNAL_ERROR);
-
-        setFormError(errorMessage);
-        return;
-      }
-
-      const userRole = payload.user?.role;
-      const resolvedRole: UserRole =
-        userRole && isUserRole(userRole) ? userRole : "patient";
-      const destination =
-        callbackUrl ??
-        payload.user?.defaultDashboardPath ??
-        getDefaultDashboardPath(resolvedRole);
-
-      router.push(destination);
-      router.refresh();
-    } catch (_error) {
-      setFormError(
-        "No pudimos contactar al servidor. Verifica tu conexión e inténtalo nuevamente.",
-      );
-    } finally {
+    if (result?.error) {
+      setFormError(errorMessages[result.error] ?? errorMessages.Default);
       setIsSubmitting(false);
+      return;
     }
+
+    const destination = result?.url ?? callbackUrl ?? getDefaultDashboardPath("patient");
+    router.push(destination);
+    router.refresh();
+    setIsSubmitting(false);
   };
 
   return (
