@@ -164,6 +164,18 @@ export function BookingFormSection({
               ) : null}
             </div>
             <div className="grid gap-2">
+              <label htmlFor="email" className="text-sm font-semibold">
+                Correo electrónico
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                className="input dark:bg-surface-muted dark:text-slate-100 dark:placeholder:text-slate-500"
+                placeholder="Ej. nombre@correo.com"
+              />
+            </div>
+            <div className="grid gap-2">
               <label htmlFor="service" className="text-sm font-semibold">
                 {selectLabel}
               </label>

@@ -123,6 +123,19 @@ export function QuickBookingForm() {
         ) : null}
       </div>
       <div className="grid gap-1">
+        <label className="text-xs font-semibold" htmlFor="dashboard-email">
+          Correo electrónico
+        </label>
+        <input
+          id="dashboard-email"
+          name="email"
+          type="email"
+          className="input"
+          placeholder="Ej. nombre@correo.com"
+          disabled={isPending}
+        />
+      </div>
+      <div className="grid gap-1">
         <label className="text-xs font-semibold" htmlFor="dashboard-phone">
           Celular
         </label>
