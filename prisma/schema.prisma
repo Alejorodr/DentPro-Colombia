@@ -104,6 +104,9 @@ model Schedule {
   specialist   Specialist    @relation(fields: [specialistId], references: [id], onDelete: Cascade)
   appointments Appointment[]
 
+  specialist   Specialist    @relation(fields: [specialistId], references: [id], onDelete: Cascade)
+  appointments Appointment[]
+
   @@unique([specialistId, start, end], name: "specialistId_start_end")
   @@map("schedules")
 }
