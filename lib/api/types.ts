@@ -7,12 +7,15 @@ export interface AppointmentRequestPayload {
   preferredDate?: string;
   patientId?: string;
   specialistId?: string;
+  scheduleId?: string;
 }
 
 export interface AppointmentSummary {
   id: string;
   patientId: string;
   specialistId: string;
+  scheduleId?: string;
+  preferredDate?: string;
   service: string;
   scheduledAt: string;
   status: "pending" | "confirmed" | "cancelled";
