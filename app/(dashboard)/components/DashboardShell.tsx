@@ -6,11 +6,11 @@ import { signOut } from "next-auth/react";
 import { useMemo } from "react";
 
 import { isUserRole, roleLabels, type UserRole } from "@/lib/auth/roles";
-import type { Session } from "next-auth";
+import type { AuthSession } from "@/auth";
 
 interface DashboardShellProps {
   children: React.ReactNode;
-  session: Session | null;
+  session: AuthSession;
 }
 
 interface NavItem {

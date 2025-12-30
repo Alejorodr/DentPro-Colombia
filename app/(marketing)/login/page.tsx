@@ -3,12 +3,13 @@ import { redirect } from "next/navigation";
 import { LoginForm } from "./LoginForm";
 import { auth } from "@/auth";
 
-interface LoginPageProps {
-  searchParams?: Promise<Record<string, string | string[] | undefined>>;
-}
+type LoginPageProps = {
+  searchParams?: Record<string, string | string[] | undefined> | Promise<Record<string, string | string[] | undefined>>;
+};
 
-export default async function LoginPage(props: LoginPageProps) {
-  const searchParams = (await props?.searchParams) ?? {};
+export default async function LoginPage(props: any) {
+  const resolvedProps = props as LoginPageProps;
+  const searchParams = (await resolvedProps?.searchParams) ?? {};
   const callbackUrlRaw = searchParams?.callbackUrl;
   const callbackUrl = typeof callbackUrlRaw === "string" ? callbackUrlRaw : "/";
 

@@ -24,13 +24,9 @@ async function fetchPatients() {
   return (await response.json()) as PatientSummary[];
 }
 
-interface DashboardPageProps {
-  params: { role: string };
-}
-
 export default async function PatientsPage(props: any) {
-  const { params } = props as DashboardPageProps;
-  const requestedRole = params.role;
+  const { params } = props as { params?: { role?: string } };
+  const requestedRole = params?.role ?? "";
 
   if (!isUserRole(requestedRole)) {
     notFound();

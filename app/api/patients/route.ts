@@ -11,7 +11,12 @@ export async function GET() {
       orderBy: { name: "asc" },
     });
 
-    const payload: PatientSummary[] = patients.map((patient) => ({
+    const payload: PatientSummary[] = patients.map((patient: {
+      id: string;
+      name: string;
+      email: string | null;
+      phone: string | null;
+    }) => ({
       id: patient.id,
       name: patient.name,
       email: patient.email ?? "",

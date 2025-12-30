@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
-import { AppointmentStatus } from "@prisma/client";
 
 import { getPrismaClient } from "@/lib/prisma";
-import type { AppointmentRequestPayload } from "@/lib/api/types";
+import type { AppointmentRequestPayload, AppointmentStatus } from "@/lib/api/types";
 import { buildError, toAppointmentSummary } from "./utils";
+
+const ACTIVE_APPOINTMENT_STATUSES: AppointmentStatus[] = ["pending", "confirmed"];
+const DEFAULT_APPOINTMENT_STATUS: AppointmentStatus = "pending";
 
 export async function GET() {
   const prisma = getPrismaClient();
@@ -64,7 +66,7 @@ export async function POST(request: Request) {
       const existingBooking = await prisma.appointment.findFirst({
         where: {
           scheduleId: payload.scheduleId,
-          status: { in: [AppointmentStatus.pending, AppointmentStatus.confirmed] },
+          status: { in: ACTIVE_APPOINTMENT_STATUSES },
         },
       });
 
@@ -89,7 +91,7 @@ export async function POST(request: Request) {
             service: payload.service,
             scheduledAt,
             preferredDate,
-            status: AppointmentStatus.pending,
+            status: DEFAULT_APPOINTMENT_STATUS,
             notes: payload.message ?? null,
           }
         : {
@@ -98,7 +100,7 @@ export async function POST(request: Request) {
             service: payload.service,
             scheduledAt,
             preferredDate,
-            status: AppointmentStatus.pending,
+            status: DEFAULT_APPOINTMENT_STATUS,
             notes: payload.message ?? null,
             patient: {
               create: {

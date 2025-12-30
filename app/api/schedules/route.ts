@@ -12,7 +12,14 @@ export async function GET() {
       include: { specialist: true },
     });
 
-    const payload: ScheduleSlot[] = schedules.map((slot) => ({
+    const payload: ScheduleSlot[] = schedules.map((slot: {
+      id: string;
+      specialistId: string;
+      specialist: { name: string | null } | null;
+      start: Date;
+      end: Date;
+      available: boolean;
+    }) => ({
       id: slot.id,
       specialistId: slot.specialistId,
       specialistName: slot.specialist?.name ?? undefined,
