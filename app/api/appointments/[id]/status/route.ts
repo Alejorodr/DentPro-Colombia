@@ -1,14 +1,8 @@
 import { NextResponse } from "next/server";
 
 import { getPrismaClient } from "@/lib/prisma";
+import type { AppointmentStatus } from "@/lib/api/types";
 import { buildError, isValidAppointmentStatus, toAppointmentSummary } from "../../utils";
-
-interface RouteParams {
-  params: { id: string };
-}
-
-const APPOINTMENT_STATUSES = ["pending", "confirmed", "cancelled"] as const;
-type AppointmentStatus = (typeof APPOINTMENT_STATUSES)[number];
 
 const transitionRules: Record<AppointmentStatus, AppointmentStatus[]> = {
   pending: ["confirmed", "cancelled"],
@@ -17,10 +11,10 @@ const transitionRules: Record<AppointmentStatus, AppointmentStatus[]> = {
 };
 
 export async function PATCH(request: Request, context: any) {
-  const { params } = context as RouteParams;
   const prisma = getPrismaClient();
 
-  const appointmentId = params.id;
+  const { params } = context as { params?: { id?: string } };
+  const appointmentId = params?.id;
   if (!appointmentId) {
     return buildError("Debes especificar una cita válida.");
   }

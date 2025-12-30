@@ -1,7 +1,14 @@
 import bcrypt from "bcryptjs";
-import { AppointmentStatus, PrismaClient, UserRole } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
+
+import type { AppointmentStatus } from "@/lib/api/types";
+import type { UserRole } from "@/lib/auth/roles";
 
 const prisma = new PrismaClient();
+const ADMIN_ROLE: UserRole = "admin";
+const PENDING_STATUS: AppointmentStatus = "pending";
+const CONFIRMED_STATUS: AppointmentStatus = "confirmed";
+const CANCELLED_STATUS: AppointmentStatus = "cancelled";
 
 function todayAt(hours: number, minutes: number): Date {
   const now = new Date();
@@ -19,13 +26,13 @@ async function main() {
     update: {
       name: "Admin DentPro",
       passwordHash,
-      primaryRole: UserRole.admin,
+      primaryRole: ADMIN_ROLE,
     },
     create: {
       name: "Admin DentPro",
       email: "admin@dentpro.co",
       passwordHash,
-      primaryRole: UserRole.admin,
+      primaryRole: ADMIN_ROLE,
     },
   });
 
@@ -153,7 +160,7 @@ async function main() {
       service: "Ortodoncia",
       scheduledAt: schedule1.start,
       preferredDate: schedule1.start,
-      status: AppointmentStatus.pending,
+      status: PENDING_STATUS,
       notes: "Primera valoración ortodoncia.",
     },
     create: {
@@ -164,7 +171,7 @@ async function main() {
       service: "Ortodoncia",
       scheduledAt: schedule1.start,
       preferredDate: schedule1.start,
-      status: AppointmentStatus.pending,
+      status: PENDING_STATUS,
       notes: "Primera valoración ortodoncia.",
     },
   });
@@ -178,7 +185,7 @@ async function main() {
       service: "Limpieza",
       scheduledAt: schedule2.start,
       preferredDate: schedule2.start,
-      status: AppointmentStatus.confirmed,
+      status: CONFIRMED_STATUS,
       notes: "Control semestral.",
     },
     create: {
@@ -189,7 +196,7 @@ async function main() {
       service: "Limpieza",
       scheduledAt: schedule2.start,
       preferredDate: schedule2.start,
-      status: AppointmentStatus.confirmed,
+      status: CONFIRMED_STATUS,
       notes: "Control semestral.",
     },
   });
@@ -203,7 +210,7 @@ async function main() {
       service: "Rehabilitación oral",
       scheduledAt: schedule3.start,
       preferredDate: schedule3.start,
-      status: AppointmentStatus.cancelled,
+      status: CANCELLED_STATUS,
       notes: "Cancelada por el paciente.",
     },
     create: {
@@ -214,7 +221,7 @@ async function main() {
       service: "Rehabilitación oral",
       scheduledAt: schedule3.start,
       preferredDate: schedule3.start,
-      status: AppointmentStatus.cancelled,
+      status: CANCELLED_STATUS,
       notes: "Cancelada por el paciente.",
     },
   });

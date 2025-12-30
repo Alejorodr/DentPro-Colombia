@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
-import { AppointmentStatus } from "@prisma/client";
 
-import type { AppointmentSummary } from "@/lib/api/types";
+import { APPOINTMENT_STATUSES, type AppointmentStatus, type AppointmentSummary } from "@/lib/api/types";
 
 export function toAppointmentSummary(record: {
   id: string;
@@ -35,5 +34,5 @@ export function buildError(message: string, status = 400) {
 }
 
 export function isValidAppointmentStatus(value: string): value is AppointmentStatus {
-  return (Object.values(AppointmentStatus) as string[]).includes(value);
+  return (APPOINTMENT_STATUSES as readonly string[]).includes(value);
 }

@@ -179,8 +179,8 @@ function getSectionIcon(section: DashboardSection) {
 }
 
 export default async function RoleDashboardPage(props: any) {
-  const { params } = props as { params: { role: string } };
-  const requestedRole = params.role;
+  const { params } = props as { params?: { role?: string } };
+  const requestedRole = params?.role ?? "";
 
   if (!isUserRole(requestedRole)) {
     notFound();

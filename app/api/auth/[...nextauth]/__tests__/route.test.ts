@@ -49,7 +49,7 @@ describe("Auth.js credentials provider", () => {
         }),
       }));
 
-      const { authOptions: mockedAuthOptions } = await import("@/app/api/auth/[...nextauth]/route");
+      const { authOptions: mockedAuthOptions } = await import("@/auth");
       const { authenticateUser } = await import("@/lib/auth/users");
       vi.mocked(authenticateUser).mockResolvedValue({
         id: "user-1",

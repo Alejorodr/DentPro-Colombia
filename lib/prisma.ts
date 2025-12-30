@@ -5,7 +5,7 @@ import { randomUUID } from "node:crypto";
 
 import bcrypt from "bcryptjs";
 
-import { Prisma, PrismaClient, UserRole } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
 
 const FALLBACK_DATABASE_PATH = path.join(
   process.cwd(),
@@ -19,6 +19,7 @@ const FALLBACK_DATABASE_URL = `file:${FALLBACK_DATABASE_PATH}`;
 const FALLBACK_ADMIN_EMAIL = "admin@dentpro.co";
 const FALLBACK_ADMIN_NAME = "Ana María Pérez";
 const FALLBACK_ADMIN_PASSWORD = "R00t&4ss";
+const ADMIN_ROLE: import("./auth/roles").UserRole = "admin";
 
 const globalForPrisma = globalThis as unknown as {
   prisma?: PrismaClient;
@@ -147,7 +148,7 @@ async function applyPendingMigrations(prisma: PrismaClient): Promise<boolean> {
       (await prisma.$queryRaw<Array<{ name: string }>>`
         SELECT "name" FROM "_fallback_migrations"
       `) ?? []
-    ).map((row) => row.name),
+    ).map((row: { name: string }) => row.name),
   );
 
   const migrationDirs = entries
@@ -174,7 +175,7 @@ async function applyPendingMigrations(prisma: PrismaClient): Promise<boolean> {
     try {
       const sql = await fsp.readFile(migrationPath, "utf8");
       const statements = splitSqlStatements(sql);
-      await prisma.$transaction(async (tx) => {
+      await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
         await ensureFallbackMigrationsTable(tx);
         for (const statement of statements) {
           await tx.$executeRawUnsafe(statement);
@@ -211,13 +212,13 @@ async function ensureAdminUser(prisma: PrismaClient) {
 
   await prisma.user.upsert({
     where: { email: FALLBACK_ADMIN_EMAIL },
-    update: { passwordHash, name: FALLBACK_ADMIN_NAME, primaryRole: UserRole.admin },
+    update: { passwordHash, name: FALLBACK_ADMIN_NAME, primaryRole: ADMIN_ROLE },
     create: {
       id: randomUUID(),
       name: FALLBACK_ADMIN_NAME,
       email: FALLBACK_ADMIN_EMAIL,
       passwordHash,
-      primaryRole: UserRole.admin,
+      primaryRole: ADMIN_ROLE,
     },
   });
 }
@@ -233,9 +234,9 @@ async function bootstrapFallbackDatabase() {
     await applyPendingMigrations(prisma);
 
     const usersTableResult =
-      (await prisma.$queryRawUnsafe<Array<{ count: number | bigint }>>(
+      ((await prisma.$queryRawUnsafe(
         "SELECT COUNT(*) as count FROM sqlite_master WHERE type='table' AND name='users'",
-      )) ?? [];
+      )) as Array<{ count: number | bigint }> | null) ?? [];
 
     const usersTableCount = Number(usersTableResult.at(0)?.count ?? 0);
 

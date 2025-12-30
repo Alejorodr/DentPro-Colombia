@@ -1,7 +1,8 @@
 import { randomUUID } from "node:crypto";
 
-import { AppointmentStatus } from "@prisma/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import type { AppointmentStatus } from "@/lib/api/types";
 
 import { PATCH } from "../[id]/status/route";
 
@@ -17,6 +18,9 @@ type AppointmentRecord = {
 };
 
 const mockAppointments = new Map<string, AppointmentRecord>();
+const PENDING_STATUS: AppointmentStatus = "pending";
+const CONFIRMED_STATUS: AppointmentStatus = "confirmed";
+const CANCELLED_STATUS: AppointmentStatus = "cancelled";
 
 vi.mock("@/lib/prisma", () => {
   const prismaMock = {
@@ -77,7 +81,7 @@ describe("PATCH /api/appointments/[id]/status", () => {
   });
 
   it("updates a pending appointment to confirmed", async () => {
-    const appointment = await createAppointment(AppointmentStatus.pending);
+    const appointment = await createAppointment(PENDING_STATUS);
 
     const response = await PATCH(
       new Request(`http://localhost/api/appointments/${appointment.id}/status`, {
@@ -92,11 +96,11 @@ describe("PATCH /api/appointments/[id]/status", () => {
     const payload = (await response.json()) as { status: string };
     expect(payload.status).toBe("confirmed");
 
-    expect(mockAppointments.get(appointment.id)?.status).toBe(AppointmentStatus.confirmed);
+    expect(mockAppointments.get(appointment.id)?.status).toBe(CONFIRMED_STATUS);
   });
 
   it("rejects transitions from cancelled to other states", async () => {
-    const appointment = await createAppointment(AppointmentStatus.cancelled);
+    const appointment = await createAppointment(CANCELLED_STATUS);
 
     const response = await PATCH(
       new Request(`http://localhost/api/appointments/${appointment.id}/status`, {
@@ -108,7 +112,7 @@ describe("PATCH /api/appointments/[id]/status", () => {
 
     expect(response.status).toBe(400);
 
-    expect(mockAppointments.get(appointment.id)?.status).toBe(AppointmentStatus.cancelled);
+    expect(mockAppointments.get(appointment.id)?.status).toBe(CANCELLED_STATUS);
   });
 
   it("returns 404 when appointment does not exist", async () => {

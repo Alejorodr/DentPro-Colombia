@@ -10,6 +10,9 @@ export interface AppointmentRequestPayload {
   scheduleId?: string;
 }
 
+export const APPOINTMENT_STATUSES = ["pending", "confirmed", "cancelled"] as const;
+export type AppointmentStatus = (typeof APPOINTMENT_STATUSES)[number];
+
 export interface AppointmentSummary {
   id: string;
   patientId: string;
@@ -20,7 +23,7 @@ export interface AppointmentSummary {
   preferredDate?: string;
   service: string;
   scheduledAt: string;
-  status: "pending" | "confirmed" | "cancelled";
+  status: AppointmentStatus;
 }
 
 export interface ScheduleSlot {
@@ -38,4 +41,3 @@ export interface PatientSummary {
   email: string;
   phone: string;
 }
-

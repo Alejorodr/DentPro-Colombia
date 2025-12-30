@@ -20,20 +20,16 @@ export function getJwtSecretString(): string {
     }
   }
 
-  if (process.env.NODE_ENV !== "production") {
-    if (!globalForJwt.__authJwtSecretString) {
-      const generatedSecret = randomBytes(64).toString("hex");
-      globalForJwt.__authJwtSecretString = generatedSecret;
+  if (!globalForJwt.__authJwtSecretString) {
+    const generatedSecret = randomBytes(64).toString("hex");
+    globalForJwt.__authJwtSecretString = generatedSecret;
 
-      console.warn(
-        "AUTH_JWT_SECRET is not configured. Generated a development-only fallback secret.",
-      );
-    }
-
-    return globalForJwt.__authJwtSecretString;
+    console.warn(
+      "AUTH_JWT_SECRET is not configured. Generated a fallback secret; configure AUTH_JWT_SECRET or AUTH_SECRET for production environments.",
+    );
   }
 
-  throw new Error("AUTH_JWT_SECRET is not configured");
+  return globalForJwt.__authJwtSecretString;
 }
 
 export function getJwtSecretKey(): Uint8Array {
