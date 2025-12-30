@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { AppointmentStatus } from "@prisma/client";
 
 import { getPrismaClient } from "@/lib/prisma";
 import { buildError, isValidAppointmentStatus, toAppointmentSummary } from "../../utils";
@@ -8,13 +7,17 @@ interface RouteParams {
   params: { id: string };
 }
 
+const APPOINTMENT_STATUSES = ["pending", "confirmed", "cancelled"] as const;
+type AppointmentStatus = (typeof APPOINTMENT_STATUSES)[number];
+
 const transitionRules: Record<AppointmentStatus, AppointmentStatus[]> = {
-  [AppointmentStatus.pending]: [AppointmentStatus.confirmed, AppointmentStatus.cancelled],
-  [AppointmentStatus.confirmed]: [AppointmentStatus.cancelled],
-  [AppointmentStatus.cancelled]: [],
+  pending: ["confirmed", "cancelled"],
+  confirmed: ["cancelled"],
+  cancelled: [],
 };
 
-export async function PATCH(request: Request, { params }: RouteParams) {
+export async function PATCH(request: Request, context: any) {
+  const { params } = context as RouteParams;
   const prisma = getPrismaClient();
 
   const appointmentId = params.id;
@@ -30,11 +33,16 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     return buildError("No se pudo leer la solicitud de cambio de estado.");
   }
 
-  const nextStatus = typeof (body as { status?: string }).status === "string" ? (body as { status: string }).status : "";
+  const rawStatus =
+    typeof (body as { status?: string }).status === "string"
+      ? (body as { status: string }).status
+      : "";
 
-  if (!isValidAppointmentStatus(nextStatus)) {
+  if (!isValidAppointmentStatus(rawStatus)) {
     return buildError("El estado solicitado no es válido.", 400);
   }
+
+  const nextStatus = rawStatus as AppointmentStatus;
 
   const appointment = await prisma.appointment.findUnique({
     where: { id: appointmentId },
@@ -44,7 +52,9 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     return buildError("La cita no existe.", 404);
   }
 
-  const allowedTransitions = transitionRules[appointment.status];
+  const currentStatus = appointment.status as AppointmentStatus;
+  const allowedTransitions = transitionRules[currentStatus];
+
   if (!allowedTransitions.includes(nextStatus)) {
     return buildError(
       "No es posible cambiar el estado actual a la opción solicitada. Verifica el flujo de confirmación/cancelación.",

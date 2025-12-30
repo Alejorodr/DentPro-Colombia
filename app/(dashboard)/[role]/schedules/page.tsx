@@ -6,15 +6,13 @@ import { auth } from "@/auth";
 import { getDefaultDashboardPath, isUserRole, roleLabels, type UserRole } from "@/lib/auth/roles";
 import type { ScheduleSlot } from "@/lib/api/types";
 
-function buildApiUrl(path: string) {
-  const host = headers().get("host");
-  const protocol = process.env.NODE_ENV === "production" ? "https" : "http";
-
-  return host ? `${protocol}://${host}${path}` : path;
-}
-
 async function fetchSchedules() {
-  const response = await fetch(buildApiUrl("/api/schedules"), {
+  const headersList = await headers();
+  const host = headersList.get("host");
+  const protocol = process.env.NODE_ENV === "production" ? "https" : "http";
+  const url = host ? `${protocol}://${host}/api/schedules` : "/api/schedules";
+
+  const response = await fetch(url, {
     cache: "no-store",
   });
 
@@ -36,7 +34,8 @@ interface DashboardPageProps {
   params: { role: string };
 }
 
-export default async function SchedulesPage({ params }: DashboardPageProps) {
+export default async function SchedulesPage(props: any) {
+  const { params } = props as DashboardPageProps;
   const requestedRole = params.role;
 
   if (!isUserRole(requestedRole)) {
@@ -58,7 +57,7 @@ export default async function SchedulesPage({ params }: DashboardPageProps) {
 
   return (
     <main className="space-y-6 py-6">
-      <header className="rounded-2xl bg-white px-6 py-5 shadow-sm ring-1 ring-slate-200 transition-colors duration-300 dark:bg-surface-elevated dark:ring-surface-muted">
+      <header className="rounded-2xl bg-white px-6 py-5 shadow-sm ring-1 ring-slate-200 transición-colors duración-300 dark:bg-surface-elevated dark:ring-surface-muted">
         <p className="text-xs font-semibold uppercase tracking-wide text-brand-teal dark:text-accent-cyan">
           {roleLabel}
         </p>
@@ -68,10 +67,13 @@ export default async function SchedulesPage({ params }: DashboardPageProps) {
         </p>
       </header>
 
-      <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 transition-colors duration-300 dark:bg-surface-elevated dark:ring-surface-muted">
+      <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 transición-colors duración-300 dark:bg-surface-elevated dark:ring-surface-muted">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Disponibilidad</h2>
-          <Link href={`/${requestedRole}`} className="text-sm font-semibold text-brand-teal transition-colors hover:text-brand-indigo dark:text-accent-cyan">
+          <Link
+            href={`/${requestedRole}`}
+            className="text-sm font-semibold text-brand-teal transición-colors hover:text-brand-indigo dark:text-accent-cyan"
+          >
             Volver al tablero
           </Link>
         </div>
@@ -89,7 +91,10 @@ export default async function SchedulesPage({ params }: DashboardPageProps) {
             <tbody>
               {schedules.length === 0 ? (
                 <tr>
-                  <td className="px-3 py-4 text-sm text-slate-500 dark:text-slate-300" colSpan={4}>
+                  <td
+                    className="px-3 py-4 text-sm text-slate-500 dark:text-slate-300"
+                    colSpan={4}
+                  >
                     No hay horarios configurados.
                   </td>
                 </tr>
@@ -100,13 +105,17 @@ export default async function SchedulesPage({ params }: DashboardPageProps) {
                     className="border-b border-slate-100 last:border-0 dark:border-surface-muted"
                   >
                     <td className="max-w-[200px] px-3 py-3 font-semibold text-slate-900 dark:text-white">
-                      <span className="line-clamp-2 break-words">{slot.specialistName ?? slot.specialistId}</span>
+                      <span className="line-clamp-2 break-words">
+                        {slot.specialistName ?? slot.specialistId}
+                      </span>
                     </td>
                     <td className="px-3 py-3">{formatDate(slot.start)}</td>
                     <td className="px-3 py-3">{formatDate(slot.end)}</td>
                     <td className="px-3 py-3">
                       <span
-                        className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide text-white ${slot.available ? "bg-brand-teal" : "bg-slate-500"}`}
+                        className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide text-white ${
+                          slot.available ? "bg-brand-teal" : "bg-slate-500"
+                        }`}
                       >
                         {slot.available ? "Disponible" : "No disponible"}
                       </span>

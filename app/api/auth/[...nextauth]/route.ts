@@ -5,7 +5,7 @@ import { getJwtSecretString } from "@/lib/auth/jwt";
 import { getDefaultDashboardPath, isUserRole } from "@/lib/auth/roles";
 import { authenticateUser, findUserById } from "@/lib/auth/users";
 
-export const authOptions: NextAuthOptions = {
+const authOptions: NextAuthOptions = {
   secret: getJwtSecretString(),
   session: { strategy: "jwt" },
   providers: [

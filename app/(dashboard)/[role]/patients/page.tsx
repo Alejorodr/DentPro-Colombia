@@ -7,15 +7,13 @@ import { getDefaultDashboardPath, isUserRole, roleLabels, type UserRole } from "
 import type { PatientSummary } from "@/lib/api/types";
 import { PatientsTable } from "./PatientsTable";
 
-function buildApiUrl(path: string) {
-  const host = headers().get("host");
-  const protocol = process.env.NODE_ENV === "production" ? "https" : "http";
-
-  return host ? `${protocol}://${host}${path}` : path;
-}
-
 async function fetchPatients() {
-  const response = await fetch(buildApiUrl("/api/patients"), {
+  const headersList = await headers();
+  const host = headersList.get("host");
+  const protocol = process.env.NODE_ENV === "production" ? "https" : "http";
+  const url = host ? `${protocol}://${host}/api/patients` : "/api/patients";
+
+  const response = await fetch(url, {
     cache: "no-store",
   });
 
@@ -30,7 +28,8 @@ interface DashboardPageProps {
   params: { role: string };
 }
 
-export default async function PatientsPage({ params }: DashboardPageProps) {
+export default async function PatientsPage(props: any) {
+  const { params } = props as DashboardPageProps;
   const requestedRole = params.role;
 
   if (!isUserRole(requestedRole)) {
@@ -62,10 +61,13 @@ export default async function PatientsPage({ params }: DashboardPageProps) {
         </p>
       </header>
 
-      <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 transition-colors duration-300 dark:bg-surface-elevated dark:ring-surface-muted">
+      <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 transition-colors duración-300 dark:bg-surface-elevated dark:ring-surface-muted">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Listado</h2>
-          <Link href={`/${requestedRole}`} className="text-sm font-semibold text-brand-teal transition-colors hover:text-brand-indigo dark:text-accent-cyan">
+          <Link
+            href={`/${requestedRole}`}
+            className="text-sm font-semibold text-brand-teal transición-colors hover:text-brand-indigo dark:text-accent-cyan"
+          >
             Volver al tablero
           </Link>
         </div>
