@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import type { Prisma } from "@prisma/client";
 
 import { getPrismaClient } from "@/lib/prisma";
 import type { AppointmentRequestPayload, AppointmentStatus } from "@/lib/api/types";
@@ -82,34 +83,40 @@ export async function POST(request: Request) {
 
     const scheduledAt = schedule?.start ?? preferredDate ?? new Date();
 
-    const appointment = await prisma.appointment.create({
-      data: payload.patientId
-        ? {
-            patientId: payload.patientId,
-            specialistId: payload.specialistId ?? schedule?.specialistId ?? null,
-            scheduleId: payload.scheduleId ?? null,
-            service: payload.service,
-            scheduledAt,
-            preferredDate,
-            status: DEFAULT_APPOINTMENT_STATUS,
-            notes: payload.message ?? null,
-          }
-        : {
-            specialistId: payload.specialistId ?? schedule?.specialistId ?? null,
-            scheduleId: payload.scheduleId ?? null,
-            service: payload.service,
-            scheduledAt,
-            preferredDate,
-            status: DEFAULT_APPOINTMENT_STATUS,
-            notes: payload.message ?? null,
-            patient: {
-              create: {
-                name: payload.name.trim(),
-                phone: payload.phone.trim(),
-                email: payload.email?.toLowerCase() ?? null,
-              },
-            },
+    let data: Prisma.AppointmentCreateInput | Prisma.AppointmentUncheckedCreateInput;
+
+    if (payload.patientId) {
+      data = {
+        patientId: payload.patientId,
+        specialistId: payload.specialistId ?? schedule?.specialistId ?? null,
+        scheduleId: payload.scheduleId ?? null,
+        service: payload.service,
+        scheduledAt,
+        preferredDate,
+        status: DEFAULT_APPOINTMENT_STATUS,
+        notes: payload.message ?? null,
+      };
+    } else {
+      data = {
+        specialistId: payload.specialistId ?? schedule?.specialistId ?? null,
+        scheduleId: payload.scheduleId ?? null,
+        service: payload.service,
+        scheduledAt,
+        preferredDate,
+        status: DEFAULT_APPOINTMENT_STATUS,
+        notes: payload.message ?? null,
+        patient: {
+          create: {
+            name: payload.name.trim(),
+            phone: payload.phone.trim(),
+            email: payload.email?.toLowerCase() ?? null,
           },
+        },
+      };
+    }
+
+    const appointment = await prisma.appointment.create({
+      data,
       include: {
         patient: true,
         specialist: true,

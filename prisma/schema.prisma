@@ -95,18 +95,6 @@ model Schedule {
   createdAt     DateTime     @default(now()) @map("created_at")
   updatedAt     DateTime     @updatedAt @map("updated_at")
 
-  specialist Specialist @relation(fields: [specialistId], references: [id], onDelete: Cascade)
-  appointments Appointment[]
-
-  specialist   Specialist    @relation(fields: [specialistId], references: [id], onDelete: Cascade)
-  appointments Appointment[]
-
-  specialist   Specialist    @relation(fields: [specialistId], references: [id], onDelete: Cascade)
-  appointments Appointment[]
-
-  specialist   Specialist    @relation(fields: [specialistId], references: [id], onDelete: Cascade)
-  appointments Appointment[]
-
   specialist   Specialist    @relation(fields: [specialistId], references: [id], onDelete: Cascade)
   appointments Appointment[]
 
