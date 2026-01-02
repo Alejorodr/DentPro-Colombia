@@ -1,15 +1,21 @@
 #!/usr/bin/env node
 const { randomUUID } = require("crypto");
 const bcrypt = require("bcryptjs");
-const { PrismaClient, AppointmentStatus, UserRole } = require("@prisma/client");
+const { PrismaClient } = require("@prisma/client");
+
+const ROLE_PATIENT = "patient";
+const ROLE_PROFESSIONAL = "professional";
+const ROLE_RECEPTION = "reception";
+const ROLE_ADMIN = "admin";
+const STATUS_CONFIRMED = "confirmed";
 
 const prisma = new PrismaClient();
 
 const defaultUsers = [
-  { name: "Laura Gómez", email: "laura@dentpro.co", role: UserRole.patient },
-  { name: "Dr. Santiago Herrera", email: "santiago@dentpro.co", role: UserRole.professional },
-  { name: "Coordinación Chía", email: "recepcion@dentpro.co", role: UserRole.reception },
-  { name: "Ana María Pérez", email: "admin@dentpro.co", role: UserRole.admin },
+  { name: "Laura Gómez", email: "laura@dentpro.co", role: ROLE_PATIENT },
+  { name: "Dr. Santiago Herrera", email: "santiago@dentpro.co", role: ROLE_PROFESSIONAL },
+  { name: "Coordinación Chía", email: "recepcion@dentpro.co", role: ROLE_RECEPTION },
+  { name: "Ana María Pérez", email: "admin@dentpro.co", role: ROLE_ADMIN },
 ];
 
 const defaultPatients = [
@@ -107,7 +113,7 @@ async function main() {
       where: { id: "a1" },
       update: {
         patientId: laura.id,
-        status: AppointmentStatus.confirmed,
+        status: STATUS_CONFIRMED,
       },
       create: {
         id: "a1",
@@ -115,7 +121,7 @@ async function main() {
         specialistId: "u2",
         service: "Ortodoncia",
         scheduledAt: new Date("2024-08-21T09:00:00-05:00"),
-        status: AppointmentStatus.confirmed,
+        status: STATUS_CONFIRMED,
         notes: "Consulta inicial",
       },
     });

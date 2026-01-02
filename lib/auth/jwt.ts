@@ -16,17 +16,26 @@ export function getJwtSecretString(): string {
 
   for (const secret of candidates) {
     if (secret && secret.trim().length > 0) {
+      globalForJwt.__authJwtSecretString = secret;
       return secret;
     }
+  }
+
+  const isBuildPhase = process.env.NEXT_PHASE === "phase-production-build";
+
+  if (!isBuildPhase && process.env.NODE_ENV === "production") {
+    throw new Error("AUTH_JWT_SECRET is not configured");
   }
 
   if (!globalForJwt.__authJwtSecretString) {
     const generatedSecret = randomBytes(64).toString("hex");
     globalForJwt.__authJwtSecretString = generatedSecret;
 
-    console.warn(
-      "AUTH_JWT_SECRET is not configured. Generated a fallback secret; configure AUTH_JWT_SECRET or AUTH_SECRET for production environments.",
-    );
+    if (!isBuildPhase) {
+      console.warn(
+        "AUTH_JWT_SECRET is not configured. Generated a fallback secret; configure AUTH_JWT_SECRET or AUTH_SECRET for production environments.",
+      );
+    }
   }
 
   return globalForJwt.__authJwtSecretString;

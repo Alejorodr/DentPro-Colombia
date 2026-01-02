@@ -9,13 +9,16 @@ export function toAppointmentSummary(record: {
   scheduleId: string | null;
   service: string;
   scheduledAt: Date;
-  status: AppointmentStatus;
+  status: AppointmentStatus | string;
   preferredDate: Date | null;
   patient?: { name?: string | null } | null;
   specialist?: { id?: string; name?: string | null } | null;
   schedule?: { specialist?: { id?: string; name?: string | null } | null } | null;
 }): AppointmentSummary {
   const specialistSource = record.schedule?.specialist ?? record.specialist ?? null;
+  const status: AppointmentStatus = isValidAppointmentStatus(record.status)
+    ? record.status
+    : "pending";
 
   return {
     id: record.id,
@@ -27,7 +30,7 @@ export function toAppointmentSummary(record: {
     preferredDate: record.preferredDate?.toISOString(),
     service: record.service,
     scheduledAt: record.scheduledAt.toISOString(),
-    status: record.status,
+    status,
   };
 }
 

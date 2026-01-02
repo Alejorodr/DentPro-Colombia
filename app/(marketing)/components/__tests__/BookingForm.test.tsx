@@ -53,6 +53,7 @@ describe("BookingFormSection", () => {
   });
 
   it("envía la solicitud y muestra mensaje de éxito", async () => {
+    const futureDate = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split("T")[0];
     vi.mocked(createAppointmentRequest).mockResolvedValue(mockAppointment);
     renderForm();
 
@@ -66,7 +67,7 @@ describe("BookingFormSection", () => {
       target: { value: "ana@test.com" },
     });
     fireEvent.change(screen.getByLabelText(/Servicio/i), { target: { value: "limpieza" } });
-    fireEvent.change(screen.getByLabelText(/Fecha preferida/i), { target: { value: "2025-01-01" } });
+    fireEvent.change(screen.getByLabelText(/Fecha preferida/i), { target: { value: futureDate } });
 
     fireEvent.submit(screen.getByRole("form", { name: /agendamiento/i }));
 

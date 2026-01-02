@@ -3,15 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
-}
-
-enum UserRole {
-  patient
-  professional
-  reception
-  admin
 }
 
 model User {
@@ -19,19 +12,13 @@ model User {
   name         String?
   email        String   @unique
   passwordHash String   @map("password_hash")
-  primaryRole  UserRole @map("primary_role_id")
+  primaryRole  String   @map("primary_role_id")
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
   specialist Specialist?
 
   @@map("users")
-}
-
-enum AppointmentStatus {
-  pending
-  confirmed
-  cancelled
 }
 
 model Patient {
@@ -71,7 +58,7 @@ model Appointment {
   service       String
   scheduledAt   DateTime          @map("scheduled_at")
   preferredDate DateTime?
-  status        AppointmentStatus @default(pending)
+  status        String            @default("pending")
   notes         String?
   createdAt     DateTime          @default(now()) @map("created_at")
   updatedAt     DateTime          @updatedAt @map("updated_at")
