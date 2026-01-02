@@ -2,7 +2,12 @@ import { NextResponse } from "next/server";
 import { AppointmentStatus } from "@prisma/client";
 
 import { getPrismaClient } from "@/lib/prisma";
-import { buildError, isValidAppointmentStatus, toAppointmentSummary } from "../../utils";
+import {
+  buildError,
+  isValidAppointmentStatus,
+  requireAppointmentManagementAccess,
+  toAppointmentSummary,
+} from "../../utils";
 
 interface RouteParams {
   params: { id: string };
@@ -15,6 +20,11 @@ const transitionRules: Record<AppointmentStatus, AppointmentStatus[]> = {
 };
 
 export async function PATCH(request: Request, { params }: RouteParams) {
+  const access = await requireAppointmentManagementAccess();
+  if ("errorResponse" in access) {
+    return access.errorResponse;
+  }
+
   const prisma = getPrismaClient();
 
   const appointmentId = params.id;

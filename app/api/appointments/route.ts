@@ -3,9 +3,14 @@ import { AppointmentStatus } from "@prisma/client";
 
 import { getPrismaClient } from "@/lib/prisma";
 import type { AppointmentRequestPayload } from "@/lib/api/types";
-import { buildError, toAppointmentSummary } from "./utils";
+import { buildError, requireAppointmentManagementAccess, toAppointmentSummary } from "./utils";
 
 export async function GET() {
+  const access = await requireAppointmentManagementAccess();
+  if ("errorResponse" in access) {
+    return access.errorResponse;
+  }
+
   const prisma = getPrismaClient();
 
   try {
