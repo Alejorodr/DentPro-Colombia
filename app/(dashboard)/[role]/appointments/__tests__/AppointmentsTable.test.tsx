@@ -50,7 +50,7 @@ describe("AppointmentsTable", () => {
     fireEvent.click(screen.getByRole("button", { name: /confirmar/i }));
 
     await waitFor(() => {
-      expect(screen.getByText(/Confirmada/i)).toBeTruthy();
+      expect(screen.getAllByRole("cell", { name: /Confirmada/i })).not.toHaveLength(0);
     });
   });
 });
