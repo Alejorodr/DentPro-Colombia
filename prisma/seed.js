@@ -15,7 +15,7 @@ const defaultUsers = [
   { name: "Laura Gómez", email: "laura@dentpro.co", role: ROLE_PATIENT },
   { name: "Dr. Santiago Herrera", email: "santiago@dentpro.co", role: ROLE_PROFESSIONAL },
   { name: "Coordinación Chía", email: "recepcion@dentpro.co", role: ROLE_RECEPTION },
-  { name: "Ana María Pérez", email: "admin@dentpro.co", role: ROLE_ADMIN },
+  { name: "DentPro Dev Admin", email: "admin@dentpro.local", role: ROLE_ADMIN },
 ];
 
 const defaultPatients = [

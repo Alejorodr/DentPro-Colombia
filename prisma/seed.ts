@@ -6,6 +6,9 @@ import type { UserRole } from "@/lib/auth/roles";
 
 const prisma = new PrismaClient();
 const ADMIN_ROLE: UserRole = "admin";
+const ADMIN_EMAIL = "admin@dentpro.local";
+const ADMIN_PASSWORD = "DentProDev!Admin1";
+const ADMIN_NAME = "DentPro Dev Admin";
 const PENDING_STATUS: AppointmentStatus = "pending";
 const CONFIRMED_STATUS: AppointmentStatus = "confirmed";
 const CANCELLED_STATUS: AppointmentStatus = "cancelled";
@@ -18,19 +21,24 @@ function todayAt(hours: number, minutes: number): Date {
 }
 
 async function main() {
+  if (process.env.NODE_ENV === "production") {
+    console.warn("Seed de desarrollo omitido en producción.");
+    return;
+  }
+
   console.log("Seeding usuario admin...");
-  const passwordHash = await bcrypt.hash("R00t&4ss", 10);
+  const passwordHash = await bcrypt.hash(ADMIN_PASSWORD, 10);
 
   await prisma.user.upsert({
-    where: { email: "admin@dentpro.co" },
+    where: { email: ADMIN_EMAIL },
     update: {
-      name: "Admin DentPro",
+      name: ADMIN_NAME,
       passwordHash,
       primaryRole: ADMIN_ROLE,
     },
     create: {
-      name: "Admin DentPro",
-      email: "admin@dentpro.co",
+      name: ADMIN_NAME,
+      email: ADMIN_EMAIL,
       passwordHash,
       primaryRole: ADMIN_ROLE,
     },
