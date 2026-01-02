@@ -62,7 +62,6 @@ export async function PATCH(request: Request, context: any) {
       data: { status: nextStatus },
       include: {
         patient: true,
-        specialist: true,
         schedule: { include: { specialist: true } },
       },
     });
