@@ -1,7 +1,26 @@
 import { NextResponse } from "next/server";
 import { AppointmentStatus } from "@prisma/client";
 
+import { auth } from "@/auth";
+import { isUserRole, type UserRole } from "@/lib/auth/roles";
 import type { AppointmentSummary } from "@/lib/api/types";
+
+const appointmentManagerRoles: UserRole[] = ["admin", "professional", "reception"];
+
+export async function requireAppointmentManagementAccess() {
+  const session = await auth();
+  const role = session?.user?.role;
+
+  if (!session || !role || !isUserRole(role)) {
+    return { errorResponse: buildError("No estás autorizado para realizar esta acción.", 401) } as const;
+  }
+
+  if (!appointmentManagerRoles.includes(role)) {
+    return { errorResponse: buildError("No tienes permisos para gestionar citas.", 403) } as const;
+  }
+
+  return { role } as const;
+}
 
 export function toAppointmentSummary(record: {
   id: string;

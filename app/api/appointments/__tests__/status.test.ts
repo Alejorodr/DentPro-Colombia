@@ -18,6 +18,12 @@ type AppointmentRecord = {
 
 const mockAppointments = new Map<string, AppointmentRecord>();
 
+vi.mock("@/auth", () => ({
+  auth: vi.fn(async () => ({
+    user: { role: "admin" },
+  })),
+}));
+
 vi.mock("@/lib/prisma", () => {
   const prismaMock = {
     appointment: {
