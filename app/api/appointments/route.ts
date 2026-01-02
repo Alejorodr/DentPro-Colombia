@@ -16,7 +16,6 @@ export async function GET() {
       orderBy: { scheduledAt: "asc" },
       include: {
         patient: true,
-        specialist: true,
         schedule: {
           include: {
             specialist: true,
@@ -119,7 +118,6 @@ export async function POST(request: Request) {
       data,
       include: {
         patient: true,
-        specialist: true,
         schedule: {
           include: {
             specialist: true,

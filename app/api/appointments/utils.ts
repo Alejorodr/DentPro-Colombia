@@ -12,15 +12,17 @@ export function toAppointmentSummary(record: {
   status: AppointmentStatus;
   preferredDate: Date | null;
   patient?: { name?: string | null } | null;
-  specialist?: { name?: string | null } | null;
-  schedule?: { specialist?: { name?: string | null } | null } | null;
+  specialist?: { id?: string; name?: string | null } | null;
+  schedule?: { specialist?: { id?: string; name?: string | null } | null } | null;
 }): AppointmentSummary {
+  const specialistSource = record.schedule?.specialist ?? record.specialist ?? null;
+
   return {
     id: record.id,
     patientId: record.patientId ?? "unassigned",
     patientName: record.patient?.name ?? undefined,
-    specialistId: record.specialistId ?? "unassigned",
-    specialistName: record.specialist?.name ?? record.schedule?.specialist?.name ?? undefined,
+    specialistId: record.specialistId ?? specialistSource?.id ?? "unassigned",
+    specialistName: specialistSource?.name ?? undefined,
     scheduleId: record.scheduleId ?? undefined,
     preferredDate: record.preferredDate?.toISOString(),
     service: record.service,
