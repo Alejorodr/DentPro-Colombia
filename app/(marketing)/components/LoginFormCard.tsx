@@ -65,7 +65,7 @@ export function LoginFormCard({
       return;
     }
 
-    const destination = result?.url ?? callbackUrl ?? getDefaultDashboardPath("patient");
+    const destination = result?.url ?? callbackUrl ?? getDefaultDashboardPath("PACIENTE");
     onSuccess?.();
     router.push(destination);
     router.refresh();

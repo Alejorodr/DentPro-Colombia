@@ -3,88 +3,98 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
+enum Role {
+  PACIENTE
+  PROFESIONAL
+  RECEPCIONISTA
+  ADMINISTRADOR
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+enum TimeSlotStatus {
+  AVAILABLE
+  BOOKED
+}
+
+model Specialty {
+  id                         String                @id @default(uuid())
+  name                       String                @unique
+  defaultSlotDurationMinutes Int
+  active                     Boolean               @default(true)
+  professionals              ProfessionalProfile[]
+}
+
 model User {
-  id           String   @id @default(uuid())
-  name         String?
-  email        String   @unique
-  passwordHash String   @map("password_hash")
-  primaryRole  String   @map("primary_role_id")
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
-
-  specialist Specialist?
-
-  @@map("users")
+  id           String              @id @default(uuid())
+  email        String              @unique
+  passwordHash String
+  role         Role
+  name         String
+  lastName     String
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+  professional ProfessionalProfile?
+  patient      PatientProfile?
 }
 
-model Patient {
-  id        String   @id @default(uuid())
-  name      String
-  email     String?
-  phone     String?
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  appointments Appointment[]
-
-  @@map("patients")
+model ProfessionalProfile {
+  id                  String      @id @default(uuid())
+  userId              String      @unique
+  specialtyId         String
+  slotDurationMinutes Int?
+  active              Boolean     @default(true)
+  user                User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  specialty           Specialty   @relation(fields: [specialtyId], references: [id], onDelete: Restrict)
+  timeSlots           TimeSlot[]
+  appointments        Appointment[]
 }
 
-model Specialist {
-  id        String   @id @default(uuid())
-  name      String
-  specialty String?
-  phone     String?
-  userId    String?  @unique
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  user         User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+model PatientProfile {
+  id         String        @id @default(uuid())
+  userId     String        @unique
+  phone      String?
+  documentId String?
+  user       User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   appointments Appointment[]
-  schedules    Schedule[]
+}
 
-  @@map("specialists")
+model TimeSlot {
+  id             String           @id @default(uuid())
+  professionalId String
+  startAt        DateTime
+  endAt          DateTime
+  status         TimeSlotStatus   @default(AVAILABLE)
+  appointmentId  String?
+  professional   ProfessionalProfile @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+
+  @@index([professionalId])
+  @@index([startAt])
 }
 
 model Appointment {
-  id            String            @id @default(uuid())
-  patientId     String?
-  specialistId  String?
-  scheduleId    String?
-  service       String
-  scheduledAt   DateTime          @map("scheduled_at")
-  preferredDate DateTime?
-  status        String            @default("pending")
-  notes         String?
-  createdAt     DateTime          @default(now()) @map("created_at")
-  updatedAt     DateTime          @updatedAt @map("updated_at")
-
-  patient    Patient?    @relation(fields: [patientId], references: [id], onDelete: SetNull)
-  specialist Specialist? @relation(fields: [specialistId], references: [id], onDelete: SetNull)
-  schedule   Schedule?   @relation(fields: [scheduleId], references: [id], onDelete: SetNull)
+  id             String            @id @default(uuid())
+  patientId      String
+  professionalId String
+  timeSlotId     String            @unique
+  reason         String
+  notes          String?
+  status         AppointmentStatus @default(PENDING)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  patient        PatientProfile    @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  professional   ProfessionalProfile @relation(fields: [professionalId], references: [id], onDelete: Restrict)
+  timeSlot       TimeSlot          @relation(fields: [timeSlotId], references: [id], onDelete: Restrict)
 
   @@index([patientId])
-  @@index([specialistId])
-  @@index([scheduleId])
-  @@map("appointments")
-}
-
-model Schedule {
-  id            String       @id @default(uuid())
-  specialistId  String
-  start         DateTime
-  end           DateTime
-  available     Boolean      @default(true)
-  createdAt     DateTime     @default(now()) @map("created_at")
-  updatedAt     DateTime     @updatedAt @map("updated_at")
-
-  specialist   Specialist    @relation(fields: [specialistId], references: [id], onDelete: Cascade)
-  appointments Appointment[]
-
-  @@unique([specialistId, start, end], name: "specialistId_start_end")
-  @@map("schedules")
+  @@index([professionalId])
 }
