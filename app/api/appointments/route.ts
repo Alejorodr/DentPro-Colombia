@@ -1,134 +1,170 @@
 import { NextResponse } from "next/server";
-import type { Prisma } from "@prisma/client";
 
 import { getPrismaClient } from "@/lib/prisma";
-import type { AppointmentRequestPayload, AppointmentStatus } from "@/lib/api/types";
-import { buildError, toAppointmentSummary } from "./utils";
-
-const ACTIVE_APPOINTMENT_STATUSES: AppointmentStatus[] = ["pending", "confirmed"];
-const DEFAULT_APPOINTMENT_STATUS: AppointmentStatus = "pending";
+import { getSessionUser, isAuthorized } from "@/app/api/_utils/auth";
+import { errorResponse } from "@/app/api/_utils/response";
+import { AppointmentStatus, TimeSlotStatus } from "@prisma/client";
 
 export async function GET() {
+  const sessionUser = await getSessionUser();
+
+  if (!sessionUser) {
+    return errorResponse("No autorizado.", 401);
+  }
+
   const prisma = getPrismaClient();
 
-  try {
+  if (isAuthorized(sessionUser.role, ["ADMINISTRADOR", "RECEPCIONISTA"])) {
     const appointments = await prisma.appointment.findMany({
-      orderBy: { scheduledAt: "asc" },
       include: {
-        patient: true,
-        schedule: {
-          include: {
-            specialist: true,
-          },
-        },
+        patient: { include: { user: true } },
+        professional: { include: { user: true, specialty: true } },
+        timeSlot: true,
       },
+      orderBy: { timeSlot: { startAt: "asc" } },
+    });
+    return NextResponse.json(appointments);
+  }
+
+  if (sessionUser.role === "PROFESIONAL") {
+    const professional = await prisma.professionalProfile.findUnique({
+      where: { userId: sessionUser.id },
     });
 
-    return NextResponse.json(appointments.map(toAppointmentSummary));
-  } catch (error) {
-    console.error("Failed to fetch appointments", error);
-    return buildError("No se pudieron cargar las citas.", 500);
+    if (!professional) {
+      return NextResponse.json([]);
+    }
+
+    const appointments = await prisma.appointment.findMany({
+      where: { professionalId: professional.id },
+      include: {
+        patient: { include: { user: true } },
+        professional: { include: { user: true, specialty: true } },
+        timeSlot: true,
+      },
+      orderBy: { timeSlot: { startAt: "asc" } },
+    });
+
+    return NextResponse.json(appointments);
   }
+
+  const patient = await prisma.patientProfile.findUnique({
+    where: { userId: sessionUser.id },
+  });
+
+  if (!patient) {
+    return NextResponse.json([]);
+  }
+
+  const appointments = await prisma.appointment.findMany({
+    where: { patientId: patient.id },
+    include: {
+      patient: { include: { user: true } },
+      professional: { include: { user: true, specialty: true } },
+      timeSlot: true,
+    },
+    orderBy: { timeSlot: { startAt: "asc" } },
+  });
+
+  return NextResponse.json(appointments);
 }
 
 export async function POST(request: Request) {
-  let payload: AppointmentRequestPayload;
+  const sessionUser = await getSessionUser();
 
-  try {
-    payload = (await request.json()) as AppointmentRequestPayload;
-  } catch (error) {
-    console.error("Invalid appointment payload", error);
-    return buildError("No se pudo leer la solicitud.");
+  if (!sessionUser) {
+    return errorResponse("No autorizado.", 401);
   }
 
-  if (!payload?.name?.trim() || !payload?.phone?.trim() || !payload?.service?.trim()) {
-    return buildError("Nombre, teléfono y servicio son obligatorios.");
+  const payload = (await request.json().catch(() => null)) as {
+    patientId?: string;
+    professionalId?: string;
+    timeSlotId?: string;
+    reason?: string;
+    notes?: string;
+  } | null;
+
+  if (!payload?.timeSlotId || !payload?.reason?.trim()) {
+    return errorResponse("El slot y el motivo son obligatorios.");
   }
 
   const prisma = getPrismaClient();
+  const timeSlot = await prisma.timeSlot.findUnique({
+    where: { id: payload.timeSlotId },
+  });
+
+  if (!timeSlot) {
+    return errorResponse("Slot no encontrado.", 404);
+  }
+
+  if (timeSlot.status !== TimeSlotStatus.AVAILABLE) {
+    return errorResponse("El slot no está disponible.", 409);
+  }
+
+  let patientId: string | null = null;
+
+  if (sessionUser.role === "PACIENTE") {
+    const patient = await prisma.patientProfile.findUnique({
+      where: { userId: sessionUser.id },
+    });
+
+    if (!patient) {
+      return errorResponse("Perfil de paciente no encontrado.", 404);
+    }
+
+    patientId = patient.id;
+  } else if (isAuthorized(sessionUser.role, ["ADMINISTRADOR", "RECEPCIONISTA"])) {
+    patientId = payload.patientId ?? null;
+  }
+
+  if (!patientId) {
+    return errorResponse("Paciente obligatorio.");
+  }
+
+  const professionalId = payload.professionalId ?? timeSlot.professionalId;
+
+  if (professionalId !== timeSlot.professionalId) {
+    return errorResponse("El profesional no coincide con el slot.");
+  }
 
   try {
-    const schedule = payload.scheduleId
-      ? await prisma.schedule.findUnique({
-          where: { id: payload.scheduleId },
-        })
-      : null;
+    const appointment = await prisma.$transaction(async (tx) => {
+      const updated = await tx.timeSlot.updateMany({
+        where: { id: timeSlot.id, status: TimeSlotStatus.AVAILABLE },
+        data: { status: TimeSlotStatus.BOOKED },
+      });
 
-    if (payload.scheduleId && !schedule) {
-      return buildError("El horario seleccionado no existe.");
-    }
+      if (updated.count === 0) {
+        throw new Error("Slot reservado");
+      }
 
-    if (schedule?.available === false) {
-      return buildError("El horario seleccionado no está disponible.", 409);
-    }
-
-    if (payload.scheduleId) {
-      const existingBooking = await prisma.appointment.findFirst({
-        where: {
-          scheduleId: payload.scheduleId,
-          status: { in: ACTIVE_APPOINTMENT_STATUSES },
+      const created = await tx.appointment.create({
+        data: {
+          patientId,
+          professionalId,
+          timeSlotId: timeSlot.id,
+          reason: payload.reason.trim(),
+          notes: payload.notes?.trim() || null,
+          status: AppointmentStatus.PENDING,
+        },
+        include: {
+          patient: { include: { user: true } },
+          professional: { include: { user: true, specialty: true } },
+          timeSlot: true,
         },
       });
 
-      if (existingBooking) {
-        return buildError("El horario ya fue reservado.", 409);
-      }
-    }
+      await tx.timeSlot.update({
+        where: { id: timeSlot.id },
+        data: { appointmentId: created.id },
+      });
 
-    const preferredDate = payload.preferredDate ? new Date(payload.preferredDate) : null;
-    if (preferredDate && Number.isNaN(preferredDate.getTime())) {
-      return buildError("La fecha preferida no es válida.");
-    }
-
-    const scheduledAt = schedule?.start ?? preferredDate ?? new Date();
-
-    let data: Prisma.AppointmentCreateInput | Prisma.AppointmentUncheckedCreateInput;
-
-    if (payload.patientId) {
-      data = {
-        patientId: payload.patientId,
-        specialistId: payload.specialistId ?? schedule?.specialistId ?? null,
-        scheduleId: payload.scheduleId ?? null,
-        service: payload.service,
-        scheduledAt,
-        preferredDate,
-        status: DEFAULT_APPOINTMENT_STATUS,
-        notes: payload.message ?? null,
-      };
-    } else {
-      data = {
-        specialistId: payload.specialistId ?? schedule?.specialistId ?? null,
-        scheduleId: payload.scheduleId ?? null,
-        service: payload.service,
-        scheduledAt,
-        preferredDate,
-        status: DEFAULT_APPOINTMENT_STATUS,
-        notes: payload.message ?? null,
-        patient: {
-          create: {
-            name: payload.name.trim(),
-            phone: payload.phone.trim(),
-            email: payload.email?.toLowerCase() ?? null,
-          },
-        },
-      };
-    }
-
-    const appointment = await prisma.appointment.create({
-      data,
-      include: {
-        patient: true,
-        schedule: {
-          include: {
-            specialist: true,
-          },
-        },
-      },
+      return created;
     });
 
-    return NextResponse.json(toAppointmentSummary(appointment), { status: 201 });
+    return NextResponse.json(appointment, { status: 201 });
   } catch (error) {
-    console.error("Failed to create appointment", error);
-    return buildError("No se pudo crear la cita.", 500);
+    console.error("No se pudo crear la cita", error);
+    return errorResponse("No se pudo crear la cita.", 409);
   }
 }

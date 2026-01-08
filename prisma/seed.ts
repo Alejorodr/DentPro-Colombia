@@ -1,240 +1,122 @@
 import bcrypt from "bcryptjs";
-import { PrismaClient } from "@prisma/client";
-
-import type { AppointmentStatus } from "@/lib/api/types";
-import type { UserRole } from "@/lib/auth/roles";
+import { PrismaClient, Role, TimeSlotStatus } from "@prisma/client";
 
 const prisma = new PrismaClient();
-const ADMIN_ROLE: UserRole = "admin";
-const ADMIN_EMAIL = "admin@dentpro.local";
-const ADMIN_PASSWORD = "DentProDev!Admin1";
-const ADMIN_NAME = "DentPro Dev Admin";
-const PENDING_STATUS: AppointmentStatus = "pending";
-const CONFIRMED_STATUS: AppointmentStatus = "confirmed";
-const CANCELLED_STATUS: AppointmentStatus = "cancelled";
 
-function todayAt(hours: number, minutes: number): Date {
-  const now = new Date();
-  now.setSeconds(0, 0);
-  now.setHours(hours, minutes, 0, 0);
-  return now;
+const DEFAULT_SPECIALTIES = [
+  { name: "Odontología General", defaultSlotDurationMinutes: 30 },
+  { name: "Ortodoncia", defaultSlotDurationMinutes: 45 },
+  { name: "Endodoncia", defaultSlotDurationMinutes: 60 },
+];
+
+function requireEnv(name: string): string {
+  const value = process.env[name]?.trim();
+  if (!value) {
+    throw new Error(`Falta configurar ${name} para ejecutar el seed.`);
+  }
+  return value;
+}
+
+function buildSlotTimes(start: Date, count: number, durationMinutes: number): Array<{ startAt: Date; endAt: Date }> {
+  const slots: Array<{ startAt: Date; endAt: Date }> = [];
+  let current = new Date(start);
+
+  for (let index = 0; index < count; index += 1) {
+    const startAt = new Date(current);
+    const endAt = new Date(startAt.getTime() + durationMinutes * 60_000);
+    slots.push({ startAt, endAt });
+    current = endAt;
+  }
+
+  return slots;
 }
 
 async function main() {
-  if (process.env.NODE_ENV === "production") {
-    console.warn("Seed de desarrollo omitido en producción.");
-    return;
+  const adminEmail = requireEnv("SEED_ADMIN_EMAIL");
+  const adminPassword = requireEnv("SEED_ADMIN_PASSWORD");
+
+  const passwordHash = await bcrypt.hash(adminPassword, 10);
+
+  const adminUser = await prisma.user.upsert({
+    where: { email: adminEmail.toLowerCase() },
+    update: {
+      name: "Admin",
+      lastName: "DentPro",
+      passwordHash,
+      role: Role.ADMINISTRADOR,
+    },
+    create: {
+      email: adminEmail.toLowerCase(),
+      name: "Admin",
+      lastName: "DentPro",
+      passwordHash,
+      role: Role.ADMINISTRADOR,
+    },
+  });
+
+  const specialties = [] as Array<{ id: string; name: string; defaultSlotDurationMinutes: number }>;
+  for (const specialty of DEFAULT_SPECIALTIES) {
+    const record = await prisma.specialty.upsert({
+      where: { name: specialty.name },
+      update: { defaultSlotDurationMinutes: specialty.defaultSlotDurationMinutes, active: true },
+      create: { ...specialty },
+    });
+    specialties.push(record);
   }
 
-  console.log("Seeding usuario admin...");
-  const passwordHash = await bcrypt.hash(ADMIN_PASSWORD, 10);
-
-  await prisma.user.upsert({
-    where: { email: ADMIN_EMAIL },
+  const professionalUser = await prisma.user.upsert({
+    where: { email: "demo-profesional@dentpro.co" },
     update: {
-      name: ADMIN_NAME,
-      passwordHash,
-      primaryRole: ADMIN_ROLE,
+      name: "Laura",
+      lastName: "Rojas",
+      role: Role.PROFESIONAL,
+      passwordHash: await bcrypt.hash("DentProDemo!1", 10),
     },
     create: {
-      name: ADMIN_NAME,
-      email: ADMIN_EMAIL,
-      passwordHash,
-      primaryRole: ADMIN_ROLE,
+      email: "demo-profesional@dentpro.co",
+      name: "Laura",
+      lastName: "Rojas",
+      role: Role.PROFESIONAL,
+      passwordHash: await bcrypt.hash("DentProDemo!1", 10),
     },
   });
 
-  console.log("Seeding especialistas...");
-  const specialist1 = await prisma.specialist.upsert({
-    where: { id: "spec-ortodoncia" },
+  const specialty = specialties[0];
+
+  const professionalProfile = await prisma.professionalProfile.upsert({
+    where: { userId: professionalUser.id },
     update: {
-      name: "Dra. Ana Ortodoncia",
-      specialty: "Ortodoncia",
-      phone: "+57 300 111 2222",
+      specialtyId: specialty.id,
+      slotDurationMinutes: specialty.defaultSlotDurationMinutes,
+      active: true,
     },
     create: {
-      id: "spec-ortodoncia",
-      name: "Dra. Ana Ortodoncia",
-      specialty: "Ortodoncia",
-      phone: "+57 300 111 2222",
+      userId: professionalUser.id,
+      specialtyId: specialty.id,
+      slotDurationMinutes: specialty.defaultSlotDurationMinutes,
+      active: true,
     },
   });
 
-  const specialist2 = await prisma.specialist.upsert({
-    where: { id: "spec-rehab" },
-    update: {
-      name: "Dr. Carlos Rehabilitación",
-      specialty: "Rehabilitación oral",
-      phone: "+57 300 333 4444",
-    },
-    create: {
-      id: "spec-rehab",
-      name: "Dr. Carlos Rehabilitación",
-      specialty: "Rehabilitación oral",
-      phone: "+57 300 333 4444",
-    },
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  tomorrow.setHours(9, 0, 0, 0);
+
+  const slots = buildSlotTimes(tomorrow, 6, professionalProfile.slotDurationMinutes ?? specialty.defaultSlotDurationMinutes);
+
+  await prisma.timeSlot.createMany({
+    data: slots.map((slot) => ({
+      professionalId: professionalProfile.id,
+      startAt: slot.startAt,
+      endAt: slot.endAt,
+      status: TimeSlotStatus.AVAILABLE,
+    })),
+    skipDuplicates: true,
   });
 
-  console.log("Seeding pacientes...");
-  const patient1 = await prisma.patient.upsert({
-    where: { id: "patient-1" },
-    update: {
-      name: "Mariana López",
-      email: "mariana@example.com",
-      phone: "+57 300 555 6666",
-    },
-    create: {
-      id: "patient-1",
-      name: "Mariana López",
-      email: "mariana@example.com",
-      phone: "+57 300 555 6666",
-    },
-  });
-
-  const patient2 = await prisma.patient.upsert({
-    where: { id: "patient-2" },
-    update: {
-      name: "Juan Pérez",
-      email: "juan@example.com",
-      phone: "+57 300 777 8888",
-    },
-    create: {
-      id: "patient-2",
-      name: "Juan Pérez",
-      email: "juan@example.com",
-      phone: "+57 300 777 8888",
-    },
-  });
-
-  console.log("Seeding horarios...");
-  const schedule1 = await prisma.schedule.upsert({
-    where: {
-      specialistId_start_end: {
-        specialistId: specialist1.id,
-        start: todayAt(9, 0),
-        end: todayAt(9, 30),
-      },
-    },
-    update: { available: true },
-    create: {
-      specialistId: specialist1.id,
-      start: todayAt(9, 0),
-      end: todayAt(9, 30),
-      available: true,
-    },
-  });
-
-  const schedule2 = await prisma.schedule.upsert({
-    where: {
-      specialistId_start_end: {
-        specialistId: specialist1.id,
-        start: todayAt(10, 0),
-        end: todayAt(10, 30),
-      },
-    },
-    update: { available: true },
-    create: {
-      specialistId: specialist1.id,
-      start: todayAt(10, 0),
-      end: todayAt(10, 30),
-      available: true,
-    },
-  });
-
-  const schedule3 = await prisma.schedule.upsert({
-    where: {
-      specialistId_start_end: {
-        specialistId: specialist2.id,
-        start: todayAt(11, 0),
-        end: todayAt(11, 30),
-      },
-    },
-    update: { available: true },
-    create: {
-      specialistId: specialist2.id,
-      start: todayAt(11, 0),
-      end: todayAt(11, 30),
-      available: true,
-    },
-  });
-
-  console.log("Seeding citas...");
-  await prisma.appointment.upsert({
-    where: { id: "appointment-1" },
-    update: {
-      patientId: patient1.id,
-      specialistId: specialist1.id,
-      scheduleId: schedule1.id,
-      service: "Ortodoncia",
-      scheduledAt: schedule1.start,
-      preferredDate: schedule1.start,
-      status: PENDING_STATUS,
-      notes: "Primera valoración ortodoncia.",
-    },
-    create: {
-      id: "appointment-1",
-      patientId: patient1.id,
-      specialistId: specialist1.id,
-      scheduleId: schedule1.id,
-      service: "Ortodoncia",
-      scheduledAt: schedule1.start,
-      preferredDate: schedule1.start,
-      status: PENDING_STATUS,
-      notes: "Primera valoración ortodoncia.",
-    },
-  });
-
-  await prisma.appointment.upsert({
-    where: { id: "appointment-2" },
-    update: {
-      patientId: patient2.id,
-      specialistId: specialist1.id,
-      scheduleId: schedule2.id,
-      service: "Limpieza",
-      scheduledAt: schedule2.start,
-      preferredDate: schedule2.start,
-      status: CONFIRMED_STATUS,
-      notes: "Control semestral.",
-    },
-    create: {
-      id: "appointment-2",
-      patientId: patient2.id,
-      specialistId: specialist1.id,
-      scheduleId: schedule2.id,
-      service: "Limpieza",
-      scheduledAt: schedule2.start,
-      preferredDate: schedule2.start,
-      status: CONFIRMED_STATUS,
-      notes: "Control semestral.",
-    },
-  });
-
-  await prisma.appointment.upsert({
-    where: { id: "appointment-3" },
-    update: {
-      patientId: patient1.id,
-      specialistId: specialist2.id,
-      scheduleId: schedule3.id,
-      service: "Rehabilitación oral",
-      scheduledAt: schedule3.start,
-      preferredDate: schedule3.start,
-      status: CANCELLED_STATUS,
-      notes: "Cancelada por el paciente.",
-    },
-    create: {
-      id: "appointment-3",
-      patientId: patient1.id,
-      specialistId: specialist2.id,
-      scheduleId: schedule3.id,
-      service: "Rehabilitación oral",
-      scheduledAt: schedule3.start,
-      preferredDate: schedule3.start,
-      status: CANCELLED_STATUS,
-      notes: "Cancelada por el paciente.",
-    },
-  });
-
-  console.log("Seed completado.");
+  console.log("Seed completado:");
+  console.log(`- Admin: ${adminUser.email}`);
+  console.log(`- Profesional demo: ${professionalUser.email}`);
 }
 
 main()

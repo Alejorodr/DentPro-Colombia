@@ -1,17 +1,17 @@
 import bcrypt from "bcryptjs";
-import { ensureFallbackDatabaseReady, getPrismaClient } from "@/lib/prisma";
+import { getPrismaClient } from "@/lib/prisma";
 import { isUserRole, type UserRole } from "./roles";
 
 type UserRecord = {
   id: string;
-  name: string | null;
+  name: string;
   email: string;
-  primaryRole: string;
+  role: string;
 };
 
 export interface DatabaseUser {
   id: string;
-  name: string | null;
+  name: string;
   email: string;
   role: UserRole;
 }
@@ -21,7 +21,7 @@ function mapUser(user: UserRecord | null): DatabaseUser | null {
     return null;
   }
 
-  if (!isUserRole(user.primaryRole)) {
+  if (!isUserRole(user.role)) {
     return null;
   }
 
@@ -29,18 +29,17 @@ function mapUser(user: UserRecord | null): DatabaseUser | null {
     id: user.id,
     name: user.name,
     email: user.email,
-    role: user.primaryRole,
+    role: user.role,
   };
 }
 
 export async function authenticateUser(email: string, password: string): Promise<DatabaseUser | null> {
   const normalizedEmail = email.toLowerCase();
   const prisma = getPrismaClient();
-  await ensureFallbackDatabaseReady();
 
   const user = await prisma.user.findUnique({
     where: { email: normalizedEmail },
-    select: { id: true, name: true, email: true, passwordHash: true, primaryRole: true },
+    select: { id: true, name: true, email: true, passwordHash: true, role: true },
   });
 
   if (!user) {
@@ -59,11 +58,10 @@ export async function authenticateUser(email: string, password: string): Promise
 
 export async function findUserById(id: string): Promise<DatabaseUser | null> {
   const prisma = getPrismaClient();
-  await ensureFallbackDatabaseReady();
   const user = await prisma.user.findUnique({
     where: { id },
-    select: { id: true, name: true, email: true, primaryRole: true },
+    select: { id: true, name: true, email: true, role: true },
   });
 
-  return mapUser(user);
+  return mapUser(user as UserRecord | null);
 }

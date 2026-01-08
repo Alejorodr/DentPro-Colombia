@@ -75,7 +75,7 @@ const marketingContent: MarketingContent = {
       label: "Agenda tu cita",
     },
     login: {
-      href: "/login",
+      href: "/auth/login",
       label: "Iniciar sesión",
     },
   },
