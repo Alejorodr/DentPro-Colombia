@@ -12,13 +12,14 @@ function canCancelWithLimit(startAt: Date): boolean {
   return diff >= 24 * 60 * 60 * 1000;
 }
 
-export async function PATCH(request: Request, { params }: { params: { id: string } }) {
+export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const sessionUser = await getSessionUser();
 
   if (!sessionUser) {
     return errorResponse("No autorizado.", 401);
   }
 
+  const { id } = await params;
   const payload = (await request.json().catch(() => null)) as {
     status?: AppointmentStatus;
     notes?: string | null;
@@ -30,7 +31,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
 
   const prisma = getPrismaClient();
   const appointment = await prisma.appointment.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: { timeSlot: true, professional: true, patient: true },
   });
 
@@ -59,7 +60,8 @@ export async function PATCH(request: Request, { params }: { params: { id: string
       return errorResponse("No autorizado.", 403);
     }
 
-    if (![AppointmentStatus.CONFIRMED, AppointmentStatus.COMPLETED].includes(payload.status)) {
+    const allowedStatuses = new Set<AppointmentStatus>([AppointmentStatus.CONFIRMED, AppointmentStatus.COMPLETED]);
+    if (!allowedStatuses.has(payload.status)) {
       return errorResponse("No autorizado para este estado.", 403);
     }
   }
@@ -69,7 +71,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
   }
 
   const updated = await prisma.appointment.update({
-    where: { id: params.id },
+    where: { id },
     data: { status: payload.status, notes: payload.notes ?? undefined },
     include: {
       patient: { include: { user: true } },
