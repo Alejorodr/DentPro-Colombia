@@ -22,13 +22,14 @@ function buildSlots(startAt: Date, endAt: Date, durationMinutes: number) {
   return slots;
 }
 
-export async function POST(request: Request, { params }: { params: { id: string } }) {
+export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const sessionUser = await getSessionUser();
 
   if (!sessionUser) {
     return errorResponse("No autorizado.", 401);
   }
 
+  const { id } = await params;
   if (!isAuthorized(sessionUser.role, ["ADMINISTRADOR"])) {
     return errorResponse("No tienes permisos para generar slots.", 403);
   }
@@ -52,7 +53,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
 
   const prisma = getPrismaClient();
   const professional = await prisma.professionalProfile.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: { specialty: true },
   });
 

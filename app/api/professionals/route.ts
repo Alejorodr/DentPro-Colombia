@@ -57,7 +57,7 @@ export async function POST(request: Request) {
           lastName: payload.lastName.trim(),
         },
       },
-      specialtyId: payload.specialtyId,
+      specialty: { connect: { id: payload.specialtyId } },
       slotDurationMinutes: payload.slotDurationMinutes ?? null,
       active: true,
     },

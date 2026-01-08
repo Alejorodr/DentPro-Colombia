@@ -5,8 +5,9 @@ import { getPrismaClient } from "@/lib/prisma";
 import { getDefaultDashboardPath, roleFromSlug, roleLabels } from "@/lib/auth/roles";
 import { AppointmentsList } from "@/app/portal/components/AppointmentsList";
 
-export default async function PortalRolePage({ params }: { params: { role: string } }) {
-  const requestedRole = roleFromSlug(params.role);
+export default async function PortalRolePage({ params }: { params: Promise<{ role: string }> }) {
+  const { role } = await params;
+  const requestedRole = roleFromSlug(role);
 
   if (!requestedRole) {
     notFound();
@@ -15,7 +16,7 @@ export default async function PortalRolePage({ params }: { params: { role: strin
   const session = await auth();
 
   if (!session?.user?.role) {
-    redirect(`/auth/login?callbackUrl=/portal/${params.role}`);
+    redirect(`/auth/login?callbackUrl=/portal/${role}`);
   }
 
   if (session.user.role !== requestedRole) {

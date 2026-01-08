@@ -10,13 +10,14 @@ function canRescheduleWithLimit(startAt: Date): boolean {
   return diff >= 24 * 60 * 60 * 1000;
 }
 
-export async function POST(request: Request, { params }: { params: { id: string } }) {
+export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const sessionUser = await getSessionUser();
 
   if (!sessionUser) {
     return errorResponse("No autorizado.", 401);
   }
 
+  const { id } = await params;
   const payload = (await request.json().catch(() => null)) as { timeSlotId?: string } | null;
 
   if (!payload?.timeSlotId) {
@@ -25,7 +26,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
 
   const prisma = getPrismaClient();
   const appointment = await prisma.appointment.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: { timeSlot: true },
   });
 
@@ -68,7 +69,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
   const updated = await prisma.$transaction(async (tx) => {
     await tx.timeSlot.update({
       where: { id: appointment.timeSlotId },
-      data: { status: TimeSlotStatus.AVAILABLE, appointmentId: null },
+      data: { status: TimeSlotStatus.AVAILABLE },
     });
 
     const slotUpdate = await tx.timeSlot.updateMany({
@@ -91,11 +92,6 @@ export async function POST(request: Request, { params }: { params: { id: string 
         professional: { include: { user: true, specialty: true } },
         timeSlot: true,
       },
-    });
-
-    await tx.timeSlot.update({
-      where: { id: newSlot.id },
-      data: { appointmentId: updatedAppointment.id },
     });
 
     return updatedAppointment;

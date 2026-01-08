@@ -69,6 +69,7 @@ export async function POST(request: Request) {
 
   const prisma = getPrismaClient();
   const passwordHash = await bcrypt.hash(payload.password, 10);
+  const professionalSpecialtyId = payload.specialtyId;
 
   const user = await prisma.user.create({
     data: {
@@ -88,7 +89,7 @@ export async function POST(request: Request) {
       professional: role === "PROFESIONAL"
         ? {
             create: {
-              specialtyId: payload.specialtyId,
+              specialty: { connect: { id: professionalSpecialtyId! } },
               slotDurationMinutes: payload.slotDurationMinutes ?? null,
               active: true,
             },

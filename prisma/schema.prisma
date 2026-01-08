@@ -35,65 +35,65 @@ model Specialty {
 }
 
 model User {
-  id           String              @id @default(uuid())
-  email        String              @unique
+  id           String               @id @default(uuid())
+  email        String               @unique
   passwordHash String
   role         Role
   name         String
   lastName     String
-  createdAt    DateTime            @default(now())
-  updatedAt    DateTime            @updatedAt
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
   professional ProfessionalProfile?
   patient      PatientProfile?
 }
 
 model ProfessionalProfile {
-  id                  String      @id @default(uuid())
-  userId              String      @unique
+  id                  String        @id @default(uuid())
+  userId              String        @unique
   specialtyId         String
   slotDurationMinutes Int?
-  active              Boolean     @default(true)
-  user                User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  specialty           Specialty   @relation(fields: [specialtyId], references: [id], onDelete: Restrict)
+  active              Boolean       @default(true)
+  user                User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  specialty           Specialty     @relation(fields: [specialtyId], references: [id], onDelete: Restrict)
   timeSlots           TimeSlot[]
   appointments        Appointment[]
 }
 
 model PatientProfile {
-  id         String        @id @default(uuid())
-  userId     String        @unique
-  phone      String?
-  documentId String?
-  user       User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id           String        @id @default(uuid())
+  userId       String        @unique
+  phone        String?
+  documentId   String?
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   appointments Appointment[]
 }
 
 model TimeSlot {
-  id             String           @id @default(uuid())
+  id             String              @id @default(uuid())
   professionalId String
   startAt        DateTime
   endAt          DateTime
-  status         TimeSlotStatus   @default(AVAILABLE)
-  appointmentId  String?
+  status         TimeSlotStatus      @default(AVAILABLE)
   professional   ProfessionalProfile @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+  appointment    Appointment?
 
   @@index([professionalId])
   @@index([startAt])
 }
 
 model Appointment {
-  id             String            @id @default(uuid())
+  id             String              @id @default(uuid())
   patientId      String
   professionalId String
-  timeSlotId     String            @unique
+  timeSlotId     String              @unique
   reason         String
   notes          String?
-  status         AppointmentStatus @default(PENDING)
-  createdAt      DateTime          @default(now())
-  updatedAt      DateTime          @updatedAt
-  patient        PatientProfile    @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  status         AppointmentStatus   @default(PENDING)
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+  patient        PatientProfile      @relation(fields: [patientId], references: [id], onDelete: Restrict)
   professional   ProfessionalProfile @relation(fields: [professionalId], references: [id], onDelete: Restrict)
-  timeSlot       TimeSlot          @relation(fields: [timeSlotId], references: [id], onDelete: Restrict)
+  timeSlot       TimeSlot            @relation(fields: [timeSlotId], references: [id], onDelete: Restrict)
 
   @@index([patientId])
   @@index([professionalId])

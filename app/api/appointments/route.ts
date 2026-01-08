@@ -84,7 +84,9 @@ export async function POST(request: Request) {
     notes?: string;
   } | null;
 
-  if (!payload?.timeSlotId || !payload?.reason?.trim()) {
+  const reason = payload?.reason?.trim();
+
+  if (!payload?.timeSlotId || !reason) {
     return errorResponse("El slot y el motivo son obligatorios.");
   }
 
@@ -143,7 +145,7 @@ export async function POST(request: Request) {
           patientId,
           professionalId,
           timeSlotId: timeSlot.id,
-          reason: payload.reason.trim(),
+          reason,
           notes: payload.notes?.trim() || null,
           status: AppointmentStatus.PENDING,
         },
@@ -152,11 +154,6 @@ export async function POST(request: Request) {
           professional: { include: { user: true, specialty: true } },
           timeSlot: true,
         },
-      });
-
-      await tx.timeSlot.update({
-        where: { id: timeSlot.id },
-        data: { appointmentId: created.id },
       });
 
       return created;

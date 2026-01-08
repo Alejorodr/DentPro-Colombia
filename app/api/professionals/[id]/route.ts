@@ -5,13 +5,14 @@ import { getPrismaClient } from "@/lib/prisma";
 import { getSessionUser, isAuthorized } from "@/app/api/_utils/auth";
 import { errorResponse } from "@/app/api/_utils/response";
 
-export async function PATCH(request: Request, { params }: { params: { id: string } }) {
+export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const sessionUser = await getSessionUser();
 
   if (!sessionUser) {
     return errorResponse("No autorizado.", 401);
   }
 
+  const { id } = await params;
   if (!isAuthorized(sessionUser.role, ["ADMINISTRADOR"])) {
     return errorResponse("No tienes permisos para actualizar profesionales.", 403);
   }
@@ -32,7 +33,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
 
   const prisma = getPrismaClient();
   const professional = await prisma.professionalProfile.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: { user: true },
   });
 
@@ -43,9 +44,9 @@ export async function PATCH(request: Request, { params }: { params: { id: string
   const passwordHash = payload.password ? await bcrypt.hash(payload.password, 10) : undefined;
 
   const updated = await prisma.professionalProfile.update({
-    where: { id: params.id },
+    where: { id },
     data: {
-      specialtyId: payload.specialtyId ?? undefined,
+      specialty: payload.specialtyId ? { connect: { id: payload.specialtyId } } : undefined,
       slotDurationMinutes: payload.slotDurationMinutes ?? undefined,
       active: typeof payload.active === "boolean" ? payload.active : undefined,
       user: {
@@ -63,19 +64,20 @@ export async function PATCH(request: Request, { params }: { params: { id: string
   return NextResponse.json(updated);
 }
 
-export async function DELETE(_request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const sessionUser = await getSessionUser();
 
   if (!sessionUser) {
     return errorResponse("No autorizado.", 401);
   }
 
+  const { id } = await params;
   if (!isAuthorized(sessionUser.role, ["ADMINISTRADOR"])) {
     return errorResponse("No tienes permisos para eliminar profesionales.", 403);
   }
 
   const prisma = getPrismaClient();
-  const professional = await prisma.professionalProfile.findUnique({ where: { id: params.id } });
+  const professional = await prisma.professionalProfile.findUnique({ where: { id } });
 
   if (!professional) {
     return errorResponse("Profesional no encontrado.", 404);
