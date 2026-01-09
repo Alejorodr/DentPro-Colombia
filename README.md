@@ -23,6 +23,9 @@ cp .env.example .env
 - `AUTH_TRUST_HOST=true`
 - `SEED_ADMIN_EMAIL`
 - `SEED_ADMIN_PASSWORD`
+- `RESEND_API_KEY` (producción)
+- `EMAIL_FROM` (producción)
+- `NEXT_PUBLIC_APP_URL` (local)
 
 3. Genera el cliente Prisma y aplica migraciones:
 
@@ -36,6 +39,40 @@ npx prisma migrate deploy
 ```bash
 npm run prisma:seed
 ```
+
+
+## Seed del admin (manual)
+
+El seed garantiza que exista un usuario ADMINISTRADOR con el correo real (ej. `kevinrodr@hotmail.com`). Ejecuta el seed manualmente cuando quieras crear o actualizar la cuenta admin:
+
+```bash
+SEED_ADMIN_EMAIL=kevinrodr@hotmail.com SEED_ADMIN_PASSWORD="TuPasswordSegura" npm run prisma:seed
+```
+
+- Si el usuario existe, se asegura el rol `ADMINISTRADOR` y se actualiza la contraseña solo si `SEED_ADMIN_PASSWORD` está presente.
+- Si no existe, `SEED_ADMIN_PASSWORD` es obligatorio para crearlo.
+- El seed no se ejecuta automáticamente en deploys.
+
+## Recuperación de contraseña
+
+- URL pública: `/auth/forgot-password`
+- Reset: `/auth/reset-password?token=...`
+
+En desarrollo sin `RESEND_API_KEY`, el link de reset se muestra en consola **solo** con `NODE_ENV=development`.
+En producción, configura Resend:
+
+```bash
+RESEND_API_KEY=tu_api_key
+EMAIL_FROM="DentPro <no-reply@tu-dominio.com>"
+NEXTAUTH_URL=https://dent-pro-colombia.vercel.app/
+```
+
+### Flujo local rápido
+
+1. Ejecuta el seed con tu correo.
+2. Visita `/auth/forgot-password` e ingresa el correo.
+3. Copia el link desde la consola (solo en desarrollo).
+4. Define la nueva contraseña y vuelve a iniciar sesión.
 
 ## Scripts útiles
 

@@ -11,7 +11,9 @@
     "prisma": "prisma",
     "db:seed": "prisma db seed",
     "prisma:seed": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' prisma/seed.ts",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "typecheck": "tsc --noEmit",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@auth/core": "0.34.2",
@@ -46,7 +48,8 @@
     "ts-node": "^10.9.2",
     "typescript": "5.9.3",
     "vite": "5.4.11",
-    "vitest": "2.1.8"
+    "vitest": "2.1.8",
+    "@playwright/test": "^1.49.0"
   },
   "prisma": {
     "seed": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' prisma/seed.ts"

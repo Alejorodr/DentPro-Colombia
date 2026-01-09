@@ -45,6 +45,7 @@ model User {
   updatedAt    DateTime             @updatedAt
   professional ProfessionalProfile?
   patient      PatientProfile?
+  resetTokens  PasswordResetToken[]
 }
 
 model ProfessionalProfile {
@@ -97,4 +98,17 @@ model Appointment {
 
   @@index([patientId])
   @@index([professionalId])
+}
+
+model PasswordResetToken {
+  id        String    @id @default(uuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  createdAt DateTime  @default(now())
+  usedAt    DateTime?
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
 }
