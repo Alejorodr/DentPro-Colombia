@@ -18,6 +18,7 @@ cp .env.example .env
 2. Completa las variables obligatorias:
 
 - `DATABASE_URL`
+- `DATABASE_URL_UNPOOLED` (opcional en Vercel/Neon: usado para migraciones y diff)
 - `OPS_ENABLED=false`
 - `OPS_KEY`
 - `NEXTAUTH_SECRET`
