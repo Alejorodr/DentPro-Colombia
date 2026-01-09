@@ -18,6 +18,8 @@ cp .env.example .env
 2. Completa las variables obligatorias:
 
 - `DATABASE_URL`
+- `OPS_ENABLED=false`
+- `OPS_KEY`
 - `NEXTAUTH_SECRET`
 - `NEXTAUTH_URL=https://dent-pro-colombia.vercel.app/`
 - `AUTH_TRUST_HOST=true`
@@ -39,6 +41,34 @@ npx prisma migrate deploy
 ```bash
 npm run prisma:seed
 ```
+
+## Operaciones de producción (temporal, remover luego)
+
+Estos endpoints están pensados solo para la inicialización de la base de datos en producción. **Remuévelos después de usarlos**.
+
+1. En Vercel, configura variables:
+   - `OPS_ENABLED=true`
+   - `OPS_KEY=<clave-secreta>`
+   - `SEED_ADMIN_EMAIL=kevinrodr@hotmail.com`
+   - `SEED_ADMIN_PASSWORD=<password-seguro>`
+2. Ejecuta migraciones:
+
+```bash
+curl -X POST https://dent-pro-colombia.vercel.app/api/ops/migrate \\
+  -H "X-OPS-KEY: <clave-secreta>"
+```
+
+3. Crea/actualiza el admin:
+
+```bash
+curl -X POST https://dent-pro-colombia.vercel.app/api/ops/seed-admin \\
+  -H "X-OPS-KEY: <clave-secreta>"
+```
+
+4. Desactiva el acceso temporal:
+   - `OPS_ENABLED=false`
+   - Redeploy
+5. Inicia sesión con el admin configurado.
 
 
 ## Seed del admin (manual)
@@ -102,4 +132,3 @@ NEXTAUTH_URL=https://dent-pro-colombia.vercel.app/
 
 - `prisma generate` debe ejecutarse en postinstall.
 - `prisma migrate deploy` debe ejecutarse en el pipeline de producción.
-
