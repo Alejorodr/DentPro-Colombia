@@ -137,16 +137,21 @@ export function LoginFormCard({
           </div>
         </label>
 
-        <div className="flex items-center justify-between text-xs text-slate-600 dark:text-slate-300">
+        <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-slate-600 dark:text-slate-300">
           <div className="space-x-2">
             <span className="font-semibold uppercase tracking-wide">Recordatorio</span>
             <span>Si tienes roles múltiples, te enviaremos al tablero correcto automáticamente.</span>
           </div>
-          {showBackLink ? (
-            <Link href="/" className="font-semibold text-brand-teal transition-colors hover:text-brand-indigo dark:text-accent-cyan">
-              Volver al inicio
+          <div className="flex items-center gap-4">
+            <Link href="/auth/forgot-password" className="font-semibold text-brand-teal transition-colors hover:text-brand-indigo dark:text-accent-cyan">
+              ¿Olvidaste tu contraseña?
             </Link>
-          ) : null}
+            {showBackLink ? (
+              <Link href="/" className="font-semibold text-brand-teal transition-colors hover:text-brand-indigo dark:text-accent-cyan">
+                Volver al inicio
+              </Link>
+            ) : null}
+          </div>
         </div>
 
         <button

@@ -33,23 +33,32 @@ function buildSlotTimes(start: Date, count: number, durationMinutes: number): Ar
 
 async function main() {
   const adminEmail = requireEnv("SEED_ADMIN_EMAIL");
-  const adminPassword = requireEnv("SEED_ADMIN_PASSWORD");
+  const adminPassword = process.env.SEED_ADMIN_PASSWORD?.trim();
 
-  const passwordHash = await bcrypt.hash(adminPassword, 10);
+  const passwordHash = adminPassword ? await bcrypt.hash(adminPassword, 12) : null;
+
+  const existingAdmin = await prisma.user.findUnique({
+    where: { email: adminEmail.toLowerCase() },
+    select: { id: true },
+  });
+
+  if (!existingAdmin && !passwordHash) {
+    throw new Error("SEED_ADMIN_PASSWORD es obligatorio para crear el usuario admin por primera vez.");
+  }
 
   const adminUser = await prisma.user.upsert({
     where: { email: adminEmail.toLowerCase() },
     update: {
       name: "Admin",
       lastName: "DentPro",
-      passwordHash,
+      ...(passwordHash ? { passwordHash } : {}),
       role: Role.ADMINISTRADOR,
     },
     create: {
       email: adminEmail.toLowerCase(),
       name: "Admin",
       lastName: "DentPro",
-      passwordHash,
+      passwordHash: passwordHash!,
       role: Role.ADMINISTRADOR,
     },
   });
@@ -70,14 +79,14 @@ async function main() {
       name: "Laura",
       lastName: "Rojas",
       role: Role.PROFESIONAL,
-      passwordHash: await bcrypt.hash("DentProDemo!1", 10),
+      passwordHash: await bcrypt.hash("DentProDemo!1", 12),
     },
     create: {
       email: "demo-profesional@dentpro.co",
       name: "Laura",
       lastName: "Rojas",
       role: Role.PROFESIONAL,
-      passwordHash: await bcrypt.hash("DentProDemo!1", 10),
+      passwordHash: await bcrypt.hash("DentProDemo!1", 12),
     },
   });
 

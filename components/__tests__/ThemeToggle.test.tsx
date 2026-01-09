@@ -37,7 +37,7 @@ describe("ThemeToggle", () => {
       }),
       dispatchEvent: vi.fn(() => true),
       setMatches(value: boolean) {
-        mockMediaQuery.matches = value;
+        Object.defineProperty(mockMediaQuery, "matches", { value, configurable: true });
         const event = { matches: value, media: mockMediaQuery.media } as MediaQueryListEvent;
 
         listeners.forEach((listener) => listener(event));
