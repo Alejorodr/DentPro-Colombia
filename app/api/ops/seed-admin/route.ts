@@ -2,6 +2,9 @@ import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
 import { Role } from "@prisma/client";
 
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 import { getPrismaClient } from "@/lib/prisma";
 import {
   enforceRateLimit,
