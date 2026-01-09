@@ -19,6 +19,7 @@ cp .env.example .env
 
 - `DATABASE_URL`
 - `DATABASE_URL_UNPOOLED` (opcional en Vercel/Neon: usado para migraciones y diff)
+- `SHADOW_DATABASE_URL` (opcional, recomendado: base shadow para validar drift con Prisma)
 - `OPS_ENABLED=false`
 - `OPS_KEY`
 - `NEXTAUTH_SECRET`
@@ -42,6 +43,10 @@ npx prisma migrate deploy
 ```bash
 npm run prisma:seed
 ```
+
+### Shadow database en Neon (recomendado)
+
+Para que `scripts/vercel-prisma.mjs` pueda validar drift en Vercel, configura `SHADOW_DATABASE_URL` apuntando a una base vacía en el mismo proyecto de Neon (puede ser otro database). Luego agrega esa URL como variable de entorno en Vercel.
 
 ## Operaciones de producción (temporal, remover luego)
 
