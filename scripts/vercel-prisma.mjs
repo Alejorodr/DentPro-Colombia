@@ -71,6 +71,16 @@ const baselineMigrations = async () => {
 };
 
 const run = async () => {
+  const requiredEnv = ['DATABASE_URL', 'DATABASE_URL_UNPOOLED'];
+  const missingEnv = requiredEnv.filter((name) => !process.env[name]);
+
+  if (missingEnv.length > 0) {
+    logStep(
+      `Omitiendo migraciones Prisma porque faltan variables: ${missingEnv.join(', ')}.`
+    );
+    return;
+  }
+
   logStep('Ejecutando migraciones Prisma');
   const deployResult = await deployMigrations();
 

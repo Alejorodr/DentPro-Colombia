@@ -65,9 +65,12 @@ export const authOptions = {
       if (user) {
         const roleCandidate =
           typeof (user as { role?: unknown }).role === "string" ? (user as { role: string }).role : "";
+        const resolvedRole = isUserRole(roleCandidate) ? roleCandidate : "PACIENTE";
+        const userIdCandidate =
+          typeof (user as { id?: unknown }).id === "string" ? (user as { id: string }).id : undefined;
 
-        token.role = isUserRole(roleCandidate) ? roleCandidate : token.role;
-        token.userId = (user as { id?: unknown }).id ?? token.userId;
+        token.role = resolvedRole;
+        token.userId = userIdCandidate ?? token.userId ?? token.sub ?? "";
         token.professionalId = (user as { professionalId?: string | null }).professionalId ?? token.professionalId;
         token.patientId = (user as { patientId?: string | null }).patientId ?? token.patientId;
 
@@ -86,6 +89,13 @@ export const authOptions = {
         }
       }
 
+      if (!token.userId && token.sub) {
+        token.userId = token.sub;
+      }
+      if (!token.role) {
+        token.role = "PACIENTE";
+      }
+
       return token;
     },
     async session({
@@ -96,6 +106,7 @@ export const authOptions = {
       token: SessionToken;
     }) {
       const role = token.role ?? "";
+      const resolvedRole = isUserRole(role) ? role : "PACIENTE";
       const userId =
         typeof token.userId === "string"
           ? token.userId
@@ -107,7 +118,7 @@ export const authOptions = {
         name: session.user?.name ?? null,
         email: session.user?.email ?? null,
         image: session.user?.image ?? null,
-        role: isUserRole(role) ? role : undefined,
+        role: resolvedRole,
         professionalId: token.professionalId ?? null,
         patientId: token.patientId ?? null,
       };
