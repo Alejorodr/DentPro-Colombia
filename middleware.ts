@@ -1,9 +1,9 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 
-import { getDefaultDashboardPath, isUserRole, roleFromSlug } from "@/lib/auth/roles";
+import { getDefaultDashboardPath, isUserRole, roleFromSlug, type UserRole } from "@/lib/auth/roles";
 
-function resolveRole(token: { role?: string } | null): string | null {
+function resolveRole(token: { role?: string } | null): UserRole | null {
   const roleCandidate = token?.role ?? "";
   return isUserRole(roleCandidate) ? roleCandidate : null;
 }
