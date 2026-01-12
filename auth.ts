@@ -18,6 +18,7 @@ type AuthenticatedUser = {
 };
 export type AuthSession = { user?: AuthenticatedUser | null } | null;
 type SessionToken = JWT & {
+  userId?: string;
   role?: import("@/lib/auth/roles").UserRole;
   professionalId?: string | null;
   patientId?: string | null;
@@ -66,7 +67,7 @@ export const authOptions = {
           typeof (user as { role?: unknown }).role === "string" ? (user as { role: string }).role : "";
 
         token.role = isUserRole(roleCandidate) ? roleCandidate : token.role;
-        token.id = (user as { id?: unknown }).id ?? token.id;
+        token.userId = (user as { id?: unknown }).id ?? token.userId;
         token.professionalId = (user as { professionalId?: string | null }).professionalId ?? token.professionalId;
         token.patientId = (user as { patientId?: string | null }).patientId ?? token.patientId;
 
@@ -95,8 +96,14 @@ export const authOptions = {
       token: SessionToken;
     }) {
       const role = token.role ?? "";
+      const userId =
+        typeof token.userId === "string"
+          ? token.userId
+          : typeof token.sub === "string"
+            ? token.sub
+            : "";
       session.user = {
-        id: typeof token.sub === "string" ? token.sub : "",
+        id: userId,
         name: session.user?.name ?? null,
         email: session.user?.email ?? null,
         image: session.user?.image ?? null,
