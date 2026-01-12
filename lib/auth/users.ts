@@ -7,6 +7,8 @@ type UserRecord = {
   name: string;
   email: string;
   role: string;
+  professional?: { id: string } | null;
+  patient?: { id: string } | null;
 };
 
 export interface DatabaseUser {
@@ -14,6 +16,8 @@ export interface DatabaseUser {
   name: string;
   email: string;
   role: UserRole;
+  professionalId?: string | null;
+  patientId?: string | null;
 }
 
 function mapUser(user: UserRecord | null): DatabaseUser | null {
@@ -30,6 +34,8 @@ function mapUser(user: UserRecord | null): DatabaseUser | null {
     name: user.name,
     email: user.email,
     role: user.role,
+    professionalId: user.professional?.id ?? null,
+    patientId: user.patient?.id ?? null,
   };
 }
 
@@ -39,7 +45,15 @@ export async function authenticateUser(email: string, password: string): Promise
 
   const user = await prisma.user.findUnique({
     where: { email: normalizedEmail },
-    select: { id: true, name: true, email: true, passwordHash: true, role: true },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      passwordHash: true,
+      role: true,
+      professional: { select: { id: true } },
+      patient: { select: { id: true } },
+    },
   });
 
   if (!user) {
@@ -60,7 +74,14 @@ export async function findUserById(id: string): Promise<DatabaseUser | null> {
   const prisma = getPrismaClient();
   const user = await prisma.user.findUnique({
     where: { id },
-    select: { id: true, name: true, email: true, role: true },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      professional: { select: { id: true } },
+      patient: { select: { id: true } },
+    },
   });
 
   return mapUser(user as UserRecord | null);

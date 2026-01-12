@@ -20,18 +20,20 @@ interface NavItem {
 const navByRole: Record<UserRole, NavItem[]> = {
   PACIENTE: [
     { label: "Mis turnos", href: "/appointments/new" },
-    { label: "Mis citas", href: "/portal/paciente" },
+    { label: "Mis citas", href: "/portal/client" },
   ],
   PROFESIONAL: [
-    { label: "Agenda", href: "/portal/profesional" },
+    { label: "Agenda", href: "/portal/professional" },
   ],
   RECEPCIONISTA: [
-    { label: "Agenda global", href: "/portal/recepcionista" },
-    { label: "Crear paciente", href: "/portal/recepcionista" },
+    { label: "Agenda global", href: "/portal/receptionist" },
+    { label: "Crear paciente", href: "/portal/receptionist" },
   ],
   ADMINISTRADOR: [
-    { label: "Usuarios", href: "/portal/admin" },
-    { label: "Especialidades", href: "/portal/admin" },
+    { label: "Usuarios", href: "/portal/admin/users" },
+    { label: "Especialidades", href: "/portal/admin/specialties" },
+    { label: "Profesionales", href: "/portal/admin/professionals" },
+    { label: "Citas", href: "/portal/admin/appointments" },
   ],
 };
 

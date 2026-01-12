@@ -11,7 +11,13 @@ type AppointmentItem = {
   status: string;
   timeSlot: { startAt: string; endAt: string };
   patient: { user: { name: string; lastName: string } } | null;
-  professional: { user: { name: string; lastName: string }; specialty: { name: string } } | null;
+  professional:
+    | {
+        id: string;
+        user: { name: string; lastName: string };
+        specialty: { id: string; name: string };
+      }
+    | null;
 };
 
 interface AppointmentsListProps {

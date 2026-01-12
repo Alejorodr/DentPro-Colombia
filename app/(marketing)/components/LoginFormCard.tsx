@@ -3,10 +3,10 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState, type FormEvent } from "react";
-import { signIn } from "next-auth/react";
+import { getSession, signIn } from "next-auth/react";
 import { ArrowRight, EnvelopeSimple, Lock, ShieldCheck, WarningCircle } from "@phosphor-icons/react";
 
-import { getDefaultDashboardPath } from "@/lib/auth/roles";
+import { getDefaultDashboardPath, isUserRole } from "@/lib/auth/roles";
 
 const errorMessages: Record<string, string> = {
   CredentialsSignin: "Correo o contraseña incorrectos.",
@@ -45,6 +45,10 @@ export function LoginFormCard({
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
+    if (isSubmitting) {
+      return;
+    }
+
     if (!canSubmit) {
       return;
     }
@@ -65,9 +69,15 @@ export function LoginFormCard({
       return;
     }
 
-    const destination = result?.url ?? callbackUrl ?? getDefaultDashboardPath("PACIENTE");
+    const resolvedSession = await getSession();
+    const roleCandidate = resolvedSession?.user?.role ?? "";
+    const resolvedRole = isUserRole(roleCandidate) ? roleCandidate : "PACIENTE";
+    const roleDestination = getDefaultDashboardPath(resolvedRole);
+    const resultUrl = result?.url ?? callbackUrl ?? roleDestination;
+    const resultPath = resultUrl.startsWith("http") ? new URL(resultUrl).pathname : resultUrl;
+    const destination = resultPath.startsWith("/portal") ? resultPath : roleDestination;
     onSuccess?.();
-    router.push(destination);
+    router.replace(destination);
     router.refresh();
     setIsSubmitting(false);
   };
@@ -111,6 +121,7 @@ export function LoginFormCard({
               autoFocus={autoFocusEmail}
               value={email}
               onChange={(event) => setEmail(event.target.value)}
+              disabled={isSubmitting}
               className="input h-12 pl-10 text-sm"
               placeholder="tu-correo@dentpro.co"
             />
@@ -131,6 +142,7 @@ export function LoginFormCard({
               required
               value={password}
               onChange={(event) => setPassword(event.target.value)}
+              disabled={isSubmitting}
               className="input h-12 pl-10 text-sm"
               placeholder="Ingresa tu contraseña"
             />
@@ -158,6 +170,7 @@ export function LoginFormCard({
           type="submit"
           className="btn-primary w-full justify-center gap-2 text-sm"
           disabled={!canSubmit}
+          aria-busy={isSubmitting}
         >
           {isSubmitting ? (
             <span className="inline-flex items-center gap-2">
