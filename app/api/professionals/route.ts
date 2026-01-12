@@ -7,6 +7,12 @@ import { errorResponse } from "@/app/api/_utils/response";
 import { Role } from "@prisma/client";
 
 export async function GET() {
+  const sessionUser = await getSessionUser();
+
+  if (!sessionUser) {
+    return errorResponse("No autorizado.", 401);
+  }
+
   const prisma = getPrismaClient();
   const professionals = await prisma.professionalProfile.findMany({
     include: { user: true, specialty: true },

@@ -5,6 +5,12 @@ import { getSessionUser, isAuthorized } from "@/app/api/_utils/auth";
 import { errorResponse } from "@/app/api/_utils/response";
 
 export async function GET() {
+  const sessionUser = await getSessionUser();
+
+  if (!sessionUser) {
+    return errorResponse("No autorizado.", 401);
+  }
+
   const prisma = getPrismaClient();
 
   const specialties = await prisma.specialty.findMany({ orderBy: { name: "asc" } });

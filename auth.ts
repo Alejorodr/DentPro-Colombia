@@ -12,11 +12,15 @@ type AuthenticatedUser = {
   email?: string | null;
   image?: string | null;
   role?: import("@/lib/auth/roles").UserRole;
+  professionalId?: string | null;
+  patientId?: string | null;
   defaultDashboardPath?: string;
 };
 export type AuthSession = { user?: AuthenticatedUser | null } | null;
 type SessionToken = JWT & {
   role?: import("@/lib/auth/roles").UserRole;
+  professionalId?: string | null;
+  patientId?: string | null;
   defaultDashboardPath?: string;
 };
 
@@ -48,6 +52,8 @@ export const authOptions = {
           name: user.name,
           email: user.email,
           role: user.role,
+          professionalId: user.professionalId ?? null,
+          patientId: user.patientId ?? null,
           defaultDashboardPath: getDefaultDashboardPath(user.role),
         } as const;
       },
@@ -61,6 +67,8 @@ export const authOptions = {
 
         token.role = isUserRole(roleCandidate) ? roleCandidate : token.role;
         token.id = (user as { id?: unknown }).id ?? token.id;
+        token.professionalId = (user as { professionalId?: string | null }).professionalId ?? token.professionalId;
+        token.patientId = (user as { patientId?: string | null }).patientId ?? token.patientId;
 
         const defaultPathCandidate =
           typeof (user as { defaultDashboardPath?: unknown }).defaultDashboardPath === "string"
@@ -72,6 +80,8 @@ export const authOptions = {
         const dbUser = await findUserById(token.sub);
         if (dbUser) {
           token.role = dbUser.role;
+          token.professionalId = dbUser.professionalId ?? null;
+          token.patientId = dbUser.patientId ?? null;
         }
       }
 
@@ -91,6 +101,8 @@ export const authOptions = {
         email: session.user?.email ?? null,
         image: session.user?.image ?? null,
         role: isUserRole(role) ? role : undefined,
+        professionalId: token.professionalId ?? null,
+        patientId: token.patientId ?? null,
       };
 
       if (token.defaultDashboardPath && typeof token.defaultDashboardPath === "string") {

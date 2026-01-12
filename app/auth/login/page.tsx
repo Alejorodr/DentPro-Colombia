@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
+import { getDefaultDashboardPath } from "@/lib/auth/roles";
 import { LoginForm } from "@/app/(marketing)/login/LoginForm";
 
 type LoginPageProps = {
@@ -15,8 +16,11 @@ export default async function AuthLoginPage(props: any) {
 
   const session = await auth();
 
-  if (session) {
-    redirect(callbackUrl);
+  if (session?.user?.role) {
+    const resolvedCallback = callbackUrl.startsWith("/portal")
+      ? callbackUrl
+      : getDefaultDashboardPath(session.user.role);
+    redirect(resolvedCallback);
   }
 
   return (
