@@ -9,16 +9,17 @@ CREATE TYPE "TimeSlotStatus" AS ENUM ('AVAILABLE', 'BOOKED');
 
 -- CreateTable
 CREATE TABLE "Specialty" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
+    "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "defaultSlotDurationMinutes" INTEGER NOT NULL,
     "active" BOOLEAN NOT NULL DEFAULT true,
+
     CONSTRAINT "Specialty_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "User" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
+    "id" UUID NOT NULL,
     "email" TEXT NOT NULL,
     "passwordHash" TEXT NOT NULL,
     "role" "Role" NOT NULL,
@@ -26,51 +27,67 @@ CREATE TABLE "User" (
     "lastName" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "ProfessionalProfile" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
+    "id" TEXT NOT NULL,
     "userId" UUID NOT NULL,
-    "specialtyId" UUID NOT NULL,
+    "specialtyId" TEXT NOT NULL,
     "slotDurationMinutes" INTEGER,
     "active" BOOLEAN NOT NULL DEFAULT true,
+
     CONSTRAINT "ProfessionalProfile_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "PatientProfile" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
+    "id" TEXT NOT NULL,
     "userId" UUID NOT NULL,
     "phone" TEXT,
     "documentId" TEXT,
+
     CONSTRAINT "PatientProfile_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "TimeSlot" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "professionalId" UUID NOT NULL,
+    "id" TEXT NOT NULL,
+    "professionalId" TEXT NOT NULL,
     "startAt" TIMESTAMP(3) NOT NULL,
     "endAt" TIMESTAMP(3) NOT NULL,
     "status" "TimeSlotStatus" NOT NULL DEFAULT 'AVAILABLE',
-    "appointmentId" UUID,
+
     CONSTRAINT "TimeSlot_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "Appointment" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "patientId" UUID NOT NULL,
-    "professionalId" UUID NOT NULL,
-    "timeSlotId" UUID NOT NULL,
+    "id" TEXT NOT NULL,
+    "patientId" TEXT NOT NULL,
+    "professionalId" TEXT NOT NULL,
+    "timeSlotId" TEXT NOT NULL,
     "reason" TEXT NOT NULL,
     "notes" TEXT,
     "status" "AppointmentStatus" NOT NULL DEFAULT 'PENDING',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+
     CONSTRAINT "Appointment_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "PasswordResetToken" (
+    "id" TEXT NOT NULL,
+    "userId" UUID NOT NULL,
+    "tokenHash" TEXT NOT NULL,
+    "expiresAt" TIMESTAMP(3) NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "usedAt" TIMESTAMP(3),
+
+    CONSTRAINT "PasswordResetToken_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -100,6 +117,15 @@ CREATE INDEX "Appointment_patientId_idx" ON "Appointment"("patientId");
 -- CreateIndex
 CREATE INDEX "Appointment_professionalId_idx" ON "Appointment"("professionalId");
 
+-- CreateIndex
+CREATE UNIQUE INDEX "PasswordResetToken_tokenHash_key" ON "PasswordResetToken"("tokenHash");
+
+-- CreateIndex
+CREATE INDEX "PasswordResetToken_userId_idx" ON "PasswordResetToken"("userId");
+
+-- CreateIndex
+CREATE INDEX "PasswordResetToken_expiresAt_idx" ON "PasswordResetToken"("expiresAt");
+
 -- AddForeignKey
 ALTER TABLE "ProfessionalProfile" ADD CONSTRAINT "ProfessionalProfile_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
@@ -120,3 +146,7 @@ ALTER TABLE "Appointment" ADD CONSTRAINT "Appointment_professionalId_fkey" FOREI
 
 -- AddForeignKey
 ALTER TABLE "Appointment" ADD CONSTRAINT "Appointment_timeSlotId_fkey" FOREIGN KEY ("timeSlotId") REFERENCES "TimeSlot"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "PasswordResetToken" ADD CONSTRAINT "PasswordResetToken_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
