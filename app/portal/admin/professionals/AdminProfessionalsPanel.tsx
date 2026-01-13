@@ -136,8 +136,8 @@ export function AdminProfessionalsPanel() {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="text-lg font-semibold text-slate-900">Nuevo profesional</h2>
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-surface-muted/80 dark:bg-surface-elevated/80">
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Nuevo profesional</h2>
         <div className="mt-4 grid gap-4 md:grid-cols-2">
           <input
             className="input h-11 text-sm"
@@ -198,21 +198,24 @@ export function AdminProfessionalsPanel() {
         >
           Crear profesional
         </button>
-        {error ? <p className="mt-2 text-sm text-red-600">{error}</p> : null}
+        {error ? <p className="mt-2 text-sm text-red-600 dark:text-red-400">{error}</p> : null}
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="text-lg font-semibold text-slate-900">Profesionales</h2>
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-surface-muted/80 dark:bg-surface-elevated/80">
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Profesionales</h2>
         <div className="mt-4 space-y-3">
           {professionals.map((professional) => (
-            <div key={professional.id} className="rounded-xl border border-slate-200 p-4">
+            <div
+              key={professional.id}
+              className="rounded-xl border border-slate-200 bg-white/60 p-4 dark:border-surface-muted/70 dark:bg-surface-base/60"
+            >
               <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                 <div>
-                  <p className="text-sm font-semibold text-slate-900">
+                  <p className="text-sm font-semibold text-slate-900 dark:text-white">
                     {professional.user.name} {professional.user.lastName}
                   </p>
-                  <p className="text-xs text-slate-500">{professional.user.email}</p>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-slate-500 dark:text-slate-400">{professional.user.email}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
                     Especialidad: {professional.specialty.name} · Slot:{" "}
                     {professional.slotDurationMinutes ?? "Sin definir"} min
                   </p>
@@ -228,7 +231,7 @@ export function AdminProfessionalsPanel() {
                   </button>
                   <button
                     type="button"
-                    className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold uppercase"
+                    className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold uppercase text-slate-600 dark:border-surface-muted/70 dark:text-slate-200"
                     onClick={() => {
                       const slot = window.prompt(
                         "Duración slot (min)",
