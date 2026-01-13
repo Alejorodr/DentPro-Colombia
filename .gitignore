@@ -6,3 +6,5 @@ out/
 !.env.example
 *.db
 prisma/.cache/
+tests/prisma-client/
+tests/.tmp/

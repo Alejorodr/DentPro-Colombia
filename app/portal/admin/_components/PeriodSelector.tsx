@@ -7,9 +7,10 @@ import type { AnalyticsRangeKey } from "@/app/portal/admin/_data/analytics";
 
 const rangeOptions: { value: AnalyticsRangeKey; label: string }[] = [
   { value: "today", label: "Hoy" },
-  { value: "7d", label: "Últimos 7 días" },
-  { value: "30d", label: "Últimos 30 días" },
+  { value: "last7", label: "Últimos 7 días" },
+  { value: "last30", label: "Últimos 30 días" },
   { value: "mtd", label: "Mes actual" },
+  { value: "ytd", label: "Año en curso" },
   { value: "custom", label: "Personalizado" },
 ];
 
