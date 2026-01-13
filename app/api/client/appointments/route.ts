@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { getSessionUser } from "@/app/api/_utils/auth";
 import { errorResponse } from "@/app/api/_utils/response";
 import { getPrismaClient } from "@/lib/prisma";
+import { createReceptionNotifications } from "@/lib/notifications";
 import { AppointmentStatus, TimeSlotStatus } from "@prisma/client";
 
 export async function POST(request: Request) {
@@ -109,6 +110,14 @@ export async function POST(request: Request) {
           service: true,
         },
       });
+    });
+
+    await createReceptionNotifications({
+      type: "appointment_created",
+      title: "Nuevo turno solicitado",
+      body: `Paciente ${patient.user.name} ${patient.user.lastName} agendó una cita.`,
+      entityType: "appointment",
+      entityId: appointment.id,
     });
 
     return NextResponse.json(appointment, { status: 201 });

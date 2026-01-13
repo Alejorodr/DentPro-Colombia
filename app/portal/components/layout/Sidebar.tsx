@@ -23,6 +23,8 @@ interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
   onSignOut: () => void;
+  brandTitle?: string;
+  brandSubtitle?: string;
 }
 
 function isItemActive(pathname: string, href: string) {
@@ -33,7 +35,16 @@ function isItemActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export function Sidebar({ items, settingsItems = [], pathname, isOpen, onClose, onSignOut }: SidebarProps) {
+export function Sidebar({
+  items,
+  settingsItems = [],
+  pathname,
+  isOpen,
+  onClose,
+  onSignOut,
+  brandTitle = "DentPro",
+  brandSubtitle = "Admin portal",
+}: SidebarProps) {
   return (
     <>
       <div
@@ -54,8 +65,8 @@ export function Sidebar({ items, settingsItems = [], pathname, isOpen, onClose, 
               DP
             </span>
             <div>
-              <p className="text-sm font-semibold text-slate-900 dark:text-white">DentPro</p>
-              <p className="text-xs text-slate-500 dark:text-slate-400">Admin portal</p>
+              <p className="text-sm font-semibold text-slate-900 dark:text-white">{brandTitle}</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">{brandSubtitle}</p>
             </div>
           </Link>
           <button

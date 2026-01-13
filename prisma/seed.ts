@@ -87,6 +87,23 @@ async function main() {
     },
   });
 
+  const receptionistUser = await prisma.user.upsert({
+    where: { email: "demo-recepcion@dentpro.co" },
+    update: {
+      name: "Diana",
+      lastName: "Mora",
+      role: Role.RECEPCIONISTA,
+      passwordHash: await bcrypt.hash("RecepDentPro!1", 12),
+    },
+    create: {
+      email: "demo-recepcion@dentpro.co",
+      name: "Diana",
+      lastName: "Mora",
+      role: Role.RECEPCIONISTA,
+      passwordHash: await bcrypt.hash("RecepDentPro!1", 12),
+    },
+  });
+
   const specialties = [] as Array<{ id: string; name: string; defaultSlotDurationMinutes: number }>;
   for (const specialty of DEFAULT_SPECIALTIES) {
     const record = await prisma.specialty.upsert({
@@ -183,6 +200,7 @@ async function main() {
       city: "Chía, Cundinamarca",
       patientCode: "8930211",
       avatarUrl: null,
+      active: true,
     },
     create: {
       userId: patientUser.id,
@@ -194,6 +212,7 @@ async function main() {
       city: "Chía, Cundinamarca",
       patientCode: "8930211",
       avatarUrl: null,
+      active: true,
     },
   });
 
@@ -276,6 +295,7 @@ async function main() {
 
   console.log("Seed completado:");
   console.log(`- Admin: ${adminUser.email}`);
+  console.log(`- Recepción demo: ${receptionistUser.email}`);
   console.log(`- Profesional demo: ${professionalUser.email}`);
   console.log(`- Paciente demo: ${patientUser.email}`);
 }

@@ -83,6 +83,7 @@ export async function POST(request: Request) {
             create: {
               phone: payload.phone?.trim() || null,
               documentId: payload.documentId?.trim() || null,
+              active: true,
             },
           }
         : undefined,

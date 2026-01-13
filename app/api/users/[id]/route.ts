@@ -14,7 +14,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   }
 
   const { id } = await params;
-  if (!isAuthorized(sessionUser.role, ["ADMINISTRADOR"])) {
+  const canManagePatients = isAuthorized(sessionUser.role, ["ADMINISTRADOR", "RECEPCIONISTA"]);
+  if (!canManagePatients) {
     return errorResponse("No tienes permisos para actualizar usuarios.", 403);
   }
 
@@ -26,6 +27,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     lastName?: string;
     phone?: string;
     documentId?: string;
+    active?: boolean;
     specialtyId?: string;
     slotDurationMinutes?: number | null;
   } | null;
@@ -45,6 +47,18 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     return errorResponse("Rol inválido.");
   }
 
+  if (sessionUser.role === "RECEPCIONISTA") {
+    if (existing.role !== "PACIENTE") {
+      return errorResponse("Recepción solo puede editar pacientes.", 403);
+    }
+    if (payload.role && payload.role !== "PACIENTE") {
+      return errorResponse("Recepción no puede cambiar el rol.", 403);
+    }
+    if (payload.specialtyId || payload.slotDurationMinutes) {
+      return errorResponse("Recepción no puede editar profesionales.", 403);
+    }
+  }
+
   const passwordHash = payload.password ? await bcrypt.hash(payload.password, 10) : undefined;
 
   const updated = await prisma.user.update({
@@ -53,22 +67,31 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       email: payload.email?.toLowerCase() ?? undefined,
       name: payload.name?.trim() ?? undefined,
       lastName: payload.lastName?.trim() ?? undefined,
-      role: payload.role ?? undefined,
-      passwordHash: passwordHash ?? undefined,
+      role: sessionUser.role === "RECEPCIONISTA" ? undefined : payload.role ?? undefined,
+      passwordHash: sessionUser.role === "RECEPCIONISTA" ? undefined : passwordHash ?? undefined,
     },
   });
 
-  const targetRole = payload.role ?? existing.role;
+  const targetRole = (sessionUser.role === "RECEPCIONISTA" ? existing.role : payload.role) ?? existing.role;
 
   if (targetRole === "PACIENTE") {
     if (!existing.patient) {
       await prisma.patientProfile.create({
-        data: { userId: id, phone: payload.phone?.trim() || null, documentId: payload.documentId?.trim() || null },
+        data: {
+          userId: id,
+          phone: payload.phone?.trim() || null,
+          documentId: payload.documentId?.trim() || null,
+          active: typeof payload.active === "boolean" ? payload.active : true,
+        },
       });
     } else {
       await prisma.patientProfile.update({
         where: { userId: id },
-        data: { phone: payload.phone?.trim() || undefined, documentId: payload.documentId?.trim() || undefined },
+        data: {
+          phone: payload.phone?.trim() || undefined,
+          documentId: payload.documentId?.trim() || undefined,
+          active: typeof payload.active === "boolean" ? payload.active : undefined,
+        },
       });
     }
   }
@@ -121,11 +144,18 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
   }
 
   const { id } = await params;
-  if (!isAuthorized(sessionUser.role, ["ADMINISTRADOR"])) {
+  const canManagePatients = isAuthorized(sessionUser.role, ["ADMINISTRADOR", "RECEPCIONISTA"]);
+  if (!canManagePatients) {
     return errorResponse("No tienes permisos para eliminar usuarios.", 403);
   }
 
   const prisma = getPrismaClient();
+  if (sessionUser.role === "RECEPCIONISTA") {
+    const user = await prisma.user.findUnique({ where: { id } });
+    if (!user || user.role !== "PACIENTE") {
+      return errorResponse("Recepción solo puede eliminar pacientes.", 403);
+    }
+  }
   await prisma.user.delete({ where: { id } });
   return NextResponse.json({ ok: true });
 }
