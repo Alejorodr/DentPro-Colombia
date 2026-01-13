@@ -47,6 +47,7 @@ export async function POST(request: Request) {
     const adminPassword = requireSeedEnv("SEED_ADMIN_PASSWORD");
     const passwordHash = await bcrypt.hash(adminPassword, 12);
     const prisma = getPrismaClient();
+    const existingAdmin = await prisma.user.findUnique({ where: { email: adminEmail } });
 
     await prisma.user.upsert({
       where: { email: adminEmail },
@@ -64,10 +65,11 @@ export async function POST(request: Request) {
         lastName: "DentPro",
       },
     });
+
+    const message = existingAdmin ? "Operación completada. Admin ya existe." : GENERIC_SUCCESS_MESSAGE;
+    return NextResponse.json({ message }, { status: 200 });
   } catch (error) {
     console.error("OPS seed admin failed", error);
     return respondGenericError();
   }
-
-  return NextResponse.json({ message: GENERIC_SUCCESS_MESSAGE }, { status: 200 });
 }
