@@ -218,9 +218,9 @@ export function AdminUsersPanel() {
 
   return (
     <div className="space-y-8">
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="text-lg font-semibold text-slate-900">Crear usuario</h2>
-        <p className="text-sm text-slate-600">Define el rol y las credenciales iniciales.</p>
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-surface-muted/80 dark:bg-surface-elevated/80">
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Crear usuario</h2>
+        <p className="text-sm text-slate-600 dark:text-slate-300">Define el rol y las credenciales iniciales.</p>
 
         <div className="mt-4 grid gap-4 md:grid-cols-2">
           <input
@@ -319,15 +319,15 @@ export function AdminUsersPanel() {
         </button>
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-surface-muted/80 dark:bg-surface-elevated/80">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-semibold text-slate-900">Usuarios</h2>
-            <p className="text-sm text-slate-600">Administra roles y accesos.</p>
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Usuarios</h2>
+            <p className="text-sm text-slate-600 dark:text-slate-300">Administra roles y accesos.</p>
           </div>
           <button
             type="button"
-            className="rounded-full border border-slate-200 px-4 py-2 text-xs font-semibold uppercase"
+            className="rounded-full border border-slate-200 px-4 py-2 text-xs font-semibold uppercase text-slate-600 dark:border-surface-muted/70 dark:text-slate-200"
             onClick={loadData}
             disabled={loading}
           >
@@ -335,24 +335,27 @@ export function AdminUsersPanel() {
           </button>
         </div>
 
-        {error ? <p className="mt-4 text-sm text-red-600">{error}</p> : null}
+        {error ? <p className="mt-4 text-sm text-red-600 dark:text-red-400">{error}</p> : null}
 
         {loading ? (
-          <p className="mt-4 text-sm text-slate-500">Cargando usuarios...</p>
+          <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">Cargando usuarios...</p>
         ) : (
           <div className="mt-4 space-y-3">
             {users.map((user) => {
               const draft = drafts[user.id] ?? {};
               const selectedRole = draft.role ?? user.role;
               return (
-                <div key={user.id} className="rounded-xl border border-slate-200 p-4">
+                <div
+                  key={user.id}
+                  className="rounded-xl border border-slate-200 bg-white/60 p-4 dark:border-surface-muted/70 dark:bg-surface-base/60"
+                >
                   <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                     <div>
-                      <p className="text-sm font-semibold text-slate-900">
+                      <p className="text-sm font-semibold text-slate-900 dark:text-white">
                         {user.name} {user.lastName}
                       </p>
-                      <p className="text-xs text-slate-500">{user.email}</p>
-                      <p className="text-xs text-slate-500">
+                      <p className="text-xs text-slate-500 dark:text-slate-400">{user.email}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
                         Rol actual: {roleLabels[user.role]}{" "}
                         {user.professional?.specialty?.name ? `· ${user.professional.specialty.name}` : ""}
                       </p>
@@ -397,7 +400,7 @@ export function AdminUsersPanel() {
                       </button>
                       <button
                         type="button"
-                        className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold uppercase"
+                        className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold uppercase text-slate-600 dark:border-surface-muted/70 dark:text-slate-200"
                         onClick={() => resetPassword(user)}
                         disabled={saving}
                       >

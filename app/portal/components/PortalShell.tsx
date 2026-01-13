@@ -1,11 +1,16 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 
+import { CalendarCheck, ClipboardText, Gear, House, SquaresFour, Stethoscope, UserCircle, Users } from "@phosphor-icons/react";
+
 import type { AuthSession } from "@/auth";
 import { roleFromSlug, roleLabels, roleSlugMap, type UserRole } from "@/lib/auth/roles";
+import { Sidebar } from "@/app/portal/components/layout/Sidebar";
+import { Topbar } from "@/app/portal/components/layout/Topbar";
 
 interface PortalShellProps {
   children: React.ReactNode;
@@ -15,26 +20,31 @@ interface PortalShellProps {
 interface NavItem {
   label: string;
   href: string;
+  icon: typeof House;
 }
 
 const navByRole: Record<UserRole, NavItem[]> = {
   PACIENTE: [
-    { label: "Mis turnos", href: "/appointments/new" },
-    { label: "Mis citas", href: "/portal/client" },
+    { label: "Mis turnos", href: "/appointments/new", icon: CalendarCheck },
+    { label: "Mis citas", href: "/portal/client", icon: ClipboardText },
   ],
-  PROFESIONAL: [
-    { label: "Agenda", href: "/portal/professional" },
-  ],
+  PROFESIONAL: [{ label: "Agenda", href: "/portal/professional", icon: CalendarCheck }],
   RECEPCIONISTA: [
-    { label: "Agenda global", href: "/portal/receptionist" },
-    { label: "Crear paciente", href: "/portal/receptionist" },
+    { label: "Agenda global", href: "/portal/receptionist", icon: CalendarCheck },
+    { label: "Crear paciente", href: "/portal/receptionist", icon: Users },
   ],
   ADMINISTRADOR: [
-    { label: "Usuarios", href: "/portal/admin/users" },
-    { label: "Especialidades", href: "/portal/admin/specialties" },
-    { label: "Profesionales", href: "/portal/admin/professionals" },
-    { label: "Citas", href: "/portal/admin/appointments" },
+    { label: "Dashboard", href: "/portal/admin", icon: House },
+    { label: "Usuarios", href: "/portal/admin/users", icon: Users },
+    { label: "Profesionales", href: "/portal/admin/professionals", icon: UserCircle },
+    { label: "Especialidades", href: "/portal/admin/specialties", icon: Stethoscope },
+    { label: "Turnos / Citas", href: "/portal/admin/appointments", icon: CalendarCheck },
+    { label: "CMS", href: "/portal/admin/content", icon: SquaresFour },
   ],
+};
+
+const settingsByRole: Partial<Record<UserRole, NavItem[]>> = {
+  ADMINISTRADOR: [{ label: "Settings", href: "/portal/admin/settings", icon: Gear }],
 };
 
 function resolveActiveRole(pathname: string, fallback?: UserRole): UserRole | null {
@@ -48,54 +58,46 @@ export function PortalShell({ children, session }: PortalShellProps) {
   const fallbackRole = session?.user?.role ?? null;
   const activeRole = resolveActiveRole(pathname, fallbackRole ?? undefined);
   const navItems = activeRole ? navByRole[activeRole] : [];
+  const settingsItems = activeRole ? settingsByRole[activeRole] ?? [] : [];
   const roleLabel = activeRole ? roleLabels[activeRole] : "";
   const userName = session?.user?.name ?? "Usuario";
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  const homeLink = useMemo(() => {
+    if (!activeRole) {
+      return "/";
+    }
+
+    return `/portal/${roleSlugMap[activeRole]}`;
+  }, [activeRole]);
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-surface-base dark:text-white">
-      <header className="border-b border-slate-200 bg-white/80 px-6 py-4 backdrop-blur dark:border-surface-muted dark:bg-surface-elevated/80">
-        <div className="mx-auto flex max-w-6xl items-center justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-brand-teal dark:text-accent-cyan">
-              {roleLabel}
-            </p>
-            <p className="text-sm text-slate-600 dark:text-slate-300">Hola, {userName}</p>
-          </div>
-          <div className="flex items-center gap-4 text-sm">
-            <nav className="hidden gap-2 md:flex">
-              {navItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`rounded-full px-3 py-1 transition-colors ${
-                    pathname === item.href
-                      ? "bg-brand-teal/10 text-brand-teal dark:bg-accent-cyan/10 dark:text-accent-cyan"
-                      : "text-slate-600 hover:text-brand-teal dark:text-slate-300"
-                  }`}
-                >
-                  {item.label}
-                </Link>
-              ))}
-            </nav>
-            {activeRole ? (
+      <Sidebar
+        items={navItems}
+        settingsItems={settingsItems}
+        pathname={pathname}
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+        onSignOut={() => signOut({ callbackUrl: "/auth/login" })}
+      />
+      <div className="flex min-h-screen flex-col md:pl-72">
+        <Topbar roleLabel={roleLabel} userName={userName} onMenuClick={() => setIsSidebarOpen(true)} />
+        <main className="w-full px-6 py-8">
+          <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
+            <div className="flex items-center justify-between text-xs uppercase tracking-wide text-slate-400 dark:text-slate-500">
+              <span>Inicio rápido</span>
               <Link
-                href={`/portal/${roleSlugMap[activeRole]}`}
-                className="text-xs font-semibold uppercase tracking-wide text-slate-500 hover:text-brand-indigo"
+                href={homeLink}
+                className="font-semibold text-brand-teal transition hover:text-brand-indigo dark:text-accent-cyan"
               >
-                Inicio
+                Ir al portal
               </Link>
-            ) : null}
-            <button
-              type="button"
-              onClick={() => signOut({ callbackUrl: "/auth/login" })}
-              className="rounded-full border border-slate-200 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-slate-600 transition hover:border-brand-teal hover:text-brand-teal dark:border-surface-muted dark:text-slate-200"
-            >
-              Cerrar sesión
-            </button>
+            </div>
+            {children}
           </div>
-        </div>
-      </header>
-      <main className="mx-auto w-full max-w-6xl px-6 py-8">{children}</main>
+        </main>
+      </div>
     </div>
   );
 }

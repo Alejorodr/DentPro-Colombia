@@ -31,11 +31,11 @@ export function AdminAppointmentsPanel() {
   }, []);
 
   if (loading) {
-    return <p className="text-sm text-slate-500">Cargando citas...</p>;
+    return <p className="text-sm text-slate-500 dark:text-slate-400">Cargando citas...</p>;
   }
 
   if (error) {
-    return <p className="text-sm text-red-600">{error}</p>;
+    return <p className="text-sm text-red-600 dark:text-red-400">{error}</p>;
   }
 
   return <AppointmentsList initialAppointments={appointments} role="ADMINISTRADOR" />;
