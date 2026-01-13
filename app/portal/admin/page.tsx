@@ -9,7 +9,9 @@ export default async function AdminPortalPage() {
     <div className="space-y-6">
       <header className="space-y-2">
         <p className="text-xs font-semibold uppercase tracking-wide text-brand-teal">Portal Administrador</p>
-        <h1 className="text-2xl font-semibold text-slate-900">Gestión general</h1>
+        <h1 className="text-2xl font-semibold text-slate-900" data-testid="admin-dashboard-title">
+          Gestión general
+        </h1>
         <p className="text-sm text-slate-600">
           Accede a los módulos clave para administrar usuarios, especialidades, profesionales y citas.
         </p>

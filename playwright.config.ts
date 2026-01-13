@@ -10,7 +10,7 @@ export default defineConfig({
   },
   webServer: {
     command:
-      "TEST_AUTH_BYPASS=1 NEXTAUTH_SECRET=test-secret NEXTAUTH_URL=http://127.0.0.1:3000 npm run vercel-build && NODE_ENV=test TEST_AUTH_BYPASS=1 NEXTAUTH_SECRET=test-secret NEXTAUTH_URL=http://127.0.0.1:3000 npm run start -- --hostname 127.0.0.1 --port 3000",
+      "OPS_ENABLED=1 OPS_KEY=ops-test-key SEED_ADMIN_EMAIL=admin@dentpro.test SEED_ADMIN_PASSWORD=Test1234! TEST_AUTH_BYPASS=1 NEXTAUTH_SECRET=test-secret NEXTAUTH_URL=http://127.0.0.1:3000 npm run vercel-build && NODE_ENV=test OPS_ENABLED=1 OPS_KEY=ops-test-key SEED_ADMIN_EMAIL=admin@dentpro.test SEED_ADMIN_PASSWORD=Test1234! TEST_AUTH_BYPASS=1 NEXTAUTH_SECRET=test-secret NEXTAUTH_URL=http://127.0.0.1:3000 npm run start -- --hostname 127.0.0.1 --port 3000",
     url: "http://127.0.0.1:3000",
     reuseExistingServer: false,
     timeout: 120_000,

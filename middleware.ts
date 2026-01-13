@@ -13,6 +13,14 @@ export async function middleware(request: NextRequest) {
   const host = request.headers.get("host") ?? "";
   const isLocalhost = host.startsWith("localhost") || host.startsWith("127.0.0.1");
   const secret = process.env.AUTH_JWT_SECRET ?? process.env.NEXTAUTH_SECRET ?? process.env.AUTH_SECRET;
+  if (!secret) {
+    const message = "NEXTAUTH_SECRET is not configured.";
+    if (process.env.NODE_ENV === "production") {
+      console.error(message);
+      throw new Error(message);
+    }
+    console.warn(message);
+  }
   const token = await getToken({ req: request, secret });
   let role = resolveRole(token);
   const testRoleCookie = request.cookies.get("dentpro-test-role")?.value ?? "";
@@ -40,7 +48,7 @@ export async function middleware(request: NextRequest) {
 
   if (!role) {
     const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = "/auth/login";
+    redirectUrl.pathname = "/login";
     const callbackPath = `${pathname}${request.nextUrl.search}`;
     redirectUrl.searchParams.set("callbackUrl", callbackPath);
     return NextResponse.redirect(redirectUrl);

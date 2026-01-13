@@ -2,11 +2,11 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState, type FormEvent } from "react";
-import { getSession, signIn } from "next-auth/react";
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
+import { getSession, signIn, useSession } from "next-auth/react";
 import { ArrowRight, EnvelopeSimple, Lock, ShieldCheck, WarningCircle } from "@phosphor-icons/react";
 
-import { getDefaultDashboardPath, isUserRole } from "@/lib/auth/roles";
+import { getDefaultDashboardPath, isUserRole, type UserRole } from "@/lib/auth/roles";
 
 const errorMessages: Record<string, string> = {
   CredentialsSignin: "Correo o contraseña incorrectos.",
@@ -32,15 +32,69 @@ export function LoginFormCard({
   autoFocusEmail = false,
 }: LoginFormCardProps) {
   const router = useRouter();
+  const { data: session, status } = useSession();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
+  const resolveRedirectPath = useCallback((candidate?: string | null) => {
+    if (!candidate) {
+      return null;
+    }
+
+    const trimmed = candidate.trim();
+    if (!trimmed) {
+      return null;
+    }
+
+    let path = trimmed;
+
+    if (trimmed.startsWith("http")) {
+      try {
+        const parsed = new URL(trimmed);
+        path = `${parsed.pathname}${parsed.search}`;
+      } catch {
+        return null;
+      }
+    }
+
+    if (!path.startsWith("/")) {
+      return null;
+    }
+
+    if (path === "/" || path.startsWith("/auth/login") || path.startsWith("/login")) {
+      return null;
+    }
+
+    return path;
+  }, []);
+
+  const resolveDestination = useCallback(
+    (role: UserRole) => {
+      const roleDestination = getDefaultDashboardPath(role);
+      const callbackDestination = resolveRedirectPath(callbackUrl);
+      return callbackDestination ?? roleDestination;
+    },
+    [callbackUrl, resolveRedirectPath],
+  );
+
   const canSubmit = useMemo(
     () => email.trim().length > 0 && password.trim().length > 0 && !isSubmitting,
     [email, isSubmitting, password],
   );
+
+  useEffect(() => {
+    if (status !== "authenticated") {
+      return;
+    }
+
+    const roleCandidate = session?.user?.role ?? "";
+    const resolvedRole = isUserRole(roleCandidate) ? roleCandidate : "PACIENTE";
+    const destination = resolveDestination(resolvedRole);
+    router.replace(destination);
+    router.refresh();
+  }, [resolveDestination, router, session?.user?.role, status]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -60,7 +114,6 @@ export function LoginFormCard({
       email,
       password,
       redirect: false,
-      callbackUrl: callbackUrl ?? "/",
     });
 
     if (result?.error) {
@@ -72,10 +125,7 @@ export function LoginFormCard({
     const resolvedSession = await getSession();
     const roleCandidate = resolvedSession?.user?.role ?? "";
     const resolvedRole = isUserRole(roleCandidate) ? roleCandidate : "PACIENTE";
-    const roleDestination = getDefaultDashboardPath(resolvedRole);
-    const resultUrl = result?.url ?? callbackUrl ?? roleDestination;
-    const resultPath = resultUrl.startsWith("http") ? new URL(resultUrl).pathname : resultUrl;
-    const destination = resultPath.startsWith("/portal") ? resultPath : roleDestination;
+    const destination = resolveDestination(resolvedRole);
     onSuccess?.();
     router.replace(destination);
     router.refresh();

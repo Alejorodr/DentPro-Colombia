@@ -108,7 +108,6 @@ export function LoginModal({ open, onClose }: LoginModalProps) {
               showBackLink={false}
               heading="Accede a tu tablero"
               description="Comparte tus credenciales para continuar con la gestión de la clínica."
-              callbackUrl="/"
               autoFocusEmail
             />
           </section>

@@ -7,6 +7,32 @@ const authUser = {
   password: process.env.TEST_AUTH_PASSWORD ?? "Test1234!",
 };
 
+test("seed admin then login redirects to admin dashboard", async ({ page, request }) => {
+  const opsKey = process.env.OPS_KEY ?? process.env.OPS_KEY_TEST ?? "ops-test-key";
+  const seedEmail = process.env.SEED_ADMIN_EMAIL ?? "admin@dentpro.test";
+  const seedPassword = process.env.SEED_ADMIN_PASSWORD ?? "Test1234!";
+  const hasDatabase = Boolean(process.env.DATABASE_URL);
+
+  test.skip(!hasDatabase, "DATABASE_URL is required for seed admin test.");
+
+  const seedResponse = await request.post("/api/ops/seed-admin", {
+    headers: { "X-OPS-KEY": opsKey },
+  });
+
+  expect(seedResponse.status()).toBe(200);
+  const seedPayload = await seedResponse.json();
+  expect(seedPayload.message).toContain("Operación completada");
+
+  await page.goto("/login");
+  await page.locator("#login-email").fill(seedEmail);
+  await page.locator("#login-password").fill(seedPassword);
+  await page.getByRole("button", { name: "Ingresar" }).click();
+
+  await expect(page).toHaveURL(/\/portal\/admin/);
+  await expect(page.getByText("Portal Administrador")).toBeVisible();
+  await expect(page.getByTestId("admin-dashboard-title")).toBeVisible();
+});
+
 test("login succeeds and persists across refresh", async ({ page, context }) => {
   await seedAdminSession(context);
   await page.goto("/portal/admin");

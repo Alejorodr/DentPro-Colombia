@@ -14,14 +14,17 @@ export default async function AuthLoginPage(props: any) {
   const resolvedProps = props as LoginPageProps;
   const searchParams = (await resolvedProps?.searchParams) ?? {};
   const callbackUrlRaw = searchParams?.callbackUrl;
-  const callbackUrl = typeof callbackUrlRaw === "string" ? callbackUrlRaw : "/";
+  const callbackUrl = typeof callbackUrlRaw === "string" && callbackUrlRaw.trim().length > 0 ? callbackUrlRaw : undefined;
+  const hasValidCallback =
+    callbackUrl !== undefined &&
+    callbackUrl !== "/" &&
+    !callbackUrl.startsWith("/auth/login") &&
+    !callbackUrl.startsWith("/login");
 
   const session = await auth();
 
   if (session?.user?.role) {
-    const resolvedCallback = callbackUrl.startsWith("/portal")
-      ? callbackUrl
-      : getDefaultDashboardPath(session.user.role);
+    const resolvedCallback = hasValidCallback ? callbackUrl : getDefaultDashboardPath(session.user.role);
     redirect(resolvedCallback);
   }
 

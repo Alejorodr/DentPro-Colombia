@@ -9,7 +9,7 @@ export async function requireRole(allowedRoles: UserRole | UserRole[]) {
   const normalizedRoles = Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles];
 
   if (!role || !isUserRole(role)) {
-    redirect("/auth/login");
+    redirect("/login");
   }
 
   if (!normalizedRoles.includes(role)) {
