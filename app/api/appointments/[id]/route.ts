@@ -77,6 +77,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       patient: { include: { user: true } },
       professional: { include: { user: true, specialty: true } },
       timeSlot: true,
+      service: true,
     },
   });
 

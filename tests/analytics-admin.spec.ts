@@ -49,6 +49,16 @@ describe("admin analytics", () => {
       },
     });
 
+    const service = await prisma.service.create({
+      data: {
+        name: "Consulta General",
+        description: "Revisión general.",
+        priceCents: 80000,
+        active: true,
+        specialtyId: specialty.id,
+      },
+    });
+
     const patientUser = await prisma.user.create({
       data: {
         email: "patient@test.com",
@@ -80,6 +90,9 @@ describe("admin analytics", () => {
         patientId: patient.id,
         professionalId: professional.id,
         timeSlotId: bookedSlot.id,
+        serviceId: service.id,
+        serviceName: service.name,
+        servicePriceCents: service.priceCents,
         reason: "Consulta",
         status: AppointmentStatus.CONFIRMED,
       },
@@ -131,6 +144,16 @@ describe("admin analytics", () => {
       },
     });
 
+    const service = await prisma.service.create({
+      data: {
+        name: "Consulta Ortodoncia",
+        description: "Primera evaluación.",
+        priceCents: 120000,
+        active: true,
+        specialtyId: specialty.id,
+      },
+    });
+
     const patientUser = await prisma.user.create({
       data: {
         email: "patient2@test.com",
@@ -158,6 +181,9 @@ describe("admin analytics", () => {
         patientId: patient.id,
         professionalId: professional.id,
         timeSlotId: slot.id,
+        serviceId: service.id,
+        serviceName: service.name,
+        servicePriceCents: service.priceCents,
         reason: "Consulta",
         status: AppointmentStatus.PENDING,
       },

@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
-import { AppointmentStatus, Role, TimeSlotStatus } from "@prisma/client";
+import { AppointmentStatus, InsuranceStatus, Role, TimeSlotStatus } from "@prisma/client";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -60,6 +60,68 @@ export async function POST(request: Request) {
         update: { defaultSlotDurationMinutes: 45, active: true },
         create: { name: "Ortodoncia", defaultSlotDurationMinutes: 45, active: true },
       }),
+      prisma.specialty.upsert({
+        where: { name: "Endodoncia" },
+        update: { defaultSlotDurationMinutes: 60, active: true },
+        create: { name: "Endodoncia", defaultSlotDurationMinutes: 60, active: true },
+      }),
+    ]);
+
+    const services = await Promise.all([
+      prisma.service.upsert({
+        where: { name: "Limpieza Dental" },
+        update: {
+          description: "Profilaxis y pulido dental.",
+          priceCents: 80000,
+          durationMinutes: 30,
+          active: true,
+          specialtyId: specialties[0]?.id ?? null,
+        },
+        create: {
+          name: "Limpieza Dental",
+          description: "Profilaxis y pulido dental.",
+          priceCents: 80000,
+          durationMinutes: 30,
+          active: true,
+          specialtyId: specialties[0]?.id ?? null,
+        },
+      }),
+      prisma.service.upsert({
+        where: { name: "Blanqueamiento" },
+        update: {
+          description: "Tratamiento estético para aclarar el esmalte.",
+          priceCents: 250000,
+          durationMinutes: 60,
+          active: true,
+          specialtyId: specialties[0]?.id ?? null,
+        },
+        create: {
+          name: "Blanqueamiento",
+          description: "Tratamiento estético para aclarar el esmalte.",
+          priceCents: 250000,
+          durationMinutes: 60,
+          active: true,
+          specialtyId: specialties[0]?.id ?? null,
+        },
+      }),
+      prisma.service.upsert({
+        where: { name: "Endodoncia Básica" },
+        update: {
+          description: "Tratamiento de conductos para aliviar dolor.",
+          priceCents: 180000,
+          durationMinutes: 60,
+          active: true,
+          specialtyId: specialties[2]?.id ?? null,
+        },
+        create: {
+          name: "Endodoncia Básica",
+          description: "Tratamiento de conductos para aliviar dolor.",
+          priceCents: 180000,
+          durationMinutes: 60,
+          active: true,
+          specialtyId: specialties[2]?.id ?? null,
+        },
+      }),
     ]);
 
     const users = [
@@ -106,6 +168,13 @@ export async function POST(request: Request) {
         lastName: "Ruiz",
         passwordHash: await bcrypt.hash("DentProPac!1", 12),
       },
+      {
+        email: "demo-paciente@dentpro.co",
+        role: Role.PACIENTE,
+        name: "Andrea",
+        lastName: "Gomez",
+        passwordHash: await bcrypt.hash("DentProDemo!1", 12),
+      },
     ];
 
     const createdUsers = await Promise.all(
@@ -146,11 +215,21 @@ export async function POST(request: Request) {
           update: {
             phone: `30055500${index}`,
             documentId: `CC10${index}2345`,
+            insuranceProvider: index % 2 === 0 ? "Colsanitas Dental Plan" : null,
+            insuranceStatus: index % 2 === 0 ? InsuranceStatus.ACTIVE : InsuranceStatus.UNKNOWN,
+            address: "Cra. 7 #13-180",
+            city: "Chía, Cundinamarca",
+            patientCode: `89302${index}1`,
           },
           create: {
             userId: user.id,
             phone: `30055500${index}`,
             documentId: `CC10${index}2345`,
+            insuranceProvider: index % 2 === 0 ? "Colsanitas Dental Plan" : null,
+            insuranceStatus: index % 2 === 0 ? InsuranceStatus.ACTIVE : InsuranceStatus.UNKNOWN,
+            address: "Cra. 7 #13-180",
+            city: "Chía, Cundinamarca",
+            patientCode: `89302${index}1`,
           },
         }),
       ),
@@ -181,6 +260,7 @@ export async function POST(request: Request) {
         slots.map(async (slot, index) => {
           const professional = professionals[index % professionals.length];
           const patient = patients[index % patients.length];
+          const service = services[index % services.length];
           if (!professional || !patient) {
             return;
           }
@@ -202,12 +282,94 @@ export async function POST(request: Request) {
               patientId: patient.id,
               professionalId: professional.id,
               timeSlotId: timeSlot.id,
-              reason: index % 2 === 0 ? "Control odontológico" : "Consulta especializada",
+              serviceId: service.id,
+              serviceName: service.name,
+              servicePriceCents: service.priceCents,
+              reason: service.name,
               status: slot.status,
             },
           });
         }),
       );
+    }
+
+    const demoPatient = await prisma.patientProfile.findFirst({
+      where: { user: { email: "demo-paciente@dentpro.co" } },
+    });
+    const primaryProfessional = await prisma.professionalProfile.findFirst({ orderBy: { userId: "asc" } });
+
+    if (demoPatient && primaryProfessional) {
+      const demoAppointments = await prisma.appointment.count({ where: { patientId: demoPatient.id } });
+      if (demoAppointments < 3) {
+        const now = new Date();
+        const buildSlot = (offsetDays: number, hour: number) => {
+          const date = new Date(now);
+          date.setDate(now.getDate() + offsetDays);
+          date.setHours(hour, 0, 0, 0);
+          return date;
+        };
+
+        const demoSlots = [
+          { startAt: buildSlot(-7, 9), status: AppointmentStatus.COMPLETED },
+          { startAt: buildSlot(-3, 11), status: AppointmentStatus.COMPLETED },
+          { startAt: buildSlot(5, 10), status: AppointmentStatus.CONFIRMED },
+        ];
+
+        for (const slot of demoSlots) {
+          const endAt = new Date(slot.startAt.getTime() + (primaryProfessional.slotDurationMinutes ?? 30) * 60_000);
+          const timeSlot = await prisma.timeSlot.create({
+            data: {
+              professionalId: primaryProfessional.id,
+              startAt: slot.startAt,
+              endAt,
+              status: slot.status === AppointmentStatus.CONFIRMED ? TimeSlotStatus.BOOKED : TimeSlotStatus.BOOKED,
+            },
+          });
+
+          const service = services[0];
+
+          await prisma.appointment.create({
+            data: {
+              patientId: demoPatient.id,
+              professionalId: primaryProfessional.id,
+              timeSlotId: timeSlot.id,
+              serviceId: service.id,
+              serviceName: service.name,
+              servicePriceCents: service.priceCents,
+              reason: service.name,
+              status: slot.status,
+            },
+          });
+        }
+      }
+    }
+
+    if (primaryProfessional) {
+      const availableCount = await prisma.timeSlot.count({
+        where: { professionalId: primaryProfessional.id, status: TimeSlotStatus.AVAILABLE },
+      });
+
+      if (availableCount < 5) {
+        const startDate = new Date();
+        startDate.setDate(startDate.getDate() + 1);
+        startDate.setHours(9, 0, 0, 0);
+
+        const slots = Array.from({ length: 5 }, (_, index) => {
+          const startAt = new Date(startDate.getTime() + index * 60 * 60_000);
+          const endAt = new Date(startAt.getTime() + (primaryProfessional.slotDurationMinutes ?? 30) * 60_000);
+          return { startAt, endAt };
+        });
+
+        await prisma.timeSlot.createMany({
+          data: slots.map((slot) => ({
+            professionalId: primaryProfessional.id,
+            startAt: slot.startAt,
+            endAt: slot.endAt,
+            status: TimeSlotStatus.AVAILABLE,
+          })),
+          skipDuplicates: true,
+        });
+      }
     }
 
     const message = existingAdmin ? "Operación completada. Admin ya existe." : GENERIC_SUCCESS_MESSAGE;

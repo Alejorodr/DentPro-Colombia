@@ -23,6 +23,12 @@ type TimeSlot = {
   status: string;
 };
 
+type Service = {
+  id: string;
+  name: string;
+  priceCents: number;
+};
+
 interface NewAppointmentFormProps {
   role: UserRole;
 }
@@ -31,8 +37,10 @@ export function NewAppointmentForm({ role }: NewAppointmentFormProps) {
   const [specialties, setSpecialties] = useState<Specialty[]>([]);
   const [professionals, setProfessionals] = useState<Professional[]>([]);
   const [slots, setSlots] = useState<TimeSlot[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
   const [specialtyId, setSpecialtyId] = useState("");
   const [professionalId, setProfessionalId] = useState("");
+  const [serviceId, setServiceId] = useState("");
   const [selectedDate, setSelectedDate] = useState("");
   const [timeSlotId, setTimeSlotId] = useState("");
   const [reason, setReason] = useState("");
@@ -52,6 +60,13 @@ export function NewAppointmentForm({ role }: NewAppointmentFormProps) {
       .then((res) => res.json())
       .then(setProfessionals)
       .catch(() => setProfessionals([]));
+  }, []);
+
+  useEffect(() => {
+    void fetch("/api/services?active=true")
+      .then((res) => res.json())
+      .then(setServices)
+      .catch(() => setServices([]));
   }, []);
 
   const filteredProfessionals = useMemo(
@@ -95,6 +110,7 @@ export function NewAppointmentForm({ role }: NewAppointmentFormProps) {
         timeSlotId,
         professionalId: professionalId || undefined,
         patientId: role !== "PACIENTE" ? patientId || undefined : undefined,
+        serviceId,
         reason,
         notes,
       }),
@@ -115,6 +131,29 @@ export function NewAppointmentForm({ role }: NewAppointmentFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
       <div className="grid gap-4 md:grid-cols-2">
+        <label className="space-y-2 text-sm font-semibold text-slate-700">
+          Servicio
+          <select
+            value={serviceId}
+            onChange={(event) => {
+              const nextServiceId = event.target.value;
+              setServiceId(nextServiceId);
+              const service = services.find((item) => item.id === nextServiceId);
+              if (service && !reason) {
+                setReason(service.name);
+              }
+            }}
+            className="input"
+            required
+          >
+            <option value="">Selecciona</option>
+            {services.map((service) => (
+              <option key={service.id} value={service.id}>
+                {service.name}
+              </option>
+            ))}
+          </select>
+        </label>
         <label className="space-y-2 text-sm font-semibold text-slate-700">
           Especialidad
           <select
