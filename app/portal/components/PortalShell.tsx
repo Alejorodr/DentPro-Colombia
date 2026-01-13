@@ -9,12 +9,15 @@ import { CalendarCheck, ClipboardText, Gear, House, SquaresFour, Stethoscope, Us
 
 import type { AuthSession } from "@/auth";
 import { roleFromSlug, roleLabels, roleSlugMap, type UserRole } from "@/lib/auth/roles";
+import type { ClinicInfo } from "@/lib/clinic";
 import { Sidebar } from "@/app/portal/components/layout/Sidebar";
 import { Topbar } from "@/app/portal/components/layout/Topbar";
+import { ClientPortalShell } from "@/app/portal/client/components/ClientPortalShell";
 
 interface PortalShellProps {
   children: React.ReactNode;
   session: AuthSession;
+  clinic: ClinicInfo;
 }
 
 interface NavItem {
@@ -53,7 +56,7 @@ function resolveActiveRole(pathname: string, fallback?: UserRole): UserRole | nu
   return role ?? fallback ?? null;
 }
 
-export function PortalShell({ children, session }: PortalShellProps) {
+export function PortalShell({ children, session, clinic }: PortalShellProps) {
   const pathname = usePathname();
   const fallbackRole = session?.user?.role ?? null;
   const activeRole = resolveActiveRole(pathname, fallbackRole ?? undefined);
@@ -70,6 +73,14 @@ export function PortalShell({ children, session }: PortalShellProps) {
 
     return `/portal/${roleSlugMap[activeRole]}`;
   }, [activeRole]);
+
+  if (activeRole === "PACIENTE") {
+    return (
+      <ClientPortalShell session={session} clinic={clinic}>
+        {children}
+      </ClientPortalShell>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-surface-base dark:text-white">

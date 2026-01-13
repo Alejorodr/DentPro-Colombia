@@ -57,6 +57,7 @@ export async function getTestPrisma(): Promise<TestPrisma> {
       await prisma.passwordResetToken.deleteMany();
       await prisma.patientProfile.deleteMany();
       await prisma.professionalProfile.deleteMany();
+      await prisma.service.deleteMany();
       await prisma.specialty.deleteMany();
       await prisma.user.deleteMany();
     };

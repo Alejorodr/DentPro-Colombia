@@ -20,6 +20,7 @@ export async function GET() {
         patient: { include: { user: true } },
         professional: { include: { user: true, specialty: true } },
         timeSlot: true,
+        service: true,
       },
       orderBy: { timeSlot: { startAt: "asc" } },
     });
@@ -41,6 +42,7 @@ export async function GET() {
         patient: { include: { user: true } },
         professional: { include: { user: true, specialty: true } },
         timeSlot: true,
+        service: true,
       },
       orderBy: { timeSlot: { startAt: "asc" } },
     });
@@ -62,6 +64,7 @@ export async function GET() {
       patient: { include: { user: true } },
       professional: { include: { user: true, specialty: true } },
       timeSlot: true,
+      service: true,
     },
     orderBy: { timeSlot: { startAt: "asc" } },
   });
@@ -80,14 +83,15 @@ export async function POST(request: Request) {
     patientId?: string;
     professionalId?: string;
     timeSlotId?: string;
+    serviceId?: string;
     reason?: string;
     notes?: string;
   } | null;
 
   const reason = payload?.reason?.trim();
 
-  if (!payload?.timeSlotId || !reason) {
-    return errorResponse("El slot y el motivo son obligatorios.");
+  if (!payload?.timeSlotId || !payload.serviceId || !reason) {
+    return errorResponse("El slot, el servicio y el motivo son obligatorios.");
   }
 
   const prisma = getPrismaClient();
@@ -97,6 +101,14 @@ export async function POST(request: Request) {
 
   if (!timeSlot) {
     return errorResponse("Slot no encontrado.", 404);
+  }
+
+  const service = await prisma.service.findUnique({
+    where: { id: payload.serviceId },
+  });
+
+  if (!service || !service.active) {
+    return errorResponse("Servicio no disponible.", 404);
   }
 
   if (timeSlot.status !== TimeSlotStatus.AVAILABLE) {
@@ -145,6 +157,9 @@ export async function POST(request: Request) {
           patientId,
           professionalId,
           timeSlotId: timeSlot.id,
+          serviceId: service.id,
+          serviceName: service.name,
+          servicePriceCents: service.priceCents,
           reason,
           notes: payload.notes?.trim() || null,
           status: AppointmentStatus.PENDING,
@@ -153,6 +168,7 @@ export async function POST(request: Request) {
           patient: { include: { user: true } },
           professional: { include: { user: true, specialty: true } },
           timeSlot: true,
+          service: true,
         },
       });
 

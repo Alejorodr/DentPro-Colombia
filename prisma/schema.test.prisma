@@ -14,6 +14,7 @@ model Specialty {
   defaultSlotDurationMinutes Int
   active                     Boolean               @default(true)
   professionals              ProfessionalProfile[]
+  services                   Service[]
 }
 
 model User {
@@ -43,12 +44,35 @@ model ProfessionalProfile {
 }
 
 model PatientProfile {
-  id           String        @id @default(uuid())
-  userId       String        @unique
-  phone        String?
-  documentId   String?
-  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  appointments Appointment[]
+  id                String        @id @default(uuid())
+  userId            String        @unique
+  phone             String?
+  documentId        String?
+  dateOfBirth       DateTime?
+  gender            String?
+  insuranceProvider String?
+  insuranceStatus   String?
+  address           String?
+  city              String?
+  avatarUrl         String?
+  patientCode       String?
+  user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  appointments      Appointment[]
+}
+
+model Service {
+  id              String        @id @default(uuid())
+  name            String        @unique
+  description     String?
+  priceCents      Int
+  durationMinutes Int?
+  active          Boolean       @default(true)
+  specialtyId     String?
+  specialty       Specialty?    @relation(fields: [specialtyId], references: [id], onDelete: SetNull)
+  appointments    Appointment[]
+
+  @@index([active])
+  @@index([specialtyId])
 }
 
 model TimeSlot {
@@ -69,6 +93,9 @@ model Appointment {
   patientId      String
   professionalId String
   timeSlotId     String              @unique
+  serviceId      String
+  serviceName    String?
+  servicePriceCents Int?
   reason         String
   notes          String?
   status         String              @default("PENDING")
@@ -77,9 +104,11 @@ model Appointment {
   patient        PatientProfile      @relation(fields: [patientId], references: [id], onDelete: Restrict)
   professional   ProfessionalProfile @relation(fields: [professionalId], references: [id], onDelete: Restrict)
   timeSlot       TimeSlot            @relation(fields: [timeSlotId], references: [id], onDelete: Restrict)
+  service        Service             @relation(fields: [serviceId], references: [id], onDelete: Restrict)
 
   @@index([patientId])
   @@index([professionalId])
+  @@index([serviceId])
 }
 
 model PasswordResetToken {
