@@ -11,7 +11,7 @@ require("ts-node/register");
 
 const { getAdminKpis, parseRange } = require("../app/portal/admin/_data/analytics.ts");
 
-const range = parseRange({ range: "7d" });
+const range = parseRange({ range: "last7" });
 
 getAdminKpis({ from: range.from, to: range.to })
   .then((kpis) => {

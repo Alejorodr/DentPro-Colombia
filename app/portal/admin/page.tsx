@@ -1,6 +1,4 @@
 import { CalendarCheck, ChartDonut, UserCheck, Users } from "@phosphor-icons/react/dist/ssr";
-
-import { requireRole } from "@/lib/auth/require-role";
 import Link from "next/link";
 
 import { PeriodSelector } from "@/app/portal/admin/_components/PeriodSelector";
@@ -18,13 +16,15 @@ import {
 } from "@/app/portal/admin/_data/analytics";
 import { getStaffList } from "@/app/portal/admin/_data/dashboard";
 import { AppointmentStatus } from "@prisma/client";
+import { requireRole } from "@/lib/auth/require-role";
+import { formatInTimeZone, getAnalyticsTimeZone } from "@/lib/dates/tz";
 
-function formatTime(date: Date) {
-  return date.toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" });
+function formatTime(date: Date, timeZone: string) {
+  return formatInTimeZone(date, timeZone, { hour: "2-digit", minute: "2-digit" });
 }
 
-function formatDate(date: Date) {
-  return date.toLocaleDateString("es-CO", { month: "short", day: "2-digit" });
+function formatDate(date: Date, timeZone: string) {
+  return formatInTimeZone(date, timeZone, { month: "short", day: "2-digit" });
 }
 
 const statusLabels: Record<AppointmentStatus, string> = {
@@ -44,11 +44,12 @@ export default async function AdminPortalPage({
   await requireRole("ADMINISTRADOR");
   const resolvedSearchParams = await searchParams;
   const range = parseRange(resolvedSearchParams ?? {});
+  const timeZone = range.timeZone ?? getAnalyticsTimeZone();
   const [kpis, staffOnDuty, appointments, trend] = await Promise.all([
     getAdminKpis({ from: range.from, to: range.to }),
     getStaffList(),
     getAppointmentsForRange({ from: range.from, to: range.to, limit: 8 }),
-    getAdminTrend({ from: range.from, to: range.to, bucket: range.bucket }),
+    getAdminTrend({ from: range.from, to: range.to, bucket: range.bucket, timeZone }),
   ]);
 
   const stats = [
@@ -187,6 +188,7 @@ export default async function AdminPortalPage({
                   <th className="px-4 py-3 font-semibold">Hora</th>
                   <th className="px-4 py-3 font-semibold">Paciente</th>
                   <th className="px-4 py-3 font-semibold">Profesional</th>
+                  <th className="px-4 py-3 font-semibold">Especialidad</th>
                   <th className="px-4 py-3 font-semibold">Estado</th>
                 </tr>
               </thead>
@@ -194,15 +196,16 @@ export default async function AdminPortalPage({
                 {appointments.map((appointment) => (
                   <tr key={appointment.id} className="bg-white dark:bg-surface-elevated/60">
                     <td className="px-4 py-3 font-semibold text-slate-900 dark:text-white">
-                      {formatDate(appointment.timeSlot.startAt)}
+                      {formatDate(appointment.timeSlot.startAt, timeZone)}
                     </td>
-                    <td className="px-4 py-3">{formatTime(appointment.timeSlot.startAt)}</td>
+                    <td className="px-4 py-3">{formatTime(appointment.timeSlot.startAt, timeZone)}</td>
                     <td className="px-4 py-3">
                       {appointment.patient?.user.name ?? "—"} {appointment.patient?.user.lastName ?? ""}
                     </td>
                     <td className="px-4 py-3">
                       {appointment.professional?.user.name ?? "—"} {appointment.professional?.user.lastName ?? ""}
                     </td>
+                    <td className="px-4 py-3">{appointment.professional?.specialty?.name ?? "—"}</td>
                     <td className="px-4 py-3">
                       <span className="rounded-full bg-brand-teal/10 px-3 py-1 text-xs font-semibold text-brand-teal dark:bg-accent-cyan/10 dark:text-accent-cyan">
                         {appointment.status}

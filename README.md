@@ -134,6 +134,39 @@ NEXTAUTH_URL=https://dent-pro-colombia.vercel.app/
 - `/portal/recepcionista`
 - `/portal/admin`
 
+## Analytics admin (KPIs por período)
+
+Endpoint protegido:
+
+```
+GET /api/analytics/admin?range=last7
+GET /api/analytics/admin?range=custom&from=YYYY-MM-DD&to=YYYY-MM-DD
+```
+
+Rangos soportados:
+
+- `today` (hoy)
+- `last7` (últimos 7 días)
+- `last30` (últimos 30 días)
+- `mtd` (mes actual)
+- `ytd` (año en curso)
+- `custom` (requiere `from` y `to`, inclusivo)
+
+KPIs incluidos:
+
+- `totalAppointments`: citas en el rango.
+- `statusCounts`: distribución por estado.
+- `newPatients`: pacientes creados en el rango.
+- `activeProfessionals`: profesionales activos con citas en rango (si no hay citas, cuenta los activos).
+- `totalSlots` y `bookedSlots`: slots disponibles vs ocupados.
+- `utilizationRate`: ocupación (`bookedSlots / totalSlots`).
+- `cancellations`: cancelaciones en el rango.
+
+Timezone:
+
+- Por defecto usa `America/Bogota`.
+- Se puede sobreescribir con `ANALYTICS_TIME_ZONE`.
+
 ## Notas de producción
 
 - `prisma generate` debe ejecutarse en postinstall.
