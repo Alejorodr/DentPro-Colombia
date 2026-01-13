@@ -5,6 +5,8 @@ import { getPrismaClient } from "@/lib/prisma";
 import { getDefaultDashboardPath, roleFromSlug, roleLabels } from "@/lib/auth/roles";
 import { AppointmentsList } from "@/app/portal/components/AppointmentsList";
 
+export const dynamic = "force-dynamic";
+
 export default async function PortalRolePage({ params }: { params: Promise<{ role: string }> }) {
   const { role } = await params;
   const requestedRole = roleFromSlug(role);

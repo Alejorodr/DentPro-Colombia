@@ -25,7 +25,7 @@ const roleSlugAliases: Record<UserRole, string[]> = {
   PACIENTE: ["paciente", "cliente", "client", "patient"],
   PROFESIONAL: ["profesional", "professional"],
   RECEPCIONISTA: ["recepcionista", "receptionist"],
-  ADMINISTRADOR: ["admin"],
+  ADMINISTRADOR: ["admin", "administrador", "administrator"],
 };
 
 export function isUserRole(role: string): role is UserRole {

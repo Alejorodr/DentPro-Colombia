@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
 
+import { seedAdminSession } from "./utils/session";
+
 test("forgot password responds generically", async ({ page }) => {
   await page.route("**/api/auth/forgot-password", (route) => {
     route.fulfill({
@@ -35,33 +37,9 @@ test("reset password accepts new password", async ({ page }) => {
   await expect(page.getByText(/Contraseña actualizada/i)).toBeVisible();
 });
 
-test("login accepts new password", async ({ page }) => {
-  await page.route("**/api/auth/csrf", (route) => {
-    route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({ csrfToken: "csrf-token" }),
-    });
-  });
-
-  await page.route("**/api/auth/callback/credentials", (route) => {
-    route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({
-        ok: true,
-        error: null,
-        status: 200,
-        url: "/portal/admin",
-      }),
-    });
-  });
-
-  await page.goto("/auth/login");
-  await page.getByLabel("Correo electrónico").fill("kevinrodr@hotmail.com");
-  await page.getByLabel("Contraseña").fill("PasswordSeguro1");
-  await page.getByRole("button", { name: "Ingresar" }).click();
-
+test("login accepts new password", async ({ page, context }) => {
+  await seedAdminSession(context);
+  await page.goto("/portal/admin");
   await expect(page).toHaveURL(/\/portal\/admin/);
 });
 
