@@ -1,13 +1,11 @@
 import { test, expect } from "@playwright/test";
 
 import { seedAdminSession } from "./utils/session";
+import { seedTestData } from "./utils/seed";
 
 test.describe("Admin analytics dashboard", () => {
   test.beforeEach(async ({ request }) => {
-    const response = await request.post("/api/ops/seed-admin", {
-      headers: { "x-ops-key": process.env.OPS_KEY ?? "ops-test-key" },
-    });
-    expect(response.ok()).toBeTruthy();
+    await seedTestData(request);
   });
 
   test("renders real KPIs and updates by range", async ({ page, context }) => {

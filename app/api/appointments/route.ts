@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { getPrismaClient } from "@/lib/prisma";
 import { getSessionUser, isAuthorized } from "@/app/api/_utils/auth";
 import { errorResponse } from "@/app/api/_utils/response";
+import { createReceptionNotifications } from "@/lib/notifications";
 import { AppointmentStatus, TimeSlotStatus } from "@prisma/client";
 
 export async function GET() {
@@ -86,6 +87,7 @@ export async function POST(request: Request) {
     serviceId?: string;
     reason?: string;
     notes?: string;
+    status?: AppointmentStatus;
   } | null;
 
   const reason = payload?.reason?.trim();
@@ -95,6 +97,10 @@ export async function POST(request: Request) {
   }
 
   const prisma = getPrismaClient();
+  const allowedStatuses = new Set<AppointmentStatus>([
+    AppointmentStatus.PENDING,
+    AppointmentStatus.CONFIRMED,
+  ]);
   const timeSlot = await prisma.timeSlot.findUnique({
     where: { id: payload.timeSlotId },
   });
@@ -162,7 +168,12 @@ export async function POST(request: Request) {
           servicePriceCents: service.priceCents,
           reason,
           notes: payload.notes?.trim() || null,
-          status: AppointmentStatus.PENDING,
+          status:
+            isAuthorized(sessionUser.role, ["ADMINISTRADOR", "RECEPCIONISTA"]) &&
+            payload?.status &&
+            allowedStatuses.has(payload.status)
+              ? payload.status
+              : AppointmentStatus.PENDING,
         },
         include: {
           patient: { include: { user: true } },
@@ -174,6 +185,16 @@ export async function POST(request: Request) {
 
       return created;
     });
+
+    if (sessionUser.role === "PACIENTE") {
+      await createReceptionNotifications({
+        type: "appointment_created",
+        title: "Nuevo turno solicitado",
+        body: `Paciente ${appointment.patient?.user.name ?? ""} ${appointment.patient?.user.lastName ?? ""} agendó una cita.`,
+        entityType: "appointment",
+        entityId: appointment.id,
+      });
+    }
 
     return NextResponse.json(appointment, { status: 201 });
   } catch (error) {

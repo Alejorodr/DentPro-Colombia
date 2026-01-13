@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { getPrismaClient } from "@/lib/prisma";
 import { getSessionUser, isAuthorized } from "@/app/api/_utils/auth";
 import { errorResponse } from "@/app/api/_utils/response";
+import { createReceptionNotifications } from "@/lib/notifications";
 import { AppointmentStatus } from "@prisma/client";
 
 const statusValues = Object.values(AppointmentStatus);
@@ -70,6 +71,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     // Sin restricciones adicionales.
   }
 
+  const previousStatus = appointment.status;
   const updated = await prisma.appointment.update({
     where: { id },
     data: { status: payload.status, notes: payload.notes ?? undefined },
@@ -80,6 +82,29 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       service: true,
     },
   });
+
+  if (previousStatus !== updated.status) {
+    const patientName = updated.patient ? `${updated.patient.user.name} ${updated.patient.user.lastName}` : "Paciente";
+    const professionalName = updated.professional
+      ? `${updated.professional.user.name} ${updated.professional.user.lastName}`
+      : "Profesional";
+    const statusLabel =
+      updated.status === AppointmentStatus.CANCELLED
+        ? "cancelado"
+        : updated.status === AppointmentStatus.CONFIRMED
+          ? "confirmado"
+          : updated.status === AppointmentStatus.COMPLETED
+            ? "finalizado"
+            : "pendiente";
+
+    await createReceptionNotifications({
+      type: "appointment_status",
+      title: "Estado de turno actualizado",
+      body: `Turno de ${patientName} con ${professionalName} fue ${statusLabel}.`,
+      entityType: "appointment",
+      entityId: updated.id,
+    });
+  }
 
   return NextResponse.json(updated);
 }

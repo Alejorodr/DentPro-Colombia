@@ -1,6 +1,7 @@
 import { test, expect } from "@playwright/test";
 
 import { seedAdminSession } from "./utils/session";
+import { seedTestData } from "./utils/seed";
 
 const authUser = {
   email: process.env.TEST_AUTH_EMAIL ?? "admin@dentpro.test",
@@ -8,20 +9,13 @@ const authUser = {
 };
 
 test("seed admin then login redirects to admin dashboard", async ({ page, request }) => {
-  const opsKey = process.env.OPS_KEY ?? process.env.OPS_KEY_TEST ?? "ops-test-key";
   const seedEmail = process.env.SEED_ADMIN_EMAIL ?? "admin@dentpro.test";
   const seedPassword = process.env.SEED_ADMIN_PASSWORD ?? "Test1234!";
   const hasDatabase = Boolean(process.env.DATABASE_URL);
 
   test.skip(!hasDatabase, "DATABASE_URL is required for seed admin test.");
 
-  const seedResponse = await request.post("/api/ops/seed-admin", {
-    headers: { "X-OPS-KEY": opsKey },
-  });
-
-  expect(seedResponse.status()).toBe(200);
-  const seedPayload = await seedResponse.json();
-  expect(seedPayload.message).toContain("Operación completada");
+  await seedTestData(request);
 
   await page.goto("/login");
   await page.locator("#login-email").fill(seedEmail);

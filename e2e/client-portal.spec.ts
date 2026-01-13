@@ -1,14 +1,12 @@
 import { test, expect } from "@playwright/test";
 
+import { seedTestData } from "./utils/seed";
+
 test("patient can book an appointment from the portal", async ({ page, request }) => {
   const hasDatabase = Boolean(process.env.DATABASE_URL);
   test.skip(!hasDatabase, "DATABASE_URL is required for client portal test.");
 
-  const opsKey = process.env.OPS_KEY ?? process.env.OPS_KEY_TEST ?? "ops-test-key";
-  const seedResponse = await request.post("/api/ops/seed-admin", {
-    headers: { "X-OPS-KEY": opsKey },
-  });
-  expect(seedResponse.status()).toBe(200);
+  await seedTestData(request);
 
   const email = process.env.DEMO_PATIENT_EMAIL ?? "demo-paciente@dentpro.co";
   const password = process.env.DEMO_PATIENT_PASSWORD ?? "DentProDemo!1";

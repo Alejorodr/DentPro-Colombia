@@ -65,7 +65,9 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(redirectUrl);
   }
 
-  if (requestedRole !== role) {
+  const allowAdminReceptionist = role === "ADMINISTRADOR" && requestedRole === "RECEPCIONISTA";
+
+  if (requestedRole !== role && !allowAdminReceptionist) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = getDefaultDashboardPath(role);
     redirectUrl.search = "";

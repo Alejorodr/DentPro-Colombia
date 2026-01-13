@@ -1,0 +1,144 @@
+"use client";
+
+import { useEffect, useState } from "react";
+
+import { X } from "@phosphor-icons/react";
+
+import { formatDateInput } from "@/lib/dates/tz";
+
+type Slot = {
+  id: string;
+  startAt: string;
+  endAt: string;
+  professional: { user: { name: string; lastName: string } };
+};
+
+interface RescheduleModalProps {
+  appointmentId: string | null;
+  open: boolean;
+  onClose: () => void;
+  onUpdated: () => void;
+}
+
+export function RescheduleModal({ appointmentId, open, onClose, onUpdated }: RescheduleModalProps) {
+  const [date, setDate] = useState(() => formatDateInput(new Date(), "America/Bogota"));
+  const [slots, setSlots] = useState<Slot[]>([]);
+  const [selectedSlotId, setSelectedSlotId] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    const loadSlots = async () => {
+      const response = await fetch(`/api/slots?date=${date}`);
+      if (response.ok) {
+        const data = (await response.json()) as { slots: Slot[] };
+        setSlots(data.slots);
+      }
+    };
+
+    void loadSlots();
+  }, [date, open]);
+
+  if (!open) {
+    return null;
+  }
+
+  const submit = async () => {
+    if (!appointmentId || !selectedSlotId) {
+      setError("Selecciona un slot disponible.");
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    const response = await fetch(`/api/appointments/${appointmentId}/reschedule`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ timeSlotId: selectedSlotId }),
+    });
+
+    if (response.ok) {
+      onUpdated();
+      onClose();
+      setSelectedSlotId("");
+    } else {
+      const body = (await response.json().catch(() => null)) as { error?: string } | null;
+      setError(body?.error ?? "No se pudo reprogramar.");
+    }
+
+    setLoading(false);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 px-4">
+      <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl dark:bg-surface-elevated">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Reprogramar turno</p>
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Selecciona un nuevo horario</h3>
+          </div>
+          <button
+            type="button"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-slate-500 dark:border-surface-muted"
+            onClick={onClose}
+            aria-label="Cerrar"
+          >
+            <X size={16} weight="bold" />
+          </button>
+        </div>
+        <div className="mt-4 space-y-4">
+          <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            Fecha
+            <input
+              type="date"
+              className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 dark:border-surface-muted dark:bg-surface-base dark:text-slate-200"
+              value={date}
+              onChange={(event) => setDate(event.target.value)}
+            />
+          </label>
+          <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            Slot disponible
+            <select
+              className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 dark:border-surface-muted dark:bg-surface-base dark:text-slate-200"
+              value={selectedSlotId}
+              onChange={(event) => setSelectedSlotId(event.target.value)}
+            >
+              <option value="">Selecciona un horario</option>
+              {slots.map((slot) => {
+                const start = new Date(slot.startAt).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" });
+                const end = new Date(slot.endAt).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" });
+                return (
+                  <option key={slot.id} value={slot.id}>
+                    {start} - {end} · {slot.professional.user.name} {slot.professional.user.lastName}
+                  </option>
+                );
+              })}
+            </select>
+          </label>
+          {error ? <p className="text-sm text-red-600">{error}</p> : null}
+        </div>
+        <div className="mt-6 flex justify-end gap-2">
+          <button
+            type="button"
+            className="rounded-full border border-slate-200 px-4 py-2 text-xs font-semibold uppercase text-slate-600 dark:border-surface-muted dark:text-slate-200"
+            onClick={onClose}
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            className="rounded-full bg-brand-teal px-4 py-2 text-xs font-semibold uppercase text-white"
+            onClick={submit}
+            disabled={loading}
+          >
+            Guardar cambios
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

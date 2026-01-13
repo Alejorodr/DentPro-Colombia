@@ -220,6 +220,7 @@ export async function POST(request: Request) {
             address: "Cra. 7 #13-180",
             city: "Chía, Cundinamarca",
             patientCode: `89302${index}1`,
+            active: true,
           },
           create: {
             userId: user.id,
@@ -230,6 +231,7 @@ export async function POST(request: Request) {
             address: "Cra. 7 #13-180",
             city: "Chía, Cundinamarca",
             patientCode: `89302${index}1`,
+            active: true,
           },
         }),
       ),

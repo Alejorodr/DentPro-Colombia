@@ -5,7 +5,16 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 
-import { CalendarCheck, ClipboardText, Gear, House, SquaresFour, Stethoscope, UserCircle, Users } from "@phosphor-icons/react";
+import {
+  CalendarCheck,
+  ClipboardText,
+  Gear,
+  House,
+  SquaresFour,
+  Stethoscope,
+  UserCircle,
+  Users,
+} from "@phosphor-icons/react";
 
 import type { AuthSession } from "@/auth";
 import { roleFromSlug, roleLabels, roleSlugMap, type UserRole } from "@/lib/auth/roles";
@@ -13,6 +22,7 @@ import type { ClinicInfo } from "@/lib/clinic";
 import { Sidebar } from "@/app/portal/components/layout/Sidebar";
 import { Topbar } from "@/app/portal/components/layout/Topbar";
 import { ClientPortalShell } from "@/app/portal/client/components/ClientPortalShell";
+import { ReceptionistShell } from "@/app/portal/receptionist/components/ReceptionistShell";
 
 interface PortalShellProps {
   children: React.ReactNode;
@@ -33,8 +43,12 @@ const navByRole: Record<UserRole, NavItem[]> = {
   ],
   PROFESIONAL: [{ label: "Agenda", href: "/portal/professional", icon: CalendarCheck }],
   RECEPCIONISTA: [
-    { label: "Agenda global", href: "/portal/receptionist", icon: CalendarCheck },
-    { label: "Crear paciente", href: "/portal/receptionist", icon: Users },
+    { label: "Dashboard", href: "/portal/receptionist/dashboard", icon: House },
+    { label: "Schedule", href: "/portal/receptionist/schedule", icon: CalendarCheck },
+    { label: "Patients", href: "/portal/receptionist/patients", icon: Users },
+    { label: "Staff", href: "/portal/receptionist/staff", icon: UserCircle },
+    { label: "Billing", href: "/portal/receptionist/billing", icon: ClipboardText },
+    { label: "Settings", href: "/portal/receptionist/settings", icon: Gear },
   ],
   ADMINISTRADOR: [
     { label: "Dashboard", href: "/portal/admin", icon: House },
@@ -82,6 +96,10 @@ export function PortalShell({ children, session, clinic }: PortalShellProps) {
     );
   }
 
+  if (activeRole === "RECEPCIONISTA") {
+    return <ReceptionistShell session={session}>{children}</ReceptionistShell>;
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-surface-base dark:text-white">
       <Sidebar
@@ -91,6 +109,7 @@ export function PortalShell({ children, session, clinic }: PortalShellProps) {
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
         onSignOut={() => signOut({ callbackUrl: "/auth/login" })}
+        brandSubtitle={`${roleLabel || "Portal"} dashboard`}
       />
       <div className="flex min-h-screen flex-col md:pl-72">
         <Topbar roleLabel={roleLabel} userName={userName} onMenuClick={() => setIsSidebarOpen(true)} />

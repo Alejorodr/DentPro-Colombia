@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { getPrismaClient } from "@/lib/prisma";
 import { getSessionUser, isAuthorized } from "@/app/api/_utils/auth";
 import { errorResponse } from "@/app/api/_utils/response";
+import { createReceptionNotifications } from "@/lib/notifications";
 import { TimeSlotStatus } from "@prisma/client";
 
 function canRescheduleWithLimit(startAt: Date): boolean {
@@ -96,6 +97,14 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     });
 
     return updatedAppointment;
+  });
+
+  await createReceptionNotifications({
+    type: "appointment_rescheduled",
+    title: "Turno reprogramado",
+    body: `Se reprogramó el turno ${updated.id}.`,
+    entityType: "appointment",
+    entityId: updated.id,
   });
 
   return NextResponse.json(updated);
