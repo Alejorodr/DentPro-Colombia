@@ -1,8 +1,18 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 
-import { Funnel, ArrowsClockwise, ArrowLeft, ArrowRight } from "@phosphor-icons/react";
+import {
+  Funnel,
+  ArrowLeft,
+  ArrowRight,
+  Eye,
+  PencilSimple,
+  CheckCircle,
+  XCircle,
+  UserCheck,
+} from "@phosphor-icons/react";
 import { AppointmentStatus } from "@prisma/client";
 
 import { Table } from "@/app/portal/components/ui/Table";
@@ -60,6 +70,40 @@ export function AppointmentTable({ appointments, page, totalPages, onPageChange,
     setBusyId(null);
   };
 
+  const exportCsv = () => {
+    if (appointments.length === 0) {
+      return;
+    }
+
+    const headers = ["Time", "Patient", "Treatment", "Doctor", "Status"];
+    const rows = appointments.map((appointment) => {
+      const start = new Date(appointment.startAt);
+      const end = new Date(appointment.endAt);
+      const timeLabel = `${start.toLocaleTimeString("es-CO", {
+        hour: "2-digit",
+        minute: "2-digit",
+      })} - ${end.toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })}`;
+      return [
+        timeLabel,
+        appointment.patient?.name ?? "",
+        appointment.service?.name ?? appointment.reason,
+        appointment.professional?.name ?? "",
+        statusLabels[appointment.status],
+      ];
+    });
+
+    const csvContent = [headers, ...rows]
+      .map((row) => row.map((cell) => `"${String(cell).replaceAll("\"", "\"\"")}"`).join(","))
+      .join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "appointments-export.csv";
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -70,6 +114,7 @@ export function AppointmentTable({ appointments, page, totalPages, onPageChange,
         <button
           type="button"
           className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-xs font-semibold uppercase text-slate-600 dark:border-surface-muted dark:text-slate-200"
+          onClick={exportCsv}
         >
           Export
         </button>
@@ -126,25 +171,56 @@ export function AppointmentTable({ appointments, page, totalPages, onPageChange,
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex flex-wrap items-center gap-2">
-                        <select
-                          className="rounded-full border border-slate-200 px-3 py-1 text-xs text-slate-600 dark:border-surface-muted dark:bg-surface-base dark:text-slate-200"
-                          value={appointment.status}
-                          onChange={(event) => updateStatus(appointment.id, event.target.value as AppointmentStatus)}
-                          disabled={busyId === appointment.id}
+                        <Link
+                          href={`/portal/receptionist/schedule?appointment=${appointment.id}`}
+                          className="inline-flex items-center gap-1 rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold uppercase text-slate-600 dark:border-surface-muted dark:text-slate-200"
                         >
-                          <option value={AppointmentStatus.PENDING}>Pending</option>
-                          <option value={AppointmentStatus.CONFIRMED}>Confirmed</option>
-                          <option value={AppointmentStatus.COMPLETED}>Checked In</option>
-                          <option value={AppointmentStatus.CANCELLED}>Cancelled</option>
-                        </select>
+                          <Eye size={14} />
+                          View
+                        </Link>
                         <button
                           type="button"
                           className="inline-flex items-center gap-1 rounded-full border border-brand-teal px-3 py-1 text-xs font-semibold uppercase text-brand-teal"
                           onClick={() => setRescheduleId(appointment.id)}
                           disabled={busyId === appointment.id}
                         >
-                          <ArrowsClockwise size={14} />
-                          Reprogramar
+                          <PencilSimple size={14} />
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          className="inline-flex items-center gap-1 rounded-full border border-emerald-200 px-3 py-1 text-xs font-semibold uppercase text-emerald-700 disabled:opacity-50 dark:border-emerald-300/40"
+                          onClick={() => updateStatus(appointment.id, AppointmentStatus.CONFIRMED)}
+                          disabled={
+                            busyId === appointment.id ||
+                            appointment.status === AppointmentStatus.CONFIRMED ||
+                            appointment.status === AppointmentStatus.CANCELLED
+                          }
+                        >
+                          <CheckCircle size={14} />
+                          Confirm
+                        </button>
+                        <button
+                          type="button"
+                          className="inline-flex items-center gap-1 rounded-full border border-blue-200 px-3 py-1 text-xs font-semibold uppercase text-blue-700 disabled:opacity-50 dark:border-blue-300/40"
+                          onClick={() => updateStatus(appointment.id, AppointmentStatus.COMPLETED)}
+                          disabled={
+                            busyId === appointment.id ||
+                            appointment.status === AppointmentStatus.COMPLETED ||
+                            appointment.status === AppointmentStatus.CANCELLED
+                          }
+                        >
+                          <UserCheck size={14} />
+                          Check-In
+                        </button>
+                        <button
+                          type="button"
+                          className="inline-flex items-center gap-1 rounded-full border border-rose-200 px-3 py-1 text-xs font-semibold uppercase text-rose-700 disabled:opacity-50 dark:border-rose-300/40"
+                          onClick={() => updateStatus(appointment.id, AppointmentStatus.CANCELLED)}
+                          disabled={busyId === appointment.id || appointment.status === AppointmentStatus.CANCELLED}
+                        >
+                          <XCircle size={14} />
+                          Cancel
                         </button>
                       </div>
                     </td>

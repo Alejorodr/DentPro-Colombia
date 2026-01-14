@@ -14,6 +14,7 @@ import {
 } from "@phosphor-icons/react";
 
 import type { AuthSession } from "@/auth";
+import { roleLabels } from "@/lib/auth/roles";
 import { Sidebar } from "@/app/portal/components/layout/Sidebar";
 import { ReceptionistTopbar } from "@/app/portal/receptionist/components/ReceptionistTopbar";
 
@@ -35,6 +36,7 @@ export function ReceptionistShell({ children, session }: ReceptionistShellProps)
   const pathname = usePathname();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const userName = session?.user?.name ?? "Recepción";
+  const userRoleLabel = roleLabels[session?.user?.role ?? "RECEPCIONISTA"];
 
   const activeLabel = useMemo(() => {
     const activeItem = navItems.find((item) => pathname === item.href || pathname.startsWith(`${item.href}/`));
@@ -55,6 +57,7 @@ export function ReceptionistShell({ children, session }: ReceptionistShellProps)
         <ReceptionistTopbar
           activeSection={activeLabel}
           userName={userName}
+          userRole={userRoleLabel}
           onMenuClick={() => setIsSidebarOpen(true)}
         />
         <main className="w-full px-6 py-8">

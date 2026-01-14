@@ -34,11 +34,30 @@ type AnalyticsResponse = {
   };
 };
 
+type CalendarDaySummary = {
+  date: string;
+  total: number;
+  pending: number;
+  confirmed: number;
+  cancelled: number;
+  checkedIn: number;
+};
+
+type CalendarSummaryResponse = {
+  days: CalendarDaySummary[];
+};
+
 function formatDateInput(date: Date) {
   const year = date.getFullYear();
   const month = `${date.getMonth() + 1}`.padStart(2, "0");
   const day = `${date.getDate()}`.padStart(2, "0");
   return `${year}-${month}-${day}`;
+}
+
+function formatMonthInput(date: Date) {
+  const year = date.getFullYear();
+  const month = `${date.getMonth() + 1}`.padStart(2, "0");
+  return `${year}-${month}`;
 }
 
 function startOfWeek(date: Date) {
@@ -62,6 +81,7 @@ export function ReceptionistSchedule() {
   const [data, setData] = useState<AnalyticsResponse | null>(null);
   const [page, setPage] = useState(1);
   const [isNewOpen, setIsNewOpen] = useState(false);
+  const [calendarSummary, setCalendarSummary] = useState<Record<string, CalendarDaySummary>>({});
 
   const range = useMemo(() => {
     if (view === "week") {
@@ -99,6 +119,22 @@ export function ReceptionistSchedule() {
     void refresh(page);
   }, [page, refresh]);
 
+  useEffect(() => {
+    const loadCalendar = async () => {
+      const response = await fetch(`/api/analytics/receptionist/calendar?month=${formatMonthInput(month)}`);
+      if (response.ok) {
+        const payload = (await response.json()) as CalendarSummaryResponse;
+        const nextSummary = payload.days.reduce((acc, day) => {
+          acc[day.date] = day;
+          return acc;
+        }, {} as Record<string, CalendarDaySummary>);
+        setCalendarSummary(nextSummary);
+      }
+    };
+
+    void loadCalendar();
+  }, [month]);
+
   return (
     <div className="space-y-6">
       <section className="flex flex-wrap items-center justify-between gap-4">
@@ -135,6 +171,7 @@ export function ReceptionistSchedule() {
             setMonth(new Date(date));
           }}
           onMonthChange={(date) => setMonth(date)}
+          daySummary={calendarSummary}
         />
         <Card className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3">

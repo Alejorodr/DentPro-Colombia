@@ -44,6 +44,14 @@ npx prisma migrate deploy
 npm run prisma:seed
 ```
 
+### Credenciales demo (seed)
+
+El seed crea usuarios de demostración para probar el portal recepcionista:
+
+- Recepcionista: `demo-recepcion@dentpro.co` / `RecepDentPro!1`
+- Profesionales: `demo-profesional@dentpro.co`, `demo-profesional2@dentpro.co`, `demo-profesional3@dentpro.co` / `DentProDemo!1`
+- Pacientes: `demo-paciente@dentpro.co` y otros (`paciente.*@dentpro.co`) / `DentProDemo!1`
+
 ### Shadow database en Neon (recomendado)
 
 Para que `scripts/vercel-prisma.mjs` pueda validar drift en Vercel, configura `SHADOW_DATABASE_URL` apuntando a una base vacía en el mismo proyecto de Neon (puede ser otro database). Luego agrega esa URL como variable de entorno en Vercel.

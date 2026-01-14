@@ -100,6 +100,7 @@ export async function getAdminKpis(
             gte: from,
             lt: to,
           },
+          status: { in: [TimeSlotStatus.AVAILABLE, TimeSlotStatus.BOOKED] },
         },
       }),
       prisma.timeSlot.count({

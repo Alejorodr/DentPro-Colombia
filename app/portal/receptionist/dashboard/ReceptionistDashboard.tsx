@@ -46,9 +46,22 @@ type AnalyticsResponse = {
     id: string;
     name: string;
     specialty: string | null;
-    status: "Free" | "Busy" | "Break";
+    status: "Free" | "Busy" | "Break" | "Offline";
     slots: number;
   }>;
+};
+
+type CalendarDaySummary = {
+  date: string;
+  total: number;
+  pending: number;
+  confirmed: number;
+  cancelled: number;
+  checkedIn: number;
+};
+
+type CalendarSummaryResponse = {
+  days: CalendarDaySummary[];
 };
 
 function formatDateInput(date: Date) {
@@ -56,6 +69,12 @@ function formatDateInput(date: Date) {
   const month = `${date.getMonth() + 1}`.padStart(2, "0");
   const day = `${date.getDate()}`.padStart(2, "0");
   return `${year}-${month}-${day}`;
+}
+
+function formatMonthInput(date: Date) {
+  const year = date.getFullYear();
+  const month = `${date.getMonth() + 1}`.padStart(2, "0");
+  return `${year}-${month}`;
 }
 
 function formatLongDate(date: Date) {
@@ -89,6 +108,7 @@ export function ReceptionistDashboard() {
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [isNewOpen, setIsNewOpen] = useState(false);
+  const [calendarSummary, setCalendarSummary] = useState<Record<string, CalendarDaySummary>>({});
 
   const range = useMemo(() => {
     if (view === "week") {
@@ -127,6 +147,22 @@ export function ReceptionistDashboard() {
   useEffect(() => {
     void refresh(page);
   }, [page, refresh]);
+
+  useEffect(() => {
+    const loadCalendar = async () => {
+      const response = await fetch(`/api/analytics/receptionist/calendar?month=${formatMonthInput(month)}`);
+      if (response.ok) {
+        const payload = (await response.json()) as CalendarSummaryResponse;
+        const nextSummary = payload.days.reduce((acc, day) => {
+          acc[day.date] = day;
+          return acc;
+        }, {} as Record<string, CalendarDaySummary>);
+        setCalendarSummary(nextSummary);
+      }
+    };
+
+    void loadCalendar();
+  }, [month]);
 
   const stats = data
     ? [
@@ -212,6 +248,7 @@ export function ReceptionistDashboard() {
               setMonth(new Date(date));
             }}
             onMonthChange={(date) => setMonth(date)}
+            daySummary={calendarSummary}
           />
           <Card className="space-y-4">
             <div className="flex items-center justify-between">
@@ -240,7 +277,9 @@ export function ReceptionistDashboard() {
                           ? "bg-emerald-100 text-emerald-700"
                           : staff.status === "Busy"
                             ? "bg-amber-100 text-amber-700"
-                            : "bg-slate-100 text-slate-500"
+                            : staff.status === "Break"
+                              ? "bg-slate-100 text-slate-500"
+                              : "bg-slate-200 text-slate-600"
                       }`}
                     >
                       {staff.status}

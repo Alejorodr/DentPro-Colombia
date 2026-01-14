@@ -9,11 +9,28 @@ type CalendarMonthProps = {
   selectedDate: Date;
   onSelect: (date: Date) => void;
   onMonthChange: (date: Date) => void;
+  daySummary?: Record<
+    string,
+    {
+      total: number;
+      pending: number;
+      confirmed: number;
+      cancelled: number;
+      checkedIn: number;
+    }
+  >;
 };
 
 const weekDays = ["L", "M", "M", "J", "V", "S", "D"];
 
-export function CalendarMonth({ month, selectedDate, onSelect, onMonthChange }: CalendarMonthProps) {
+const formatDateKey = (date: Date) => {
+  const year = date.getFullYear();
+  const month = `${date.getMonth() + 1}`.padStart(2, "0");
+  const day = `${date.getDate()}`.padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+export function CalendarMonth({ month, selectedDate, onSelect, onMonthChange, daySummary }: CalendarMonthProps) {
   const monthLabel = new Intl.DateTimeFormat("es-CO", { month: "long", year: "numeric" }).format(month);
 
   const days = useMemo(() => {
@@ -64,12 +81,13 @@ export function CalendarMonth({ month, selectedDate, onSelect, onMonthChange }: 
           const date = new Date(month.getFullYear(), month.getMonth(), index + 1);
           const isSelected = isSameDay(date, selectedDate);
           const isToday = isSameDay(date, today);
+          const summary = daySummary?.[formatDateKey(date)];
           return (
             <button
               key={date.toISOString()}
               type="button"
               onClick={() => onSelect(date)}
-              className={`flex h-9 w-9 items-center justify-center rounded-full text-xs font-semibold transition ${
+              className={`relative flex h-9 w-9 items-center justify-center rounded-full text-xs font-semibold transition ${
                 isSelected
                   ? "bg-brand-teal text-white shadow"
                   : isToday
@@ -78,6 +96,11 @@ export function CalendarMonth({ month, selectedDate, onSelect, onMonthChange }: 
               }`}
             >
               {index + 1}
+              {summary && summary.total > 0 ? (
+                <span className="absolute -bottom-1 -right-1 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-brand-teal px-1 text-[9px] font-semibold text-white">
+                  {summary.total}
+                </span>
+              ) : null}
             </button>
           );
         })}

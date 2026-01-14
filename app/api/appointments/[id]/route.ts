@@ -4,7 +4,7 @@ import { getPrismaClient } from "@/lib/prisma";
 import { getSessionUser, isAuthorized } from "@/app/api/_utils/auth";
 import { errorResponse } from "@/app/api/_utils/response";
 import { createReceptionNotifications } from "@/lib/notifications";
-import { AppointmentStatus } from "@prisma/client";
+import { AppointmentStatus, TimeSlotStatus } from "@prisma/client";
 
 const statusValues = Object.values(AppointmentStatus);
 
@@ -74,7 +74,20 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   const previousStatus = appointment.status;
   const updated = await prisma.appointment.update({
     where: { id },
-    data: { status: payload.status, notes: payload.notes ?? undefined },
+    data: {
+      status: payload.status,
+      notes: payload.notes ?? undefined,
+      checkedInAt:
+        payload.status === AppointmentStatus.COMPLETED ? appointment.checkedInAt ?? new Date() : null,
+      timeSlot: {
+        update: {
+          status:
+            payload.status === AppointmentStatus.CANCELLED
+              ? TimeSlotStatus.AVAILABLE
+              : TimeSlotStatus.BOOKED,
+        },
+      },
+    },
     include: {
       patient: { include: { user: true } },
       professional: { include: { user: true, specialty: true } },
@@ -94,7 +107,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
         : updated.status === AppointmentStatus.CONFIRMED
           ? "confirmado"
           : updated.status === AppointmentStatus.COMPLETED
-            ? "finalizado"
+            ? "check-in realizado"
             : "pendiente";
 
     await createReceptionNotifications({

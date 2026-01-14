@@ -10,10 +10,11 @@ import { NotificationsBell } from "@/app/portal/receptionist/components/Notifica
 interface ReceptionistTopbarProps {
   activeSection: string;
   userName: string;
+  userRole: string;
   onMenuClick: () => void;
 }
 
-export function ReceptionistTopbar({ activeSection, userName, onMenuClick }: ReceptionistTopbarProps) {
+export function ReceptionistTopbar({ activeSection, userName, userRole, onMenuClick }: ReceptionistTopbarProps) {
   return (
     <header className="sticky top-0 z-30 flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 bg-white/80 px-6 py-4 backdrop-blur dark:border-surface-muted dark:bg-surface-elevated/80">
       <div className="flex items-center gap-3">
@@ -38,7 +39,10 @@ export function ReceptionistTopbar({ activeSection, userName, onMenuClick }: Rec
         <NotificationsBell />
         <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-2 py-1 text-sm text-slate-600 shadow-sm shadow-slate-100/40 dark:border-surface-muted dark:bg-surface-base dark:text-slate-200">
           <AvatarFallback name={userName} className="h-9 w-9" />
-          <span className="hidden pr-2 text-xs font-medium md:inline">{userName}</span>
+          <div className="hidden pr-2 text-xs md:block">
+            <p className="font-semibold">{userName}</p>
+            <p className="text-[11px] text-slate-400 dark:text-slate-500">{userRole}</p>
+          </div>
         </div>
       </div>
     </header>

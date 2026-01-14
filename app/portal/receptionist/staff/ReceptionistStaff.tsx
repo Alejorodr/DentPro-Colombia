@@ -15,7 +15,7 @@ type StaffItem = {
   id: string;
   name: string;
   specialty: string | null;
-  status: "Free" | "Busy" | "Break";
+  status: "Free" | "Busy" | "Break" | "Offline";
   slots: number;
 };
 
@@ -79,7 +79,9 @@ export function ReceptionistStaff() {
                         ? "bg-emerald-100 text-emerald-700"
                         : member.status === "Busy"
                           ? "bg-amber-100 text-amber-700"
-                          : "bg-slate-100 text-slate-500"
+                          : member.status === "Break"
+                            ? "bg-slate-100 text-slate-500"
+                            : "bg-slate-200 text-slate-600"
                     }`}
                   >
                     {member.status}

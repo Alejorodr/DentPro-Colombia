@@ -62,7 +62,7 @@ export async function GET(request: Request) {
   const staffEnd = addDaysZoned(staffStart, 1, timeZone);
 
   const prisma = getPrismaClient();
-  const [totalAppointments, statusRows, appointments, staffProfiles] = await Promise.all([
+  const [totalAppointments, statusRows, checkedInCount, appointments, staffProfiles] = await Promise.all([
     prisma.appointment.count({
       where: { timeSlot: { startAt: { gte: rangeStart, lt: rangeEnd } } },
     }),
@@ -70,6 +70,9 @@ export async function GET(request: Request) {
       by: ["status"],
       where: { timeSlot: { startAt: { gte: rangeStart, lt: rangeEnd } } },
       _count: { status: true },
+    }),
+    prisma.appointment.count({
+      where: { checkedInAt: { not: null }, timeSlot: { startAt: { gte: rangeStart, lt: rangeEnd } } },
     }),
     prisma.appointment.findMany({
       where: { timeSlot: { startAt: { gte: rangeStart, lt: rangeEnd } } },
@@ -90,7 +93,7 @@ export async function GET(request: Request) {
         specialty: true,
         timeSlots: {
           where: { startAt: { gte: staffStart, lt: staffEnd } },
-          select: { status: true },
+          select: { status: true, startAt: true, endAt: true },
         },
       },
       orderBy: { user: { name: "asc" } },
@@ -106,12 +109,41 @@ export async function GET(request: Request) {
     statusCounts[row.status] = row._count.status;
   }
 
+  const todayLabel = formatDateInput(new Date(), timeZone);
+  const staffLabel = formatDateInput(staffStart, timeZone);
+  const referenceTime =
+    todayLabel === staffLabel ? new Date() : new Date((staffStart.getTime() + staffEnd.getTime()) / 2);
+
   const staffOnDuty = staffProfiles.map((profile) => {
     const slots = profile.timeSlots;
-    let availability: "Free" | "Busy" | "Break" = "Break";
+    if (slots.length === 0) {
+      return {
+        id: profile.id,
+        name: `${profile.user.name} ${profile.user.lastName}`,
+        specialty: profile.specialty?.name ?? null,
+        status: "Offline" as const,
+        slots: 0,
+      };
+    }
 
-    if (slots.length > 0) {
-      availability = slots.some((slot) => slot.status === TimeSlotStatus.AVAILABLE) ? "Free" : "Busy";
+    const sortedSlots = [...slots].sort((a, b) => a.startAt.getTime() - b.startAt.getTime());
+    const firstStart = sortedSlots[0].startAt;
+    const lastEnd = sortedSlots[sortedSlots.length - 1].endAt;
+    const currentSlot = sortedSlots.find(
+      (slot) => referenceTime >= slot.startAt && referenceTime < slot.endAt,
+    );
+
+    let availability: "Free" | "Busy" | "Break" | "Offline" = "Offline";
+
+    if (currentSlot) {
+      availability =
+        currentSlot.status === TimeSlotStatus.BOOKED
+          ? "Busy"
+          : currentSlot.status === TimeSlotStatus.BREAK
+            ? "Break"
+            : "Free";
+    } else if (referenceTime >= firstStart && referenceTime < lastEnd) {
+      availability = slots.some((slot) => slot.status === TimeSlotStatus.BREAK) ? "Break" : "Free";
     }
 
     return {
@@ -134,7 +166,7 @@ export async function GET(request: Request) {
       totalAppointments,
       pending: statusCounts[AppointmentStatus.PENDING] ?? 0,
       confirmed: statusCounts[AppointmentStatus.CONFIRMED] ?? 0,
-      checkedIn: statusCounts[AppointmentStatus.COMPLETED] ?? 0,
+      checkedIn: checkedInCount,
       cancellations: statusCounts[AppointmentStatus.CANCELLED] ?? 0,
     },
     appointments: appointments.map((appointment) => ({
