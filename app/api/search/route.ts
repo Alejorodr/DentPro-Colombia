@@ -29,13 +29,18 @@ export async function GET(request: Request) {
     prisma.patientProfile.findMany({
       where: {
         active: true,
-        user: {
-          OR: [
-            { name: { contains: query, mode: "insensitive" } },
-            { lastName: { contains: query, mode: "insensitive" } },
-            { email: { contains: query, mode: "insensitive" } },
-          ],
-        },
+        OR: [
+          {
+            user: {
+              OR: [
+                { name: { contains: query, mode: "insensitive" } },
+                { lastName: { contains: query, mode: "insensitive" } },
+                { email: { contains: query, mode: "insensitive" } },
+              ],
+            },
+          },
+          { documentId: { contains: query, mode: "insensitive" } },
+        ],
       },
       include: { user: true },
       take: limit,
@@ -44,13 +49,18 @@ export async function GET(request: Request) {
     prisma.professionalProfile.findMany({
       where: {
         active: true,
-        user: {
-          OR: [
-            { name: { contains: query, mode: "insensitive" } },
-            { lastName: { contains: query, mode: "insensitive" } },
-            { email: { contains: query, mode: "insensitive" } },
-          ],
-        },
+        OR: [
+          {
+            user: {
+              OR: [
+                { name: { contains: query, mode: "insensitive" } },
+                { lastName: { contains: query, mode: "insensitive" } },
+                { email: { contains: query, mode: "insensitive" } },
+              ],
+            },
+          },
+          { specialty: { name: { contains: query, mode: "insensitive" } } },
+        ],
       },
       include: { user: true, specialty: true },
       take: limit,
@@ -76,6 +86,17 @@ export async function GET(request: Request) {
               },
             },
           },
+          {
+            professional: {
+              user: {
+                OR: [
+                  { name: { contains: query, mode: "insensitive" } },
+                  { lastName: { contains: query, mode: "insensitive" } },
+                ],
+              },
+            },
+          },
+          { service: { name: { contains: query, mode: "insensitive" } } },
         ],
       },
       include: {

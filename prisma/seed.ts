@@ -31,6 +31,116 @@ const DEFAULT_SERVICES = [
     durationMinutes: 60,
     specialtyName: "Endodoncia",
   },
+  {
+    name: "Ortodoncia Inicial",
+    description: "Evaluación y ajuste de brackets.",
+    priceCents: 140000,
+    durationMinutes: 45,
+    specialtyName: "Ortodoncia",
+  },
+  {
+    name: "Implante Dental",
+    description: "Colocación de implante dental.",
+    priceCents: 450000,
+    durationMinutes: 90,
+    specialtyName: "Odontología General",
+  },
+];
+
+const PROFESSIONAL_SEED = [
+  {
+    email: "demo-profesional@dentpro.co",
+    name: "Laura",
+    lastName: "Rojas",
+    specialtyName: "Odontología General",
+  },
+  {
+    email: "demo-profesional2@dentpro.co",
+    name: "Juan",
+    lastName: "Martinez",
+    specialtyName: "Endodoncia",
+  },
+  {
+    email: "demo-profesional3@dentpro.co",
+    name: "Elena",
+    lastName: "Gomez",
+    specialtyName: "Ortodoncia",
+  },
+];
+
+const PATIENT_SEED = [
+  {
+    email: "demo-paciente@dentpro.co",
+    name: "Andrea",
+    lastName: "Gomez",
+    phone: "+57 310 555 9812",
+    documentId: "CC10928312",
+    insuranceProvider: "Colsanitas Dental Plan",
+    insuranceStatus: InsuranceStatus.ACTIVE,
+    address: "Cra. 7 #13-180",
+    city: "Chía, Cundinamarca",
+    patientCode: "8930211",
+  },
+  {
+    email: "paciente.luisa@dentpro.co",
+    name: "Luisa",
+    lastName: "Alvarez",
+    phone: "+57 313 222 1109",
+    documentId: "CC4488123",
+    insuranceProvider: "Sura Odonto",
+    insuranceStatus: InsuranceStatus.ACTIVE,
+    address: "Av. Pradilla #12-40",
+    city: "Chía, Cundinamarca",
+    patientCode: "9341120",
+  },
+  {
+    email: "paciente.carlos@dentpro.co",
+    name: "Carlos",
+    lastName: "Perez",
+    phone: "+57 320 771 2200",
+    documentId: "CC5589012",
+    insuranceProvider: "Coomeva",
+    insuranceStatus: InsuranceStatus.UNKNOWN,
+    address: "Cra. 5 #12-30",
+    city: "Cajicá, Cundinamarca",
+    patientCode: "5521990",
+  },
+  {
+    email: "paciente.ana@dentpro.co",
+    name: "Ana",
+    lastName: "Silva",
+    phone: "+57 301 662 1031",
+    documentId: "CC7722331",
+    insuranceProvider: "Compensar",
+    insuranceStatus: InsuranceStatus.ACTIVE,
+    address: "Calle 9 #12-22",
+    city: "Bogotá, Cundinamarca",
+    patientCode: "1102919",
+  },
+  {
+    email: "paciente.maria@dentpro.co",
+    name: "Maria",
+    lastName: "Rodriguez",
+    phone: "+57 314 550 8844",
+    documentId: "CC3321129",
+    insuranceProvider: "Sanitas Dental",
+    insuranceStatus: InsuranceStatus.ACTIVE,
+    address: "Av. Chilacos #8-88",
+    city: "Chía, Cundinamarca",
+    patientCode: "7741239",
+  },
+  {
+    email: "paciente.jorge@dentpro.co",
+    name: "Jorge",
+    lastName: "Castro",
+    phone: "+57 311 902 3377",
+    documentId: "CC9902123",
+    insuranceProvider: "Medisanitas",
+    insuranceStatus: InsuranceStatus.INACTIVE,
+    address: "Calle 4 #10-66",
+    city: "Zipaquirá, Cundinamarca",
+    patientCode: "3302219",
+  },
 ];
 
 function requireEnv(name: string): string {
@@ -53,6 +163,41 @@ function buildSlotTimes(start: Date, count: number, durationMinutes: number): Ar
   }
 
   return slots;
+}
+
+async function ensureTimeSlot({
+  professionalId,
+  startAt,
+  endAt,
+  status,
+}: {
+  professionalId: string;
+  startAt: Date;
+  endAt: Date;
+  status: TimeSlotStatus;
+}) {
+  const existing = await prisma.timeSlot.findFirst({
+    where: { professionalId, startAt },
+  });
+
+  if (existing) {
+    if (existing.status !== status || existing.endAt.getTime() !== endAt.getTime()) {
+      return prisma.timeSlot.update({
+        where: { id: existing.id },
+        data: { status, endAt },
+      });
+    }
+    return existing;
+  }
+
+  return prisma.timeSlot.create({
+    data: {
+      professionalId,
+      startAt,
+      endAt,
+      status,
+    },
+  });
 }
 
 async function main() {
@@ -87,20 +232,23 @@ async function main() {
     },
   });
 
+  const demoPasswordHash = await bcrypt.hash("DentProDemo!1", 12);
+  const receptionistPasswordHash = await bcrypt.hash("RecepDentPro!1", 12);
+
   const receptionistUser = await prisma.user.upsert({
     where: { email: "demo-recepcion@dentpro.co" },
     update: {
       name: "Diana",
       lastName: "Mora",
       role: Role.RECEPCIONISTA,
-      passwordHash: await bcrypt.hash("RecepDentPro!1", 12),
+      passwordHash: receptionistPasswordHash,
     },
     create: {
       email: "demo-recepcion@dentpro.co",
       name: "Diana",
       lastName: "Mora",
       role: Role.RECEPCIONISTA,
-      passwordHash: await bcrypt.hash("RecepDentPro!1", 12),
+      passwordHash: receptionistPasswordHash,
     },
   });
 
@@ -113,40 +261,6 @@ async function main() {
     });
     specialties.push(record);
   }
-
-  const professionalUser = await prisma.user.upsert({
-    where: { email: "demo-profesional@dentpro.co" },
-    update: {
-      name: "Laura",
-      lastName: "Rojas",
-      role: Role.PROFESIONAL,
-      passwordHash: await bcrypt.hash("DentProDemo!1", 12),
-    },
-    create: {
-      email: "demo-profesional@dentpro.co",
-      name: "Laura",
-      lastName: "Rojas",
-      role: Role.PROFESIONAL,
-      passwordHash: await bcrypt.hash("DentProDemo!1", 12),
-    },
-  });
-
-  const specialty = specialties[0];
-
-  const professionalProfile = await prisma.professionalProfile.upsert({
-    where: { userId: professionalUser.id },
-    update: {
-      specialtyId: specialty.id,
-      slotDurationMinutes: specialty.defaultSlotDurationMinutes,
-      active: true,
-    },
-    create: {
-      userId: professionalUser.id,
-      specialtyId: specialty.id,
-      slotDurationMinutes: specialty.defaultSlotDurationMinutes,
-      active: true,
-    },
-  });
 
   const serviceRecords = await Promise.all(
     DEFAULT_SERVICES.map((service) => {
@@ -172,132 +286,168 @@ async function main() {
     }),
   );
 
-  const patientUser = await prisma.user.upsert({
-    where: { email: "demo-paciente@dentpro.co" },
-    update: {
-      name: "Andrea",
-      lastName: "Gomez",
-      role: Role.PACIENTE,
-      passwordHash: await bcrypt.hash("DentProDemo!1", 12),
-    },
-    create: {
-      email: "demo-paciente@dentpro.co",
-      name: "Andrea",
-      lastName: "Gomez",
-      role: Role.PACIENTE,
-      passwordHash: await bcrypt.hash("DentProDemo!1", 12),
-    },
-  });
+  const professionalProfiles = await Promise.all(
+    PROFESSIONAL_SEED.map(async (professional) => {
+      const professionalUser = await prisma.user.upsert({
+        where: { email: professional.email },
+        update: {
+          name: professional.name,
+          lastName: professional.lastName,
+          role: Role.PROFESIONAL,
+          passwordHash: demoPasswordHash,
+        },
+        create: {
+          email: professional.email,
+          name: professional.name,
+          lastName: professional.lastName,
+          role: Role.PROFESIONAL,
+          passwordHash: demoPasswordHash,
+        },
+      });
 
-  const patientProfile = await prisma.patientProfile.upsert({
-    where: { userId: patientUser.id },
-    update: {
-      phone: "+57 310 555 9812",
-      documentId: "CC10928312",
-      insuranceProvider: "Colsanitas Dental Plan",
-      insuranceStatus: InsuranceStatus.ACTIVE,
-      address: "Cra. 7 #13-180",
-      city: "Chía, Cundinamarca",
-      patientCode: "8930211",
-      avatarUrl: null,
-      active: true,
-    },
-    create: {
-      userId: patientUser.id,
-      phone: "+57 310 555 9812",
-      documentId: "CC10928312",
-      insuranceProvider: "Colsanitas Dental Plan",
-      insuranceStatus: InsuranceStatus.ACTIVE,
-      address: "Cra. 7 #13-180",
-      city: "Chía, Cundinamarca",
-      patientCode: "8930211",
-      avatarUrl: null,
-      active: true,
-    },
-  });
+      const specialty = specialties.find((item) => item.name === professional.specialtyName) ?? specialties[0];
 
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  tomorrow.setHours(9, 0, 0, 0);
+      return prisma.professionalProfile.upsert({
+        where: { userId: professionalUser.id },
+        update: {
+          specialtyId: specialty.id,
+          slotDurationMinutes: specialty.defaultSlotDurationMinutes,
+          active: true,
+        },
+        create: {
+          userId: professionalUser.id,
+          specialtyId: specialty.id,
+          slotDurationMinutes: specialty.defaultSlotDurationMinutes,
+          active: true,
+        },
+      });
+    }),
+  );
 
-  const slots = buildSlotTimes(tomorrow, 6, professionalProfile.slotDurationMinutes ?? specialty.defaultSlotDurationMinutes);
+  const patientProfiles = await Promise.all(
+    PATIENT_SEED.map(async (patient) => {
+      const patientUser = await prisma.user.upsert({
+        where: { email: patient.email },
+        update: {
+          name: patient.name,
+          lastName: patient.lastName,
+          role: Role.PACIENTE,
+          passwordHash: demoPasswordHash,
+        },
+        create: {
+          email: patient.email,
+          name: patient.name,
+          lastName: patient.lastName,
+          role: Role.PACIENTE,
+          passwordHash: demoPasswordHash,
+        },
+      });
 
-  await prisma.timeSlot.createMany({
-    data: slots.map((slot) => ({
-      professionalId: professionalProfile.id,
-      startAt: slot.startAt,
-      endAt: slot.endAt,
-      status: TimeSlotStatus.AVAILABLE,
-    })),
-    skipDuplicates: true,
-  });
+      return prisma.patientProfile.upsert({
+        where: { userId: patientUser.id },
+        update: {
+          phone: patient.phone,
+          documentId: patient.documentId,
+          insuranceProvider: patient.insuranceProvider,
+          insuranceStatus: patient.insuranceStatus,
+          address: patient.address,
+          city: patient.city,
+          patientCode: patient.patientCode,
+          avatarUrl: null,
+          active: true,
+        },
+        create: {
+          userId: patientUser.id,
+          phone: patient.phone,
+          documentId: patient.documentId,
+          insuranceProvider: patient.insuranceProvider,
+          insuranceStatus: patient.insuranceStatus,
+          address: patient.address,
+          city: patient.city,
+          patientCode: patient.patientCode,
+          avatarUrl: null,
+          active: true,
+        },
+      });
+    }),
+  );
 
-  const pastDate = new Date();
-  pastDate.setDate(pastDate.getDate() - 10);
-  pastDate.setHours(9, 0, 0, 0);
+  const dayOffsets = [0, 1, 3, 8];
+  const slotPlan = [TimeSlotStatus.BOOKED, TimeSlotStatus.AVAILABLE, TimeSlotStatus.BREAK, TimeSlotStatus.BOOKED];
+  const appointmentStatuses = [
+    AppointmentStatus.PENDING,
+    AppointmentStatus.CONFIRMED,
+    AppointmentStatus.CANCELLED,
+    AppointmentStatus.COMPLETED,
+  ];
+  let appointmentIndex = 0;
 
-  const pastSlots = buildSlotTimes(pastDate, 2, professionalProfile.slotDurationMinutes ?? specialty.defaultSlotDurationMinutes);
-  const createdPastSlots = await Promise.all(
-    pastSlots.map((slot) =>
-      prisma.timeSlot.create({
-        data: {
-          professionalId: professionalProfile.id,
+  for (const profile of professionalProfiles) {
+    const slotDuration = profile.slotDurationMinutes ?? 30;
+    for (const offset of dayOffsets) {
+      const dayStart = new Date();
+      dayStart.setDate(dayStart.getDate() + offset);
+      dayStart.setHours(8, 0, 0, 0);
+
+      const slots = buildSlotTimes(dayStart, slotPlan.length, slotDuration);
+
+      for (const [index, slot] of slots.entries()) {
+        const plannedStatus = slotPlan[index];
+        const appointmentStatus =
+          plannedStatus === TimeSlotStatus.BOOKED
+            ? appointmentStatuses[appointmentIndex % appointmentStatuses.length]
+            : null;
+        const slotStatus =
+          appointmentStatus === AppointmentStatus.CANCELLED
+            ? TimeSlotStatus.AVAILABLE
+            : plannedStatus;
+
+        const timeSlot = await ensureTimeSlot({
+          professionalId: profile.id,
           startAt: slot.startAt,
           endAt: slot.endAt,
-          status: TimeSlotStatus.BOOKED,
-        },
-      }),
-    ),
-  );
+          status: slotStatus,
+        });
 
-  await Promise.all(
-    createdPastSlots.map((slot, index) =>
-      prisma.appointment.create({
-        data: {
-          patientId: patientProfile.id,
-          professionalId: professionalProfile.id,
-          timeSlotId: slot.id,
-          serviceId: serviceRecords[index % serviceRecords.length].id,
-          serviceName: serviceRecords[index % serviceRecords.length].name,
-          servicePriceCents: serviceRecords[index % serviceRecords.length].priceCents,
-          reason: serviceRecords[index % serviceRecords.length].name,
-          status: AppointmentStatus.COMPLETED,
-        },
-      }),
-    ),
-  );
+        if (plannedStatus === TimeSlotStatus.BOOKED && appointmentStatus) {
+          const patient = patientProfiles[appointmentIndex % patientProfiles.length];
+          const service = serviceRecords[appointmentIndex % serviceRecords.length];
+          await prisma.appointment.upsert({
+            where: { timeSlotId: timeSlot.id },
+            update: {
+              patientId: patient.id,
+              professionalId: profile.id,
+              serviceId: service.id,
+              serviceName: service.name,
+              servicePriceCents: service.priceCents,
+              reason: service.name,
+              status: appointmentStatus,
+              checkedInAt: appointmentStatus === AppointmentStatus.COMPLETED ? slot.startAt : null,
+            },
+            create: {
+              patientId: patient.id,
+              professionalId: profile.id,
+              timeSlotId: timeSlot.id,
+              serviceId: service.id,
+              serviceName: service.name,
+              servicePriceCents: service.priceCents,
+              reason: service.name,
+              status: appointmentStatus,
+              checkedInAt: appointmentStatus === AppointmentStatus.COMPLETED ? slot.startAt : null,
+            },
+          });
 
-  const futureDate = new Date();
-  futureDate.setDate(futureDate.getDate() + 3);
-  futureDate.setHours(10, 0, 0, 0);
-
-  const futureSlot = await prisma.timeSlot.create({
-    data: {
-      professionalId: professionalProfile.id,
-      startAt: futureDate,
-      endAt: new Date(futureDate.getTime() + (professionalProfile.slotDurationMinutes ?? specialty.defaultSlotDurationMinutes) * 60_000),
-      status: TimeSlotStatus.BOOKED,
-    },
-  });
-
-  await prisma.appointment.create({
-    data: {
-      patientId: patientProfile.id,
-      professionalId: professionalProfile.id,
-      timeSlotId: futureSlot.id,
-      serviceId: serviceRecords[0].id,
-      serviceName: serviceRecords[0].name,
-      servicePriceCents: serviceRecords[0].priceCents,
-      reason: serviceRecords[0].name,
-      status: AppointmentStatus.CONFIRMED,
-    },
-  });
+          appointmentIndex += 1;
+        }
+      }
+    }
+  }
 
   console.log("Seed completado:");
   console.log(`- Admin: ${adminUser.email}`);
   console.log(`- Recepción demo: ${receptionistUser.email}`);
-  console.log(`- Profesional demo: ${professionalUser.email}`);
-  console.log(`- Paciente demo: ${patientUser.email}`);
+  console.log(`- Profesionales demo: ${PROFESSIONAL_SEED.map((item) => item.email).join(", ")}`);
+  console.log(`- Pacientes demo: ${PATIENT_SEED.map((item) => item.email).join(", ")}`);
 }
 
 main()

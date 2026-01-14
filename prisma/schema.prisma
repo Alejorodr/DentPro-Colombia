@@ -25,6 +25,7 @@ enum AppointmentStatus {
 enum TimeSlotStatus {
   AVAILABLE
   BOOKED
+  BREAK
 }
 
 enum InsuranceStatus {
@@ -126,6 +127,7 @@ model Appointment {
   reason         String
   notes          String?
   status         AppointmentStatus   @default(PENDING)
+  checkedInAt    DateTime?
   createdAt      DateTime            @default(now())
   updatedAt      DateTime            @updatedAt
   patient        PatientProfile      @relation(fields: [patientId], references: [id], onDelete: Restrict)
