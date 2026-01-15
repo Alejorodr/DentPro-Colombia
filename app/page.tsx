@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { InfoBar } from "./(marketing)/components/InfoBar";
 import { Navbar } from "./(marketing)/components/Navbar";
 import { Hero } from "./(marketing)/components/Hero";
+import { CampaignCarousel } from "./(marketing)/components/CampaignCarousel";
 import { ServicesSection } from "./(marketing)/components/Services";
 import { SpecialistsSlider } from "./(marketing)/components/SpecialistsSlider";
 import { BookingFormSection } from "./(marketing)/components/BookingForm";
@@ -355,6 +356,7 @@ export default function Home() {
       <Navbar {...marketingContent.navbar} />
       <main id="inicio">
         <Hero {...marketingContent.hero} />
+        <CampaignCarousel />
         <ServicesSection {...marketingContent.services} />
         <SpecialistsSlider {...marketingContent.specialists} />
         <BookingFormSection {...marketingContent.booking} />

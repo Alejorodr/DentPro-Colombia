@@ -3,7 +3,13 @@ import "server-only";
 import { cache } from "react";
 
 import { getPrismaClient } from "@/lib/prisma";
-import { getAdminKpis as getAdminKpisBase, getAdminTrend as getAdminTrendBase } from "@/lib/analytics/admin";
+import {
+  getAdminAppointmentsSummary as getAdminAppointmentsSummaryBase,
+  getAdminKpis as getAdminKpisBase,
+  getAdminRevenueTrend as getAdminRevenueTrendBase,
+  getAdminStaffOnDuty as getAdminStaffOnDutyBase,
+  getAdminTrend as getAdminTrendBase,
+} from "@/lib/analytics/admin";
 import type { AnalyticsBucket, AnalyticsRange, AnalyticsRangeKey } from "@/lib/analytics/range";
 import { parseRange } from "@/lib/analytics/range";
 
@@ -32,6 +38,28 @@ export const getAdminTrend = cache(
   },
 );
 
+export const getAdminRevenueTrend = cache(
+  async ({
+    from,
+    to,
+    bucket,
+    timeZone,
+  }: {
+    from: Date;
+    to: Date;
+    bucket: AnalyticsBucket;
+    timeZone?: string;
+  }) => {
+    const prisma = getPrismaClient();
+    return getAdminRevenueTrendBase(prisma, { from, to, bucket, timeZone });
+  },
+);
+
+export const getStaffOnDuty = cache(async () => {
+  const prisma = getPrismaClient();
+  return getAdminStaffOnDutyBase(prisma);
+});
+
 export const getAppointmentsForRange = cache(async ({
   from,
   to,
@@ -42,21 +70,5 @@ export const getAppointmentsForRange = cache(async ({
   limit?: number;
 }) => {
   const prisma = getPrismaClient();
-  return prisma.appointment.findMany({
-    where: {
-      timeSlot: {
-        startAt: {
-          gte: from,
-          lt: to,
-        },
-      },
-    },
-    include: {
-      timeSlot: true,
-      patient: { include: { user: true } },
-      professional: { include: { user: true, specialty: true } },
-    },
-    orderBy: { timeSlot: { startAt: "asc" } },
-    take: limit,
-  });
+  return getAdminAppointmentsSummaryBase(prisma, { from, to, limit });
 });

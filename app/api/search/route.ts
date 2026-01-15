@@ -120,11 +120,19 @@ export async function GET(request: Request) {
     return NextResponse.json({ results });
   }
 
+  const isAdminScope = scope === "admin" && isAuthorized(sessionUser.role, ["ADMINISTRADOR"]);
   if (!isAuthorized(sessionUser.role, ["RECEPCIONISTA", "ADMINISTRADOR"])) {
     return errorResponse("No autorizado.", 403);
   }
 
-  const [patients, professionals, services, appointments] = await Promise.all([
+  const dateMatch = query.match(/^\d{4}-\d{2}-\d{2}$/);
+  const parsedDate = dateMatch ? new Date(`${query}T00:00:00.000Z`) : null;
+  const nextDate = parsedDate ? new Date(parsedDate.getTime() + 24 * 60 * 60 * 1000) : null;
+  const statusMatch = Object.values(AppointmentStatus).find(
+    (status) => status.toLowerCase() === query.toLowerCase(),
+  );
+
+  const [patients, professionals, services, appointments, users, specialties] = await Promise.all([
     prisma.patientProfile.findMany({
       where: {
         active: true,
@@ -175,6 +183,7 @@ export async function GET(request: Request) {
         OR: [
           { reason: { contains: query, mode: "insensitive" } },
           { id: { contains: query, mode: "insensitive" } },
+          ...(statusMatch ? [{ status: statusMatch }] : []),
           {
             patient: {
               user: {
@@ -197,6 +206,16 @@ export async function GET(request: Request) {
           },
           { service: { name: { contains: query, mode: "insensitive" } } },
         ],
+        ...(parsedDate && nextDate
+          ? {
+              timeSlot: {
+                startAt: {
+                  gte: parsedDate,
+                  lt: nextDate,
+                },
+              },
+            }
+          : {}),
       },
       include: {
         patient: { include: { user: true } },
@@ -206,37 +225,77 @@ export async function GET(request: Request) {
       orderBy: { timeSlot: { startAt: "desc" } },
       take: limit,
     }),
+    isAdminScope
+      ? prisma.user.findMany({
+          where: {
+            OR: [
+              { name: { contains: query, mode: "insensitive" } },
+              { lastName: { contains: query, mode: "insensitive" } },
+              { email: { contains: query, mode: "insensitive" } },
+            ],
+          },
+          take: limit,
+          orderBy: { name: "asc" },
+        })
+      : Promise.resolve([]),
+    isAdminScope
+      ? prisma.specialty.findMany({
+          where: { name: { contains: query, mode: "insensitive" } },
+          take: limit,
+          orderBy: { name: "asc" },
+        })
+      : Promise.resolve([]),
   ]);
 
   const results = [
     ...patients.map((patient) => ({
-      type: "Paciente",
+      type: isAdminScope ? "Patients" : "Paciente",
       id: patient.id,
       label: `${patient.user.name} ${patient.user.lastName}`,
       description: patient.user.email,
-      href: `/portal/receptionist/patients?patient=${patient.id}`,
+      href: isAdminScope
+        ? `/portal/admin/patients?patient=${patient.id}`
+        : `/portal/receptionist/patients?patient=${patient.id}`,
     })),
     ...professionals.map((professional) => ({
-      type: "Profesional",
+      type: isAdminScope ? "Staff" : "Profesional",
       id: professional.id,
       label: `${professional.user.name} ${professional.user.lastName}`,
       description: professional.specialty?.name ?? "Sin especialidad",
-      href: "/portal/receptionist/staff",
+      href: isAdminScope ? "/portal/admin/staff" : "/portal/receptionist/staff",
     })),
     ...services.map((service) => ({
-      type: "Servicio",
+      type: isAdminScope ? "Services" : "Servicio",
       id: service.id,
       label: service.name,
       description: `COP ${(service.priceCents / 100).toLocaleString("es-CO")}`,
-      href: "/portal/receptionist/billing",
+      href: isAdminScope ? "/portal/admin/services" : "/portal/receptionist/billing",
     })),
     ...appointments.map((appointment) => ({
-      type: "Turno",
+      type: isAdminScope ? "Appointments" : "Turno",
       id: appointment.id,
       label: `${appointment.patient?.user.name ?? "Paciente"} ${appointment.patient?.user.lastName ?? ""}`.trim(),
       description: `${appointment.status === AppointmentStatus.CANCELLED ? "Cancelado" : appointment.status} · ${appointment.timeSlot.startAt.toLocaleDateString("es-CO")}`,
-      href: "/portal/receptionist/schedule",
+      href: isAdminScope ? "/portal/admin/appointments" : "/portal/receptionist/schedule",
     })),
+    ...(isAdminScope
+      ? users.map((user) => ({
+          type: "Users",
+          id: user.id,
+          label: `${user.name} ${user.lastName}`.trim(),
+          description: user.email,
+          href: "/portal/admin/users",
+        }))
+      : []),
+    ...(isAdminScope
+      ? specialties.map((specialty) => ({
+          type: "Specialties",
+          id: specialty.id,
+          label: specialty.name,
+          description: "Especialidad clínica",
+          href: "/portal/admin/specialties",
+        }))
+      : []),
   ];
 
   return NextResponse.json({ results });
