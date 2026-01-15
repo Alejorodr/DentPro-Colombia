@@ -23,6 +23,7 @@ import { Sidebar } from "@/app/portal/components/layout/Sidebar";
 import { Topbar } from "@/app/portal/components/layout/Topbar";
 import { ClientPortalShell } from "@/app/portal/client/components/ClientPortalShell";
 import { ReceptionistShell } from "@/app/portal/receptionist/components/ReceptionistShell";
+import { ProfessionalShell } from "@/app/portal/professional/components/ProfessionalShell";
 
 interface PortalShellProps {
   children: React.ReactNode;
@@ -98,6 +99,14 @@ export function PortalShell({ children, session, clinic }: PortalShellProps) {
 
   if (activeRole === "RECEPCIONISTA") {
     return <ReceptionistShell session={session}>{children}</ReceptionistShell>;
+  }
+
+  if (activeRole === "PROFESIONAL") {
+    return (
+      <ProfessionalShell session={session} clinic={clinic}>
+        {children}
+      </ProfessionalShell>
+    );
   }
 
   return (

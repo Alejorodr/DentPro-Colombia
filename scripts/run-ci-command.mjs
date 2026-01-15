@@ -8,7 +8,7 @@ if (!command) {
 }
 
 const env = { ...process.env };
-if (env.CI) {
+if (env.CI && !env.NO_COLOR) {
   env.FORCE_COLOR = "0";
 }
 
