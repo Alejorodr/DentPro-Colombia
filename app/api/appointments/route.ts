@@ -1,12 +1,26 @@
 import { NextResponse } from "next/server";
+import { z } from "zod";
 
 import { getPrismaClient } from "@/lib/prisma";
 import { getSessionUser, isAuthorized } from "@/app/api/_utils/auth";
 import { errorResponse } from "@/app/api/_utils/response";
+import { buildPaginatedResponse, getPaginationParams } from "@/app/api/_utils/pagination";
 import { createReceptionNotifications } from "@/lib/notifications";
 import { AppointmentStatus, TimeSlotStatus } from "@prisma/client";
+import { parseJson } from "@/app/api/_utils/validation";
+import { enforceRateLimit } from "@/app/api/_utils/ratelimit";
 
-export async function GET() {
+const createAppointmentSchema = z.object({
+  patientId: z.string().uuid().optional(),
+  professionalId: z.string().uuid().optional(),
+  timeSlotId: z.string().uuid(),
+  serviceId: z.string().uuid(),
+  reason: z.string().trim().min(1).max(200),
+  notes: z.string().trim().max(1000).optional(),
+  status: z.nativeEnum(AppointmentStatus).optional(),
+});
+
+export async function GET(request: Request) {
   const sessionUser = await getSessionUser();
 
   if (!sessionUser) {
@@ -14,18 +28,25 @@ export async function GET() {
   }
 
   const prisma = getPrismaClient();
+  const { searchParams } = new URL(request.url);
+  const { page, pageSize, skip, take } = getPaginationParams(searchParams);
 
   if (isAuthorized(sessionUser.role, ["ADMINISTRADOR", "RECEPCIONISTA"])) {
-    const appointments = await prisma.appointment.findMany({
-      include: {
-        patient: { include: { user: true } },
-        professional: { include: { user: true, specialty: true } },
-        timeSlot: true,
-        service: true,
-      },
-      orderBy: { timeSlot: { startAt: "asc" } },
-    });
-    return NextResponse.json(appointments);
+    const [appointments, total] = await Promise.all([
+      prisma.appointment.findMany({
+        include: {
+          patient: { include: { user: true } },
+          professional: { include: { user: true, specialty: true } },
+          timeSlot: true,
+          service: true,
+        },
+        orderBy: { timeSlot: { startAt: "asc" } },
+        skip,
+        take,
+      }),
+      prisma.appointment.count(),
+    ]);
+    return NextResponse.json(buildPaginatedResponse(appointments, page, pageSize, total));
   }
 
   if (sessionUser.role === "PROFESIONAL") {
@@ -34,21 +55,27 @@ export async function GET() {
     });
 
     if (!professional) {
-      return NextResponse.json([]);
+      return NextResponse.json(buildPaginatedResponse([], page, pageSize, 0));
     }
 
-    const appointments = await prisma.appointment.findMany({
-      where: { professionalId: professional.id },
-      include: {
-        patient: { include: { user: true } },
-        professional: { include: { user: true, specialty: true } },
-        timeSlot: true,
-        service: true,
-      },
-      orderBy: { timeSlot: { startAt: "asc" } },
-    });
+    const where = { professionalId: professional.id };
+    const [appointments, total] = await Promise.all([
+      prisma.appointment.findMany({
+        where,
+        include: {
+          patient: { include: { user: true } },
+          professional: { include: { user: true, specialty: true } },
+          timeSlot: true,
+          service: true,
+        },
+        orderBy: { timeSlot: { startAt: "asc" } },
+        skip,
+        take,
+      }),
+      prisma.appointment.count({ where }),
+    ]);
 
-    return NextResponse.json(appointments);
+    return NextResponse.json(buildPaginatedResponse(appointments, page, pageSize, total));
   }
 
   const patient = await prisma.patientProfile.findUnique({
@@ -56,21 +83,27 @@ export async function GET() {
   });
 
   if (!patient) {
-    return NextResponse.json([]);
+    return NextResponse.json(buildPaginatedResponse([], page, pageSize, 0));
   }
 
-  const appointments = await prisma.appointment.findMany({
-    where: { patientId: patient.id },
-    include: {
-      patient: { include: { user: true } },
-      professional: { include: { user: true, specialty: true } },
-      timeSlot: true,
-      service: true,
-    },
-    orderBy: { timeSlot: { startAt: "asc" } },
-  });
+  const where = { patientId: patient.id };
+  const [appointments, total] = await Promise.all([
+    prisma.appointment.findMany({
+      where,
+      include: {
+        patient: { include: { user: true } },
+        professional: { include: { user: true, specialty: true } },
+        timeSlot: true,
+        service: true,
+      },
+      orderBy: { timeSlot: { startAt: "asc" } },
+      skip,
+      take,
+    }),
+    prisma.appointment.count({ where }),
+  ]);
 
-  return NextResponse.json(appointments);
+  return NextResponse.json(buildPaginatedResponse(appointments, page, pageSize, total));
 }
 
 export async function POST(request: Request) {
@@ -80,17 +113,21 @@ export async function POST(request: Request) {
     return errorResponse("No autorizado.", 401);
   }
 
-  const payload = (await request.json().catch(() => null)) as {
-    patientId?: string;
-    professionalId?: string;
-    timeSlotId?: string;
-    serviceId?: string;
-    reason?: string;
-    notes?: string;
-    status?: AppointmentStatus;
-  } | null;
+  const rateLimited = await enforceRateLimit(request, "appointments:create", {
+    limit: 10,
+    window: "1 m",
+    windowMs: 60 * 1000,
+  });
+  if (rateLimited) {
+    return rateLimited;
+  }
 
-  const reason = payload?.reason?.trim();
+  const { data: payload, error } = await parseJson(request, createAppointmentSchema);
+  if (error) {
+    return error;
+  }
+
+  const reason = payload.reason.trim();
 
   if (!payload?.timeSlotId || !payload.serviceId || !reason) {
     return errorResponse("El slot, el servicio y el motivo son obligatorios.");

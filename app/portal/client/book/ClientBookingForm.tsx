@@ -74,9 +74,9 @@ export function ClientBookingForm() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    void fetch("/api/services?active=true")
+    void fetch("/api/services?active=true&pageSize=50")
       .then((res) => (res.ok ? res.json() : []))
-      .then((data: Service[]) => setServices(data))
+      .then((data: { data?: Service[] }) => setServices(data.data ?? []))
       .catch(() => setServices([]));
   }, []);
 

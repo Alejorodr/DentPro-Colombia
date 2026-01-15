@@ -14,11 +14,11 @@ export function AdminAppointmentsPanel() {
   const loadAppointments = async () => {
     setLoading(true);
     setError(null);
-    const response = await fetch("/api/appointments");
+    const response = await fetch("/api/appointments?pageSize=50");
 
     if (response.ok) {
-      const data = (await response.json()) as AppointmentItem[];
-      setAppointments(data);
+      const data = (await response.json()) as { data: AppointmentItem[] };
+      setAppointments(data.data ?? []);
     } else {
       setError("No pudimos cargar las citas.");
     }

@@ -69,19 +69,22 @@ export function NewAppointmentModal({ open, onClose, onCreated }: NewAppointment
 
     const loadOptions = async () => {
       const [patientsResponse, professionalsResponse, servicesResponse] = await Promise.all([
-        fetch("/api/patients?active=true"),
-        fetch("/api/professionals"),
-        fetch("/api/services?active=true"),
+        fetch("/api/patients?active=true&pageSize=50"),
+        fetch("/api/professionals?pageSize=50"),
+        fetch("/api/services?active=true&pageSize=50"),
       ]);
 
       if (patientsResponse.ok) {
-        setPatients((await patientsResponse.json()) as PatientOption[]);
+        const data = (await patientsResponse.json()) as { data: PatientOption[] };
+        setPatients(data.data ?? []);
       }
       if (professionalsResponse.ok) {
-        setProfessionals((await professionalsResponse.json()) as ProfessionalOption[]);
+        const data = (await professionalsResponse.json()) as { data: ProfessionalOption[] };
+        setProfessionals(data.data ?? []);
       }
       if (servicesResponse.ok) {
-        setServices((await servicesResponse.json()) as ServiceOption[]);
+        const data = (await servicesResponse.json()) as { data: ServiceOption[] };
+        setServices(data.data ?? []);
       }
     };
 

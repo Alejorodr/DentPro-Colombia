@@ -36,13 +36,13 @@ export function AdminProfessionalsPanel() {
 
   const loadData = async () => {
     const [professionalsResponse, specialtiesResponse] = await Promise.all([
-      fetch("/api/professionals"),
+      fetch("/api/professionals?pageSize=50"),
       fetch("/api/specialties"),
     ]);
 
     if (professionalsResponse.ok) {
-      const data = (await professionalsResponse.json()) as Professional[];
-      setProfessionals(data);
+      const data = (await professionalsResponse.json()) as { data: Professional[] };
+      setProfessionals(data.data ?? []);
     }
 
     if (specialtiesResponse.ok) {

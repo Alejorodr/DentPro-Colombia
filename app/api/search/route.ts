@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server";
+import { z } from "zod";
 
 import { getSessionUser, isAuthorized } from "@/app/api/_utils/auth";
 import { errorResponse } from "@/app/api/_utils/response";
 import { getPrismaClient } from "@/lib/prisma";
 import { AppointmentStatus } from "@prisma/client";
+import { enforceRateLimit } from "@/app/api/_utils/ratelimit";
+
+const searchQuerySchema = z.string().trim().min(1).max(80);
 
 export async function GET(request: Request) {
   const sessionUser = await getSessionUser();
@@ -13,11 +17,27 @@ export async function GET(request: Request) {
   }
 
   const { searchParams } = new URL(request.url);
-  const query = searchParams.get("q")?.trim() ?? "";
-  const scope = searchParams.get("scope");
-  if (!query) {
+  const queryRaw = searchParams.get("q")?.trim() ?? "";
+  if (!queryRaw) {
     return NextResponse.json({ results: [] });
   }
+
+  const parsedQuery = searchQuerySchema.safeParse(queryRaw);
+  if (!parsedQuery.success) {
+    return errorResponse("Consulta inválida.", 400);
+  }
+
+  const rateLimited = await enforceRateLimit(request, "search", {
+    limit: 30,
+    window: "1 m",
+    windowMs: 60 * 1000,
+  });
+  if (rateLimited) {
+    return rateLimited;
+  }
+
+  const query = parsedQuery.data;
+  const scope = searchParams.get("scope");
 
   const limit = Math.min(Number(searchParams.get("limit") ?? "6"), 10);
   const prisma = getPrismaClient();

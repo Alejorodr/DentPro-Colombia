@@ -36,10 +36,10 @@ export function ProfessionalDocuments() {
   useEffect(() => {
     void loadAttachments();
     const loadPatients = async () => {
-      const response = await fetch("/api/professional/patients");
+      const response = await fetch("/api/professional/patients?pageSize=50");
       if (!response.ok) return;
-      const data = (await response.json()) as { patients: PatientOption[] };
-      setPatients(data.patients ?? []);
+      const data = (await response.json()) as { data: PatientOption[] };
+      setPatients(data.data ?? []);
     };
     void loadPatients();
   }, []);

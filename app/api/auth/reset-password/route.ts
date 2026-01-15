@@ -1,13 +1,33 @@
 import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
+import { z } from "zod";
 
 import { getPrismaClient } from "@/lib/prisma";
 import { hashPasswordResetToken, validatePasswordPolicy } from "@/lib/auth/password-reset";
+import { parseJson } from "@/app/api/_utils/validation";
+import { enforceRateLimit } from "@/app/api/_utils/ratelimit";
+
+const resetPasswordSchema = z.object({
+  token: z.string().trim().min(10).max(256),
+  password: z.string().min(10).max(200),
+});
 
 export async function POST(request: Request) {
-  const body = await request.json().catch(() => null);
-  const token = typeof body?.token === "string" ? body.token : "";
-  const password = typeof body?.password === "string" ? body.password : "";
+  const rateLimited = await enforceRateLimit(request, "auth:reset-password", {
+    limit: 5,
+    window: "10 m",
+    windowMs: 10 * 60 * 1000,
+  });
+  if (rateLimited) {
+    return rateLimited;
+  }
+
+  const { data, error } = await parseJson(request, resetPasswordSchema);
+  if (error) {
+    return error;
+  }
+
+  const { token, password } = data;
 
   if (!token || !password) {
     return NextResponse.json({ message: "Solicitud inválida." }, { status: 400 });

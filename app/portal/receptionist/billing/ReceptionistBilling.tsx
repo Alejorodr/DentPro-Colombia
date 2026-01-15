@@ -21,10 +21,10 @@ export function ReceptionistBilling() {
 
   useEffect(() => {
     const loadServices = async () => {
-      const response = await fetch("/api/services?active=true");
+      const response = await fetch("/api/services?active=true&pageSize=50");
       if (response.ok) {
-        const data = (await response.json()) as ServiceItem[];
-        setServices(data);
+        const data = (await response.json()) as { data: ServiceItem[] };
+        setServices(data.data ?? []);
       }
     };
 
