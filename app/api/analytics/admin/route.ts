@@ -1,7 +1,13 @@
 import { NextResponse } from "next/server";
 
 import { auth } from "@/auth";
-import { getAdminKpis, getAdminRecentAppointments, getAdminTrend } from "@/lib/analytics/admin";
+import {
+  getAdminAppointmentsSummary,
+  getAdminKpis,
+  getAdminRevenueTrend,
+  getAdminStaffOnDuty,
+  getAdminTrend,
+} from "@/lib/analytics/admin";
 import { parseRange } from "@/lib/analytics/range";
 import { getPrismaClient } from "@/lib/prisma";
 
@@ -26,10 +32,12 @@ export async function GET(request: Request) {
   });
 
   const prisma = getPrismaClient();
-  const [kpis, trend, recentAppointments] = await Promise.all([
+  const [kpis, trend, revenueTrend, recentAppointments, staffOnDuty] = await Promise.all([
     getAdminKpis(prisma, { from: range.from, to: range.to }),
     getAdminTrend(prisma, { from: range.from, to: range.to, bucket: range.bucket, timeZone: range.timeZone }),
-    getAdminRecentAppointments(prisma, { from: range.from, to: range.to, limit: 12 }),
+    getAdminRevenueTrend(prisma, { from: range.from, to: range.to, bucket: range.bucket, timeZone: range.timeZone }),
+    getAdminAppointmentsSummary(prisma, { from: range.from, to: range.to, limit: 12 }),
+    getAdminStaffOnDuty(prisma),
   ]);
 
   return NextResponse.json({
@@ -39,13 +47,15 @@ export async function GET(request: Request) {
     bucket: range.bucket,
     kpis,
     trend,
-    recentAppointments: recentAppointments.map((appointment) => ({
+    revenueTrend,
+    staffOnDuty,
+    todaysAppointments: recentAppointments.map((appointment) => ({
       id: appointment.id,
       startAt: appointment.startAt.toISOString(),
       status: appointment.status,
       patientName: appointment.patientName,
       professionalName: appointment.professionalName,
-      specialty: appointment.specialty,
+      serviceName: appointment.serviceName,
     })),
   });
 }

@@ -11,8 +11,6 @@ import {
   Gear,
   House,
   SquaresFour,
-  Stethoscope,
-  UserCircle,
   Users,
 } from "@phosphor-icons/react";
 
@@ -24,6 +22,8 @@ import { Topbar } from "@/app/portal/components/layout/Topbar";
 import { ClientPortalShell } from "@/app/portal/client/components/ClientPortalShell";
 import { ReceptionistShell } from "@/app/portal/receptionist/components/ReceptionistShell";
 import { ProfessionalShell } from "@/app/portal/professional/components/ProfessionalShell";
+import { AdminGlobalSearch } from "@/app/portal/admin/_components/GlobalSearchBox";
+import { NotificationsDropdown } from "@/app/portal/admin/_components/NotificationsDropdown";
 
 interface PortalShellProps {
   children: React.ReactNode;
@@ -47,17 +47,16 @@ const navByRole: Record<UserRole, NavItem[]> = {
     { label: "Dashboard", href: "/portal/receptionist/dashboard", icon: House },
     { label: "Schedule", href: "/portal/receptionist/schedule", icon: CalendarCheck },
     { label: "Patients", href: "/portal/receptionist/patients", icon: Users },
-    { label: "Staff", href: "/portal/receptionist/staff", icon: UserCircle },
+    { label: "Staff", href: "/portal/receptionist/staff", icon: Users },
     { label: "Billing", href: "/portal/receptionist/billing", icon: ClipboardText },
     { label: "Settings", href: "/portal/receptionist/settings", icon: Gear },
   ],
   ADMINISTRADOR: [
     { label: "Dashboard", href: "/portal/admin", icon: House },
-    { label: "Usuarios", href: "/portal/admin/users", icon: Users },
-    { label: "Profesionales", href: "/portal/admin/professionals", icon: UserCircle },
-    { label: "Especialidades", href: "/portal/admin/specialties", icon: Stethoscope },
-    { label: "Turnos / Citas", href: "/portal/admin/appointments", icon: CalendarCheck },
-    { label: "CMS", href: "/portal/admin/content", icon: SquaresFour },
+    { label: "Staff Management", href: "/portal/admin/staff", icon: Users },
+    { label: "Patient Records", href: "/portal/admin/patients", icon: Users },
+    { label: "Services & Pricing", href: "/portal/admin/services", icon: ClipboardText },
+    { label: "Content CMS", href: "/portal/admin/content", icon: SquaresFour },
   ],
 };
 
@@ -80,6 +79,7 @@ export function PortalShell({ children, session, clinic }: PortalShellProps) {
   const roleLabel = activeRole ? roleLabels[activeRole] : "";
   const userName = session?.user?.name ?? "Usuario";
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const isAdmin = activeRole === "ADMINISTRADOR";
 
   const homeLink = useMemo(() => {
     if (!activeRole) {
@@ -118,10 +118,19 @@ export function PortalShell({ children, session, clinic }: PortalShellProps) {
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
         onSignOut={() => signOut({ callbackUrl: "/auth/login" })}
-        brandSubtitle={`${roleLabel || "Portal"} dashboard`}
+        brandTitle={isAdmin ? "DentPro Admin" : "DentPro"}
+        brandSubtitle={isAdmin ? "Administrator portal" : `${roleLabel || "Portal"} dashboard`}
       />
       <div className="flex min-h-screen flex-col md:pl-72">
-        <Topbar roleLabel={roleLabel} userName={userName} onMenuClick={() => setIsSidebarOpen(true)} />
+        <Topbar
+          roleLabel={roleLabel}
+          userName={userName}
+          onMenuClick={() => setIsSidebarOpen(true)}
+          title={isAdmin ? "Administrator Portal" : undefined}
+          subtitle={isAdmin ? "Dashboard Overview" : undefined}
+          searchSlot={isAdmin ? <AdminGlobalSearch /> : undefined}
+          notificationsSlot={isAdmin ? <NotificationsDropdown scope="admin" /> : undefined}
+        />
         <main className="w-full px-6 py-8">
           <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
             <div className="flex items-center justify-between text-xs uppercase tracking-wide text-slate-400 dark:text-slate-500">

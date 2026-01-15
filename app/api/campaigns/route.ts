@@ -7,25 +7,23 @@ import { getPrismaClient } from "@/lib/prisma";
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const activeOnly = searchParams.get("active") === "true";
-  const query = searchParams.get("q")?.trim();
+  const now = new Date();
 
   const prisma = getPrismaClient();
-  const services = await prisma.service.findMany({
+  const campaigns = await prisma.campaign.findMany({
     where: {
-      ...(activeOnly ? { active: true } : {}),
-      ...(query
+      ...(activeOnly
         ? {
-            OR: [
-              { name: { contains: query, mode: "insensitive" } },
-              { description: { contains: query, mode: "insensitive" } },
-            ],
+            active: true,
+            startAt: { lte: now },
+            endAt: { gte: now },
           }
         : {}),
     },
-    orderBy: { name: "asc" },
+    orderBy: { createdAt: "desc" },
   });
 
-  return NextResponse.json(services);
+  return NextResponse.json(campaigns);
 }
 
 export async function POST(request: Request) {
@@ -35,27 +33,33 @@ export async function POST(request: Request) {
   }
 
   const body = (await request.json()) as {
-    name?: string;
+    title?: string;
     description?: string | null;
-    priceCents?: number;
-    durationMinutes?: number | null;
+    imageUrl?: string;
+    ctaText?: string | null;
+    ctaUrl?: string | null;
+    startAt?: string;
+    endAt?: string;
     active?: boolean;
   };
 
-  if (!body.name || typeof body.priceCents !== "number") {
-    return errorResponse("Nombre y precio son obligatorios.", 400);
+  if (!body.title || !body.imageUrl || !body.startAt || !body.endAt) {
+    return errorResponse("Título, imagen y rango de fechas son obligatorios.", 400);
   }
 
   const prisma = getPrismaClient();
-  const service = await prisma.service.create({
+  const campaign = await prisma.campaign.create({
     data: {
-      name: body.name,
+      title: body.title,
       description: body.description ?? null,
-      priceCents: body.priceCents,
-      durationMinutes: body.durationMinutes ?? null,
+      imageUrl: body.imageUrl,
+      ctaText: body.ctaText ?? null,
+      ctaUrl: body.ctaUrl ?? null,
+      startAt: new Date(body.startAt),
+      endAt: new Date(body.endAt),
       active: body.active ?? true,
     },
   });
 
-  return NextResponse.json(service);
+  return NextResponse.json(campaign);
 }

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { getSessionUser } from "@/app/api/_utils/auth";
+import { getSessionUser, isAuthorized } from "@/app/api/_utils/auth";
 import { errorResponse } from "@/app/api/_utils/response";
 import { getPrismaClient } from "@/lib/prisma";
 
@@ -15,7 +15,8 @@ export async function PATCH(_request: Request, { params }: { params: Promise<{ i
   const prisma = getPrismaClient();
   const notification = await prisma.notification.findUnique({ where: { id } });
 
-  if (!notification || notification.userId !== sessionUser.id) {
+  const canReadAny = isAuthorized(sessionUser.role, ["ADMINISTRADOR"]);
+  if (!notification || (!canReadAny && notification.userId !== sessionUser.id)) {
     return errorResponse("Notificación no encontrada.", 404);
   }
 
