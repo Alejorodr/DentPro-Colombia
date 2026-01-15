@@ -40,10 +40,11 @@ export function AdminServicesPanel() {
     if (query.trim()) {
       params.set("q", query.trim());
     }
+    params.set("pageSize", "50");
     const response = await fetch(`/api/services?${params.toString()}`);
     if (response.ok) {
-      const data = (await response.json()) as ServiceRecord[];
-      setServices(data);
+      const data = (await response.json()) as { data: ServiceRecord[] };
+      setServices(data.data ?? []);
     }
   }, [query]);
 

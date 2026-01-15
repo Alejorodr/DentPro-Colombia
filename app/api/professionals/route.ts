@@ -4,9 +4,10 @@ import bcrypt from "bcryptjs";
 import { getPrismaClient } from "@/lib/prisma";
 import { getSessionUser, isAuthorized } from "@/app/api/_utils/auth";
 import { errorResponse } from "@/app/api/_utils/response";
+import { buildPaginatedResponse, getPaginationParams } from "@/app/api/_utils/pagination";
 import { Role } from "@prisma/client";
 
-export async function GET() {
+export async function GET(request: Request) {
   const sessionUser = await getSessionUser();
 
   if (!sessionUser) {
@@ -14,11 +15,19 @@ export async function GET() {
   }
 
   const prisma = getPrismaClient();
-  const professionals = await prisma.professionalProfile.findMany({
-    include: { user: true, specialty: true },
-    orderBy: { user: { name: "asc" } },
-  });
-  return NextResponse.json(professionals);
+  const { searchParams } = new URL(request.url);
+  const { page, pageSize, skip, take } = getPaginationParams(searchParams);
+
+  const [professionals, total] = await Promise.all([
+    prisma.professionalProfile.findMany({
+      include: { user: true, specialty: true },
+      orderBy: { user: { name: "asc" } },
+      skip,
+      take,
+    }),
+    prisma.professionalProfile.count(),
+  ]);
+  return NextResponse.json(buildPaginatedResponse(professionals, page, pageSize, total));
 }
 
 export async function POST(request: Request) {

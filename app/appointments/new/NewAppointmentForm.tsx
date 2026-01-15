@@ -56,16 +56,16 @@ export function NewAppointmentForm({ role }: NewAppointmentFormProps) {
   }, []);
 
   useEffect(() => {
-    void fetch("/api/professionals")
+    void fetch("/api/professionals?pageSize=50")
       .then((res) => res.json())
-      .then(setProfessionals)
+      .then((payload) => setProfessionals(payload.data ?? []))
       .catch(() => setProfessionals([]));
   }, []);
 
   useEffect(() => {
-    void fetch("/api/services?active=true")
+    void fetch("/api/services?active=true&pageSize=50")
       .then((res) => res.json())
-      .then(setServices)
+      .then((payload) => setServices(payload.data ?? []))
       .catch(() => setServices([]));
   }, []);
 

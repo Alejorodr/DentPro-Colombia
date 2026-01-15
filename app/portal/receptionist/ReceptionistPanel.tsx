@@ -36,14 +36,14 @@ export function ReceptionistPanel() {
 
   const loadData = async () => {
     const [appointmentsResponse, specialtiesResponse, professionalsResponse] = await Promise.all([
-      fetch("/api/appointments"),
+      fetch("/api/appointments?pageSize=50"),
       fetch("/api/specialties"),
-      fetch("/api/professionals"),
+      fetch("/api/professionals?pageSize=50"),
     ]);
 
     if (appointmentsResponse.ok) {
-      const data = (await appointmentsResponse.json()) as AppointmentItem[];
-      setAppointments(data);
+      const data = (await appointmentsResponse.json()) as { data: AppointmentItem[] };
+      setAppointments(data.data ?? []);
     }
 
     if (specialtiesResponse.ok) {
@@ -52,8 +52,8 @@ export function ReceptionistPanel() {
     }
 
     if (professionalsResponse.ok) {
-      const data = (await professionalsResponse.json()) as Professional[];
-      setProfessionals(data);
+      const data = (await professionalsResponse.json()) as { data: Professional[] };
+      setProfessionals(data.data ?? []);
     }
   };
 

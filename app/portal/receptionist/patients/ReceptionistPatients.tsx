@@ -38,10 +38,11 @@ export function ReceptionistPatients() {
     if (query.trim()) {
       params.set("q", query.trim());
     }
+    params.set("pageSize", "50");
     const response = await fetch(`/api/patients?${params.toString()}`);
     if (response.ok) {
-      const data = (await response.json()) as PatientRecord[];
-      setPatients(data);
+      const data = (await response.json()) as { data: PatientRecord[] };
+      setPatients(data.data ?? []);
     }
   }, [query]);
 

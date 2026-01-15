@@ -2,7 +2,9 @@ import { NextResponse } from "next/server";
 
 import { getSessionUser } from "@/app/api/_utils/auth";
 import { errorResponse } from "@/app/api/_utils/response";
+import { buildPaginatedResponse, getPaginationParams } from "@/app/api/_utils/pagination";
 import { getPrismaClient } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 
 export async function GET(request: Request) {
   const sessionUser = await getSessionUser();
@@ -26,48 +28,60 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const query = searchParams.get("q")?.trim();
+  const { page, pageSize, skip, take } = getPaginationParams(searchParams);
 
-  const appointments = await prisma.appointment.findMany({
-    where: {
-      professionalId: professional.id,
-      ...(query
-        ? {
-            patient: {
-              OR: [
-                { patientCode: { contains: query, mode: "insensitive" } },
-                { user: { name: { contains: query, mode: "insensitive" } } },
-                { user: { lastName: { contains: query, mode: "insensitive" } } },
-                { user: { email: { contains: query, mode: "insensitive" } } },
-              ],
-            },
-          }
-        : {}),
-    },
-    include: { patient: { include: { user: true } }, timeSlot: true },
-    orderBy: { timeSlot: { startAt: "desc" } },
-  });
+  const where: Prisma.PatientProfileWhereInput = {
+    appointments: { some: { professionalId: professional.id } },
+    ...(query
+      ? {
+          OR: [
+            { patientCode: { contains: query, mode: "insensitive" } },
+            { user: { name: { contains: query, mode: "insensitive" } } },
+            { user: { lastName: { contains: query, mode: "insensitive" } } },
+            { user: { email: { contains: query, mode: "insensitive" } } },
+          ],
+        }
+      : {}),
+  };
 
-  const patientMap = new Map<string, {
-    id: string;
-    name: string;
-    lastName: string;
-    email: string;
-    patientCode?: string | null;
-    lastVisit?: string | null;
-  }>();
+  const [patients, total] = await Promise.all([
+    prisma.patientProfile.findMany({
+      where,
+      include: { user: true },
+      orderBy: { user: { name: "asc" } },
+      skip,
+      take,
+    }),
+    prisma.patientProfile.count({ where }),
+  ]);
 
-  for (const appointment of appointments) {
-    if (!patientMap.has(appointment.patientId)) {
-      patientMap.set(appointment.patientId, {
-        id: appointment.patient.id,
-        name: appointment.patient.user.name,
-        lastName: appointment.patient.user.lastName,
-        email: appointment.patient.user.email,
-        patientCode: appointment.patient.patientCode,
-        lastVisit: appointment.timeSlot.startAt.toISOString(),
-      });
+  const patientIds = patients.map((patient) => patient.id);
+  const lastAppointments = patientIds.length
+    ? await prisma.appointment.findMany({
+        where: {
+          professionalId: professional.id,
+          patientId: { in: patientIds },
+        },
+        include: { timeSlot: true },
+        orderBy: { timeSlot: { startAt: "desc" } },
+      })
+    : [];
+
+  const lastVisitMap = new Map<string, string>();
+  for (const appointment of lastAppointments) {
+    if (!lastVisitMap.has(appointment.patientId)) {
+      lastVisitMap.set(appointment.patientId, appointment.timeSlot.startAt.toISOString());
     }
   }
 
-  return NextResponse.json({ patients: Array.from(patientMap.values()) });
+  const data = patients.map((patient) => ({
+    id: patient.id,
+    name: patient.user.name,
+    lastName: patient.user.lastName,
+    email: patient.user.email,
+    patientCode: patient.patientCode,
+    lastVisit: lastVisitMap.get(patient.id) ?? null,
+  }));
+
+  return NextResponse.json(buildPaginatedResponse(data, page, pageSize, total));
 }

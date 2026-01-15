@@ -1,10 +1,27 @@
 import { NextResponse } from "next/server";
+import { z } from "zod";
 
 import { getSessionUser } from "@/app/api/_utils/auth";
 import { errorResponse } from "@/app/api/_utils/response";
 import { getPrismaClient } from "@/lib/prisma";
 import { createReceptionNotifications } from "@/lib/notifications";
 import { AppointmentStatus, TimeSlotStatus } from "@prisma/client";
+import { parseJson } from "@/app/api/_utils/validation";
+import { enforceRateLimit } from "@/app/api/_utils/ratelimit";
+
+const patientDetailsSchema = z.object({
+  name: z.string().trim().max(80).optional(),
+  lastName: z.string().trim().max(80).optional(),
+  email: z.string().trim().email().max(120).optional(),
+  phone: z.string().trim().max(30).optional(),
+  documentId: z.string().trim().max(40).optional(),
+});
+
+const createClientAppointmentSchema = z.object({
+  serviceId: z.string().uuid(),
+  slotId: z.string().uuid(),
+  patientDetails: patientDetailsSchema.optional(),
+});
 
 export async function POST(request: Request) {
   const sessionUser = await getSessionUser();
@@ -17,17 +34,19 @@ export async function POST(request: Request) {
     return errorResponse("No autorizado.", 403);
   }
 
-  const payload = (await request.json().catch(() => null)) as {
-    serviceId?: string;
-    slotId?: string;
-    patientDetails?: {
-      name?: string;
-      lastName?: string;
-      email?: string;
-      phone?: string;
-      documentId?: string;
-    };
-  } | null;
+  const rateLimited = await enforceRateLimit(request, "client:appointments:create", {
+    limit: 10,
+    window: "1 m",
+    windowMs: 60 * 1000,
+  });
+  if (rateLimited) {
+    return rateLimited;
+  }
+
+  const { data: payload, error } = await parseJson(request, createClientAppointmentSchema);
+  if (error) {
+    return error;
+  }
 
   if (!payload?.serviceId || !payload?.slotId) {
     return errorResponse("Servicio y slot son obligatorios.");

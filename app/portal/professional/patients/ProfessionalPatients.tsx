@@ -22,13 +22,13 @@ export function ProfessionalPatients() {
     const controller = new AbortController();
 
     const load = async () => {
-      const response = await fetch(`/api/professional/patients?q=${encodeURIComponent(query)}`, {
+      const response = await fetch(`/api/professional/patients?q=${encodeURIComponent(query)}&pageSize=50`, {
         signal: controller.signal,
       });
       if (!response.ok) return;
-      const data = (await response.json()) as { patients: PatientItem[] };
+      const data = (await response.json()) as { data: PatientItem[] };
       if (!active) return;
-      setPatients(data.patients ?? []);
+      setPatients(data.data ?? []);
     };
 
     const timeout = setTimeout(() => {
