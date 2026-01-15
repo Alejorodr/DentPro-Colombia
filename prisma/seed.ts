@@ -1,5 +1,14 @@
 import bcrypt from "bcryptjs";
-import { AppointmentStatus, InsuranceStatus, PrismaClient, Role, TimeSlotStatus } from "@prisma/client";
+import {
+  AllergySeverity,
+  AppointmentStatus,
+  AttachmentKind,
+  InsuranceStatus,
+  PrescriptionItemType,
+  PrismaClient,
+  Role,
+  TimeSlotStatus,
+} from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -73,6 +82,8 @@ const PATIENT_SEED = [
     email: "demo-paciente@dentpro.co",
     name: "Andrea",
     lastName: "Gomez",
+    dateOfBirth: new Date(1992, 5, 12),
+    gender: "Femenino",
     phone: "+57 310 555 9812",
     documentId: "CC10928312",
     insuranceProvider: "Colsanitas Dental Plan",
@@ -85,6 +96,8 @@ const PATIENT_SEED = [
     email: "paciente.luisa@dentpro.co",
     name: "Luisa",
     lastName: "Alvarez",
+    dateOfBirth: new Date(1988, 9, 4),
+    gender: "Femenino",
     phone: "+57 313 222 1109",
     documentId: "CC4488123",
     insuranceProvider: "Sura Odonto",
@@ -97,6 +110,8 @@ const PATIENT_SEED = [
     email: "paciente.carlos@dentpro.co",
     name: "Carlos",
     lastName: "Perez",
+    dateOfBirth: new Date(1985, 2, 21),
+    gender: "Masculino",
     phone: "+57 320 771 2200",
     documentId: "CC5589012",
     insuranceProvider: "Coomeva",
@@ -109,6 +124,8 @@ const PATIENT_SEED = [
     email: "paciente.ana@dentpro.co",
     name: "Ana",
     lastName: "Silva",
+    dateOfBirth: new Date(1997, 10, 2),
+    gender: "Femenino",
     phone: "+57 301 662 1031",
     documentId: "CC7722331",
     insuranceProvider: "Compensar",
@@ -121,6 +138,8 @@ const PATIENT_SEED = [
     email: "paciente.maria@dentpro.co",
     name: "Maria",
     lastName: "Rodriguez",
+    dateOfBirth: new Date(1990, 8, 14),
+    gender: "Femenino",
     phone: "+57 314 550 8844",
     documentId: "CC3321129",
     insuranceProvider: "Sanitas Dental",
@@ -133,6 +152,8 @@ const PATIENT_SEED = [
     email: "paciente.jorge@dentpro.co",
     name: "Jorge",
     lastName: "Castro",
+    dateOfBirth: new Date(1979, 3, 19),
+    gender: "Masculino",
     phone: "+57 311 902 3377",
     documentId: "CC9902123",
     insuranceProvider: "Medisanitas",
@@ -348,6 +369,8 @@ async function main() {
         update: {
           phone: patient.phone,
           documentId: patient.documentId,
+          dateOfBirth: patient.dateOfBirth,
+          gender: patient.gender,
           insuranceProvider: patient.insuranceProvider,
           insuranceStatus: patient.insuranceStatus,
           address: patient.address,
@@ -360,6 +383,8 @@ async function main() {
           userId: patientUser.id,
           phone: patient.phone,
           documentId: patient.documentId,
+          dateOfBirth: patient.dateOfBirth,
+          gender: patient.gender,
           insuranceProvider: patient.insuranceProvider,
           insuranceStatus: patient.insuranceStatus,
           address: patient.address,
@@ -439,6 +464,108 @@ async function main() {
 
           appointmentIndex += 1;
         }
+      }
+    }
+  }
+
+  const primaryProfessional = professionalProfiles[0];
+  const primaryPatient = patientProfiles[0];
+
+  if (primaryProfessional && primaryPatient) {
+    const existingAllergy = await prisma.medicalAllergy.findFirst({
+      where: { patientId: primaryPatient.id, substance: "Penicilina" },
+    });
+
+    if (!existingAllergy) {
+      await prisma.medicalAllergy.create({
+        data: {
+          patientId: primaryPatient.id,
+          substance: "Penicilina",
+          severity: AllergySeverity.CRITICAL,
+          notes: "Reacción severa reportada.",
+        },
+      });
+    }
+
+    const existingRule = await prisma.availabilityRule.findFirst({
+      where: { professionalId: primaryProfessional.id },
+    });
+
+    if (!existingRule) {
+      await prisma.availabilityRule.create({
+        data: {
+          professionalId: primaryProfessional.id,
+          rrule: "FREQ=WEEKLY;BYDAY=MO,WE,FR",
+          startTime: "09:00",
+          endTime: "18:00",
+          timezone: "America/Bogota",
+          active: true,
+        },
+      });
+    }
+
+    const recentAppointments = await prisma.appointment.findMany({
+      where: { professionalId: primaryProfessional.id },
+      include: { timeSlot: true },
+      orderBy: { timeSlot: { startAt: "asc" } },
+      take: 3,
+    });
+
+    const appointmentForNotes = recentAppointments[0];
+    if (appointmentForNotes) {
+      const existingNote = await prisma.clinicalNote.findFirst({
+        where: { appointmentId: appointmentForNotes.id },
+      });
+
+      if (!existingNote) {
+        await prisma.clinicalNote.create({
+          data: {
+            appointmentId: appointmentForNotes.id,
+            authorUserId: primaryProfessional.userId,
+            content:
+              "Paciente reporta sensibilidad leve en cuadrante superior izquierdo. Se recomienda seguimiento en 2 semanas.",
+          },
+        });
+      }
+
+      const prescription = await prisma.prescription.upsert({
+        where: { appointmentId: appointmentForNotes.id },
+        update: {},
+        create: { appointmentId: appointmentForNotes.id },
+      });
+
+      const existingItems = await prisma.prescriptionItem.findFirst({
+        where: { prescriptionId: prescription.id },
+      });
+
+      if (!existingItems) {
+        await prisma.prescriptionItem.create({
+          data: {
+            prescriptionId: prescription.id,
+            type: PrescriptionItemType.MEDICATION,
+            name: "Ibuprofeno",
+            dosage: "400mg",
+            frequency: "Cada 8 horas",
+            instructions: "Tomar con alimentos.",
+          },
+        });
+      }
+
+      const existingAttachment = await prisma.attachment.findFirst({
+        where: { appointmentId: appointmentForNotes.id, kind: AttachmentKind.XRAY },
+      });
+
+      if (!existingAttachment) {
+        await prisma.attachment.create({
+          data: {
+            appointmentId: appointmentForNotes.id,
+            patientId: appointmentForNotes.patientId,
+            kind: AttachmentKind.XRAY,
+            filename: "Radiografia_panorama.pdf",
+            mimeType: "application/pdf",
+            url: "https://example.com/radiografia-panorama",
+          },
+        });
       }
     }
   }

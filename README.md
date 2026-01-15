@@ -124,6 +124,21 @@ NEXTAUTH_URL=https://dent-pro-colombia.vercel.app/
 - `npm run build`: build de producción
 - `npm run lint`: lint
 - `npm run test`: tests unitarios
+- `npm run test:e2e`: E2E (opt-in, requiere browsers instalados)
+
+### Playwright (E2E)
+
+Para instalar los browsers (una sola vez) ejecuta:
+
+```bash
+npx playwright install --with-deps chromium
+```
+
+Luego habilita los E2E con:
+
+```bash
+RUN_E2E=1 npm run test:e2e
+```
 
 ## Roles soportados
 
