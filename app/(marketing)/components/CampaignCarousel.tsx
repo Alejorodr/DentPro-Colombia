@@ -4,7 +4,10 @@ import Link from "next/link";
 import { getPrismaClient } from "@/lib/prisma";
 
 export async function CampaignCarousel() {
-  if (!process.env.DATABASE_URL) {
+  const isVercel =
+    process.env.VERCEL === "1" || process.env.VERCEL === "true" || Boolean(process.env.VERCEL_ENV);
+
+  if (!isVercel || !process.env.DATABASE_URL) {
     return null;
   }
 

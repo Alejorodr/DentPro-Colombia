@@ -42,14 +42,13 @@ export async function getTestPrisma(): Promise<TestPrisma> {
     }
 
     process.env.TEST_DATABASE_URL = databaseUrl;
+    process.env.DATABASE_URL = databaseUrl;
     ensureClientGenerated(schemaPath, databaseUrl);
 
     const prismaClientPath = path.join(root, "tests", "prisma-client", "index.js");
     const prismaModule = await import(pathToFileURL(prismaClientPath).toString());
     const PrismaClientConstructor = prismaModule.PrismaClient as typeof PrismaClient;
-    const prisma = new PrismaClientConstructor({
-      datasources: { db: { url: databaseUrl } },
-    });
+    const prisma = new PrismaClientConstructor();
 
     const reset = async () => {
       await prisma.appointment.deleteMany();
