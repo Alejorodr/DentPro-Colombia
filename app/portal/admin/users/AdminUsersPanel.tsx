@@ -218,7 +218,7 @@ export function AdminUsersPanel() {
 
   return (
     <div className="space-y-8">
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-surface-muted/80 dark:bg-surface-elevated/80">
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs dark:border-surface-muted/80 dark:bg-surface-elevated/80">
         <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Crear usuario</h2>
         <p className="text-sm text-slate-600 dark:text-slate-300">Define el rol y las credenciales iniciales.</p>
 
@@ -319,7 +319,7 @@ export function AdminUsersPanel() {
         </button>
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-surface-muted/80 dark:bg-surface-elevated/80">
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs dark:border-surface-muted/80 dark:bg-surface-elevated/80">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Usuarios</h2>

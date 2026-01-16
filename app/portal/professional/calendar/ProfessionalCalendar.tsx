@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-import { CalendarBlank } from "@phosphor-icons/react";
+import { CalendarBlank } from "@/components/ui/Icon";
 
 interface AvailabilityRule {
   id: string;
@@ -99,7 +99,7 @@ export function ProfessionalCalendar() {
       </header>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900/60">
+        <div className="rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-xs dark:border-slate-800 dark:bg-slate-900/60">
           <h2 className="text-lg font-semibold">Recurring rules</h2>
           <div className="mt-4 space-y-3 text-sm">
             <input
@@ -152,7 +152,7 @@ export function ProfessionalCalendar() {
           </div>
         </div>
 
-        <div className="rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900/60">
+        <div className="rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-xs dark:border-slate-800 dark:bg-slate-900/60">
           <h2 className="text-lg font-semibold">Exceptions</h2>
           <div className="mt-4 space-y-3 text-sm">
             <input
@@ -166,7 +166,7 @@ export function ProfessionalCalendar() {
                 type="checkbox"
                 checked={exceptionForm.isAvailable}
                 onChange={(event) => setExceptionForm((prev) => ({ ...prev, isAvailable: event.target.checked }))}
-                className="h-4 w-4 rounded border-slate-300"
+                className="h-4 w-4 rounded-sm border-slate-300"
               />
               Available exception
             </label>
@@ -215,7 +215,7 @@ export function ProfessionalCalendar() {
         </div>
       </div>
 
-      <div className="rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900/60">
+      <div className="rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-xs dark:border-slate-800 dark:bg-slate-900/60">
         <div className="flex items-center gap-2">
           <CalendarBlank size={20} className="text-slate-400" />
           <h2 className="text-lg font-semibold">Next 30 days preview</h2>

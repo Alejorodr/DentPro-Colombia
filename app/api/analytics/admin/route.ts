@@ -11,8 +11,6 @@ import {
 import { parseRange } from "@/lib/analytics/range";
 import { getPrismaClient } from "@/lib/prisma";
 
-export const runtime = "nodejs";
-
 export async function GET(request: Request) {
   const session = await auth();
   if (!session?.user) {

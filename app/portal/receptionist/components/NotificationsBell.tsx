@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import { Bell } from "@phosphor-icons/react";
+import { Bell } from "@/components/ui/Icon";
 
 type NotificationItem = {
   id: string;
@@ -54,7 +54,7 @@ export function NotificationsBell() {
     <div ref={containerRef} className="relative">
       <button
         type="button"
-        className="relative inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-teal/60 dark:border-surface-muted dark:text-slate-200"
+        className="relative inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition hover:text-slate-900 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-teal/60 dark:border-surface-muted dark:text-slate-200"
         aria-label="Ver notificaciones"
         onClick={() => {
           setOpen((prev) => !prev);
@@ -63,7 +63,7 @@ export function NotificationsBell() {
       >
         <Bell aria-hidden="true" className="h-5 w-5" weight="bold" />
         {unreadCount > 0 ? (
-          <span className="absolute -right-0.5 -top-0.5 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-brand-teal px-1 text-[10px] font-semibold text-white">
+          <span className="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-teal px-1 text-[10px] font-semibold text-white">
             {unreadCount}
           </span>
         ) : null}

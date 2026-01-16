@@ -1,5 +1,3 @@
-export const dynamic = "force-dynamic";
-
 import { InfoBar } from "./(marketing)/components/InfoBar";
 import { Navbar } from "./(marketing)/components/Navbar";
 import { Hero } from "./(marketing)/components/Hero";

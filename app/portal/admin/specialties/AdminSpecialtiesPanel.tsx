@@ -96,7 +96,7 @@ export function AdminSpecialtiesPanel() {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-surface-muted/80 dark:bg-surface-elevated/80">
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs dark:border-surface-muted/80 dark:bg-surface-elevated/80">
         <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Nueva especialidad</h2>
         <div className="mt-4 grid gap-4 md:grid-cols-3">
           <input
@@ -125,7 +125,7 @@ export function AdminSpecialtiesPanel() {
       {error ? <p className="mt-2 text-sm text-red-600 dark:text-red-400">{error}</p> : null}
     </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-surface-muted/80 dark:bg-surface-elevated/80">
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs dark:border-surface-muted/80 dark:bg-surface-elevated/80">
         <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Especialidades</h2>
         <div className="mt-4 space-y-3">
           {specialties.map((specialty) => (

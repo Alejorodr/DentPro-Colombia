@@ -5,8 +5,6 @@ import { getPrismaClient } from "@/lib/prisma";
 import { getDefaultDashboardPath, roleFromSlug, roleLabels } from "@/lib/auth/roles";
 import { AppointmentsList } from "@/app/portal/components/AppointmentsList";
 
-export const dynamic = "force-dynamic";
-
 export default async function PortalRolePage({ params }: { params: Promise<{ role: string }> }) {
   const { role } = await params;
   const requestedRole = roleFromSlug(role);
@@ -88,7 +86,7 @@ export default async function PortalRolePage({ params }: { params: Promise<{ rol
         </p>
       </header>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
             <h2 className="text-lg font-semibold text-slate-900">Citas próximas</h2>

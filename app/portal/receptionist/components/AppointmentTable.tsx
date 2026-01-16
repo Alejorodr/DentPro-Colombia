@@ -12,7 +12,7 @@ import {
   CheckCircle,
   XCircle,
   UserCheck,
-} from "@phosphor-icons/react";
+} from "@/components/ui/Icon";
 import { AppointmentStatus } from "@prisma/client";
 
 import { Table } from "@/app/portal/components/ui/Table";

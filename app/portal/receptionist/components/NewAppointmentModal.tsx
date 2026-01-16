@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-import { X } from "@phosphor-icons/react";
+import { X } from "@/components/ui/Icon";
 import { AppointmentStatus } from "@prisma/client";
 
 import { formatDateInput } from "@/lib/dates/tz";

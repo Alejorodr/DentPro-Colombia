@@ -4,6 +4,10 @@ import Link from "next/link";
 import { getPrismaClient } from "@/lib/prisma";
 
 export async function CampaignCarousel() {
+  if (!process.env.DATABASE_URL) {
+    return null;
+  }
+
   const prisma = getPrismaClient();
   const now = new Date();
   const campaigns = await prisma.campaign.findMany({

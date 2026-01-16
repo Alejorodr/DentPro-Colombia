@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-import { X } from "@phosphor-icons/react";
+import { X } from "@/components/ui/Icon";
 
 import { formatDateInput } from "@/lib/dates/tz";
 

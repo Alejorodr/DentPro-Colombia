@@ -82,7 +82,7 @@ export function AppointmentsList({ initialAppointments, role }: AppointmentsList
         appointments.map((appointment) => (
           <div
             key={appointment.id}
-            className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-surface-muted/80 dark:bg-surface-elevated/80"
+            className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs dark:border-surface-muted/80 dark:bg-surface-elevated/80"
           >
             <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
               <div>

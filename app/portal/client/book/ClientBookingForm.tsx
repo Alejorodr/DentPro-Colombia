@@ -161,7 +161,7 @@ export function ClientBookingForm() {
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
       <div className="space-y-6">
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-surface-muted/70 dark:bg-surface-elevated">
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs dark:border-surface-muted/70 dark:bg-surface-elevated">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{clinic?.city ?? "DentPro"}</p>
           <h1 className="mt-2 text-3xl font-semibold text-slate-900 dark:text-white">Schedule Your Visit</h1>
           <p className="mt-2 text-sm text-slate-500 dark:text-slate-300">
@@ -169,7 +169,7 @@ export function ClientBookingForm() {
           </p>
         </div>
 
-        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-surface-muted/70 dark:bg-surface-elevated">
+        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs dark:border-surface-muted/70 dark:bg-surface-elevated">
           <div className="mb-4 flex items-center gap-3">
             <span className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-50 text-sm font-semibold text-blue-600">
               1
@@ -212,7 +212,7 @@ export function ClientBookingForm() {
           </div>
         </section>
 
-        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-surface-muted/70 dark:bg-surface-elevated">
+        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs dark:border-surface-muted/70 dark:bg-surface-elevated">
           <div className="mb-4 flex items-center gap-3">
             <span className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-50 text-sm font-semibold text-blue-600">
               2
@@ -246,7 +246,7 @@ export function ClientBookingForm() {
           </div>
         </section>
 
-        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-surface-muted/70 dark:bg-surface-elevated">
+        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs dark:border-surface-muted/70 dark:bg-surface-elevated">
           <div className="mb-4 flex items-center gap-3">
             <span className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-50 text-sm font-semibold text-blue-600">
               3
@@ -310,7 +310,7 @@ export function ClientBookingForm() {
       </div>
 
       <aside className="space-y-6">
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-surface-muted/70 dark:bg-surface-elevated">
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs dark:border-surface-muted/70 dark:bg-surface-elevated">
           <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Booking Summary</h2>
           <div className="mt-4 space-y-3 text-sm text-slate-600 dark:text-slate-300">
             <div className="flex items-center justify-between">

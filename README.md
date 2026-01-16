@@ -30,6 +30,11 @@ cp .env.example .env
 - `RESEND_API_KEY` (producción)
 - `EMAIL_FROM` (producción)
 - `NEXT_PUBLIC_APP_URL` (local)
+- `SENTRY_DSN` (observabilidad en server)
+- `NEXT_PUBLIC_SENTRY_DSN` (observabilidad en client)
+- `SENTRY_ENVIRONMENT` (opcional)
+- `SENTRY_TRACES_SAMPLE_RATE` (opcional, default 0.1)
+- `LOG_LEVEL` (opcional, default `info`)
 
 3. Genera el cliente Prisma y aplica migraciones:
 
@@ -120,7 +125,7 @@ NEXTAUTH_URL=https://dent-pro-colombia.vercel.app/
 
 ## Scripts útiles
 
-- `npm run dev`: entorno local
+- `npm run dev`: entorno local (Turbopack)
 - `npm run build`: build de producción
 - `npm run lint`: lint
 - `npm run test`: tests unitarios
@@ -192,5 +197,6 @@ Timezone:
 
 ## Notas de producción
 
+- Tailwind CSS v4 exige Node.js 20+.
 - `prisma generate` debe ejecutarse en postinstall.
 - `prisma migrate deploy` debe ejecutarse en el pipeline de producción.

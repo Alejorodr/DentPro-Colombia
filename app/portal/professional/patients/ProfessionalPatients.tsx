@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-import { MagnifyingGlass } from "@phosphor-icons/react";
+import { MagnifyingGlass } from "@/components/ui/Icon";
 
 interface PatientItem {
   id: string;
@@ -49,7 +49,7 @@ export function ProfessionalPatients() {
         <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">Patient list</h1>
       </header>
 
-      <div className="rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900/60">
+      <div className="rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-xs dark:border-slate-800 dark:bg-slate-900/60">
         <div className="relative max-w-md">
           <MagnifyingGlass className="absolute left-3 top-3 text-slate-400" size={18} />
           <input

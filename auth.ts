@@ -5,7 +5,7 @@ import type { JWT } from "next-auth/jwt";
 import { cookies } from "next/headers";
 
 import { getJwtSecretString } from "@/lib/auth/jwt";
-import { getDefaultDashboardPath, isUserRole } from "@/lib/auth/roles";
+import { isUserRole } from "@/lib/auth/roles";
 import { authorizeCredentials } from "@/lib/auth/credentials";
 import { findUserById } from "@/lib/auth/users";
 type AuthenticatedUser = {

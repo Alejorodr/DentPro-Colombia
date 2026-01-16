@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 
-import { Moon, Sun } from "@phosphor-icons/react";
+import { Moon, Sun } from "@/components/ui/Icon";
 
 type Theme = "light" | "dark";
 
@@ -125,7 +125,7 @@ export function ThemeToggle() {
   return (
     <button
       type="button"
-      className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition-colors hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-brand-teal/60 dark:border-surface-muted/70 dark:bg-surface-base/80 dark:text-slate-200 dark:hover:text-white dark:focus-visible:ring-accent-cyan/60"
+      className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition-colors hover:text-slate-900 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-brand-teal/60 dark:border-surface-muted/70 dark:bg-surface-base/80 dark:text-slate-200 dark:hover:text-white dark:focus-visible:ring-accent-cyan/60"
       aria-label={label}
       title={label}
       onClick={handleToggle}

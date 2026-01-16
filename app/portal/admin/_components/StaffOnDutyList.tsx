@@ -25,7 +25,7 @@ const statusLabels: Record<StaffMember["status"], string> = {
 
 export function StaffOnDutyList({ staff }: { staff: StaffMember[] }) {
   return (
-    <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm shadow-slate-100/60 dark:border-surface-muted/70 dark:bg-surface-elevated/80">
+    <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-xs shadow-slate-100/60 dark:border-surface-muted/70 dark:bg-surface-elevated/80">
       <div className="flex items-center justify-between">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">

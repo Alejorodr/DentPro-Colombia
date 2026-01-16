@@ -1,6 +1,6 @@
 "use client";
 
-import { Copyright } from "@phosphor-icons/react";
+import { Copyright } from "@/components/ui/Icon";
 
 import type { MarketingIconName } from "./icon-types";
 import { resolveMarketingIcon } from "./icon-registry";
@@ -107,7 +107,7 @@ export function ContactSection({
             })}
           </div>
         </div>
-        <div className="rounded-3xl bg-white/10 p-8 backdrop-blur transition-colors duration-300 dark:border dark:border-accent-cyan/10 dark:bg-surface-muted/80">
+        <div className="rounded-3xl bg-white/10 p-8 backdrop-blur-sm transition-colors duration-300 dark:border dark:border-accent-cyan/10 dark:bg-surface-muted/80">
           <h3 className="text-xl font-semibold">{supportTitle}</h3>
           <p className="mt-2 text-sm text-slate-300">
             Nuestro equipo de Patient Care está listo para acompañarte antes, durante y después de cada visita.
@@ -127,7 +127,7 @@ export function ContactSection({
             })}
           </ul>
         </div>
-        <div className="rounded-3xl bg-white/10 p-8 backdrop-blur transition-colors duration-300 dark:border dark:border-accent-cyan/10 dark:bg-surface-muted/80">
+        <div className="rounded-3xl bg-white/10 p-8 backdrop-blur-sm transition-colors duration-300 dark:border dark:border-accent-cyan/10 dark:bg-surface-muted/80">
           <h3 className="text-xl font-semibold">{locationsTitle}</h3>
           <ul className="mt-6 space-y-4 text-sm text-slate-200">
             {locations.map((location) => (
@@ -140,7 +140,7 @@ export function ContactSection({
           {mapEmbed ? (
             <div className="contact-map mt-8">
               <div
-                className="aspect-[4/3]"
+                className="aspect-4/3"
                 dangerouslySetInnerHTML={{ __html: mapEmbed }}
               />
             </div>

@@ -80,7 +80,7 @@ export default async function AdminPortalPage({
         ))}
       </section>
 
-      <section className="grid gap-6 lg:grid-cols-[2fr,1fr]">
+      <section className="grid gap-6 lg:grid-cols-[2fr_1fr]">
         <RevenueTrendChart
           series={revenueTrend.series.map((value) => value / 100)}
           labels={revenueTrend.labels}

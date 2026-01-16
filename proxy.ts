@@ -8,7 +8,7 @@ function resolveRole(token: { role?: string } | null): UserRole | null {
   return isUserRole(roleCandidate) ? roleCandidate : null;
 }
 
-export async function middleware(request: NextRequest) {
+export default async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const host = request.headers.get("host") ?? "";
   const isLocalhost = host.startsWith("localhost") || host.startsWith("127.0.0.1");

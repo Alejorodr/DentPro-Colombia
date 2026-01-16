@@ -50,7 +50,7 @@ export default async function ClientPortalPage() {
       </header>
 
       <section className="grid gap-4 md:grid-cols-3">
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-surface-muted/70 dark:bg-surface-elevated">
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs dark:border-surface-muted/70 dark:bg-surface-elevated">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Next cleaning due</p>
           <p className="mt-4 text-2xl font-semibold text-slate-900 dark:text-white">
             {nextAppointment ? formatDate(nextAppointment.timeSlot.startAt) : "Sin citas próximas"}
@@ -59,14 +59,14 @@ export default async function ClientPortalPage() {
             <div className="h-2 w-1/2 rounded-full bg-blue-600" />
           </div>
         </div>
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-surface-muted/70 dark:bg-surface-elevated">
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs dark:border-surface-muted/70 dark:bg-surface-elevated">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Total visits</p>
           <p className="mt-4 text-3xl font-semibold text-slate-900 dark:text-white" data-testid="client-total-visits">
             {totalVisits}
           </p>
           <p className="text-xs text-slate-500 dark:text-slate-300">Desde tu primera visita</p>
         </div>
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-surface-muted/70 dark:bg-surface-elevated">
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs dark:border-surface-muted/70 dark:bg-surface-elevated">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Insurance status</p>
           <p className="mt-4 text-2xl font-semibold text-slate-900 dark:text-white">{insuranceStatus}</p>
           <p className="text-xs text-slate-500 dark:text-slate-300">{insuranceProvider}</p>
@@ -77,7 +77,7 @@ export default async function ClientPortalPage() {
         <div className="space-y-6">
           <div>
             <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Your Next Visit</h2>
-            <div className="mt-4 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-surface-muted/70 dark:bg-surface-elevated">
+            <div className="mt-4 rounded-3xl border border-slate-200 bg-white p-6 shadow-xs dark:border-surface-muted/70 dark:bg-surface-elevated">
               {nextAppointment ? (
                 <div className="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
                   <div className="space-y-4">
@@ -146,7 +146,7 @@ export default async function ClientPortalPage() {
               dashboard.recentHistory.map((appointment) => (
                 <div
                   key={appointment.id}
-                  className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-surface-muted/70 dark:bg-surface-elevated"
+                  className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs dark:border-surface-muted/70 dark:bg-surface-elevated"
                 >
                   <div className="flex items-center justify-between text-xs text-slate-400">
                     <span>{appointment.status}</span>

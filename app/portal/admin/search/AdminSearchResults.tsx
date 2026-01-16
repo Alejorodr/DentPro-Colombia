@@ -80,7 +80,7 @@ export function AdminSearchResults() {
                   <Link
                     key={`${item.type}-${item.id}`}
                     href={item.href}
-                    className="rounded-2xl border border-slate-200 bg-white p-4 text-sm shadow-sm transition hover:border-brand-teal/40 hover:shadow-md dark:border-surface-muted dark:bg-surface-elevated"
+                    className="rounded-2xl border border-slate-200 bg-white p-4 text-sm shadow-xs transition hover:border-brand-teal/40 hover:shadow-md dark:border-surface-muted dark:bg-surface-elevated"
                   >
                     <p className="font-semibold text-slate-900 dark:text-white">{item.label}</p>
                     {item.description ? (

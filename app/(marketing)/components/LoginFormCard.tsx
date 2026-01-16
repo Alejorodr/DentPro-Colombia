@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { getSession, signIn, useSession } from "next-auth/react";
-import { ArrowRight, EnvelopeSimple, Lock, ShieldCheck, WarningCircle } from "@phosphor-icons/react";
+import { ArrowRight, EnvelopeSimple, Lock, ShieldCheck, WarningCircle } from "@/components/ui/Icon";
 
 import { getDefaultDashboardPath, isUserRole, type UserRole } from "@/lib/auth/roles";
 

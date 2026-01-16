@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-import { FileText } from "@phosphor-icons/react";
+import { FileText } from "@/components/ui/Icon";
 import { AttachmentKind } from "@prisma/client";
 
 interface AttachmentItem {
@@ -95,7 +95,7 @@ export function ProfessionalDocuments() {
         <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">Document library</h1>
       </header>
 
-      <div className="rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900/60">
+      <div className="rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-xs dark:border-slate-800 dark:bg-slate-900/60">
         <div className="flex items-center gap-2">
           <FileText size={20} className="text-slate-400" />
           <h2 className="text-lg font-semibold">Upload document</h2>
@@ -135,7 +135,7 @@ export function ProfessionalDocuments() {
         </div>
       </div>
 
-      <div className="rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900/60">
+      <div className="rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-xs dark:border-slate-800 dark:bg-slate-900/60">
         <h2 className="text-lg font-semibold">Documents</h2>
         <div className="mt-4 space-y-3">
           {attachments.length === 0 ? (

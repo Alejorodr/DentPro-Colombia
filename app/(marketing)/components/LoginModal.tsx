@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type MouseEvent } from "react";
 import { createPortal } from "react-dom";
-import { ChartLineUp, Lock, X } from "@phosphor-icons/react";
+import { ChartLineUp, Lock, X } from "@/components/ui/Icon";
 
 import { LoginFormCard } from "./LoginFormCard";
 
@@ -112,7 +112,7 @@ export function LoginModal({ open, onClose }: LoginModalProps) {
             />
           </section>
           <aside
-            className="modal-card flex flex-col justify-between bg-gradient-to-br from-brand-sky/90 via-brand-teal/95 to-brand-indigo/95 text-white"
+            className="modal-card flex flex-col justify-between bg-linear-to-br from-brand-sky/90 via-brand-teal/95 to-brand-indigo/95 text-white"
             id="loginModalDescription"
           >
             <div className="space-y-4">

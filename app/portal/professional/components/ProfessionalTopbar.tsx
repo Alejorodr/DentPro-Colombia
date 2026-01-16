@@ -9,7 +9,7 @@ import {
   MagnifyingGlass,
   MoonStars,
   ShieldCheck,
-} from "@phosphor-icons/react";
+} from "@/components/ui/Icon";
 
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { cn } from "@/lib/utils";
@@ -103,11 +103,11 @@ export function ProfessionalTopbar({ userName, onMenuClick }: ProfessionalTopbar
   }, [query]);
 
   return (
-    <header className="sticky top-0 z-30 flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 bg-white/80 px-6 py-4 backdrop-blur dark:border-slate-800 dark:bg-slate-950/80">
+    <header className="sticky top-0 z-30 flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 bg-white/80 px-6 py-4 backdrop-blur-sm dark:border-slate-800 dark:bg-slate-950/80">
       <div className="flex items-center gap-3">
         <button
           type="button"
-          className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-teal/60 dark:border-slate-800 dark:text-slate-200 md:hidden"
+          className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition hover:text-slate-900 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-teal/60 dark:border-slate-800 dark:text-slate-200 md:hidden"
           onClick={onMenuClick}
           aria-label="Open menu"
         >
@@ -130,7 +130,7 @@ export function ProfessionalTopbar({ userName, onMenuClick }: ProfessionalTopbar
             aria-label="Search"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            className="w-full rounded-full border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-sm text-slate-600 shadow-sm shadow-slate-100/60 outline-none transition focus-visible:ring-2 focus-visible:ring-brand-teal/60 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
+            className="w-full rounded-full border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-sm text-slate-600 shadow-xs shadow-slate-100/60 outline-hidden transition focus-visible:ring-2 focus-visible:ring-brand-teal/60 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
           />
           {query ? (
             <div className="absolute left-0 right-0 top-12 z-20 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl dark:border-slate-800 dark:bg-slate-950">
@@ -184,7 +184,7 @@ export function ProfessionalTopbar({ userName, onMenuClick }: ProfessionalTopbar
         <div className="relative">
           <button
             type="button"
-            className="relative inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-teal/60 dark:border-slate-800 dark:text-slate-200"
+            className="relative inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition hover:text-slate-900 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-teal/60 dark:border-slate-800 dark:text-slate-200"
             aria-label="View notifications"
             onClick={() => setIsNotificationsOpen((prev) => !prev)}
           >

@@ -4,7 +4,7 @@ import Link from "next/link";
 
 import type { ComponentType, SVGProps } from "react";
 
-import { SignOut, X } from "@phosphor-icons/react";
+import { SignOut, X } from "@/components/ui/Icon";
 
 const iconWeight = "bold" as const;
 
@@ -48,7 +48,7 @@ export function Sidebar({
   return (
     <>
       <div
-        className={`fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-sm transition-opacity md:hidden ${
+        className={`fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-xs transition-opacity md:hidden ${
           isOpen ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
         aria-hidden={!isOpen}
@@ -71,7 +71,7 @@ export function Sidebar({
           </Link>
           <button
             type="button"
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-slate-500 transition hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-teal/50 dark:border-surface-muted dark:text-slate-300 md:hidden"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-slate-500 transition hover:text-slate-900 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-teal/50 dark:border-surface-muted dark:text-slate-300 md:hidden"
             onClick={onClose}
             aria-label="Cerrar menú"
           >
@@ -91,7 +91,7 @@ export function Sidebar({
                   key={item.href}
                   href={item.href}
                   aria-current={active ? "page" : undefined}
-                  className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-teal/60 dark:focus-visible:ring-accent-cyan/60 ${
+                  className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-teal/60 dark:focus-visible:ring-accent-cyan/60 ${
                     active
                       ? "bg-brand-teal/10 text-brand-teal dark:bg-accent-cyan/10 dark:text-accent-cyan"
                       : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-surface-muted/70"
@@ -116,7 +116,7 @@ export function Sidebar({
                     key={item.href}
                     href={item.href}
                     aria-current={active ? "page" : undefined}
-                    className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-teal/60 dark:focus-visible:ring-accent-cyan/60 ${
+                    className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-teal/60 dark:focus-visible:ring-accent-cyan/60 ${
                       active
                         ? "bg-brand-teal/10 text-brand-teal dark:bg-accent-cyan/10 dark:text-accent-cyan"
                         : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-surface-muted/70"
@@ -134,7 +134,7 @@ export function Sidebar({
           <button
             type="button"
             onClick={onSignOut}
-            className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-teal/60 dark:text-slate-300 dark:hover:bg-surface-muted/70"
+            className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-teal/60 dark:text-slate-300 dark:hover:bg-surface-muted/70"
           >
             <SignOut aria-hidden="true" className="h-5 w-5" weight="bold" />
             Cerrar sesión

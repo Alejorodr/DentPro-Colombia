@@ -33,6 +33,7 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   outputFileTracingRoot: __dirname,
+  cacheComponents: true,
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "images.unsplash.com" },

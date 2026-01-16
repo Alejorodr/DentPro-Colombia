@@ -2,9 +2,6 @@ import { NextResponse } from "next/server";
 import { exec } from "node:child_process";
 import { promisify } from "node:util";
 
-export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
-
 import {
   enforceRateLimit,
   getOpsKey,

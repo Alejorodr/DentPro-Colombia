@@ -49,7 +49,7 @@ export function ChartSpark({ className, series, labels, ariaLabel }: ChartSparkP
           </text>
         ) : (
           <>
-            <path d={linePath} className="fill-none stroke-brand-teal stroke-[3] dark:stroke-accent-cyan" />
+            <path d={linePath} className="fill-none stroke-brand-teal stroke-3 dark:stroke-accent-cyan" />
             <path d={areaPath} fill="url(#spark-gradient)" />
             {showDots.map((point) =>
               point ? (
