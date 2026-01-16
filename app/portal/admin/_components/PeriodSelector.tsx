@@ -71,7 +71,7 @@ export function PeriodSelector({ rangeKey, fromInput, toInput }: PeriodSelectorP
   };
 
   return (
-    <div className="flex flex-wrap items-end gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm dark:border-surface-muted/70 dark:bg-surface-elevated/80">
+    <div className="flex flex-wrap items-end gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-xs dark:border-surface-muted/70 dark:bg-surface-elevated/80">
       <div className="flex flex-col gap-1">
         <label className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
           Período
@@ -79,7 +79,7 @@ export function PeriodSelector({ rangeKey, fromInput, toInput }: PeriodSelectorP
         <select
           value={rangeKey}
           onChange={(event) => handleRangeChange(event.target.value as AnalyticsRangeKey)}
-          className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-teal/30 dark:border-surface-muted/70 dark:bg-surface-muted/60 dark:text-slate-200"
+          className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-xs focus:outline-hidden focus:ring-2 focus:ring-brand-teal/30 dark:border-surface-muted/70 dark:bg-surface-muted/60 dark:text-slate-200"
         >
           {rangeOptions.map((option) => (
             <option key={option.value} value={option.value}>
@@ -97,7 +97,7 @@ export function PeriodSelector({ rangeKey, fromInput, toInput }: PeriodSelectorP
           type="date"
           value={from}
           onChange={(event) => handleDateChange(event.target.value, to)}
-          className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-teal/30 dark:border-surface-muted/70 dark:bg-surface-muted/60 dark:text-slate-200"
+          className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-xs focus:outline-hidden focus:ring-2 focus:ring-brand-teal/30 dark:border-surface-muted/70 dark:bg-surface-muted/60 dark:text-slate-200"
         />
       </div>
 
@@ -109,7 +109,7 @@ export function PeriodSelector({ rangeKey, fromInput, toInput }: PeriodSelectorP
           type="date"
           value={to}
           onChange={(event) => handleDateChange(from, event.target.value)}
-          className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-teal/30 dark:border-surface-muted/70 dark:bg-surface-muted/60 dark:text-slate-200"
+          className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-xs focus:outline-hidden focus:ring-2 focus:ring-brand-teal/30 dark:border-surface-muted/70 dark:bg-surface-muted/60 dark:text-slate-200"
         />
       </div>
 

@@ -2,9 +2,6 @@ import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
 import { AppointmentStatus, InsuranceStatus, Role, TimeSlotStatus } from "@prisma/client";
 
-export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
-
 import { getPrismaClient } from "@/lib/prisma";
 import {
   enforceRateLimit,

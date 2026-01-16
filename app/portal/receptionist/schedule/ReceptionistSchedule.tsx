@@ -162,7 +162,7 @@ export function ReceptionistSchedule() {
           </button>
         </div>
       </section>
-      <section className="grid gap-6 lg:grid-cols-[1.1fr,2fr]">
+      <section className="grid gap-6 lg:grid-cols-[1.1fr_2fr]">
         <CalendarMonth
           month={month}
           selectedDate={selectedDate}

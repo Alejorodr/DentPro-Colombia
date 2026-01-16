@@ -3,8 +3,6 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { NewAppointmentForm } from "@/app/appointments/new/NewAppointmentForm";
 
-export const dynamic = "force-dynamic";
-
 export default async function NewAppointmentPage() {
   const session = await auth();
 

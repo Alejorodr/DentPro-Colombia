@@ -35,10 +35,10 @@ export function InfoBar({ location, schedule, whatsapp, email, socials }: InfoBa
   const EmailIcon = resolveMarketingIcon(email.icon);
 
   return (
-    <div className="border-b border-white/60 bg-white/80 text-sm text-slate-600 backdrop-blur-sm transition-colors duration-300 dark:border-surface-muted/60 dark:bg-surface-base/90 dark:text-slate-200">
+    <div className="border-b border-white/60 bg-white/80 text-sm text-slate-600 backdrop-blur-xs transition-colors duration-300 dark:border-surface-muted/60 dark:bg-surface-base/90 dark:text-slate-200">
       <div className="container mx-auto flex flex-col gap-3 px-6 py-3 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
-          <span className="inline-flex items-center gap-2 rounded-full bg-brand-light/80 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-brand-indigo shadow-sm dark:bg-surface-muted/80 dark:text-accent-cyan">
+          <span className="inline-flex items-center gap-2 rounded-full bg-brand-light/80 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-brand-indigo shadow-xs dark:bg-surface-muted/80 dark:text-accent-cyan">
             <LocationIcon className="h-4 w-4" weight="fill" aria-hidden="true" />
             {location.text}
           </span>

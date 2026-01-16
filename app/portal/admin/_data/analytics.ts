@@ -10,7 +10,7 @@ import {
   getAdminStaffOnDuty as getAdminStaffOnDutyBase,
   getAdminTrend as getAdminTrendBase,
 } from "@/lib/analytics/admin";
-import type { AnalyticsBucket, AnalyticsRange, AnalyticsRangeKey } from "@/lib/analytics/range";
+import type { AnalyticsBucket } from "@/lib/analytics/range";
 import { parseRange } from "@/lib/analytics/range";
 
 export type { AnalyticsBucket, AnalyticsRange, AnalyticsRangeKey } from "@/lib/analytics/range";

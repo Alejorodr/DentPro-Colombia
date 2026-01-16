@@ -5,6 +5,7 @@ import { getPrismaClient } from "@/lib/prisma";
 import { getSessionUser, isAuthorized } from "@/app/api/_utils/auth";
 import { errorResponse } from "@/app/api/_utils/response";
 import { isUserRole, type UserRole } from "@/lib/auth/roles";
+import { logger } from "@/lib/logger";
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const sessionUser = await getSessionUser();
@@ -73,6 +74,16 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   });
 
   const targetRole = (sessionUser.role === "RECEPCIONISTA" ? existing.role : payload.role) ?? existing.role;
+  if (existing.role !== targetRole) {
+    logger.info({
+      event: "user.role_changed",
+      userId: id,
+      previousRole: existing.role,
+      nextRole: targetRole,
+      actorId: sessionUser.id,
+      actorRole: sessionUser.role,
+    });
+  }
 
   if (targetRole === "PACIENTE") {
     if (!existing.patient) {
@@ -157,5 +168,11 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
     }
   }
   await prisma.user.delete({ where: { id } });
+  logger.info({
+    event: "user.deleted",
+    userId: id,
+    actorId: sessionUser.id,
+    actorRole: sessionUser.role,
+  });
   return NextResponse.json({ ok: true });
 }

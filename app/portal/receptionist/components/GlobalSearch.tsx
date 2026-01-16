@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 
-import { MagnifyingGlass } from "@phosphor-icons/react";
+import { MagnifyingGlass } from "@/components/ui/Icon";
 
 type SearchResult = {
   type: string;
@@ -69,13 +69,13 @@ export function GlobalSearch() {
 
   return (
     <div ref={containerRef} className="relative w-full">
-      <div className="flex w-full items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-600 shadow-sm shadow-slate-100/50 outline-none transition focus-within:ring-2 focus-within:ring-brand-teal/60 dark:border-surface-muted dark:bg-surface-base dark:text-slate-200">
+      <div className="flex w-full items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-600 shadow-xs shadow-slate-100/50 outline-hidden transition focus-within:ring-2 focus-within:ring-brand-teal/60 dark:border-surface-muted dark:bg-surface-base dark:text-slate-200">
         <MagnifyingGlass aria-hidden="true" className="h-4 w-4" />
         <input
           type="search"
           placeholder="Search patients, doctors, or appointments…"
           aria-label="Buscar en el portal"
-          className="w-full bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400 dark:text-slate-100"
+          className="w-full bg-transparent text-sm text-slate-700 outline-hidden placeholder:text-slate-400 dark:text-slate-100"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           onFocus={() => setOpen(true)}

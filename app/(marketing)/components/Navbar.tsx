@@ -3,7 +3,7 @@
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
-import { List, UserCircle, X } from "@phosphor-icons/react";
+import { List, UserCircle, X } from "@/components/ui/Icon";
 
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { LoginModal } from "./LoginModal";
@@ -150,24 +150,25 @@ export function Navbar({ brand, links, cta, login }: NavbarProps) {
           </button>
         </div>
       </div>
-      <div className={`mobile-menu dark:bg-surface-base/95 ${isOpen ? "open" : ""}`} id="mobileMenu">
-        <nav className="flex flex-col gap-4 px-6 pb-6 text-base font-semibold text-slate-700 dark:text-slate-100">
-          {links.map((link) => (
-            <a
-              key={`mobile-${link.href}`}
-              href={link.href}
-              className="transition hover:text-brand-teal dark:hover:text-accent-cyan"
-              onClick={closeMenu}
-            >
-              {link.label}
+      {isOpen ? (
+        <div className="mobile-menu open dark:bg-surface-base/95" id="mobileMenu">
+          <nav className="flex flex-col gap-4 px-6 pb-6 text-base font-semibold text-slate-700 dark:text-slate-100">
+            {links.map((link) => (
+              <a
+                key={`mobile-${link.href}`}
+                href={link.href}
+                className="transition hover:text-brand-teal dark:hover:text-accent-cyan"
+                onClick={closeMenu}
+              >
+                {link.label}
+              </a>
+            ))}
+            <a href={cta.href} className="btn-primary" onClick={closeMenu}>
+              {cta.label}
             </a>
-          ))}
-          <a href={cta.href} className="btn-primary" onClick={closeMenu}>
-            {cta.label}
-          </a>
-        </nav>
-      </div>
+          </nav>
+        </div>
+      ) : null}
     </header>
   );
 }
-

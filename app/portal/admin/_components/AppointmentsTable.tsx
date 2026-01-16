@@ -24,7 +24,7 @@ const statusStyles: Record<string, string> = {
 
 export function AppointmentsTable({ appointments }: { appointments: AppointmentItem[] }) {
   return (
-    <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm shadow-slate-100/60 dark:border-surface-muted/70 dark:bg-surface-elevated/80">
+    <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-xs shadow-slate-100/60 dark:border-surface-muted/70 dark:bg-surface-elevated/80">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">

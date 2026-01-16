@@ -12,7 +12,7 @@ import {
   House,
   SquaresFour,
   Users,
-} from "@phosphor-icons/react";
+} from "@/components/ui/Icon";
 
 import type { AuthSession } from "@/auth";
 import { roleFromSlug, roleLabels, roleSlugMap, type UserRole } from "@/lib/auth/roles";

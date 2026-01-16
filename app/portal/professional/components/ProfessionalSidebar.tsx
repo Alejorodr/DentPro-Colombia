@@ -11,7 +11,7 @@ import {
   House,
   Users,
   XCircle,
-} from "@phosphor-icons/react";
+} from "@/components/ui/Icon";
 
 import type { ClinicInfo } from "@/lib/clinic";
 import { cn } from "@/lib/utils";
@@ -40,7 +40,7 @@ export function ProfessionalSidebar({ clinic, pathname, userName, isOpen, onClos
   return (
     <aside
       className={cn(
-        "fixed inset-y-0 left-0 z-40 flex w-72 flex-col border-r border-slate-200 bg-white/95 px-5 py-6 text-slate-900 backdrop-blur dark:border-slate-800 dark:bg-slate-950/95 dark:text-white",
+        "fixed inset-y-0 left-0 z-40 flex w-72 flex-col border-r border-slate-200 bg-white/95 px-5 py-6 text-slate-900 backdrop-blur-sm dark:border-slate-800 dark:bg-slate-950/95 dark:text-white",
         isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0",
         "transition-transform",
       )}

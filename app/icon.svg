@@ -1,0 +1,7 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">DentPro</title>
+  <desc id="desc">DentPro logo placeholder</desc>
+  <rect width="256" height="256" rx="64" fill="#0A3D91"/>
+  <path d="M78 80h64c26.51 0 48 21.49 48 48s-21.49 48-48 48H98c-11.05 0-20-8.95-20-20V80z" fill="#E6F4FF"/>
+  <path d="M106 104h36c13.25 0 24 10.75 24 24s-10.75 24-24 24h-16c-11.05 0-20-8.95-20-20v-28z" fill="#5BD0FF"/>
+</svg>

@@ -136,7 +136,7 @@ export function AdminProfessionalsPanel() {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-surface-muted/80 dark:bg-surface-elevated/80">
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs dark:border-surface-muted/80 dark:bg-surface-elevated/80">
         <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Nuevo profesional</h2>
         <div className="mt-4 grid gap-4 md:grid-cols-2">
           <input
@@ -201,7 +201,7 @@ export function AdminProfessionalsPanel() {
         {error ? <p className="mt-2 text-sm text-red-600 dark:text-red-400">{error}</p> : null}
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-surface-muted/80 dark:bg-surface-elevated/80">
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs dark:border-surface-muted/80 dark:bg-surface-elevated/80">
         <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Profesionales</h2>
         <div className="mt-4 space-y-3">
           {professionals.map((professional) => (

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { MagnifyingGlass, PencilSimple, Trash } from "@phosphor-icons/react";
+import { MagnifyingGlass, PencilSimple, Trash } from "@/components/ui/Icon";
 
 import { Card } from "@/app/portal/components/ui/Card";
 import { Table } from "@/app/portal/components/ui/Table";

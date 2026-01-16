@@ -1,6 +1,6 @@
 "use client";
 
-import type { Icon } from "@phosphor-icons/react";
+import type { Icon } from "@/components/ui/Icon";
 import {
   Baby,
   CalendarCheck,
@@ -25,7 +25,7 @@ import {
   Tooth,
   UsersThree,
   WhatsappLogo,
-} from "@phosphor-icons/react";
+} from "@/components/ui/Icon";
 
 import type { MarketingIconName } from "./icon-types";
 

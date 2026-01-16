@@ -114,7 +114,7 @@ export function ReceptionistPanel() {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
         <h2 className="text-lg font-semibold text-slate-900">Crear paciente</h2>
         <div className="mt-4 grid gap-4 md:grid-cols-2">
           <input
@@ -172,7 +172,7 @@ export function ReceptionistPanel() {
         {error ? <p className="mt-2 text-sm text-red-600">{error}</p> : null}
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
             <h2 className="text-lg font-semibold text-slate-900">Citas unificadas</h2>

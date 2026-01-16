@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 
-import { CaretLeft, CaretRight } from "@phosphor-icons/react";
+import { CaretLeft, CaretRight } from "@/components/ui/Icon";
 
 import { useSpecialistsCarousel } from "@/hooks/useSpecialistsCarousel";
 

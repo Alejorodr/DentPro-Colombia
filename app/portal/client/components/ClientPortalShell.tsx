@@ -12,7 +12,7 @@ import {
   SignOut,
   UserCircle,
   ClockCounterClockwise,
-} from "@phosphor-icons/react";
+} from "@/components/ui/Icon";
 
 import type { AuthSession } from "@/auth";
 import type { ClinicInfo } from "@/lib/clinic";

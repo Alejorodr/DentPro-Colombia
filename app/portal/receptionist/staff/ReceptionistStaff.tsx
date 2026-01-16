@@ -66,7 +66,7 @@ export function ReceptionistStaff() {
             staff.map((member) => (
               <div
                 key={member.id}
-                className="rounded-2xl border border-slate-100 bg-white px-4 py-4 shadow-sm dark:border-surface-muted dark:bg-surface-base"
+                className="rounded-2xl border border-slate-100 bg-white px-4 py-4 shadow-xs dark:border-surface-muted dark:bg-surface-base"
               >
                 <div className="flex items-center justify-between">
                   <div>

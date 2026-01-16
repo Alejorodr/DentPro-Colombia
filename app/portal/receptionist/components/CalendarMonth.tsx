@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 
-import { CaretLeft, CaretRight } from "@phosphor-icons/react";
+import { CaretLeft, CaretRight } from "@/components/ui/Icon";
 
 type CalendarMonthProps = {
   month: Date;
@@ -48,7 +48,7 @@ export function CalendarMonth({ month, selectedDate, onSelect, onMonthChange, da
   const today = new Date();
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-surface-muted dark:bg-surface-elevated/80">
+    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs dark:border-surface-muted dark:bg-surface-elevated/80">
       <div className="flex items-center justify-between">
         <button
           type="button"
@@ -89,7 +89,7 @@ export function CalendarMonth({ month, selectedDate, onSelect, onMonthChange, da
               onClick={() => onSelect(date)}
               className={`relative flex h-9 w-9 items-center justify-center rounded-full text-xs font-semibold transition ${
                 isSelected
-                  ? "bg-brand-teal text-white shadow"
+                  ? "bg-brand-teal text-white shadow-sm"
                   : isToday
                     ? "border border-brand-teal text-brand-teal"
                     : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-surface-muted"
@@ -97,7 +97,7 @@ export function CalendarMonth({ month, selectedDate, onSelect, onMonthChange, da
             >
               {index + 1}
               {summary && summary.total > 0 ? (
-                <span className="absolute -bottom-1 -right-1 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-brand-teal px-1 text-[9px] font-semibold text-white">
+                <span className="absolute -bottom-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand-teal px-1 text-[9px] font-semibold text-white">
                   {summary.total}
                 </span>
               ) : null}

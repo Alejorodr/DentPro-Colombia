@@ -55,7 +55,7 @@ export default async function ClientAppointmentsPage() {
           upcoming.map((appointment) => (
             <div
               key={appointment.id}
-              className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-surface-muted/70 dark:bg-surface-elevated"
+              className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs dark:border-surface-muted/70 dark:bg-surface-elevated"
             >
               <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
@@ -89,7 +89,7 @@ export default async function ClientAppointmentsPage() {
           past.map((appointment) => (
             <div
               key={appointment.id}
-              className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-surface-muted/70 dark:bg-surface-elevated"
+              className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs dark:border-surface-muted/70 dark:bg-surface-elevated"
             >
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{appointment.status}</p>
               <p className="text-base font-semibold text-slate-900 dark:text-white">

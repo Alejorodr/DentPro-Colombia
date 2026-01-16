@@ -12,7 +12,7 @@ import {
   Microphone,
   Printer,
   ShieldWarning,
-} from "@phosphor-icons/react";
+} from "@/components/ui/Icon";
 import { AppointmentStatus, AttachmentKind, PrescriptionItemType } from "@prisma/client";
 
 import { cn } from "@/lib/utils";
@@ -303,19 +303,19 @@ export function ProfessionalDashboard() {
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Portal Profesional</p>
           <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">Dashboard</h1>
         </div>
-        <label className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">
+        <label className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500 shadow-xs dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">
           <CalendarBlank size={16} />
           <input
             type="date"
             value={selectedDate}
             onChange={(event) => setSelectedDate(event.target.value)}
-            className="bg-transparent text-xs font-semibold text-slate-600 outline-none dark:text-slate-200"
+            className="bg-transparent text-xs font-semibold text-slate-600 outline-hidden dark:text-slate-200"
           />
         </label>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1.6fr)_minmax(0,1.1fr)]">
-        <section className="rounded-3xl border border-slate-200 bg-white/80 p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900/60">
+        <section className="rounded-3xl border border-slate-200 bg-white/80 p-5 shadow-xs dark:border-slate-800 dark:bg-slate-900/60">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold">Daily Schedule</h2>
             <span className="rounded-full bg-brand-indigo/10 px-3 py-1 text-xs font-semibold text-brand-indigo">
@@ -368,7 +368,7 @@ export function ProfessionalDashboard() {
           </div>
         </section>
 
-        <section className="rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900/60">
+        <section className="rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-xs dark:border-slate-800 dark:bg-slate-900/60">
           {!appointmentDetail ? (
             <div className="flex h-full flex-col items-center justify-center text-center text-sm text-slate-500">
               <p className="text-base font-semibold text-slate-900 dark:text-white">Select an appointment</p>
@@ -519,7 +519,7 @@ export function ProfessionalDashboard() {
         </section>
 
         <section className="space-y-4">
-          <div className="rounded-3xl border border-slate-200 bg-white/80 p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900/60">
+          <div className="rounded-3xl border border-slate-200 bg-white/80 p-5 shadow-xs dark:border-slate-800 dark:bg-slate-900/60">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold">Procedural Notes</h3>
               <button
@@ -541,7 +541,7 @@ export function ProfessionalDashboard() {
               value={notesContent}
               onChange={(event) => setNotesContent(event.target.value)}
               placeholder="Start typing procedural observations here..."
-              className="mt-4 h-48 w-full rounded-2xl border border-slate-200 bg-white/80 p-4 text-sm text-slate-700 outline-none focus-visible:ring-2 focus-visible:ring-brand-indigo/40 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
+              className="mt-4 h-48 w-full rounded-2xl border border-slate-200 bg-white/80 p-4 text-sm text-slate-700 outline-hidden focus-visible:ring-2 focus-visible:ring-brand-indigo/40 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
             />
             <div className="mt-4 flex items-center justify-between text-xs text-slate-500">
               <span>{appointmentDetail?.clinicalNotes.at(0)?.updatedAt ? "Autosaved" : "No notes yet"}</span>
@@ -555,7 +555,7 @@ export function ProfessionalDashboard() {
             </div>
           </div>
 
-          <div className="rounded-3xl border border-slate-200 bg-white/80 p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900/60">
+          <div className="rounded-3xl border border-slate-200 bg-white/80 p-5 shadow-xs dark:border-slate-800 dark:bg-slate-900/60">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold">Issue Prescription</h3>
               <FileText size={20} className="text-slate-400" />
@@ -624,7 +624,7 @@ export function ProfessionalDashboard() {
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
-            <div className="rounded-3xl border border-slate-200 bg-white/80 p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/60">
+            <div className="rounded-3xl border border-slate-200 bg-white/80 p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900/60">
               <h4 className="text-sm font-semibold">Upload X-Ray</h4>
               <p className="text-xs text-slate-500">Import from device or add a link.</p>
               <div className="mt-3 space-y-2">
@@ -653,7 +653,7 @@ export function ProfessionalDashboard() {
                 <p className="text-[11px] text-slate-400">For production, configure external storage.</p>
               </div>
             </div>
-            <div className="rounded-3xl border border-slate-200 bg-white/80 p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/60">
+            <div className="rounded-3xl border border-slate-200 bg-white/80 p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900/60">
               <h4 className="text-sm font-semibold">Print Summary</h4>
               <p className="text-xs text-slate-500">Generate a printable visit summary.</p>
               <Link
@@ -672,13 +672,13 @@ export function ProfessionalDashboard() {
             </div>
           </div>
 
-          <div className="rounded-3xl border border-slate-200 bg-white/80 p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/60">
+          <div className="rounded-3xl border border-slate-200 bg-white/80 p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900/60">
             <label className="flex items-center gap-3 text-xs text-slate-500">
               <input
                 type="checkbox"
                 checked={markCompleted}
                 onChange={(event) => setMarkCompleted(event.target.checked)}
-                className="h-4 w-4 rounded border-slate-300 text-brand-indigo focus:ring-brand-indigo"
+                className="h-4 w-4 rounded-sm border-slate-300 text-brand-indigo focus:ring-brand-indigo"
               />
               Mark appointment as completed
             </label>

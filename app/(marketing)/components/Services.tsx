@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle } from "@phosphor-icons/react";
+import { CheckCircle } from "@/components/ui/Icon";
 
 import type { MarketingIconName } from "./icon-types";
 import { resolveMarketingIcon } from "./icon-registry";

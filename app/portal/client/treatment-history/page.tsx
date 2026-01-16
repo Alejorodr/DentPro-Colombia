@@ -36,7 +36,7 @@ export default async function ClientTreatmentHistoryPage() {
           {appointments.map((appointment) => (
             <div
               key={appointment.id}
-              className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-surface-muted/70 dark:bg-surface-elevated"
+              className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs dark:border-surface-muted/70 dark:bg-surface-elevated"
             >
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{appointment.status}</p>
               <p className="text-lg font-semibold text-slate-900 dark:text-white">

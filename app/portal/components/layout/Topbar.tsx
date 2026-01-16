@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 
-import { Bell, List, Question } from "@phosphor-icons/react";
+import { Bell, List, Question } from "@/components/ui/Icon";
 
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { AvatarFallback } from "@/app/portal/components/ui/AvatarFallback";
@@ -29,11 +29,11 @@ export function Topbar({
   notificationsSlot,
 }: TopbarProps) {
   return (
-    <header className="sticky top-0 z-30 flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 bg-white/80 px-6 py-4 backdrop-blur dark:border-surface-muted dark:bg-surface-elevated/80">
+    <header className="sticky top-0 z-30 flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 bg-white/80 px-6 py-4 backdrop-blur-sm dark:border-surface-muted dark:bg-surface-elevated/80">
       <div className="flex items-center gap-3">
         <button
           type="button"
-          className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-teal/60 dark:border-surface-muted dark:text-slate-300 md:hidden"
+          className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition hover:text-slate-900 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-teal/60 dark:border-surface-muted dark:text-slate-300 md:hidden"
           onClick={onMenuClick}
           aria-label="Abrir menú"
         >
@@ -55,7 +55,7 @@ export function Topbar({
                 type="search"
                 placeholder="Buscar en el portal"
                 aria-label="Buscar"
-                className="w-full rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-600 shadow-sm shadow-slate-100/50 outline-none transition focus-visible:ring-2 focus-visible:ring-brand-teal/60 dark:border-surface-muted dark:bg-surface-base dark:text-slate-200"
+                className="w-full rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-600 shadow-xs shadow-slate-100/50 outline-hidden transition focus-visible:ring-2 focus-visible:ring-brand-teal/60 dark:border-surface-muted dark:bg-surface-base dark:text-slate-200"
               />
             </div>
           )}
@@ -65,7 +65,7 @@ export function Topbar({
         {notificationsSlot ?? (
           <button
             type="button"
-            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-teal/60 dark:border-surface-muted dark:text-slate-200"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition hover:text-slate-900 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-teal/60 dark:border-surface-muted dark:text-slate-200"
             aria-label="Ver notificaciones"
           >
             <Bell aria-hidden="true" className="h-5 w-5" weight="bold" />
@@ -73,12 +73,12 @@ export function Topbar({
         )}
         <button
           type="button"
-          className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-teal/60 dark:border-surface-muted dark:text-slate-200"
+          className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition hover:text-slate-900 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-teal/60 dark:border-surface-muted dark:text-slate-200"
           aria-label="Ayuda"
         >
           <Question aria-hidden="true" className="h-5 w-5" weight="bold" />
         </button>
-        <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-2 py-1 text-sm text-slate-600 shadow-sm shadow-slate-100/40 dark:border-surface-muted dark:bg-surface-base dark:text-slate-200">
+        <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-2 py-1 text-sm text-slate-600 shadow-xs shadow-slate-100/40 dark:border-surface-muted dark:bg-surface-base dark:text-slate-200">
           <AvatarFallback name={userName} className="h-9 w-9" />
           <span className="hidden pr-2 text-xs font-medium md:inline">{userName}</span>
         </div>

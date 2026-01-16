@@ -11,7 +11,7 @@ import {
   House,
   UserCircle,
   Users,
-} from "@phosphor-icons/react";
+} from "@/components/ui/Icon";
 
 import type { AuthSession } from "@/auth";
 import { roleLabels } from "@/lib/auth/roles";

@@ -9,6 +9,7 @@ import { createReceptionNotifications } from "@/lib/notifications";
 import { AppointmentStatus, TimeSlotStatus } from "@prisma/client";
 import { parseJson } from "@/app/api/_utils/validation";
 import { enforceRateLimit } from "@/app/api/_utils/ratelimit";
+import { logger } from "@/lib/logger";
 
 const createAppointmentSchema = z.object({
   patientId: z.string().uuid().optional(),
@@ -233,9 +234,18 @@ export async function POST(request: Request) {
       });
     }
 
+    logger.info({
+      event: "appointment.created",
+      appointmentId: appointment.id,
+      userId: sessionUser.id,
+      role: sessionUser.role,
+      timeSlotId: appointment.timeSlotId,
+      serviceId: appointment.serviceId,
+    });
+
     return NextResponse.json(appointment, { status: 201 });
   } catch (error) {
-    console.error("No se pudo crear la cita", error);
+    logger.error({ event: "appointment.create_failed", error }, "No se pudo crear la cita");
     return errorResponse("No se pudo crear la cita.", 409);
   }
 }
