@@ -11,6 +11,7 @@
 - Icon wrapper to centralize Phosphor icon imports.
 - Upgrade guides for Next.js 16 and Tailwind CSS v4.
 - GitHub Actions workflow to run lint, test, and build on PRs.
+- Prisma v7 configuration file (`prisma/prisma.config.ts`) to define datasource URLs outside schema files.
 
 ### Changed
 - Added rate limiting to auth, appointment creation, and search endpoints.
@@ -24,6 +25,8 @@
 - Migrated Tailwind configuration to CSS-first v4 and updated PostCSS config.
 - Enabled Turbopack for local development.
 - Confirmed `next-auth` latest stable remains v4.24.13; v5 evaluation deferred.
+- Migrated Prisma datasource URLs to `prisma/prisma.config.ts` and removed `url`/`directUrl` from schema files; `DATABASE_URL` and `DATABASE_URL_UNPOOLED` are now read by the config. (2026-01-16, commit: 00a09bc)
+- Simplified Prisma client initialization to rely on Prisma config instead of manual datasource overrides. (2026-01-16, commit: 00a09bc)
 
 ### Fixed
 - Safer fallbacks in API request handling for malformed inputs.
@@ -42,6 +45,9 @@
 - `npm run build` (fails without `DATABASE_URL` or Prisma engine access)
 - `npm install prisma@latest --save-dev`
 - `npm install @prisma/client@latest`
+- `npx prisma generate` (failed: Prisma 5.22.0 still expects datasource url)
+- `npx prisma@7.2.0 generate` (failed: Prisma engine checksum 403)
+- `npx prisma@7.2.0 migrate dev` (failed: Prisma engine checksum 403)
 - `npx prisma generate` (failed: Prisma engine checksum 403)
 - `npx prisma migrate dev --name upgrade_7_2` (failed: Prisma engine checksum 403)
 - `npx @tailwindcss/upgrade --force`
@@ -56,6 +62,7 @@
 - `npm run lint`
 - `npm run test`
 - `npm run e2e`
+- `npm run build` (failed: Prisma 5.22.0 still expects datasource url)
 
 **Files modified**
 - `proxy.ts`, `next.config.ts`, `app/layout.tsx`, `app/page.tsx`, `app/portal/layout.tsx`
@@ -70,3 +77,6 @@
 - `package.json`, `package-lock.json`, `.env.example`, `README.md`
 - `docs/UPGRADE_TO_NEXT16.md`, `docs/UPGRADE_TO_V4.md`
 - `.github/workflows/ci.yml`
+- `prisma/schema.prisma`, `prisma/schema.test.prisma`, `prisma/prisma.config.ts`
+- `lib/prisma.ts`, `SECURITY_HARDENING.md`, `CHANGELOG_AUDIT.md`
+- `.env`, `.env.production`

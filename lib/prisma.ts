@@ -8,9 +8,7 @@ function createPrismaClient() {
     throw new Error("DATABASE_URL no está configurada. Configura la conexión a Neon.");
   }
 
-  return new PrismaClient({
-    datasources: { db: { url: databaseUrl } },
-  });
+  return new PrismaClient();
 }
 
 export function getPrismaClient(): PrismaClient {
