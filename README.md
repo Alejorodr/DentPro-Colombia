@@ -36,6 +36,8 @@ cp .env.example .env
 - `SENTRY_TRACES_SAMPLE_RATE` (opcional, default 0.1)
 - `LOG_LEVEL` (opcional, default `info`)
 
+> Nota: `scripts/vercel-prisma.mjs` exige `DATABASE_URL` en deploys de Vercel para ejecutar `prisma migrate deploy`.
+
 3. Genera el cliente Prisma y aplica migraciones:
 
 ```bash

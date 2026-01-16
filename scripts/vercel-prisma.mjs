@@ -1,14 +1,19 @@
 #!/usr/bin/env node
 
+import 'dotenv/config';
 import { spawn } from 'node:child_process';
 import { readdir } from 'node:fs/promises';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 const prismaArgs = (...args) => ['--yes', 'prisma', ...args];
 
 const runCommand = (command, args) =>
   new Promise((resolve, reject) => {
     const child = spawn(command, args, {
+      cwd: repoRoot,
       stdio: ['ignore', 'pipe', 'pipe'],
     });
 
@@ -34,7 +39,7 @@ const logStep = (message) => {
 const runPrisma = async (args) => runCommand('npx', prismaArgs(...args));
 
 const listMigrationDirectories = async () => {
-  const migrationsPath = path.join(process.cwd(), 'prisma', 'migrations');
+  const migrationsPath = path.join(repoRoot, 'prisma', 'migrations');
   const entries = await readdir(migrationsPath, { withFileTypes: true });
   return entries
     .filter((entry) => entry.isDirectory())
@@ -71,13 +76,32 @@ const baselineMigrations = async () => {
 };
 
 const run = async () => {
-  const requiredEnv = ['DATABASE_URL', 'DATABASE_URL_UNPOOLED'];
-  const missingEnv = requiredEnv.filter((name) => !process.env[name]);
+  const isVercel =
+    process.env.VERCEL === '1' ||
+    process.env.VERCEL === 'true' ||
+    Boolean(process.env.VERCEL_ENV);
+  const shouldRunMigrations = isVercel || process.env.RUN_PRISMA_MIGRATIONS === 'true';
+
+  if (!shouldRunMigrations) {
+    logStep(
+      'Omitiendo migraciones Prisma fuera de Vercel. Usa RUN_PRISMA_MIGRATIONS=true para ejecutarlas en local.'
+    );
+    return;
+  }
+
+  const requiredEnv = ['DATABASE_URL'];
+  const missingEnv = requiredEnv.filter(
+    (name) => !process.env[name] || process.env[name].trim() === ''
+  );
 
   if (missingEnv.length > 0) {
-    logStep(
-      `Omitiendo migraciones Prisma porque faltan variables: ${missingEnv.join(', ')}.`
-    );
+    const message = `Falta${missingEnv.length > 1 ? 'n' : ''} variable${
+      missingEnv.length > 1 ? 's' : ''
+    } para migraciones Prisma: ${missingEnv.join(', ')}.`;
+    if (isVercel) {
+      throw new Error(message);
+    }
+    logStep(`${message} Omitiendo migraciones Prisma en entorno local.`);
     return;
   }
 
