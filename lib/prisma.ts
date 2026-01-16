@@ -9,7 +9,11 @@ function createPrismaClient() {
   }
 
   return new PrismaClient({
-    datasourceUrl: databaseUrl,
+    datasources: {
+      db: {
+        url: databaseUrl,
+      },
+    },
   } as Prisma.PrismaClientOptions);
 }
 
