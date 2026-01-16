@@ -18,6 +18,11 @@ This phase focuses on critical quick wins: rate limiting, input validation, pagi
 - Additional authorization checks for remaining ID-based endpoints not touched in this phase.
 
 ## Environment configuration (Vercel)
+### Prisma (database connection)
+Set the following in Vercel for **Preview** and **Production**:
+- `DATABASE_URL` (pooled connection string for Neon/PostgreSQL)
+- `DATABASE_URL_UNPOOLED` (non-pooled connection string for migrations, if used)
+
 ### Upstash (rate limiting)
 Set the following in Vercel for **Preview** and **Production**:
 - `UPSTASH_REDIS_REST_URL`
