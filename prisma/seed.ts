@@ -4,13 +4,16 @@ import {
   AppointmentStatus,
   AttachmentKind,
   InsuranceStatus,
+  Prisma,
   PrescriptionItemType,
   PrismaClient,
   Role,
   TimeSlotStatus,
 } from "@prisma/client";
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  datasourceUrl: process.env.DATABASE_URL,
+} as Prisma.PrismaClientOptions);
 
 const DEFAULT_SPECIALTIES = [
   { name: "Odontología General", defaultSlotDurationMinutes: 30 },

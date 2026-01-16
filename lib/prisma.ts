@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
 
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 
@@ -8,7 +8,9 @@ function createPrismaClient() {
     throw new Error("DATABASE_URL no está configurada. Configura la conexión a Neon.");
   }
 
-  return new PrismaClient();
+  return new PrismaClient({
+    datasourceUrl: databaseUrl,
+  } as Prisma.PrismaClientOptions);
 }
 
 export function getPrismaClient(): PrismaClient {
