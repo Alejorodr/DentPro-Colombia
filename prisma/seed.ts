@@ -12,7 +12,11 @@ import {
 } from "@prisma/client";
 
 const prisma = new PrismaClient({
-  datasourceUrl: process.env.DATABASE_URL,
+  datasources: {
+    db: {
+      url: process.env.DATABASE_URL as string,
+    },
+  },
 } as Prisma.PrismaClientOptions);
 
 const DEFAULT_SPECIALTIES = [
