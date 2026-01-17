@@ -5,7 +5,7 @@ import globals from "globals";
 
 export default [
   {
-    ignores: ["node_modules/**", ".next/**", "dist/**"],
+    ignores: ["node_modules/**", ".next/**", "dist/**", "tests/prisma-client/**", "tests/.tmp/**"],
   },
   {
     files: ["**/*.{js,jsx,ts,tsx}"] ,

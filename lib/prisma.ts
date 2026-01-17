@@ -3,11 +3,11 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import { Pool } from "pg";
 
 declare global {
-  // eslint-disable-next-line no-var
   var __prisma: PrismaClient | undefined;
-  // eslint-disable-next-line no-var
   var __prismaPool: Pool | undefined;
 }
+
+let prismaClient: PrismaClient | null = null;
 
 function makeClient(): PrismaClient {
   const databaseUrl = process.env.DATABASE_URL;
@@ -31,14 +31,20 @@ function makeClient(): PrismaClient {
   return new PrismaClient({ adapter });
 }
 
-export const prisma: PrismaClient = globalThis.__prisma ?? makeClient();
-
-if (process.env.NODE_ENV !== "production") {
-  globalThis.__prisma = prisma;
-}
-
 export function getPrismaClient(): PrismaClient {
-  return prisma;
+  if (globalThis.__prisma) {
+    return globalThis.__prisma;
+  }
+
+  if (!prismaClient) {
+    prismaClient = makeClient();
+  }
+
+  if (process.env.NODE_ENV !== "production") {
+    globalThis.__prisma = prismaClient;
+  }
+
+  return prismaClient;
 }
 
 export function __resetPrismaClientForTests() {
@@ -56,6 +62,7 @@ export function __resetPrismaClientForTests() {
 
   delete globalThis.__prisma;
   delete globalThis.__prismaPool;
+  prismaClient = null;
 }
 
 export { PrismaClient };

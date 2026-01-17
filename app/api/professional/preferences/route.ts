@@ -1,8 +1,14 @@
 import { NextResponse } from "next/server";
+import { z } from "zod";
 
 import { getSessionUser } from "@/app/api/_utils/auth";
 import { errorResponse } from "@/app/api/_utils/response";
+import { parseJson } from "@/app/api/_utils/validation";
 import { getPrismaClient } from "@/lib/prisma";
+
+const preferencesSchema = z.object({
+  privacyMode: z.boolean(),
+});
 
 export async function GET() {
   const sessionUser = await getSessionUser();
@@ -35,10 +41,9 @@ export async function POST(request: Request) {
     return errorResponse("No autorizado.", 403);
   }
 
-  const payload = (await request.json().catch(() => null)) as { privacyMode?: boolean } | null;
-
-  if (typeof payload?.privacyMode !== "boolean") {
-    return errorResponse("Preferencia inválida.");
+  const { data: payload, error } = await parseJson(request, preferencesSchema);
+  if (error) {
+    return error;
   }
 
   const prisma = getPrismaClient();

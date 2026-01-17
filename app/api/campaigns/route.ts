@@ -1,8 +1,21 @@
 import { NextResponse } from "next/server";
+import { z } from "zod";
 
 import { getSessionUser, isAuthorized } from "@/app/api/_utils/auth";
 import { errorResponse } from "@/app/api/_utils/response";
+import { parseJson } from "@/app/api/_utils/validation";
 import { getPrismaClient } from "@/lib/prisma";
+
+const campaignSchema = z.object({
+  title: z.string().trim().min(1).max(120),
+  description: z.string().trim().max(500).nullable().optional(),
+  imageUrl: z.string().trim().min(1).max(500),
+  ctaText: z.string().trim().max(80).nullable().optional(),
+  ctaUrl: z.string().trim().max(500).nullable().optional(),
+  startAt: z.string().trim().min(1),
+  endAt: z.string().trim().min(1),
+  active: z.boolean().optional(),
+});
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -32,19 +45,15 @@ export async function POST(request: Request) {
     return errorResponse("No autorizado.", 401);
   }
 
-  const body = (await request.json()) as {
-    title?: string;
-    description?: string | null;
-    imageUrl?: string;
-    ctaText?: string | null;
-    ctaUrl?: string | null;
-    startAt?: string;
-    endAt?: string;
-    active?: boolean;
-  };
+  const { data: body, error } = await parseJson(request, campaignSchema);
+  if (error) {
+    return error;
+  }
 
-  if (!body.title || !body.imageUrl || !body.startAt || !body.endAt) {
-    return errorResponse("Título, imagen y rango de fechas son obligatorios.", 400);
+  const startAt = new Date(body.startAt);
+  const endAt = new Date(body.endAt);
+  if (Number.isNaN(startAt.getTime()) || Number.isNaN(endAt.getTime()) || startAt >= endAt) {
+    return errorResponse("Rango de fechas inválido.", 400);
   }
 
   const prisma = getPrismaClient();
@@ -55,8 +64,8 @@ export async function POST(request: Request) {
       imageUrl: body.imageUrl,
       ctaText: body.ctaText ?? null,
       ctaUrl: body.ctaUrl ?? null,
-      startAt: new Date(body.startAt),
-      endAt: new Date(body.endAt),
+      startAt,
+      endAt,
       active: body.active ?? true,
     },
   });

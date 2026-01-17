@@ -1,11 +1,26 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
+import { z } from "zod";
 
 import { getPrismaClient } from "@/lib/prisma";
 import { getSessionUser, isAuthorized } from "@/app/api/_utils/auth";
 import { errorResponse } from "@/app/api/_utils/response";
+import { parseJson } from "@/app/api/_utils/validation";
 import { isUserRole, type UserRole } from "@/lib/auth/roles";
 import { logger } from "@/lib/logger";
+
+const updateUserSchema = z.object({
+  email: z.string().trim().email().max(120).optional(),
+  password: z.string().min(8).max(200).optional(),
+  role: z.string().optional(),
+  name: z.string().trim().min(1).max(120).optional(),
+  lastName: z.string().trim().min(1).max(120).optional(),
+  phone: z.string().trim().max(30).optional(),
+  documentId: z.string().trim().max(40).optional(),
+  active: z.boolean().optional(),
+  specialtyId: z.string().uuid().optional(),
+  slotDurationMinutes: z.number().int().min(5).max(240).nullable().optional(),
+});
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const sessionUser = await getSessionUser();
@@ -20,21 +35,9 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     return errorResponse("No tienes permisos para actualizar usuarios.", 403);
   }
 
-  const payload = (await request.json().catch(() => null)) as {
-    email?: string;
-    password?: string;
-    role?: UserRole;
-    name?: string;
-    lastName?: string;
-    phone?: string;
-    documentId?: string;
-    active?: boolean;
-    specialtyId?: string;
-    slotDurationMinutes?: number | null;
-  } | null;
-
-  if (!payload) {
-    return errorResponse("Solicitud inválida.");
+  const { data: payload, error } = await parseJson(request, updateUserSchema);
+  if (error) {
+    return error;
   }
 
   const prisma = getPrismaClient();
@@ -44,7 +47,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     return errorResponse("Usuario no encontrado.", 404);
   }
 
-  if (payload.role && !isUserRole(payload.role)) {
+  const requestedRole = payload.role as UserRole | undefined;
+  if (requestedRole && !isUserRole(requestedRole)) {
     return errorResponse("Rol inválido.");
   }
 
@@ -52,7 +56,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     if (existing.role !== "PACIENTE") {
       return errorResponse("Recepción solo puede editar pacientes.", 403);
     }
-    if (payload.role && payload.role !== "PACIENTE") {
+    if (requestedRole && requestedRole !== "PACIENTE") {
       return errorResponse("Recepción no puede cambiar el rol.", 403);
     }
     if (payload.specialtyId || payload.slotDurationMinutes) {
@@ -68,12 +72,12 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       email: payload.email?.toLowerCase() ?? undefined,
       name: payload.name?.trim() ?? undefined,
       lastName: payload.lastName?.trim() ?? undefined,
-      role: sessionUser.role === "RECEPCIONISTA" ? undefined : payload.role ?? undefined,
+      role: sessionUser.role === "RECEPCIONISTA" ? undefined : requestedRole ?? undefined,
       passwordHash: sessionUser.role === "RECEPCIONISTA" ? undefined : passwordHash ?? undefined,
     },
   });
 
-  const targetRole = (sessionUser.role === "RECEPCIONISTA" ? existing.role : payload.role) ?? existing.role;
+  const targetRole = (sessionUser.role === "RECEPCIONISTA" ? existing.role : requestedRole) ?? existing.role;
   if (existing.role !== targetRole) {
     logger.info({
       event: "user.role_changed",

@@ -1,9 +1,27 @@
 import { NextResponse } from "next/server";
+import { z } from "zod";
 
 import { getPrismaClient } from "@/lib/prisma";
 import { InsuranceStatus } from "@prisma/client";
 import { getSessionUser } from "@/app/api/_utils/auth";
 import { errorResponse } from "@/app/api/_utils/response";
+import { parseJson } from "@/app/api/_utils/validation";
+
+const updateProfileSchema = z.object({
+  name: z.string().trim().min(1).max(120).optional(),
+  lastName: z.string().trim().min(1).max(120).optional(),
+  email: z.string().trim().email().max(120).optional(),
+  phone: z.string().trim().max(30).optional(),
+  documentId: z.string().trim().max(40).optional(),
+  address: z.string().trim().max(200).optional(),
+  city: z.string().trim().max(80).optional(),
+  insuranceProvider: z.string().trim().max(120).optional(),
+  insuranceStatus: z.string().trim().max(40).optional(),
+  gender: z.string().trim().max(40).optional(),
+  avatarUrl: z.string().trim().max(500).optional(),
+  patientCode: z.string().trim().max(40).optional(),
+  dateOfBirth: z.string().trim().optional(),
+});
 
 export async function GET() {
   const sessionUser = await getSessionUser();
@@ -40,24 +58,9 @@ export async function PATCH(request: Request) {
     return errorResponse("No autorizado.", 401);
   }
 
-  const payload = (await request.json().catch(() => null)) as {
-    name?: string;
-    lastName?: string;
-    email?: string;
-    phone?: string;
-    documentId?: string;
-    address?: string;
-    city?: string;
-    insuranceProvider?: string;
-    insuranceStatus?: string;
-    gender?: string;
-    avatarUrl?: string;
-    patientCode?: string;
-    dateOfBirth?: string;
-  } | null;
-
-  if (!payload) {
-    return errorResponse("Solicitud inválida.");
+  const { data: payload, error } = await parseJson(request, updateProfileSchema);
+  if (error) {
+    return error;
   }
 
   const resolvedInsuranceStatus =

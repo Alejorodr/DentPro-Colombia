@@ -1,11 +1,22 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
+import { z } from "zod";
 
 import { getPrismaClient } from "@/lib/prisma";
 import { getSessionUser, isAuthorized } from "@/app/api/_utils/auth";
 import { errorResponse } from "@/app/api/_utils/response";
 import { buildPaginatedResponse, getPaginationParams } from "@/app/api/_utils/pagination";
+import { parseJson } from "@/app/api/_utils/validation";
 import { Role } from "@prisma/client";
+
+const createProfessionalSchema = z.object({
+  email: z.string().trim().email().max(120),
+  password: z.string().min(8).max(200),
+  name: z.string().trim().min(1).max(120),
+  lastName: z.string().trim().min(1).max(120),
+  specialtyId: z.string().uuid(),
+  slotDurationMinutes: z.number().int().min(5).max(240).nullable().optional(),
+});
 
 export async function GET(request: Request) {
   const sessionUser = await getSessionUser();
@@ -41,21 +52,9 @@ export async function POST(request: Request) {
     return errorResponse("No tienes permisos para crear profesionales.", 403);
   }
 
-  const payload = (await request.json().catch(() => null)) as {
-    email?: string;
-    password?: string;
-    name?: string;
-    lastName?: string;
-    specialtyId?: string;
-    slotDurationMinutes?: number | null;
-  } | null;
-
-  if (!payload?.email?.trim() || !payload.password || !payload.name?.trim() || !payload.lastName?.trim()) {
-    return errorResponse("Nombre, apellido, correo y contraseña son obligatorios.");
-  }
-
-  if (!payload.specialtyId) {
-    return errorResponse("La especialidad es obligatoria.");
+  const { data: payload, error } = await parseJson(request, createProfessionalSchema);
+  if (error) {
+    return error;
   }
 
   const prisma = getPrismaClient();

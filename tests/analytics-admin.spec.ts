@@ -17,14 +17,16 @@ describe("admin analytics", () => {
     prisma = testDb.prisma;
     reset = testDb.reset;
     disconnect = testDb.disconnect;
-  });
+  }, 20000);
 
   beforeEach(async () => {
     await reset();
   });
 
   afterAll(async () => {
-    await disconnect();
+    if (disconnect) {
+      await disconnect();
+    }
   });
 
   it("calculates KPIs from real data", async () => {
@@ -110,6 +112,7 @@ describe("admin analytics", () => {
     const kpis = await getAdminKpis(prisma, {
       from: new Date("2024-04-10T00:00:00Z"),
       to: new Date("2024-04-12T00:00:00Z"),
+      useSql: false,
     });
 
     expect(kpis.totalAppointments).toBe(1);

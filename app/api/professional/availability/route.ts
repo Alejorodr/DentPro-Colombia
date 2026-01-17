@@ -1,9 +1,29 @@
 import { NextResponse } from "next/server";
+import { z } from "zod";
 
 import { getSessionUser } from "@/app/api/_utils/auth";
 import { errorResponse } from "@/app/api/_utils/response";
+import { parseJson } from "@/app/api/_utils/validation";
 import { expandAvailability } from "@/lib/availability";
 import { getPrismaClient } from "@/lib/prisma";
+
+const availabilitySchema = z.union([
+  z.object({
+    type: z.literal("rule"),
+    rrule: z.string().trim().min(1),
+    startTime: z.string().trim().min(1),
+    endTime: z.string().trim().min(1),
+    timezone: z.string().trim().min(1),
+  }),
+  z.object({
+    type: z.literal("exception"),
+    date: z.string().trim().min(1),
+    isAvailable: z.boolean().optional(),
+    startTime: z.string().trim().optional(),
+    endTime: z.string().trim().optional(),
+    reason: z.string().trim().max(200).optional(),
+  }),
+]);
 
 function getRangeFromQuery(rangeParam: string | null) {
   const days = Math.min(Number(rangeParam ?? "30"), 60);
@@ -66,21 +86,9 @@ export async function POST(request: Request) {
     return errorResponse("No autorizado.", 403);
   }
 
-  const payload = (await request.json().catch(() => null)) as
-    | {
-        type?: "rule" | "exception";
-        rrule?: string;
-        startTime?: string;
-        endTime?: string;
-        timezone?: string;
-        date?: string;
-        isAvailable?: boolean;
-        reason?: string;
-      }
-    | null;
-
-  if (!payload?.type) {
-    return errorResponse("Tipo de disponibilidad inválido.");
+  const { data: payload, error } = await parseJson(request, availabilitySchema);
+  if (error) {
+    return error;
   }
 
   const prisma = getPrismaClient();
@@ -93,10 +101,6 @@ export async function POST(request: Request) {
   }
 
   if (payload.type === "rule") {
-    if (!payload.rrule || !payload.startTime || !payload.endTime || !payload.timezone) {
-      return errorResponse("Datos incompletos para regla.");
-    }
-
     const rule = await prisma.availabilityRule.create({
       data: {
         professionalId: professional.id,

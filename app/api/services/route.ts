@@ -1,10 +1,20 @@
 import { NextResponse } from "next/server";
+import { z } from "zod";
 
 import { getSessionUser, isAuthorized } from "@/app/api/_utils/auth";
 import { errorResponse } from "@/app/api/_utils/response";
 import { buildPaginatedResponse, getPaginationParams } from "@/app/api/_utils/pagination";
+import { parseJson } from "@/app/api/_utils/validation";
 import { getPrismaClient } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
+
+const serviceSchema = z.object({
+  name: z.string().trim().min(1).max(120),
+  description: z.string().trim().max(500).nullable().optional(),
+  priceCents: z.number().int().min(0),
+  durationMinutes: z.number().int().min(0).nullable().optional(),
+  active: z.boolean().optional(),
+});
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -43,16 +53,9 @@ export async function POST(request: Request) {
     return errorResponse("No autorizado.", 401);
   }
 
-  const body = (await request.json()) as {
-    name?: string;
-    description?: string | null;
-    priceCents?: number;
-    durationMinutes?: number | null;
-    active?: boolean;
-  };
-
-  if (!body.name || typeof body.priceCents !== "number") {
-    return errorResponse("Nombre y precio son obligatorios.", 400);
+  const { data: body, error } = await parseJson(request, serviceSchema);
+  if (error) {
+    return error;
   }
 
   const prisma = getPrismaClient();

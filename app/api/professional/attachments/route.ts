@@ -1,11 +1,23 @@
 import { NextResponse } from "next/server";
+import { z } from "zod";
 
 import { getSessionUser } from "@/app/api/_utils/auth";
 import { errorResponse } from "@/app/api/_utils/response";
+import { parseJson } from "@/app/api/_utils/validation";
 import { getPrismaClient } from "@/lib/prisma";
 import { AttachmentKind } from "@prisma/client";
 
 const allowedKinds = new Set<AttachmentKind>([AttachmentKind.XRAY, AttachmentKind.LAB, AttachmentKind.DOCUMENT]);
+const professionalAttachmentSchema = z.object({
+  kind: z.nativeEnum(AttachmentKind),
+  filename: z.string().trim().min(1).max(200),
+  mimeType: z.string().trim().max(120).nullable().optional(),
+  size: z.number().int().min(0).nullable().optional(),
+  url: z.string().trim().max(500).nullable().optional(),
+  dataUrl: z.string().trim().max(20000).nullable().optional(),
+  appointmentId: z.string().uuid().nullable().optional(),
+  patientId: z.string().uuid().nullable().optional(),
+});
 
 export async function GET(request: Request) {
   const sessionUser = await getSessionUser();
@@ -74,18 +86,12 @@ export async function POST(request: Request) {
     return errorResponse("No autorizado.", 403);
   }
 
-  const payload = (await request.json().catch(() => null)) as {
-    kind?: AttachmentKind;
-    filename?: string;
-    mimeType?: string | null;
-    size?: number | null;
-    url?: string | null;
-    dataUrl?: string | null;
-    appointmentId?: string | null;
-    patientId?: string | null;
-  } | null;
+  const { data: payload, error } = await parseJson(request, professionalAttachmentSchema);
+  if (error) {
+    return error;
+  }
 
-  if (!payload?.kind || !allowedKinds.has(payload.kind) || !payload.filename) {
+  if (!allowedKinds.has(payload.kind)) {
     return errorResponse("Datos de adjunto inválidos.");
   }
 
