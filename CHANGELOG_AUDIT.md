@@ -34,7 +34,7 @@
 - Prevented marketing mobile menu from rendering when closed to avoid overlaying content.
 - Avoided hard failure when `DATABASE_URL` is missing by short-circuiting the marketing campaign carousel.
 - Replaced the app icon with an SVG to avoid binary assets and satisfy Turbopack decoding.
-- Replaced Prisma `datasourceUrl` overrides with `datasources` configuration for client initialization in app and seed scripts.
+- Replaced Prisma connection overrides with driver adapter initialization for app and seed scripts.
 
 ### Security
 - Enforced rate limiting and input validation on critical routes.

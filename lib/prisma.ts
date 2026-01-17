@@ -1,38 +1,61 @@
-import { Prisma, PrismaClient } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { Pool } from "pg";
 
-const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
+declare global {
+  // eslint-disable-next-line no-var
+  var __prisma: PrismaClient | undefined;
+  // eslint-disable-next-line no-var
+  var __prismaPool: Pool | undefined;
+}
 
-function createPrismaClient() {
+function makeClient(): PrismaClient {
   const databaseUrl = process.env.DATABASE_URL;
-  if (!databaseUrl || databaseUrl.trim().length === 0) {
-    throw new Error("DATABASE_URL no está configurada. Configura la conexión a Neon.");
+  if (!databaseUrl) {
+    throw new Error("DATABASE_URL is not set");
   }
 
-  return new PrismaClient({
-    datasources: {
-      db: {
-        url: databaseUrl,
-      },
-    },
-  } as Prisma.PrismaClientOptions);
+  const pool =
+    globalThis.__prismaPool ??
+    new Pool({
+      connectionString: databaseUrl,
+      ssl: { rejectUnauthorized: false },
+    });
+
+  const adapter = new PrismaPg(pool);
+
+  if (process.env.NODE_ENV !== "production") {
+    globalThis.__prismaPool = pool;
+  }
+
+  return new PrismaClient({ adapter });
+}
+
+export const prisma: PrismaClient = globalThis.__prisma ?? makeClient();
+
+if (process.env.NODE_ENV !== "production") {
+  globalThis.__prisma = prisma;
 }
 
 export function getPrismaClient(): PrismaClient {
-  if (!globalForPrisma.prisma) {
-    globalForPrisma.prisma = createPrismaClient();
-  }
-
-  return globalForPrisma.prisma;
+  return prisma;
 }
 
 export function __resetPrismaClientForTests() {
-  if (globalForPrisma.prisma) {
-    void globalForPrisma.prisma.$disconnect().catch(() => {
+  if (globalThis.__prisma) {
+    void globalThis.__prisma.$disconnect().catch(() => {
       /* noop */
     });
   }
 
-  delete globalForPrisma.prisma;
+  if (globalThis.__prismaPool) {
+    void globalThis.__prismaPool.end().catch(() => {
+      /* noop */
+    });
+  }
+
+  delete globalThis.__prisma;
+  delete globalThis.__prismaPool;
 }
 
 export { PrismaClient };
