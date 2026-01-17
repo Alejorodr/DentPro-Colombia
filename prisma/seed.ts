@@ -4,20 +4,25 @@ import {
   AppointmentStatus,
   AttachmentKind,
   InsuranceStatus,
-  Prisma,
   PrescriptionItemType,
   PrismaClient,
   Role,
   TimeSlotStatus,
 } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { Pool } from "pg";
 
-const prisma = new PrismaClient({
-  datasources: {
-    db: {
-      url: process.env.DATABASE_URL as string,
-    },
-  },
-} as Prisma.PrismaClientOptions);
+const databaseUrl = process.env.DATABASE_URL;
+if (!databaseUrl) {
+  throw new Error("DATABASE_URL is not set");
+}
+
+const pool = new Pool({
+  connectionString: databaseUrl,
+  ssl: { rejectUnauthorized: false },
+});
+
+const prisma = new PrismaClient({ adapter: new PrismaPg(pool) });
 
 const DEFAULT_SPECIALTIES = [
   { name: "Odontología General", defaultSlotDurationMinutes: 30 },
@@ -205,16 +210,14 @@ async function ensureTimeSlot({
   status: TimeSlotStatus;
 }) {
   const existing = await prisma.timeSlot.findFirst({
-    where: { professionalId, startAt },
+    where: {
+      professionalId,
+      startAt,
+      endAt,
+    },
   });
 
   if (existing) {
-    if (existing.status !== status || existing.endAt.getTime() !== endAt.getTime()) {
-      return prisma.timeSlot.update({
-        where: { id: existing.id },
-        data: { status, endAt },
-      });
-    }
     return existing;
   }
 
@@ -228,367 +231,482 @@ async function ensureTimeSlot({
   });
 }
 
-async function main() {
-  const adminEmail = requireEnv("SEED_ADMIN_EMAIL");
-  const adminPassword = process.env.SEED_ADMIN_PASSWORD?.trim();
+async function ensureProfessionalSlots({
+  professionalId,
+  startAt,
+  slots,
+  durationMinutes,
+}: {
+  professionalId: string;
+  startAt: Date;
+  slots: number;
+  durationMinutes: number;
+}) {
+  const slotTimes = buildSlotTimes(startAt, slots, durationMinutes);
 
-  const passwordHash = adminPassword ? await bcrypt.hash(adminPassword, 12) : null;
-
-  const existingAdmin = await prisma.user.findUnique({
-    where: { email: adminEmail.toLowerCase() },
-    select: { id: true },
-  });
-
-  if (!existingAdmin && !passwordHash) {
-    throw new Error("SEED_ADMIN_PASSWORD es obligatorio para crear el usuario admin por primera vez.");
-  }
-
-  const adminUser = await prisma.user.upsert({
-    where: { email: adminEmail.toLowerCase() },
-    update: {
-      name: "Admin",
-      lastName: "DentPro",
-      ...(passwordHash ? { passwordHash } : {}),
-      role: Role.ADMINISTRADOR,
-    },
-    create: {
-      email: adminEmail.toLowerCase(),
-      name: "Admin",
-      lastName: "DentPro",
-      passwordHash: passwordHash!,
-      role: Role.ADMINISTRADOR,
-    },
-  });
-
-  const demoPasswordHash = await bcrypt.hash("DentProDemo!1", 12);
-  const receptionistPasswordHash = await bcrypt.hash("RecepDentPro!1", 12);
-
-  const receptionistUser = await prisma.user.upsert({
-    where: { email: "demo-recepcion@dentpro.co" },
-    update: {
-      name: "Diana",
-      lastName: "Mora",
-      role: Role.RECEPCIONISTA,
-      passwordHash: receptionistPasswordHash,
-    },
-    create: {
-      email: "demo-recepcion@dentpro.co",
-      name: "Diana",
-      lastName: "Mora",
-      role: Role.RECEPCIONISTA,
-      passwordHash: receptionistPasswordHash,
-    },
-  });
-
-  const specialties = [] as Array<{ id: string; name: string; defaultSlotDurationMinutes: number }>;
-  for (const specialty of DEFAULT_SPECIALTIES) {
-    const record = await prisma.specialty.upsert({
-      where: { name: specialty.name },
-      update: { defaultSlotDurationMinutes: specialty.defaultSlotDurationMinutes, active: true },
-      create: { ...specialty },
+  for (const slotTime of slotTimes) {
+    await ensureTimeSlot({
+      professionalId,
+      startAt: slotTime.startAt,
+      endAt: slotTime.endAt,
+      status: TimeSlotStatus.AVAILABLE,
     });
-    specialties.push(record);
   }
-
-  const serviceRecords = await Promise.all(
-    DEFAULT_SERVICES.map((service) => {
-      const specialtyForService = specialties.find((item) => item.name === service.specialtyName);
-      return prisma.service.upsert({
-        where: { name: service.name },
-        update: {
-          description: service.description,
-          priceCents: service.priceCents,
-          durationMinutes: service.durationMinutes,
-          active: true,
-          specialtyId: specialtyForService?.id ?? null,
-        },
-        create: {
-          name: service.name,
-          description: service.description,
-          priceCents: service.priceCents,
-          durationMinutes: service.durationMinutes,
-          active: true,
-          specialtyId: specialtyForService?.id ?? null,
-        },
-      });
-    }),
-  );
-
-  const professionalProfiles = await Promise.all(
-    PROFESSIONAL_SEED.map(async (professional) => {
-      const professionalUser = await prisma.user.upsert({
-        where: { email: professional.email },
-        update: {
-          name: professional.name,
-          lastName: professional.lastName,
-          role: Role.PROFESIONAL,
-          passwordHash: demoPasswordHash,
-        },
-        create: {
-          email: professional.email,
-          name: professional.name,
-          lastName: professional.lastName,
-          role: Role.PROFESIONAL,
-          passwordHash: demoPasswordHash,
-        },
-      });
-
-      const specialty = specialties.find((item) => item.name === professional.specialtyName) ?? specialties[0];
-
-      return prisma.professionalProfile.upsert({
-        where: { userId: professionalUser.id },
-        update: {
-          specialtyId: specialty.id,
-          slotDurationMinutes: specialty.defaultSlotDurationMinutes,
-          active: true,
-        },
-        create: {
-          userId: professionalUser.id,
-          specialtyId: specialty.id,
-          slotDurationMinutes: specialty.defaultSlotDurationMinutes,
-          active: true,
-        },
-      });
-    }),
-  );
-
-  const patientProfiles = await Promise.all(
-    PATIENT_SEED.map(async (patient) => {
-      const patientUser = await prisma.user.upsert({
-        where: { email: patient.email },
-        update: {
-          name: patient.name,
-          lastName: patient.lastName,
-          role: Role.PACIENTE,
-          passwordHash: demoPasswordHash,
-        },
-        create: {
-          email: patient.email,
-          name: patient.name,
-          lastName: patient.lastName,
-          role: Role.PACIENTE,
-          passwordHash: demoPasswordHash,
-        },
-      });
-
-      return prisma.patientProfile.upsert({
-        where: { userId: patientUser.id },
-        update: {
-          phone: patient.phone,
-          documentId: patient.documentId,
-          dateOfBirth: patient.dateOfBirth,
-          gender: patient.gender,
-          insuranceProvider: patient.insuranceProvider,
-          insuranceStatus: patient.insuranceStatus,
-          address: patient.address,
-          city: patient.city,
-          patientCode: patient.patientCode,
-          avatarUrl: null,
-          active: true,
-        },
-        create: {
-          userId: patientUser.id,
-          phone: patient.phone,
-          documentId: patient.documentId,
-          dateOfBirth: patient.dateOfBirth,
-          gender: patient.gender,
-          insuranceProvider: patient.insuranceProvider,
-          insuranceStatus: patient.insuranceStatus,
-          address: patient.address,
-          city: patient.city,
-          patientCode: patient.patientCode,
-          avatarUrl: null,
-          active: true,
-        },
-      });
-    }),
-  );
-
-  const dayOffsets = [0, 1, 3, 8];
-  const slotPlan = [TimeSlotStatus.BOOKED, TimeSlotStatus.AVAILABLE, TimeSlotStatus.BREAK, TimeSlotStatus.BOOKED];
-  const appointmentStatuses = [
-    AppointmentStatus.PENDING,
-    AppointmentStatus.CONFIRMED,
-    AppointmentStatus.CANCELLED,
-    AppointmentStatus.COMPLETED,
-  ];
-  let appointmentIndex = 0;
-
-  for (const profile of professionalProfiles) {
-    const slotDuration = profile.slotDurationMinutes ?? 30;
-    for (const offset of dayOffsets) {
-      const dayStart = new Date();
-      dayStart.setDate(dayStart.getDate() + offset);
-      dayStart.setHours(8, 0, 0, 0);
-
-      const slots = buildSlotTimes(dayStart, slotPlan.length, slotDuration);
-
-      for (const [index, slot] of slots.entries()) {
-        const plannedStatus = slotPlan[index];
-        const appointmentStatus =
-          plannedStatus === TimeSlotStatus.BOOKED
-            ? appointmentStatuses[appointmentIndex % appointmentStatuses.length]
-            : null;
-        const slotStatus =
-          appointmentStatus === AppointmentStatus.CANCELLED
-            ? TimeSlotStatus.AVAILABLE
-            : plannedStatus;
-
-        const timeSlot = await ensureTimeSlot({
-          professionalId: profile.id,
-          startAt: slot.startAt,
-          endAt: slot.endAt,
-          status: slotStatus,
-        });
-
-        if (plannedStatus === TimeSlotStatus.BOOKED && appointmentStatus) {
-          const patient = patientProfiles[appointmentIndex % patientProfiles.length];
-          const service = serviceRecords[appointmentIndex % serviceRecords.length];
-          await prisma.appointment.upsert({
-            where: { timeSlotId: timeSlot.id },
-            update: {
-              patientId: patient.id,
-              professionalId: profile.id,
-              serviceId: service.id,
-              serviceName: service.name,
-              servicePriceCents: service.priceCents,
-              reason: service.name,
-              status: appointmentStatus,
-              checkedInAt: appointmentStatus === AppointmentStatus.COMPLETED ? slot.startAt : null,
-            },
-            create: {
-              patientId: patient.id,
-              professionalId: profile.id,
-              timeSlotId: timeSlot.id,
-              serviceId: service.id,
-              serviceName: service.name,
-              servicePriceCents: service.priceCents,
-              reason: service.name,
-              status: appointmentStatus,
-              checkedInAt: appointmentStatus === AppointmentStatus.COMPLETED ? slot.startAt : null,
-            },
-          });
-
-          appointmentIndex += 1;
-        }
-      }
-    }
-  }
-
-  const primaryProfessional = professionalProfiles[0];
-  const primaryPatient = patientProfiles[0];
-
-  if (primaryProfessional && primaryPatient) {
-    const existingAllergy = await prisma.medicalAllergy.findFirst({
-      where: { patientId: primaryPatient.id, substance: "Penicilina" },
-    });
-
-    if (!existingAllergy) {
-      await prisma.medicalAllergy.create({
-        data: {
-          patientId: primaryPatient.id,
-          substance: "Penicilina",
-          severity: AllergySeverity.CRITICAL,
-          notes: "Reacción severa reportada.",
-        },
-      });
-    }
-
-    const existingRule = await prisma.availabilityRule.findFirst({
-      where: { professionalId: primaryProfessional.id },
-    });
-
-    if (!existingRule) {
-      await prisma.availabilityRule.create({
-        data: {
-          professionalId: primaryProfessional.id,
-          rrule: "FREQ=WEEKLY;BYDAY=MO,WE,FR",
-          startTime: "09:00",
-          endTime: "18:00",
-          timezone: "America/Bogota",
-          active: true,
-        },
-      });
-    }
-
-    const recentAppointments = await prisma.appointment.findMany({
-      where: { professionalId: primaryProfessional.id },
-      include: { timeSlot: true },
-      orderBy: { timeSlot: { startAt: "asc" } },
-      take: 3,
-    });
-
-    const appointmentForNotes = recentAppointments[0];
-    if (appointmentForNotes) {
-      const existingNote = await prisma.clinicalNote.findFirst({
-        where: { appointmentId: appointmentForNotes.id },
-      });
-
-      if (!existingNote) {
-        await prisma.clinicalNote.create({
-          data: {
-            appointmentId: appointmentForNotes.id,
-            authorUserId: primaryProfessional.userId,
-            content:
-              "Paciente reporta sensibilidad leve en cuadrante superior izquierdo. Se recomienda seguimiento en 2 semanas.",
-          },
-        });
-      }
-
-      const prescription = await prisma.prescription.upsert({
-        where: { appointmentId: appointmentForNotes.id },
-        update: {},
-        create: { appointmentId: appointmentForNotes.id },
-      });
-
-      const existingItems = await prisma.prescriptionItem.findFirst({
-        where: { prescriptionId: prescription.id },
-      });
-
-      if (!existingItems) {
-        await prisma.prescriptionItem.create({
-          data: {
-            prescriptionId: prescription.id,
-            type: PrescriptionItemType.MEDICATION,
-            name: "Ibuprofeno",
-            dosage: "400mg",
-            frequency: "Cada 8 horas",
-            instructions: "Tomar con alimentos.",
-          },
-        });
-      }
-
-      const existingAttachment = await prisma.attachment.findFirst({
-        where: { appointmentId: appointmentForNotes.id, kind: AttachmentKind.XRAY },
-      });
-
-      if (!existingAttachment) {
-        await prisma.attachment.create({
-          data: {
-            appointmentId: appointmentForNotes.id,
-            patientId: appointmentForNotes.patientId,
-            kind: AttachmentKind.XRAY,
-            filename: "Radiografia_panorama.pdf",
-            mimeType: "application/pdf",
-            url: "https://example.com/radiografia-panorama",
-          },
-        });
-      }
-    }
-  }
-
-  console.log("Seed completado:");
-  console.log(`- Admin: ${adminUser.email}`);
-  console.log(`- Recepción demo: ${receptionistUser.email}`);
-  console.log(`- Profesionales demo: ${PROFESSIONAL_SEED.map((item) => item.email).join(", ")}`);
-  console.log(`- Pacientes demo: ${PATIENT_SEED.map((item) => item.email).join(", ")}`);
 }
 
-main()
-  .catch((error) => {
-    console.error("Error durante el seed:", error);
-    process.exit(1);
-  })
-  .finally(async () => {
+async function ensureProfessionalSlotsForDay({
+  professionalId,
+  day,
+  durationMinutes,
+}: {
+  professionalId: string;
+  day: Date;
+  durationMinutes: number;
+}) {
+  const startAt = new Date(day);
+  startAt.setHours(8, 0, 0, 0);
+  await ensureProfessionalSlots({
+    professionalId,
+    startAt,
+    slots: 12,
+    durationMinutes,
+  });
+}
+
+async function ensureProfessionalSlotsInWeek({
+  professionalId,
+  startDay,
+  durationMinutes,
+}: {
+  professionalId: string;
+  startDay: Date;
+  durationMinutes: number;
+}) {
+  for (let index = 0; index < 5; index += 1) {
+    const day = new Date(startDay);
+    day.setDate(startDay.getDate() + index);
+    await ensureProfessionalSlotsForDay({ professionalId, day, durationMinutes });
+  }
+}
+
+async function assignDefaultSlots(professionalId: string, durationMinutes: number) {
+  const today = new Date();
+  const startDay = new Date(today);
+  startDay.setDate(today.getDate() + 1);
+  await ensureProfessionalSlotsInWeek({
+    professionalId,
+    startDay,
+    durationMinutes,
+  });
+}
+
+async function ensureProfessional({
+  email,
+  name,
+  lastName,
+  specialtyName,
+}: {
+  email: string;
+  name: string;
+  lastName: string;
+  specialtyName: string;
+}) {
+  const professional = await prisma.user.upsert({
+    where: { email },
+    update: {
+      role: Role.PROFESIONAL,
+    },
+    create: {
+      email,
+      name,
+      lastName,
+      passwordHash: await bcrypt.hash(requireEnv("PROFESSIONAL_SEED_PASSWORD"), 10),
+      role: Role.PROFESIONAL,
+      professional: {
+        create: {
+          specialty: {
+            connect: {
+              name: specialtyName,
+            },
+          },
+          active: true,
+        },
+      },
+    },
+    include: {
+      professional: true,
+    },
+  });
+
+  if (professional.professional) {
+    const slotDurationMinutes = professional.professional.slotDurationMinutes ?? 30;
+    await assignDefaultSlots(professional.professional.id, slotDurationMinutes);
+  }
+
+  return professional;
+}
+
+async function ensurePatient({
+  email,
+  name,
+  lastName,
+  dateOfBirth,
+  gender,
+  phone,
+  documentId,
+  insuranceProvider,
+  insuranceStatus,
+  address,
+  city,
+  patientCode,
+}: {
+  email: string;
+  name: string;
+  lastName: string;
+  dateOfBirth: Date;
+  gender: string;
+  phone: string;
+  documentId: string;
+  insuranceProvider: string;
+  insuranceStatus: InsuranceStatus;
+  address: string;
+  city: string;
+  patientCode: string;
+}) {
+  const patient = await prisma.user.upsert({
+    where: { email },
+    update: {
+      role: Role.PACIENTE,
+    },
+    create: {
+      email,
+      name,
+      lastName,
+      passwordHash: await bcrypt.hash(requireEnv("PATIENT_SEED_PASSWORD"), 10),
+      role: Role.PACIENTE,
+      patient: {
+        create: {
+          dateOfBirth,
+          gender,
+          phone,
+          documentId,
+          insuranceProvider,
+          insuranceStatus,
+          address,
+          city,
+          patientCode,
+        },
+      },
+    },
+    include: {
+      patient: true,
+    },
+  });
+
+  return patient;
+}
+
+async function ensureSpecialties() {
+  for (const specialty of DEFAULT_SPECIALTIES) {
+    await prisma.specialty.upsert({
+      where: { name: specialty.name },
+      update: {
+        defaultSlotDurationMinutes: specialty.defaultSlotDurationMinutes,
+      },
+      create: specialty,
+    });
+  }
+}
+
+async function ensureServices() {
+  for (const service of DEFAULT_SERVICES) {
+    await prisma.service.upsert({
+      where: { name: service.name },
+      update: {
+        description: service.description,
+        priceCents: service.priceCents,
+        durationMinutes: service.durationMinutes,
+      },
+      create: {
+        name: service.name,
+        description: service.description,
+        priceCents: service.priceCents,
+        durationMinutes: service.durationMinutes,
+        specialty: {
+          connect: {
+            name: service.specialtyName,
+          },
+        },
+      },
+    });
+  }
+}
+
+async function ensureAdminUser() {
+  const adminEmail = requireEnv("ADMIN_SEED_EMAIL");
+
+  await prisma.user.upsert({
+    where: { email: adminEmail },
+    update: {
+      role: Role.ADMINISTRADOR,
+    },
+    create: {
+      email: adminEmail,
+      name: "Admin",
+      lastName: "DentPro",
+      passwordHash: await bcrypt.hash(requireEnv("ADMIN_SEED_PASSWORD"), 10),
+      role: Role.ADMINISTRADOR,
+    },
+  });
+}
+
+async function ensureReceptions() {
+  const receptionistEmail = requireEnv("RECEPTIONIST_SEED_EMAIL");
+
+  await prisma.user.upsert({
+    where: { email: receptionistEmail },
+    update: {
+      role: Role.RECEPCIONISTA,
+    },
+    create: {
+      email: receptionistEmail,
+      name: "Marta",
+      lastName: "Zuluaga",
+      passwordHash: await bcrypt.hash(requireEnv("RECEPTIONIST_SEED_PASSWORD"), 10),
+      role: Role.RECEPCIONISTA,
+    },
+  });
+}
+
+async function ensurePrescriptions(appointmentId: string) {
+  const prescriptions = await prisma.prescription.findMany({
+    where: {
+      appointmentId,
+    },
+  });
+
+  if (prescriptions.length > 0) {
+    return;
+  }
+
+  await prisma.prescription.create({
+    data: {
+      appointmentId,
+      items: {
+        create: [
+          {
+            name: "Ibuprofeno 400mg",
+            dosage: "1 tableta cada 8 horas",
+            type: PrescriptionItemType.MEDICATION,
+          },
+          {
+            name: "Enjuague bucal",
+            dosage: "2 veces al día",
+            type: PrescriptionItemType.PROCEDURE,
+          },
+        ],
+      },
+    },
+  });
+}
+
+async function ensureAppointment(professionalId: string, patientId: string, serviceId: string) {
+  const existingAppointment = await prisma.appointment.findFirst({
+    where: {
+      professionalId,
+      patientId,
+    },
+  });
+
+  if (existingAppointment) {
+    return existingAppointment;
+  }
+
+  const timeSlot = await prisma.timeSlot.findFirst({
+    where: {
+      professionalId,
+      status: TimeSlotStatus.AVAILABLE,
+    },
+  });
+
+  if (!timeSlot) {
+    return null;
+  }
+
+  return prisma.appointment.create({
+    data: {
+      status: AppointmentStatus.PENDING,
+      reason: "Dolor de encías",
+      professional: {
+        connect: {
+          id: professionalId,
+        },
+      },
+      patient: {
+        connect: {
+          id: patientId,
+        },
+      },
+      timeSlot: {
+        connect: {
+          id: timeSlot.id,
+        },
+      },
+      service: {
+        connect: {
+          id: serviceId,
+        },
+      },
+    },
+  });
+}
+
+async function ensureAttachments(appointmentId: string) {
+  const attachments = await prisma.attachment.findMany({
+    where: {
+      appointmentId,
+    },
+  });
+
+  if (attachments.length > 0) {
+    return;
+  }
+
+  await prisma.attachment.create({
+    data: {
+      appointmentId,
+      filename: "radiografia-inicial.png",
+      url: "https://example.com/radiografia-inicial.png",
+      kind: AttachmentKind.XRAY,
+    },
+  });
+}
+
+async function ensureAllergies(patientId: string) {
+  const allergies = await prisma.medicalAllergy.findMany({
+    where: {
+      patientId,
+    },
+  });
+
+  if (allergies.length > 0) {
+    return;
+  }
+
+  await prisma.medicalAllergy.createMany({
+    data: [
+      {
+        patientId,
+        substance: "Penicilina",
+        severity: AllergySeverity.MEDIUM,
+        notes: "Reacción leve en la piel.",
+      },
+      {
+        patientId,
+        substance: "Látex",
+        severity: AllergySeverity.HIGH,
+        notes: "Hinchazón y dificultad para respirar.",
+      },
+    ],
+  });
+}
+
+async function ensureNotifications({
+  patientUserId,
+  professionalUserId,
+}: {
+  patientUserId: string;
+  professionalUserId: string;
+}) {
+  const notifications = await prisma.notification.findMany({
+    where: {
+      userId: {
+        in: [patientUserId, professionalUserId],
+      },
+    },
+  });
+
+  if (notifications.length > 0) {
+    return;
+  }
+
+  await prisma.notification.createMany({
+    data: [
+      {
+        userId: patientUserId,
+        type: "APPOINTMENT_REMINDER",
+        title: "Recordatorio de cita",
+        body: "Recuerda tu cita mañana a las 10:00am.",
+      },
+      {
+        userId: patientUserId,
+        type: "FOLLOW_UP",
+        title: "Seguimiento",
+        body: "¿Cómo te sientes después del procedimiento?",
+      },
+      {
+        userId: professionalUserId,
+        type: "NEW_APPOINTMENT",
+        title: "Nueva cita asignada",
+        body: "Tienes una nueva cita en agenda.",
+      },
+    ],
+  });
+}
+
+async function runSeed() {
+  await prisma.$connect();
+
+  try {
+    await ensureSpecialties();
+    await ensureServices();
+    await ensureAdminUser();
+    await ensureReceptions();
+
+    for (const professional of PROFESSIONAL_SEED) {
+      await ensureProfessional(professional);
+    }
+
+    for (const patient of PATIENT_SEED) {
+      await ensurePatient(patient);
+    }
+
+    const firstProfessional = await prisma.professionalProfile.findFirst();
+    const firstPatient = await prisma.patientProfile.findFirst();
+    const firstService = await prisma.service.findFirst();
+
+    if (firstProfessional && firstPatient && firstService) {
+      const appointment =
+        (await ensureAppointment(firstProfessional.id, firstPatient.id, firstService.id)) ??
+        (await prisma.appointment.findFirst({
+          where: {
+            professionalId: firstProfessional.id,
+            patientId: firstPatient.id,
+          },
+        }));
+
+      if (appointment) {
+        await ensureAttachments(appointment.id);
+        await ensurePrescriptions(appointment.id);
+      }
+
+      await ensureAllergies(firstPatient.id);
+      await ensureNotifications({
+        patientUserId: firstPatient.userId,
+        professionalUserId: firstProfessional.userId,
+      });
+    }
+  } finally {
     await prisma.$disconnect();
+    await pool.end();
+  }
+}
+
+runSeed()
+  .then(() => {
+    console.log("Seed finalizado correctamente.");
+  })
+  .catch(async (error) => {
+    console.error("Error ejecutando seed:", error);
+    process.exitCode = 1;
   });
