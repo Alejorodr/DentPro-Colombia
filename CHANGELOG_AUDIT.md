@@ -33,6 +33,7 @@
 - Resolved missing React Hook dependency in notifications dropdown.
 - Prevented marketing mobile menu from rendering when closed to avoid overlaying content.
 - Avoided hard failure when `DATABASE_URL` is missing by short-circuiting the marketing campaign carousel.
+- Marked the campaign carousel render as dynamic by reading request headers before using `new Date()` to avoid Next.js prerender current time errors.
 - Replaced the app icon with an SVG to avoid binary assets and satisfy Turbopack decoding.
 - Replaced Prisma connection overrides with driver adapter initialization for app and seed scripts.
 
