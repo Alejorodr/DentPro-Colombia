@@ -1,9 +1,17 @@
 import { NextResponse } from "next/server";
+import { z } from "zod";
 
 import { getPrismaClient } from "@/lib/prisma";
 import { getSessionUser, isAuthorized } from "@/app/api/_utils/auth";
 import { errorResponse } from "@/app/api/_utils/response";
+import { parseJson } from "@/app/api/_utils/validation";
 import { TimeSlotStatus } from "@prisma/client";
+
+const generateSlotsSchema = z.object({
+  startAt: z.string().trim().min(1),
+  endAt: z.string().trim().min(1),
+  slotDurationMinutes: z.number().int().min(5).max(240).optional(),
+});
 
 function buildSlots(startAt: Date, endAt: Date, durationMinutes: number) {
   const slots: Array<{ startAt: Date; endAt: Date }> = [];
@@ -34,14 +42,9 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     return errorResponse("No tienes permisos para generar slots.", 403);
   }
 
-  const payload = (await request.json().catch(() => null)) as {
-    startAt?: string;
-    endAt?: string;
-    slotDurationMinutes?: number;
-  } | null;
-
-  if (!payload?.startAt || !payload?.endAt) {
-    return errorResponse("Debe indicar rango de fechas.");
+  const { data: payload, error } = await parseJson(request, generateSlotsSchema);
+  if (error) {
+    return error;
   }
 
   const startAt = new Date(payload.startAt);

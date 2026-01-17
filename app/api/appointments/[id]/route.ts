@@ -1,12 +1,17 @@
 import { NextResponse } from "next/server";
+import { z } from "zod";
 
 import { getPrismaClient } from "@/lib/prisma";
 import { getSessionUser, isAuthorized } from "@/app/api/_utils/auth";
 import { errorResponse } from "@/app/api/_utils/response";
+import { parseJson } from "@/app/api/_utils/validation";
 import { createReceptionNotifications } from "@/lib/notifications";
 import { AppointmentStatus, TimeSlotStatus } from "@prisma/client";
 
-const statusValues = Object.values(AppointmentStatus);
+const updateAppointmentSchema = z.object({
+  status: z.nativeEnum(AppointmentStatus),
+  notes: z.string().max(1000).nullable().optional(),
+});
 
 function canCancelWithLimit(startAt: Date): boolean {
   const diff = startAt.getTime() - Date.now();
@@ -21,13 +26,9 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   }
 
   const { id } = await params;
-  const payload = (await request.json().catch(() => null)) as {
-    status?: AppointmentStatus;
-    notes?: string | null;
-  } | null;
-
-  if (!payload?.status || !statusValues.includes(payload.status)) {
-    return errorResponse("Estado inválido.");
+  const { data: payload, error } = await parseJson(request, updateAppointmentSchema);
+  if (error) {
+    return error;
   }
 
   const prisma = getPrismaClient();

@@ -1,9 +1,21 @@
 import { NextResponse } from "next/server";
+import { z } from "zod";
 
 import { getSessionUser } from "@/app/api/_utils/auth";
 import { errorResponse } from "@/app/api/_utils/response";
+import { parseJson } from "@/app/api/_utils/validation";
 import { getPrismaClient } from "@/lib/prisma";
 import { PrescriptionItemType } from "@prisma/client";
+
+const prescriptionSchema = z.object({
+  item: z.object({
+    type: z.nativeEnum(PrescriptionItemType).optional(),
+    name: z.string().trim().min(1).max(120),
+    dosage: z.string().trim().max(200).optional(),
+    frequency: z.string().trim().max(200).optional(),
+    instructions: z.string().trim().max(500).optional(),
+  }),
+});
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const sessionUser = await getSessionUser();
@@ -16,22 +28,13 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     return errorResponse("No autorizado.", 403);
   }
 
-  const payload = (await request.json().catch(() => null)) as {
-    item?: {
-      type?: PrescriptionItemType;
-      name?: string;
-      dosage?: string;
-      frequency?: string;
-      instructions?: string;
-    };
-  } | null;
-
-  const item = payload?.item;
-  const name = item?.name?.trim();
-
-  if (!item || !name) {
-    return errorResponse("El nombre es obligatorio.");
+  const { data: payload, error } = await parseJson(request, prescriptionSchema);
+  if (error) {
+    return error;
   }
+
+  const item = payload.item;
+  const name = item.name.trim();
 
   const { id } = await params;
   const prisma = getPrismaClient();

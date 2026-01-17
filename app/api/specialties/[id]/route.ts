@@ -1,8 +1,16 @@
 import { NextResponse } from "next/server";
+import { z } from "zod";
 
 import { getPrismaClient } from "@/lib/prisma";
 import { getSessionUser, isAuthorized } from "@/app/api/_utils/auth";
 import { errorResponse } from "@/app/api/_utils/response";
+import { parseJson } from "@/app/api/_utils/validation";
+
+const updateSpecialtySchema = z.object({
+  name: z.string().trim().min(1).max(120).optional(),
+  defaultSlotDurationMinutes: z.number().int().min(1).max(240).optional(),
+  active: z.boolean().optional(),
+});
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const sessionUser = await getSessionUser();
@@ -16,14 +24,9 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     return errorResponse("No tienes permisos para actualizar especialidades.", 403);
   }
 
-  const payload = (await request.json().catch(() => null)) as {
-    name?: string;
-    defaultSlotDurationMinutes?: number;
-    active?: boolean;
-  } | null;
-
-  if (!payload) {
-    return errorResponse("Solicitud inválida.");
+  const { data: payload, error } = await parseJson(request, updateSpecialtySchema);
+  if (error) {
+    return error;
   }
 
   const prisma = getPrismaClient();

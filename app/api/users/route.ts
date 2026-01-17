@@ -1,10 +1,24 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
+import { z } from "zod";
 
 import { getPrismaClient } from "@/lib/prisma";
 import { getSessionUser, isAuthorized } from "@/app/api/_utils/auth";
 import { errorResponse } from "@/app/api/_utils/response";
+import { parseJson } from "@/app/api/_utils/validation";
 import { isUserRole, type UserRole } from "@/lib/auth/roles";
+
+const createUserSchema = z.object({
+  email: z.string().trim().email().max(120),
+  password: z.string().min(8).max(200),
+  role: z.string().optional(),
+  name: z.string().trim().min(1).max(120),
+  lastName: z.string().trim().min(1).max(120),
+  phone: z.string().trim().max(30).optional(),
+  documentId: z.string().trim().max(40).optional(),
+  specialtyId: z.string().uuid().optional(),
+  slotDurationMinutes: z.number().int().min(5).max(240).optional(),
+});
 
 export async function GET() {
   const sessionUser = await getSessionUser();
@@ -37,23 +51,12 @@ export async function POST(request: Request) {
     return errorResponse("No tienes permisos para crear usuarios.", 403);
   }
 
-  const payload = (await request.json().catch(() => null)) as {
-    email?: string;
-    password?: string;
-    role?: UserRole;
-    name?: string;
-    lastName?: string;
-    phone?: string;
-    documentId?: string;
-    specialtyId?: string;
-    slotDurationMinutes?: number;
-  } | null;
-
-  if (!payload?.email?.trim() || !payload.password || !payload.name?.trim() || !payload.lastName?.trim()) {
-    return errorResponse("Nombre, apellido, correo y contraseña son obligatorios.");
+  const { data: payload, error } = await parseJson(request, createUserSchema);
+  if (error) {
+    return error;
   }
 
-  const role = payload.role ?? "PACIENTE";
+  const role = (payload.role as UserRole | undefined) ?? "PACIENTE";
 
   if (!isUserRole(role)) {
     return errorResponse("Rol inválido.");

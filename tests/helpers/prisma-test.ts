@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
+import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import type { PrismaClient } from "@prisma/client";
 
 type TestPrisma = {
@@ -14,13 +15,15 @@ type TestPrisma = {
 let prismaPromise: Promise<TestPrisma> | null = null;
 
 function ensureClientGenerated(schemaPath: string, databaseUrl: string) {
-  execSync(`npx prisma generate --schema ${schemaPath}`, { stdio: "ignore" });
-  execSync(`npx prisma db push --schema ${schemaPath} --skip-generate`, {
+  const env = {
+    ...process.env,
+    TEST_DATABASE_URL: databaseUrl,
+    DATABASE_URL: databaseUrl,
+  };
+  execSync(`npx prisma generate --schema ${schemaPath}`, { stdio: "ignore", env });
+  execSync(`npx prisma db push --schema ${schemaPath}`, {
     stdio: "ignore",
-    env: {
-      ...process.env,
-      TEST_DATABASE_URL: databaseUrl,
-    },
+    env,
   });
 }
 
@@ -48,7 +51,8 @@ export async function getTestPrisma(): Promise<TestPrisma> {
     const prismaClientPath = path.join(root, "tests", "prisma-client", "index.js");
     const prismaModule = await import(pathToFileURL(prismaClientPath).toString());
     const PrismaClientConstructor = prismaModule.PrismaClient as typeof PrismaClient;
-    const prisma = new PrismaClientConstructor();
+    const adapter = new PrismaBetterSqlite3({ url: dbPath });
+    const prisma = new PrismaClientConstructor({ adapter });
 
     const reset = async () => {
       await prisma.appointment.deleteMany();

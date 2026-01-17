@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Added
+- RUNBOOK_DEPLOY.md with Vercel environment setup and SSL recommendations.
 - Rate limit helper and Zod validation utilities for API routes.
 - Pagination helper with consistent response shape for large listings.
 - Environment documentation and security hardening notes.
@@ -14,6 +15,13 @@
 - Prisma v7 configuration file (`prisma/prisma.config.ts`) to define datasource URLs outside schema files.
 
 ### Changed
+- Marked the marketing root page as dynamic to prevent prerender issues.
+- Switched CSP to report-only mode while keeping other security headers intact.
+- Expanded Zod validation across admin/professional CRUD endpoints and campaign/service/specialty updates.
+- Applied `npm audit fix` (non-breaking) and updated the lockfile.
+- Added SQLite adapter setup for analytics tests and updated KPI queries to support non-SQLite environments.
+- Excluded generated Prisma test client output from linting and vitest scans.
+- Disabled Cache Components to allow route segment configs (`dynamic`, `revalidate`).
 - Added rate limiting to auth, appointment creation, and search endpoints.
 - Added Zod validation for forgot/reset password and appointment creation payloads.
 - Paginated appointment, patient, professional, service, and professional patient list endpoints.
@@ -29,6 +37,7 @@
 - Simplified Prisma client initialization to rely on Prisma config instead of manual datasource overrides. (2026-01-16, commit: 00a09bc)
 
 ### Fixed
+- Eliminated the `/` blank screen by forcing dynamic rendering and disabling revalidation.
 - Safer fallbacks in API request handling for malformed inputs.
 - Resolved missing React Hook dependency in notifications dropdown.
 - Prevented marketing mobile menu from rendering when closed to avoid overlaying content.
@@ -40,6 +49,7 @@
 ### Security
 - Enforced rate limiting and input validation on critical routes.
 - Added production-grade security headers.
+- Documented remaining npm audit findings and environment recommendations.
 
 ### Audit Log
 **Commands executed**

@@ -28,12 +28,11 @@ const securityHeaders = [
     key: "Permissions-Policy",
     value: "camera=(), microphone=(), geolocation=(), interest-cohort=()",
   },
-  { key: "Content-Security-Policy", value: csp },
+  { key: "Content-Security-Policy-Report-Only", value: csp },
 ];
 
 const nextConfig: NextConfig = {
   outputFileTracingRoot: __dirname,
-  cacheComponents: true,
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "images.unsplash.com" },

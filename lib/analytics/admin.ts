@@ -84,9 +84,9 @@ function toUtcFromZonedDate(date: Date, timeZone: string) {
 
 export async function getAdminKpis(
   prisma: PrismaClient,
-  { from, to }: { from: Date; to: Date },
+  { from, to, useSql = true }: { from: Date; to: Date; useSql?: boolean },
 ): Promise<AdminKpis> {
-  const [totalAppointments, statusRows, newPatients, totalSlots, bookedSlots, activeWithAppointments, activeTotal, revenueRows, pendingApprovals] =
+  const [totalAppointments, statusRows, newPatients, totalSlots, bookedSlots, activeWithAppointments, activeTotal, revenueData, pendingApprovals] =
     await Promise.all([
       prisma.appointment.count({
         where: {
@@ -153,15 +153,30 @@ export async function getAdminKpis(
         select: { professionalId: true },
       }),
       prisma.professionalProfile.count({ where: { active: true } }),
-      prisma.$queryRaw<Array<{ total: bigint | null }>>(
-        Prisma.sql`
-          SELECT COALESCE(SUM(COALESCE(a."servicePriceCents", s."priceCents")), 0)::bigint AS total
-          FROM "Appointment" a
-          INNER JOIN "Service" s ON s."id" = a."serviceId"
-          INNER JOIN "TimeSlot" t ON t."id" = a."timeSlotId"
-          WHERE t."startAt" >= ${from} AND t."startAt" < ${to}
-        `,
-      ),
+      useSql
+        ? prisma.$queryRaw<Array<{ total: bigint | null }>>(
+            Prisma.sql`
+              SELECT COALESCE(SUM(COALESCE(a."servicePriceCents", s."priceCents")), 0)::bigint AS total
+              FROM "Appointment" a
+              INNER JOIN "Service" s ON s."id" = a."serviceId"
+              INNER JOIN "TimeSlot" t ON t."id" = a."timeSlotId"
+              WHERE t."startAt" >= ${from} AND t."startAt" < ${to}
+            `,
+          )
+        : prisma.appointment.findMany({
+            where: {
+              timeSlot: {
+                startAt: {
+                  gte: from,
+                  lt: to,
+                },
+              },
+            },
+            select: {
+              servicePriceCents: true,
+              service: { select: { priceCents: true } },
+            },
+          }),
       prisma.appointment.count({
         where: {
           status: AppointmentStatus.PENDING,
@@ -191,7 +206,13 @@ export async function getAdminKpis(
   // Si no hay citas en el rango, reportamos el total de profesionales activos.
   const activeProfessionals = totalAppointments > 0 ? activeWithAppointments.length : activeTotal;
   const cancellations = statusCounts[AppointmentStatus.CANCELLED] ?? 0;
-  const revenueCents = Number(revenueRows[0]?.total ?? 0);
+  const revenueCents = useSql
+    ? Number((revenueData as Array<{ total: bigint | null }>)[0]?.total ?? 0)
+    : (revenueData as Array<{ servicePriceCents: number | null; service: { priceCents: number } | null }>).reduce(
+        (total, appointment) =>
+          total + (appointment.servicePriceCents ?? appointment.service?.priceCents ?? 0),
+        0,
+      );
 
   return {
     totalAppointments,

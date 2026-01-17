@@ -1,8 +1,14 @@
 import { NextResponse } from "next/server";
+import { z } from "zod";
 
 import { getSessionUser } from "@/app/api/_utils/auth";
 import { errorResponse } from "@/app/api/_utils/response";
+import { parseJson } from "@/app/api/_utils/validation";
 import { getPrismaClient } from "@/lib/prisma";
+
+const noteSchema = z.object({
+  content: z.string().trim().min(1).max(2000),
+});
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const sessionUser = await getSessionUser();
@@ -15,12 +21,11 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     return errorResponse("No autorizado.", 403);
   }
 
-  const payload = (await request.json().catch(() => null)) as { content?: string } | null;
-  const content = payload?.content?.trim();
-
-  if (!content) {
-    return errorResponse("La nota no puede estar vacía.");
+  const { data: payload, error } = await parseJson(request, noteSchema);
+  if (error) {
+    return error;
   }
+  const content = payload.content.trim();
 
   const { id } = await params;
   const prisma = getPrismaClient();

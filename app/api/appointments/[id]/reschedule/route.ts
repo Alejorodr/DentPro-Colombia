@@ -1,10 +1,16 @@
 import { NextResponse } from "next/server";
+import { z } from "zod";
 
 import { getPrismaClient } from "@/lib/prisma";
 import { getSessionUser, isAuthorized } from "@/app/api/_utils/auth";
 import { errorResponse } from "@/app/api/_utils/response";
+import { parseJson } from "@/app/api/_utils/validation";
 import { createReceptionNotifications } from "@/lib/notifications";
 import { TimeSlotStatus } from "@prisma/client";
+
+const rescheduleSchema = z.object({
+  timeSlotId: z.string().uuid(),
+});
 
 function canRescheduleWithLimit(startAt: Date): boolean {
   const diff = startAt.getTime() - Date.now();
@@ -19,10 +25,9 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   }
 
   const { id } = await params;
-  const payload = (await request.json().catch(() => null)) as { timeSlotId?: string } | null;
-
-  if (!payload?.timeSlotId) {
-    return errorResponse("Nuevo slot obligatorio.");
+  const { data: payload, error } = await parseJson(request, rescheduleSchema);
+  if (error) {
+    return error;
   }
 
   const prisma = getPrismaClient();
