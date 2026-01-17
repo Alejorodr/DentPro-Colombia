@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { headers } from "next/headers";
 
 import { getPrismaClient } from "@/lib/prisma";
 
@@ -12,6 +13,7 @@ export async function CampaignCarousel() {
   }
 
   const prisma = getPrismaClient();
+  headers();
   const now = new Date();
   const campaigns = await prisma.campaign.findMany({
     where: {
