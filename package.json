@@ -65,6 +65,11 @@
     "vite": "7.3.1",
     "vitest": "4.0.17"
   },
+  "overrides": {
+    "cookie": "0.7.2",
+    "diff": "8.0.3",
+    "hono": "4.11.4"
+  },
   "prisma": {
     "seed": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' prisma/seed.ts"
   }

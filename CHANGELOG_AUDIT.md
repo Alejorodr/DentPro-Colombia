@@ -13,6 +13,7 @@
 - Upgrade guides for Next.js 16 and Tailwind CSS v4.
 - GitHub Actions workflow to run lint, test, and build on PRs.
 - Prisma v7 configuration file (`prisma/prisma.config.ts`) to define datasource URLs outside schema files.
+- Playwright smoke test for the marketing home hero panel.
 
 ### Changed
 - Marked the marketing root page as dynamic to prevent prerender issues.
@@ -33,6 +34,8 @@
 - Migrated Tailwind configuration to CSS-first v4 and updated PostCSS config.
 - Enabled Turbopack for local development.
 - Confirmed `next-auth` latest stable remains v4.24.13; v5 evaluation deferred.
+- Added npm overrides to resolve `cookie`, `diff`, and `hono` advisories without breaking upgrades.
+- Documented telemetry opt-out and CI/Vercel caching guidance.
 - Migrated Prisma datasource URLs to `prisma/prisma.config.ts` and removed `url`/`directUrl` from schema files; `DATABASE_URL` and `DATABASE_URL_UNPOOLED` are now read by the config. (2026-01-16, commit: 00a09bc)
 - Simplified Prisma client initialization to rely on Prisma config instead of manual datasource overrides. (2026-01-16, commit: 00a09bc)
 
@@ -49,7 +52,7 @@
 ### Security
 - Enforced rate limiting and input validation on critical routes.
 - Added production-grade security headers.
-- Documented remaining npm audit findings and environment recommendations.
+- Resolved npm audit findings via overrides and refreshed environment recommendations.
 
 ### Audit Log
 **Commands executed**

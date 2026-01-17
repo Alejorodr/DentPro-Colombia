@@ -18,19 +18,24 @@ This phase focuses on critical quick wins: rate limiting, input validation, pagi
 - Stronger CSP with nonces and removal of `unsafe-eval` where possible.
 - Additional authorization checks for remaining ID-based endpoints not touched in this phase.
 
-## Dependency audit (Phase 4-5)
+## Dependency audit (Phase 4-7)
 **Commands executed**
 - `npm audit`
 - `npm audit fix`
+- `npm install` (with npm overrides)
 
-**Remaining findings (no non-breaking fix without --force)**
-- `@auth/core` depends on `cookie <0.7.0` (low). Resolving requires upgrading `@auth/core` to `0.41.1` and validating `next-auth` compatibility.
-- `ts-node` depends on `diff <8.0.3` (low). The suggested fix pins to an outdated `ts-node` release; requires further evaluation.
-- `prisma` pulls `@prisma/dev` → `hono <=4.11.3` (high). Prisma 7.2.0 is currently latest; await upstream patch before upgrading.
+**Resolved findings (non-breaking)**
+- `cookie` pinned to `0.7.2` via npm overrides to address `@auth/core` advisory.
+- `diff` pinned to `8.0.3` via npm overrides for the jsdiff DoS advisory.
+- `hono` pinned to `4.11.4` via npm overrides for Prisma `@prisma/dev` dependency chain.
+
+**Remaining findings**
+- None (npm audit reports 0 vulnerabilities).
 
 ## Environment warnings & recommendations
-- `npm warn Unknown env config "http-proxy"` appears in CI; no `.npmrc` exists in the repo, so this likely comes from the environment configuration.
+- `npm warn Unknown env config "http-proxy"` appears in CI; no `.npmrc` exists in the repo, so this likely comes from runner environment configuration (unset `http-proxy` if possible).
 - `pg` TLS defaults may tighten in future releases; update Vercel `DATABASE_URL` to include `sslmode=verify-full` (preferred) or `uselibpqcompat=true&sslmode=require`.
+- Prisma's pooled Postgres client currently sets `ssl.rejectUnauthorized=false` for provider compatibility; remove once the connection string enforces `sslmode=verify-full`.
 
 ## Environment configuration (Vercel)
 ### Prisma (database connection)

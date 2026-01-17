@@ -36,3 +36,8 @@ If your provider requires libpq-compatible parameters:
 ## Notes
 - When Upstash variables are not set, rate limiting falls back to in-memory limits (development only).
 - Update CSP rules in `next.config.ts` when adding third-party scripts or assets.
+- Vercel already caches Next.js builds; keep GitHub Actions using `actions/setup-node` with `cache: "npm"` to reuse `package-lock.json`.
+
+## Next.js telemetry (optional)
+To disable telemetry locally or in CI (optional):
+1. `npx next telemetry disable`

@@ -19,6 +19,8 @@ function makeClient(): PrismaClient {
     globalThis.__prismaPool ??
     new Pool({
       connectionString: databaseUrl,
+      // Neon pooled connections may require relaxed TLS in some environments.
+      // Prefer DATABASE_URL with sslmode=verify-full and remove this override if possible.
       ssl: { rejectUnauthorized: false },
     });
 
