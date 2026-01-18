@@ -50,6 +50,34 @@ enum AttachmentKind {
   DOCUMENT
 }
 
+enum ClinicalNoteType {
+  EVOLUTION
+  OBSERVATION
+  DIAGNOSIS
+  PLAN
+}
+
+enum AccessLogAction {
+  VIEW
+  CREATE
+  UPDATE
+  DELETE
+  EXPORT
+}
+
+enum ClinicDocumentTemplateType {
+  CONSENT
+  QUOTE
+  PRESCRIPTION
+}
+
+enum LabOrderStatus {
+  PENDING
+  ORDERED
+  COMPLETED
+  CANCELLED
+}
+
 model Specialty {
   id                         String                @id @default(uuid())
   name                       String                @unique
@@ -73,7 +101,16 @@ model User {
   patient      PatientProfile?
   notifications Notification[]
   resetTokens  PasswordResetToken[]
-  clinicalNotes ClinicalNote[]
+  clinicalNotesAuthored ClinicalNote[] @relation("ClinicalNoteAuthor")
+  clinicalNotesDeleted ClinicalNote[] @relation("ClinicalNoteDeletedBy")
+  clinicalAttachmentsUploaded ClinicalAttachment[] @relation("ClinicalAttachmentUploaded")
+  clinicalAttachmentsDeleted ClinicalAttachment[] @relation("ClinicalAttachmentDeleted")
+  prescriptionsDeleted Prescription[] @relation("PrescriptionDeletedBy")
+  consentsAccepted SignedConsent[] @relation("SignedConsentAcceptedBy")
+  clinicalEpisodesCreated ClinicalEpisode[] @relation("ClinicalEpisodesCreated")
+  clinicalEpisodesUpdated ClinicalEpisode[] @relation("ClinicalEpisodesUpdated")
+  clinicalEpisodesDeleted ClinicalEpisode[] @relation("ClinicalEpisodesDeleted")
+  accessLogs AccessLog[]
 }
 
 model ProfessionalProfile {
@@ -88,6 +125,8 @@ model ProfessionalProfile {
   appointments        Appointment[]
   availabilityRules   AvailabilityRule[]
   availabilityExceptions AvailabilityException[]
+  clinicalEpisodes    ClinicalEpisode[]
+  prescriptions       Prescription[]
 }
 
 model PatientProfile {
@@ -108,6 +147,11 @@ model PatientProfile {
   appointments      Appointment[]
   allergies         MedicalAllergy[]
   attachments       Attachment[]
+  clinicalEpisodes  ClinicalEpisode[]
+  clinicalAttachments ClinicalAttachment[]
+  prescriptions     Prescription[]
+  consents          SignedConsent[]
+  accessLogs        AccessLog[]
 }
 
 model Service {
@@ -159,6 +203,7 @@ model Appointment {
   clinicalNotes  ClinicalNote[]
   prescription   Prescription?
   attachments    Attachment[]
+  clinicalEpisodes ClinicalEpisode[]
 
   @@index([patientId])
   @@index([professionalId])
@@ -167,24 +212,46 @@ model Appointment {
 
 model ClinicalNote {
   id             String      @id @default(uuid())
-  appointmentId  String
+  appointmentId  String?
+  episodeId      String?
   authorUserId   String      @db.Uuid
+  type           ClinicalNoteType @default(EVOLUTION)
   content        String
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
-  appointment    Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
-  author         User        @relation(fields: [authorUserId], references: [id], onDelete: Cascade)
+  deletedAt      DateTime?
+  deletedByUserId String?    @db.Uuid
+  appointment    Appointment? @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  episode        ClinicalEpisode? @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+  author         User        @relation("ClinicalNoteAuthor", fields: [authorUserId], references: [id], onDelete: Cascade)
+  deletedByUser  User?       @relation("ClinicalNoteDeletedBy", fields: [deletedByUserId], references: [id], onDelete: SetNull)
 
   @@index([appointmentId])
+  @@index([episodeId])
   @@index([authorUserId])
 }
 
 model Prescription {
   id            String             @id @default(uuid())
-  appointmentId String             @unique
+  appointmentId String?            @unique
+  episodeId     String?
+  professionalId String?
+  patientId     String?
+  content       Json?
   createdAt     DateTime           @default(now())
-  appointment   Appointment        @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  issuedAt      DateTime?
+  deletedAt     DateTime?
+  deletedByUserId String?          @db.Uuid
+  appointment   Appointment?       @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  episode       ClinicalEpisode?   @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+  professional  ProfessionalProfile? @relation(fields: [professionalId], references: [id], onDelete: SetNull)
+  patient       PatientProfile?    @relation(fields: [patientId], references: [id], onDelete: SetNull)
+  deletedByUser User?              @relation("PrescriptionDeletedBy", fields: [deletedByUserId], references: [id], onDelete: SetNull)
   items         PrescriptionItem[]
+
+  @@index([episodeId])
+  @@index([patientId])
+  @@index([professionalId])
 }
 
 model PrescriptionItem {
@@ -231,6 +298,125 @@ model Attachment {
   @@index([appointmentId])
   @@index([patientId])
   @@index([kind])
+}
+
+model ClinicalEpisode {
+  id              String      @id @default(uuid())
+  patientId       String
+  professionalId  String
+  appointmentId   String?
+  date            DateTime
+  reason          String?
+  notes           String?
+  diagnosis       String?
+  treatmentPlan   String?
+  visibleToPatient Boolean    @default(false)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  createdByUserId String      @db.Uuid
+  updatedByUserId String?     @db.Uuid
+  deletedAt       DateTime?
+  deletedByUserId String?     @db.Uuid
+  patient         PatientProfile @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  professional    ProfessionalProfile @relation(fields: [professionalId], references: [id], onDelete: Restrict)
+  appointment     Appointment? @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+  createdByUser   User        @relation("ClinicalEpisodesCreated", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  updatedByUser   User?       @relation("ClinicalEpisodesUpdated", fields: [updatedByUserId], references: [id], onDelete: SetNull)
+  deletedByUser   User?       @relation("ClinicalEpisodesDeleted", fields: [deletedByUserId], references: [id], onDelete: SetNull)
+  notesEntries    ClinicalNote[]
+  prescriptions   Prescription[]
+  labOrders       LabOrder[]
+  attachments     ClinicalAttachment[]
+
+  @@index([patientId])
+  @@index([professionalId])
+  @@index([appointmentId])
+  @@index([date])
+  @@index([deletedAt])
+}
+
+model ClinicalAttachment {
+  id              String      @id @default(uuid())
+  episodeId       String
+  patientId       String
+  uploadedByUserId String     @db.Uuid
+  filename        String
+  mimeType        String
+  size            Int
+  storageKey      String
+  url             String
+  checksum        String?
+  visibleToPatient Boolean    @default(false)
+  createdAt       DateTime    @default(now())
+  deletedAt       DateTime?
+  deletedByUserId String?     @db.Uuid
+  episode         ClinicalEpisode @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+  patient         PatientProfile @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  uploadedByUser  User        @relation("ClinicalAttachmentUploaded", fields: [uploadedByUserId], references: [id], onDelete: Restrict)
+  deletedByUser   User?       @relation("ClinicalAttachmentDeleted", fields: [deletedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([episodeId])
+  @@index([patientId])
+  @@index([deletedAt])
+}
+
+model AccessLog {
+  id         String          @id @default(uuid())
+  userId     String          @db.Uuid
+  patientId  String?
+  action     AccessLogAction
+  route      String
+  requestId  String
+  metadata   Json?
+  createdAt  DateTime        @default(now())
+  user       User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  patient    PatientProfile? @relation(fields: [patientId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([patientId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+model ClinicDocumentTemplate {
+  id          String                    @id @default(uuid())
+  type        ClinicDocumentTemplateType
+  title       String
+  contentHtml String
+  active      Boolean                   @default(true)
+  createdAt   DateTime                  @default(now())
+  updatedAt   DateTime                  @updatedAt
+  consents    SignedConsent[]
+
+  @@index([type])
+  @@index([active])
+}
+
+model SignedConsent {
+  id                String               @id @default(uuid())
+  patientId         String
+  templateId        String
+  acceptedAt        DateTime             @default(now())
+  acceptedByUserId  String               @db.Uuid
+  ipHash            String?
+  userAgent         String?
+  patient           PatientProfile       @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  template          ClinicDocumentTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  acceptedByUser    User                 @relation("SignedConsentAcceptedBy", fields: [acceptedByUserId], references: [id], onDelete: Cascade)
+
+  @@index([patientId])
+  @@index([templateId])
+}
+
+model LabOrder {
+  id         String      @id @default(uuid())
+  episodeId  String
+  details    String
+  status     LabOrderStatus @default(PENDING)
+  createdAt  DateTime    @default(now())
+  episode    ClinicalEpisode @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+
+  @@index([episodeId])
 }
 
 model AvailabilityRule {

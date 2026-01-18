@@ -20,6 +20,7 @@ Use `.env.example` as the source of truth. At minimum, configure:
 - `UPSTASH_REDIS_REST_TOKEN`
 - `RESEND_API_KEY`
 - `EMAIL_FROM`
+- `BLOB_READ_WRITE_TOKEN` (adjuntos clínicos privados)
 
 Optional but recommended:
 - `SENTRY_DSN`, `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `NEXT_PUBLIC_SENTRY_ENVIRONMENT`
