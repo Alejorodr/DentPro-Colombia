@@ -9,8 +9,8 @@ Run these commands locally before deploying:
 
 ## Required environment variables (Vercel)
 Use `.env.example` as the source of truth. At minimum, configure:
-- `DATABASE_URL`
-- `DATABASE_URL_UNPOOLED`
+- `DATABASE_URL` (Neon)
+- `DATABASE_URL_UNPOOLED` (opcional)
 - `NEXTAUTH_URL`
 - `NEXTAUTH_SECRET`
 - `AUTH_SECRET`
@@ -37,6 +37,8 @@ If your provider requires libpq-compatible parameters:
 - `DATABASE_URL=...&uselibpqcompat=true&sslmode=require`
 
 ## Notes
+- Nunca commitear `.env` ni `.env.production`; solo mantener `.env.example` con placeholders.
+- En previews (VERCEL_ENV distinto de `production`), las migraciones se omiten y el build pasa sin DB, pero el runtime puede requerirla para APIs/portales.
 - When Upstash variables are not set, rate limiting falls back to in-memory limits (development only).
 - Update CSP rules in `next.config.ts` when adding third-party scripts or assets.
 - Vercel already caches Next.js builds; keep GitHub Actions using `actions/setup-node` with `cache: "npm"` to reuse `package-lock.json`.

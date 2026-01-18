@@ -75,34 +75,29 @@ const baselineMigrations = async () => {
   }
 };
 
-const run = async () => {
-  const isVercel =
-    process.env.VERCEL === '1' ||
-    process.env.VERCEL === 'true' ||
-    Boolean(process.env.VERCEL_ENV);
-  const shouldRunMigrations = isVercel || process.env.RUN_PRISMA_MIGRATIONS === 'true';
+const isInvalidDatabaseUrl = (value) => {
+  if (!value || value.trim() === '') {
+    return true;
+  }
+  const normalized = value.trim();
+  if (!normalized.startsWith('postgres://') && !normalized.startsWith('postgresql://')) {
+    return true;
+  }
+  return normalized.includes('HOST:5432') || normalized.includes('USER:PASSWORD');
+};
 
-  if (!shouldRunMigrations) {
-    logStep(
-      'Omitiendo migraciones Prisma fuera de Vercel. Usa RUN_PRISMA_MIGRATIONS=true para ejecutarlas en local.'
-    );
+const run = async () => {
+  const isProduction = process.env.VERCEL_ENV === 'production';
+
+  if (!isProduction) {
+    logStep('Skip migrate (non-production deployment).');
     return;
   }
 
-  const requiredEnv = ['DATABASE_URL'];
-  const missingEnv = requiredEnv.filter(
-    (name) => !process.env[name] || process.env[name].trim() === ''
-  );
+  const databaseUrl = process.env.DATABASE_URL || process.env.DATABASE_URL_UNPOOLED;
 
-  if (missingEnv.length > 0) {
-    const message = `Falta${missingEnv.length > 1 ? 'n' : ''} variable${
-      missingEnv.length > 1 ? 's' : ''
-    } para migraciones Prisma: ${missingEnv.join(', ')}.`;
-    if (isVercel) {
-      throw new Error(message);
-    }
-    logStep(`${message} Omitiendo migraciones Prisma en entorno local.`);
-    return;
+  if (isInvalidDatabaseUrl(databaseUrl)) {
+    throw new Error('DATABASE_URL inválida o placeholder. Configure DATABASE_URL en Vercel.');
   }
 
   logStep('Ejecutando migraciones Prisma');
