@@ -3,10 +3,11 @@ import bcrypt from "bcryptjs";
 import { z } from "zod";
 
 import { getPrismaClient } from "@/lib/prisma";
-import { getSessionUser, isAuthorized } from "@/app/api/_utils/auth";
 import { errorResponse } from "@/app/api/_utils/response";
+import { buildPaginatedResponse, getPaginationParams } from "@/app/api/_utils/pagination";
 import { parseJson } from "@/app/api/_utils/validation";
 import { isUserRole, type UserRole } from "@/lib/auth/roles";
+import { requireRole, requireSession } from "@/lib/authz";
 
 const createUserSchema = z.object({
   email: z.string().trim().email().max(120),
@@ -20,35 +21,43 @@ const createUserSchema = z.object({
   slotDurationMinutes: z.number().int().min(5).max(240).optional(),
 });
 
-export async function GET() {
-  const sessionUser = await getSessionUser();
-
-  if (!sessionUser) {
-    return errorResponse("No autorizado.", 401);
+export async function GET(request: Request) {
+  const sessionResult = await requireSession();
+  if ("error" in sessionResult) {
+    return errorResponse(sessionResult.error.message, sessionResult.error.status);
   }
 
-  if (!isAuthorized(sessionUser.role, ["ADMINISTRADOR"])) {
-    return errorResponse("No tienes permisos para listar usuarios.", 403);
+  const roleError = requireRole(sessionResult.user, ["ADMINISTRADOR"]);
+  if (roleError) {
+    return errorResponse("No tienes permisos para listar usuarios.", roleError.status);
   }
+
+  const { searchParams } = new URL(request.url);
+  const { page, pageSize, skip, take } = getPaginationParams(searchParams);
 
   const prisma = getPrismaClient();
-  const users = await prisma.user.findMany({
-    orderBy: { createdAt: "desc" },
-    include: { patient: true, professional: { include: { specialty: true } } },
-  });
+  const [users, total] = await Promise.all([
+    prisma.user.findMany({
+      orderBy: { createdAt: "desc" },
+      include: { patient: true, professional: { include: { specialty: true } } },
+      skip,
+      take,
+    }),
+    prisma.user.count(),
+  ]);
 
-  return NextResponse.json(users);
+  return NextResponse.json(buildPaginatedResponse(users, page, pageSize, total));
 }
 
 export async function POST(request: Request) {
-  const sessionUser = await getSessionUser();
-
-  if (!sessionUser) {
-    return errorResponse("No autorizado.", 401);
+  const sessionResult = await requireSession();
+  if ("error" in sessionResult) {
+    return errorResponse(sessionResult.error.message, sessionResult.error.status);
   }
 
-  if (!isAuthorized(sessionUser.role, ["ADMINISTRADOR", "RECEPCIONISTA"])) {
-    return errorResponse("No tienes permisos para crear usuarios.", 403);
+  const roleError = requireRole(sessionResult.user, ["ADMINISTRADOR"]);
+  if (roleError) {
+    return errorResponse("No tienes permisos para crear usuarios.", roleError.status);
   }
 
   const { data: payload, error } = await parseJson(request, createUserSchema);
@@ -66,9 +75,6 @@ export async function POST(request: Request) {
     return errorResponse("La especialidad es obligatoria para profesionales.");
   }
 
-  if (sessionUser.role === "RECEPCIONISTA" && role !== "PACIENTE") {
-    return errorResponse("Recepción solo puede crear pacientes.", 403);
-  }
 
   const prisma = getPrismaClient();
   const passwordHash = await bcrypt.hash(payload.password, 10);

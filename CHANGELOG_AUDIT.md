@@ -3,6 +3,11 @@
 ## [Unreleased]
 
 ### Added
+- `RUNBOOK_OBSERVABILITY.md` and `SECURITY_MODEL.md` with production ops and authz coverage.
+- Request ID middleware to propagate `x-request-id` across API responses.
+- Authz helper utilities (`lib/authz.ts`) and memory rate limiter (`lib/rateLimit.ts`).
+- Sentry edge configuration and safer Sentry defaults (PII off, low sample rate).
+- API smoke, authz, and rate-limit tests via Vitest.
 - RUNBOOK_DEPLOY.md with Vercel environment setup and SSL recommendations.
 - Rate limit helper and Zod validation utilities for API routes.
 - Pagination helper with consistent response shape for large listings.
@@ -16,6 +21,10 @@
 - Playwright smoke test for the marketing home hero panel.
 
 ### Changed
+- API logs now emit structured JSON with requestId and sanitized fields.
+- `buildPaginatedResponse` includes `items` while keeping backward compatibility.
+- `/api/users` is now paginated and admin-only; receptionist patient flows moved to `/api/patients`.
+- Search responses now include pagination metadata.
 - Marked the marketing root page as dynamic to prevent prerender issues.
 - Switched CSP to report-only mode while keeping other security headers intact.
 - Expanded Zod validation across admin/professional CRUD endpoints and campaign/service/specialty updates.
@@ -50,6 +59,8 @@
 - Replaced Prisma connection overrides with driver adapter initialization for app and seed scripts.
 
 ### Security
+- Centralized role checks and ownership validation across client/professional/appointment APIs.
+- Added requestId propagation to support traceability without exposing secrets.
 - Enforced rate limiting and input validation on critical routes.
 - Added production-grade security headers.
 - Resolved npm audit findings via overrides and refreshed environment recommendations.

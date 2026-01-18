@@ -2,12 +2,13 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
 import { GET } from "@/app/api/client/dashboard/route";
-import { getSessionUser } from "@/app/api/_utils/auth";
+import { requireSession } from "@/lib/authz";
 import { getPrismaClient } from "@/lib/prisma";
 import { getClientDashboardData } from "@/lib/portal/client-dashboard";
 
-vi.mock("@/app/api/_utils/auth", () => ({
-  getSessionUser: vi.fn(),
+vi.mock("@/lib/authz", () => ({
+  requireSession: vi.fn(),
+  requireRole: vi.fn(() => null),
 }));
 
 vi.mock("@/lib/prisma", () => ({
@@ -20,13 +21,13 @@ vi.mock("@/lib/portal/client-dashboard", () => ({
 
 describe("GET /api/client/dashboard", () => {
   beforeEach(() => {
-    vi.mocked(getSessionUser).mockReset();
+    vi.mocked(requireSession).mockReset();
     vi.mocked(getPrismaClient).mockReset();
     vi.mocked(getClientDashboardData).mockReset();
   });
 
   it("returns dashboard payload for patient", async () => {
-    vi.mocked(getSessionUser).mockResolvedValue({ id: "user-1", role: "PACIENTE" });
+    vi.mocked(requireSession).mockResolvedValue({ user: { id: "user-1", role: "PACIENTE" } });
     vi.mocked(getPrismaClient).mockReturnValue({} as any);
     vi.mocked(getClientDashboardData).mockResolvedValue({
       patient: { id: "patient-1", name: "Andrea Gomez", patientCode: "8930211", avatarUrl: null },

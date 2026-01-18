@@ -1,25 +1,25 @@
 import { NextResponse } from "next/server";
 
-import { getSessionUser } from "@/app/api/_utils/auth";
 import { errorResponse } from "@/app/api/_utils/response";
 import { buildPaginatedResponse, getPaginationParams } from "@/app/api/_utils/pagination";
 import { getPrismaClient } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
+import { requireRole, requireSession } from "@/lib/authz";
 
 export async function GET(request: Request) {
-  const sessionUser = await getSessionUser();
-
-  if (!sessionUser) {
-    return errorResponse("No autorizado.", 401);
+  const sessionResult = await requireSession();
+  if ("error" in sessionResult) {
+    return errorResponse(sessionResult.error.message, sessionResult.error.status);
   }
 
-  if (sessionUser.role !== "PROFESIONAL") {
-    return errorResponse("No autorizado.", 403);
+  const roleError = requireRole(sessionResult.user, ["PROFESIONAL"]);
+  if (roleError) {
+    return errorResponse(roleError.message, roleError.status);
   }
 
   const prisma = getPrismaClient();
   const professional = await prisma.professionalProfile.findUnique({
-    where: { userId: sessionUser.id },
+    where: { userId: sessionResult.user.id },
   });
 
   if (!professional) {

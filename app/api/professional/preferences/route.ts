@@ -1,29 +1,29 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { getSessionUser } from "@/app/api/_utils/auth";
 import { errorResponse } from "@/app/api/_utils/response";
 import { parseJson } from "@/app/api/_utils/validation";
 import { getPrismaClient } from "@/lib/prisma";
+import { requireRole, requireSession } from "@/lib/authz";
 
 const preferencesSchema = z.object({
   privacyMode: z.boolean(),
 });
 
 export async function GET() {
-  const sessionUser = await getSessionUser();
-
-  if (!sessionUser) {
-    return errorResponse("No autorizado.", 401);
+  const sessionResult = await requireSession();
+  if ("error" in sessionResult) {
+    return errorResponse(sessionResult.error.message, sessionResult.error.status);
   }
 
-  if (sessionUser.role !== "PROFESIONAL") {
-    return errorResponse("No autorizado.", 403);
+  const roleError = requireRole(sessionResult.user, ["PROFESIONAL"]);
+  if (roleError) {
+    return errorResponse(roleError.message, roleError.status);
   }
 
   const prisma = getPrismaClient();
   const user = await prisma.user.findUnique({
-    where: { id: sessionUser.id },
+    where: { id: sessionResult.user.id },
     select: { privacyMode: true },
   });
 
@@ -31,14 +31,14 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const sessionUser = await getSessionUser();
-
-  if (!sessionUser) {
-    return errorResponse("No autorizado.", 401);
+  const sessionResult = await requireSession();
+  if ("error" in sessionResult) {
+    return errorResponse(sessionResult.error.message, sessionResult.error.status);
   }
 
-  if (sessionUser.role !== "PROFESIONAL") {
-    return errorResponse("No autorizado.", 403);
+  const roleError = requireRole(sessionResult.user, ["PROFESIONAL"]);
+  if (roleError) {
+    return errorResponse(roleError.message, roleError.status);
   }
 
   const { data: payload, error } = await parseJson(request, preferencesSchema);
@@ -48,7 +48,7 @@ export async function POST(request: Request) {
 
   const prisma = getPrismaClient();
   const user = await prisma.user.update({
-    where: { id: sessionUser.id },
+    where: { id: sessionResult.user.id },
     data: { privacyMode: payload.privacyMode },
     select: { privacyMode: true },
   });

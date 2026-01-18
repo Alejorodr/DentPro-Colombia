@@ -63,7 +63,7 @@ export function AdminUsersPanel() {
       setError(null);
       setLoading(true);
       const [usersResponse, specialtiesResponse] = await Promise.all([
-        fetch("/api/users"),
+        fetch("/api/users?pageSize=50"),
         fetch("/api/specialties"),
       ]);
 
@@ -75,9 +75,9 @@ export function AdminUsersPanel() {
         throw new Error("No pudimos cargar las especialidades.");
       }
 
-      const usersJson = (await usersResponse.json()) as UserRecord[];
+      const usersJson = (await usersResponse.json()) as { data: UserRecord[] };
       const specialtiesJson = (await specialtiesResponse.json()) as Specialty[];
-      setUsers(usersJson);
+      setUsers(usersJson.data ?? []);
       setSpecialties(specialtiesJson);
     } catch (fetchError) {
       setError(fetchError instanceof Error ? fetchError.message : "Error inesperado.");

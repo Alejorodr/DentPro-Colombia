@@ -1,20 +1,32 @@
 import { NextResponse } from "next/server";
+import bcrypt from "bcryptjs";
+import { z } from "zod";
 
-import { getSessionUser, isAuthorized } from "@/app/api/_utils/auth";
 import { errorResponse } from "@/app/api/_utils/response";
 import { buildPaginatedResponse, getPaginationParams } from "@/app/api/_utils/pagination";
+import { parseJson } from "@/app/api/_utils/validation";
 import { getPrismaClient } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
+import { requireRole, requireSession } from "@/lib/authz";
+
+const createPatientSchema = z.object({
+  email: z.string().trim().email().max(120),
+  password: z.string().min(8).max(200),
+  name: z.string().trim().min(1).max(120),
+  lastName: z.string().trim().min(1).max(120),
+  phone: z.string().trim().max(30).optional(),
+  documentId: z.string().trim().max(40).optional(),
+});
 
 export async function GET(request: Request) {
-  const sessionUser = await getSessionUser();
-
-  if (!sessionUser) {
-    return errorResponse("No autorizado.", 401);
+  const sessionResult = await requireSession();
+  if ("error" in sessionResult) {
+    return errorResponse(sessionResult.error.message, sessionResult.error.status);
   }
 
-  if (!isAuthorized(sessionUser.role, ["RECEPCIONISTA", "ADMINISTRADOR"])) {
-    return errorResponse("No autorizado.", 403);
+  const roleError = requireRole(sessionResult.user, ["RECEPCIONISTA", "ADMINISTRADOR"]);
+  if (roleError) {
+    return errorResponse(roleError.message, roleError.status);
   }
 
   const { searchParams } = new URL(request.url);
@@ -49,4 +61,48 @@ export async function GET(request: Request) {
   ]);
 
   return NextResponse.json(buildPaginatedResponse(patients, page, pageSize, total));
+}
+
+export async function POST(request: Request) {
+  const sessionResult = await requireSession();
+  if ("error" in sessionResult) {
+    return errorResponse(sessionResult.error.message, sessionResult.error.status);
+  }
+
+  const roleError = requireRole(sessionResult.user, ["RECEPCIONISTA", "ADMINISTRADOR"]);
+  if (roleError) {
+    return errorResponse(roleError.message, roleError.status);
+  }
+
+  const { data: payload, error } = await parseJson(request, createPatientSchema);
+  if (error) {
+    return error;
+  }
+
+  const prisma = getPrismaClient();
+  const passwordHash = await bcrypt.hash(payload.password, 10);
+
+  try {
+    const user = await prisma.user.create({
+      data: {
+        email: payload.email.toLowerCase(),
+        passwordHash,
+        role: "PACIENTE",
+        name: payload.name.trim(),
+        lastName: payload.lastName.trim(),
+        patient: {
+          create: {
+            phone: payload.phone?.trim() || null,
+            documentId: payload.documentId?.trim() || null,
+            active: true,
+          },
+        },
+      },
+      include: { patient: true },
+    });
+
+    return NextResponse.json(user, { status: 201 });
+  } catch {
+    return errorResponse("No se pudo crear el paciente.");
+  }
 }

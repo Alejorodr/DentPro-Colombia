@@ -2,11 +2,11 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { getPrismaClient } from "@/lib/prisma";
-import { getSessionUser, isAuthorized } from "@/app/api/_utils/auth";
 import { errorResponse } from "@/app/api/_utils/response";
 import { parseJson } from "@/app/api/_utils/validation";
 import { createReceptionNotifications } from "@/lib/notifications";
 import { AppointmentStatus, TimeSlotStatus } from "@prisma/client";
+import { requireOwnershipOrRole, requireRole, requireSession } from "@/lib/authz";
 
 const updateAppointmentSchema = z.object({
   status: z.nativeEnum(AppointmentStatus),
@@ -19,10 +19,19 @@ function canCancelWithLimit(startAt: Date): boolean {
 }
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const sessionUser = await getSessionUser();
+  const sessionResult = await requireSession();
+  if ("error" in sessionResult) {
+    return errorResponse(sessionResult.error.message, sessionResult.error.status);
+  }
 
-  if (!sessionUser) {
-    return errorResponse("No autorizado.", 401);
+  const roleError = requireRole(sessionResult.user, [
+    "PACIENTE",
+    "PROFESIONAL",
+    "RECEPCIONISTA",
+    "ADMINISTRADOR",
+  ]);
+  if (roleError) {
+    return errorResponse(roleError.message, roleError.status);
   }
 
   const { id } = await params;
@@ -41,9 +50,14 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     return errorResponse("Cita no encontrada.", 404);
   }
 
-  if (sessionUser.role === "PACIENTE") {
-    const patient = await prisma.patientProfile.findUnique({ where: { userId: sessionUser.id } });
-    if (!patient || appointment.patientId !== patient.id) {
+  if (sessionResult.user.role === "PACIENTE") {
+    const patient = await prisma.patientProfile.findUnique({ where: { userId: sessionResult.user.id } });
+    const ownershipError = requireOwnershipOrRole({
+      user: sessionResult.user,
+      ownerId: patient?.userId,
+      rolesAllowed: ["ADMINISTRADOR", "RECEPCIONISTA"],
+    });
+    if (!patient || appointment.patientId !== patient.id || ownershipError) {
       return errorResponse("No autorizado.", 403);
     }
 
@@ -56,8 +70,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     }
   }
 
-  if (sessionUser.role === "PROFESIONAL") {
-    const professional = await prisma.professionalProfile.findUnique({ where: { userId: sessionUser.id } });
+  if (sessionResult.user.role === "PROFESIONAL") {
+    const professional = await prisma.professionalProfile.findUnique({ where: { userId: sessionResult.user.id } });
     if (!professional || appointment.professionalId !== professional.id) {
       return errorResponse("No autorizado.", 403);
     }
@@ -68,7 +82,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     }
   }
 
-  if (isAuthorized(sessionUser.role, ["RECEPCIONISTA", "ADMINISTRADOR"])) {
+  if (["RECEPCIONISTA", "ADMINISTRADOR"].includes(sessionResult.user.role)) {
     // Sin restricciones adicionales.
   }
 

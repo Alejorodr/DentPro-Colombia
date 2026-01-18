@@ -3,11 +3,11 @@ import bcrypt from "bcryptjs";
 import { z } from "zod";
 
 import { getPrismaClient } from "@/lib/prisma";
-import { getSessionUser, isAuthorized } from "@/app/api/_utils/auth";
 import { errorResponse } from "@/app/api/_utils/response";
 import { buildPaginatedResponse, getPaginationParams } from "@/app/api/_utils/pagination";
 import { parseJson } from "@/app/api/_utils/validation";
 import { Role } from "@prisma/client";
+import { requireRole, requireSession } from "@/lib/authz";
 
 const createProfessionalSchema = z.object({
   email: z.string().trim().email().max(120),
@@ -19,10 +19,9 @@ const createProfessionalSchema = z.object({
 });
 
 export async function GET(request: Request) {
-  const sessionUser = await getSessionUser();
-
-  if (!sessionUser) {
-    return errorResponse("No autorizado.", 401);
+  const sessionResult = await requireSession();
+  if ("error" in sessionResult) {
+    return errorResponse(sessionResult.error.message, sessionResult.error.status);
   }
 
   const prisma = getPrismaClient();
@@ -42,14 +41,14 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const sessionUser = await getSessionUser();
-
-  if (!sessionUser) {
-    return errorResponse("No autorizado.", 401);
+  const sessionResult = await requireSession();
+  if ("error" in sessionResult) {
+    return errorResponse(sessionResult.error.message, sessionResult.error.status);
   }
 
-  if (!isAuthorized(sessionUser.role, ["ADMINISTRADOR"])) {
-    return errorResponse("No tienes permisos para crear profesionales.", 403);
+  const roleError = requireRole(sessionResult.user, ["ADMINISTRADOR"]);
+  if (roleError) {
+    return errorResponse("No tienes permisos para crear profesionales.", roleError.status);
   }
 
   const { data: payload, error } = await parseJson(request, createProfessionalSchema);
