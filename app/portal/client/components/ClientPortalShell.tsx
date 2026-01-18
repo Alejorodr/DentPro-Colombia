@@ -12,6 +12,7 @@ import {
   SignOut,
   UserCircle,
   ClockCounterClockwise,
+  FileText,
 } from "@/components/ui/Icon";
 
 import type { AuthSession } from "@/auth";
@@ -32,6 +33,7 @@ const navItems = [
   { label: "Dashboard", href: "/portal/client", icon: House },
   { label: "Appointments", href: "/portal/client/appointments", icon: CalendarCheck },
   { label: "Treatment History", href: "/portal/client/treatment-history", icon: ClockCounterClockwise },
+  { label: "Consents", href: "/portal/client/consents", icon: FileText },
   { label: "Profile", href: "/portal/client/profile", icon: UserCircle },
   { label: "Settings", href: "/portal/client/settings", icon: Gear },
 ];

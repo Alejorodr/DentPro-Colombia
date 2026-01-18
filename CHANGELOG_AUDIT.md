@@ -47,6 +47,12 @@
 - Documented telemetry opt-out and CI/Vercel caching guidance.
 - Migrated Prisma datasource URLs to `prisma/prisma.config.ts` and removed `url`/`directUrl` from schema files; `DATABASE_URL` and `DATABASE_URL_UNPOOLED` are now read by the config. (2026-01-16, commit: 00a09bc)
 - Simplified Prisma client initialization to rely on Prisma config instead of manual datasource overrides. (2026-01-16, commit: 00a09bc)
+- Implemented Phase 7 clinical data model (episodes, notes, prescriptions, attachments, templates, consents, and access logs).
+- Added clinical API endpoints with zod validation, pagination, and role-based access control.
+- Added secure clinical attachments via Vercel Blob with size/type validation and protected downloads.
+- Added printable episode and prescription routes with audit logging.
+- Added admin templates CRUD and audit log UI, plus patient consent UX.
+- Added backup runbook and updated deployment/observability docs for clinical operations.
 
 ### Fixed
 - Eliminated the `/` blank screen by forcing dynamic rendering and disabling revalidation.
@@ -64,6 +70,7 @@
 - Enforced rate limiting and input validation on critical routes.
 - Added production-grade security headers.
 - Resolved npm audit findings via overrides and refreshed environment recommendations.
+- Enforced clinical access logging, soft deletes, and patient visibility gates for sensitive data.
 
 ### Audit Log
 **Commands executed**

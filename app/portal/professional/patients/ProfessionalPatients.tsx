@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { MagnifyingGlass } from "@/components/ui/Icon";
@@ -65,7 +66,10 @@ export function ProfessionalPatients() {
             <p className="text-sm text-slate-500">No patients matched your search.</p>
           ) : (
             patients.map((patient) => (
-              <div key={patient.id} className="flex items-center justify-between rounded-2xl border border-slate-200 px-4 py-3 text-sm dark:border-slate-800">
+              <div
+                key={patient.id}
+                className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 px-4 py-3 text-sm dark:border-slate-800"
+              >
                 <div>
                   <p className="font-semibold text-slate-900 dark:text-white">
                     {patient.name} {patient.lastName}
@@ -76,6 +80,12 @@ export function ProfessionalPatients() {
                   <p>ID: {patient.patientCode ?? "-"}</p>
                   <p>{patient.lastVisit ? `Last visit: ${new Date(patient.lastVisit).toLocaleDateString("es-CO")}` : ""}</p>
                 </div>
+                <Link
+                  href={`/portal/professional/patients/${patient.id}`}
+                  className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600 transition hover:border-brand-indigo hover:text-brand-indigo dark:border-slate-700 dark:text-slate-300"
+                >
+                  Historia clínica
+                </Link>
               </div>
             ))
           )}

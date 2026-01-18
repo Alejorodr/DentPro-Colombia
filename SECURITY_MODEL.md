@@ -39,6 +39,17 @@
 ### Search
 - `GET /api/search` → **ADMINISTRADOR**, **RECEPCIONISTA**, **PROFESIONAL** (y solo scope permitido)
 
+### Clínica (historia clínica y adjuntos)
+- `GET /api/clinical/patients/[patientId]/episodes` → **ADMINISTRADOR**, **PROFESIONAL** (pacientes atendidos), **PACIENTE** (solo visibles)
+- `POST /api/clinical/patients/[patientId]/episodes` → **ADMINISTRADOR**, **PROFESIONAL** (solo sus pacientes)
+- `GET/PATCH/DELETE /api/clinical/episodes/[episodeId]` → **ADMINISTRADOR** (todo), **PROFESIONAL** (solo sus episodios)
+- `GET/POST /api/clinical/episodes/[episodeId]/notes` → **ADMINISTRADOR**, **PROFESIONAL** (solo sus episodios)
+- `GET/POST /api/clinical/episodes/[episodeId]/prescriptions` → **ADMINISTRADOR**, **PROFESIONAL** (solo sus episodios), **PACIENTE** (solo episodios visibles)
+- `GET/POST /api/clinical/episodes/[episodeId]/attachments` → **ADMINISTRADOR**, **PROFESIONAL** (solo sus episodios), **PACIENTE** (solo visibles)
+- `GET /api/clinical/attachments/[attachmentId]/download` → **ADMINISTRADOR**, **PROFESIONAL** (solo sus episodios), **PACIENTE** (solo visibles)
+- `DELETE /api/clinical/attachments/[attachmentId]` → **ADMINISTRADOR**, **PROFESIONAL** (solo sus episodios)
+- `GET /api/admin/audit/access-logs` → **ADMINISTRADOR**
+
 ## IDOR checklist aplicado
 - Recursos con `[id]` validan pertenencia (paciente o profesional) antes de leer/modificar.
 - Roles elevados (`ADMINISTRADOR`, `RECEPCIONISTA`) pueden operar sobre recursos compartidos.

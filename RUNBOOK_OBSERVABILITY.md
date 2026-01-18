@@ -33,6 +33,14 @@ Los logs en API usan JSON con:
 
 El `requestId` se genera en middleware y se propaga en `x-request-id` en cada respuesta.
 
+### Auditoría clínica
+Además de los logs de aplicación, las acciones clínicas generan registros en `AccessLog`:
+- Lectura, creación y actualización de episodios clínicos.
+- Descarga de adjuntos clínicos.
+- Impresión/exportación de resúmenes y recetas.
+
+Estos registros se consultan desde `/portal/admin/audit` o `GET /api/admin/audit/access-logs`.
+
 ## Checklist de verificación
 - [ ] En desarrollo, dispara un error controlado: `GET /api/_monitoring?error=1`.
 - [ ] Verifica que el evento aparece en Sentry (si `SENTRY_DSN` está configurado).

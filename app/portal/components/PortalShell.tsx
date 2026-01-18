@@ -10,6 +10,7 @@ import {
   ClipboardText,
   Gear,
   House,
+  ShieldCheck,
   SquaresFour,
   Users,
 } from "@/components/ui/Icon";
@@ -57,6 +58,8 @@ const navByRole: Record<UserRole, NavItem[]> = {
     { label: "Patient Records", href: "/portal/admin/patients", icon: Users },
     { label: "Services & Pricing", href: "/portal/admin/services", icon: ClipboardText },
     { label: "Content CMS", href: "/portal/admin/content", icon: SquaresFour },
+    { label: "Clinical Templates", href: "/portal/admin/templates", icon: ClipboardText },
+    { label: "Audit Logs", href: "/portal/admin/audit", icon: ShieldCheck },
   ],
 };
 

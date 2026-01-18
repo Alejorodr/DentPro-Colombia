@@ -169,13 +169,18 @@ export async function GET(request: Request) {
           description: `${appointment.timeSlot.startAt.toLocaleDateString("es-CO")} · ${appointment.status}`,
           href: `/portal/professional?appointment=${appointment.id}`,
         })),
-        ...notes.map((note) => ({
-          type: "Nota clínica",
-          id: note.id,
-          label: note.content.slice(0, 40),
-          description: `${note.appointment.patient?.user.name ?? "Paciente"} ${note.appointment.patient?.user.lastName ?? ""}`.trim(),
-          href: `/portal/professional?appointment=${note.appointmentId}`,
-        })),
+        ...notes.map((note) => {
+          const patientName = `${note.appointment?.patient?.user.name ?? "Paciente"} ${
+            note.appointment?.patient?.user.lastName ?? ""
+          }`.trim();
+          return {
+            type: "Nota clínica",
+            id: note.id,
+            label: note.content.slice(0, 40),
+            description: patientName,
+            href: note.appointmentId ? `/portal/professional?appointment=${note.appointmentId}` : "/portal/professional",
+          };
+        }),
       ];
 
       const sliced = results.slice(skip, skip + take);
