@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { getSessionUser } from "@/app/api/_utils/auth";
 import { errorResponse } from "@/app/api/_utils/response";
 import { parseJson } from "@/app/api/_utils/validation";
 import { getPrismaClient } from "@/lib/prisma";
 import { PrescriptionItemType } from "@prisma/client";
+import { requireRole, requireSession } from "@/lib/authz";
 
 const prescriptionSchema = z.object({
   item: z.object({
@@ -18,14 +18,14 @@ const prescriptionSchema = z.object({
 });
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const sessionUser = await getSessionUser();
-
-  if (!sessionUser) {
-    return errorResponse("No autorizado.", 401);
+  const sessionResult = await requireSession();
+  if ("error" in sessionResult) {
+    return errorResponse(sessionResult.error.message, sessionResult.error.status);
   }
 
-  if (sessionUser.role !== "PROFESIONAL") {
-    return errorResponse("No autorizado.", 403);
+  const roleError = requireRole(sessionResult.user, ["PROFESIONAL"]);
+  if (roleError) {
+    return errorResponse(roleError.message, roleError.status);
   }
 
   const { data: payload, error } = await parseJson(request, prescriptionSchema);
@@ -39,7 +39,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   const { id } = await params;
   const prisma = getPrismaClient();
   const professional = await prisma.professionalProfile.findUnique({
-    where: { userId: sessionUser.id },
+    where: { userId: sessionResult.user.id },
   });
 
   if (!professional) {

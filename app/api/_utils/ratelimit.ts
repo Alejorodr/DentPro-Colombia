@@ -2,13 +2,14 @@ import { NextResponse } from "next/server";
 import { Ratelimit, type Duration } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 
+import { checkMemoryRateLimit } from "@/lib/rateLimit";
+
 export type RateLimitConfig = {
   limit: number;
   window: Duration;
   windowMs: number;
 };
 
-const inMemoryStore = new Map<string, { count: number; resetAt: number }>();
 const ratelimiters = new Map<string, Ratelimit>();
 
 const hasUpstashConfig = Boolean(
@@ -70,22 +71,19 @@ export async function enforceRateLimit(request: Request, key: string, config: Ra
     return null;
   }
 
-  const now = Date.now();
-  const entry = inMemoryStore.get(identifier);
-  if (!entry || entry.resetAt <= now) {
-    inMemoryStore.set(identifier, { count: 1, resetAt: now + config.windowMs });
-    return null;
-  }
+  const memoryResult = checkMemoryRateLimit({
+    key: identifier,
+    limit: config.limit,
+    windowMs: config.windowMs,
+  });
 
-  entry.count += 1;
-  if (entry.count > config.limit) {
-    const retryAfter = Math.max(1, Math.ceil((entry.resetAt - now) / 1000));
+  if (!memoryResult.allowed) {
     return NextResponse.json(
-      { error: "Demasiadas solicitudes. Intenta más tarde.", retryAfter },
+      { error: "Demasiadas solicitudes. Intenta más tarde.", retryAfter: memoryResult.retryAfter },
       {
         status: 429,
         headers: {
-          "Retry-After": retryAfter.toString(),
+          "Retry-After": memoryResult.retryAfter.toString(),
         },
       },
     );

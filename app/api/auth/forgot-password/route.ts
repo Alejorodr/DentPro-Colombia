@@ -6,6 +6,9 @@ import { sendPasswordResetEmail } from "@/lib/email/password-reset";
 import { generatePasswordResetToken, normalizeEmail } from "@/lib/auth/password-reset";
 import { getAppBaseUrl } from "@/lib/auth/url";
 import { enforceRateLimit } from "@/app/api/_utils/ratelimit";
+import { getRequestId } from "@/app/api/_utils/request";
+import { logger } from "@/lib/logger";
+import * as Sentry from "@sentry/nextjs";
 
 const GENERIC_MESSAGE = "Si el correo existe, te enviaremos instrucciones para restablecer tu contraseña.";
 const forgotPasswordSchema = z.object({
@@ -13,20 +16,41 @@ const forgotPasswordSchema = z.object({
 });
 
 export async function POST(request: Request) {
+  const requestId = getRequestId(request);
+  const startedAt = Date.now();
   const rateLimited = await enforceRateLimit(request, "auth:forgot-password", {
-    limit: 5,
-    window: "10 m",
-    windowMs: 10 * 60 * 1000,
+    limit: 10,
+    window: "1 m",
+    windowMs: 60 * 1000,
   });
   if (rateLimited) {
+    logger.warn({
+      event: "auth.forgot_password.rate_limited",
+      route: "/api/auth/forgot-password",
+      requestId,
+      status: 429,
+    });
     return rateLimited;
   }
+
+  logger.info({
+    event: "auth.forgot_password.start",
+    route: "/api/auth/forgot-password",
+    requestId,
+  });
 
   const body = await request.json().catch(() => null);
   const parsed = forgotPasswordSchema.safeParse(body);
   const emailRaw = parsed.success ? parsed.data.email : null;
 
   if (!emailRaw) {
+    logger.info({
+      event: "auth.forgot_password.invalid_payload",
+      route: "/api/auth/forgot-password",
+      requestId,
+      status: 200,
+      durationMs: Date.now() - startedAt,
+    });
     return NextResponse.json({ message: GENERIC_MESSAGE }, { status: 200 });
   }
 
@@ -66,8 +90,23 @@ export async function POST(request: Request) {
       await sendPasswordResetEmail({ to: user.email, resetLink });
     }
   } catch (error) {
-    console.error("Failed to process forgot password request", error);
+    Sentry.captureException(error);
+    logger.error({
+      event: "auth.forgot_password.failed",
+      route: "/api/auth/forgot-password",
+      requestId,
+      status: 500,
+      durationMs: Date.now() - startedAt,
+      error,
+    });
   }
 
+  logger.info({
+    event: "auth.forgot_password.success",
+    route: "/api/auth/forgot-password",
+    requestId,
+    status: 200,
+    durationMs: Date.now() - startedAt,
+  });
   return NextResponse.json({ message: GENERIC_MESSAGE }, { status: 200 });
 }

@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { getPrismaClient } from "@/lib/prisma";
-import { getSessionUser, isAuthorized } from "@/app/api/_utils/auth";
 import { errorResponse } from "@/app/api/_utils/response";
 import { buildPaginatedResponse, getPaginationParams } from "@/app/api/_utils/pagination";
 import { createReceptionNotifications } from "@/lib/notifications";
@@ -10,6 +9,9 @@ import { AppointmentStatus, TimeSlotStatus } from "@prisma/client";
 import { parseJson } from "@/app/api/_utils/validation";
 import { enforceRateLimit } from "@/app/api/_utils/ratelimit";
 import { logger } from "@/lib/logger";
+import { getRequestId } from "@/app/api/_utils/request";
+import { requireRole, requireSession } from "@/lib/authz";
+import * as Sentry from "@sentry/nextjs";
 
 const createAppointmentSchema = z.object({
   patientId: z.string().uuid().optional(),
@@ -22,17 +24,26 @@ const createAppointmentSchema = z.object({
 });
 
 export async function GET(request: Request) {
-  const sessionUser = await getSessionUser();
+  const sessionResult = await requireSession();
+  if ("error" in sessionResult) {
+    return errorResponse(sessionResult.error.message, sessionResult.error.status);
+  }
 
-  if (!sessionUser) {
-    return errorResponse("No autorizado.", 401);
+  const roleError = requireRole(sessionResult.user, [
+    "ADMINISTRADOR",
+    "RECEPCIONISTA",
+    "PROFESIONAL",
+    "PACIENTE",
+  ]);
+  if (roleError) {
+    return errorResponse("No autorizado.", roleError.status);
   }
 
   const prisma = getPrismaClient();
   const { searchParams } = new URL(request.url);
   const { page, pageSize, skip, take } = getPaginationParams(searchParams);
 
-  if (isAuthorized(sessionUser.role, ["ADMINISTRADOR", "RECEPCIONISTA"])) {
+  if (["ADMINISTRADOR", "RECEPCIONISTA"].includes(sessionResult.user.role)) {
     const [appointments, total] = await Promise.all([
       prisma.appointment.findMany({
         include: {
@@ -50,9 +61,9 @@ export async function GET(request: Request) {
     return NextResponse.json(buildPaginatedResponse(appointments, page, pageSize, total));
   }
 
-  if (sessionUser.role === "PROFESIONAL") {
+  if (sessionResult.user.role === "PROFESIONAL") {
     const professional = await prisma.professionalProfile.findUnique({
-      where: { userId: sessionUser.id },
+      where: { userId: sessionResult.user.id },
     });
 
     if (!professional) {
@@ -80,7 +91,7 @@ export async function GET(request: Request) {
   }
 
   const patient = await prisma.patientProfile.findUnique({
-    where: { userId: sessionUser.id },
+    where: { userId: sessionResult.user.id },
   });
 
   if (!patient) {
@@ -108,23 +119,58 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const sessionUser = await getSessionUser();
+  const requestId = getRequestId(request);
+  const startedAt = Date.now();
+  const sessionResult = await requireSession();
 
-  if (!sessionUser) {
-    return errorResponse("No autorizado.", 401);
+  if ("error" in sessionResult) {
+    logger.warn({
+      event: "appointment.create.unauthorized",
+      route: "/api/appointments",
+      requestId,
+      status: sessionResult.error.status,
+    });
+    return errorResponse(sessionResult.error.message, sessionResult.error.status);
+  }
+
+  const roleError = requireRole(sessionResult.user, ["ADMINISTRADOR", "RECEPCIONISTA", "PACIENTE"]);
+  if (roleError) {
+    return errorResponse("No autorizado.", roleError.status);
   }
 
   const rateLimited = await enforceRateLimit(request, "appointments:create", {
-    limit: 10,
+    limit: 30,
     window: "1 m",
     windowMs: 60 * 1000,
   });
   if (rateLimited) {
+    logger.warn({
+      event: "appointment.create.rate_limited",
+      route: "/api/appointments",
+      requestId,
+      userId: sessionResult.user.id,
+      status: 429,
+    });
     return rateLimited;
   }
 
+  logger.info({
+    event: "appointment.create.start",
+    route: "/api/appointments",
+    requestId,
+    userId: sessionResult.user.id,
+  });
+
   const { data: payload, error } = await parseJson(request, createAppointmentSchema);
   if (error) {
+    logger.warn({
+      event: "appointment.create.invalid_payload",
+      route: "/api/appointments",
+      requestId,
+      userId: sessionResult.user.id,
+      status: 400,
+      durationMs: Date.now() - startedAt,
+    });
     return error;
   }
 
@@ -139,6 +185,7 @@ export async function POST(request: Request) {
     AppointmentStatus.PENDING,
     AppointmentStatus.CONFIRMED,
   ]);
+  const canOverrideStatus = ["ADMINISTRADOR", "RECEPCIONISTA"].includes(sessionResult.user.role);
   const timeSlot = await prisma.timeSlot.findUnique({
     where: { id: payload.timeSlotId },
   });
@@ -161,9 +208,9 @@ export async function POST(request: Request) {
 
   let patientId: string | null = null;
 
-  if (sessionUser.role === "PACIENTE") {
+  if (sessionResult.user.role === "PACIENTE") {
     const patient = await prisma.patientProfile.findUnique({
-      where: { userId: sessionUser.id },
+      where: { userId: sessionResult.user.id },
     });
 
     if (!patient) {
@@ -171,7 +218,7 @@ export async function POST(request: Request) {
     }
 
     patientId = patient.id;
-  } else if (isAuthorized(sessionUser.role, ["ADMINISTRADOR", "RECEPCIONISTA"])) {
+  } else if (["ADMINISTRADOR", "RECEPCIONISTA"].includes(sessionResult.user.role)) {
     patientId = payload.patientId ?? null;
   }
 
@@ -207,9 +254,7 @@ export async function POST(request: Request) {
           reason,
           notes: payload.notes?.trim() || null,
           status:
-            isAuthorized(sessionUser.role, ["ADMINISTRADOR", "RECEPCIONISTA"]) &&
-            payload?.status &&
-            allowedStatuses.has(payload.status)
+            canOverrideStatus && payload?.status && allowedStatuses.has(payload.status)
               ? payload.status
               : AppointmentStatus.PENDING,
         },
@@ -224,7 +269,7 @@ export async function POST(request: Request) {
       return created;
     });
 
-    if (sessionUser.role === "PACIENTE") {
+    if (sessionResult.user.role === "PACIENTE") {
       await createReceptionNotifications({
         type: "appointment_created",
         title: "Nuevo turno solicitado",
@@ -236,16 +281,32 @@ export async function POST(request: Request) {
 
     logger.info({
       event: "appointment.created",
+      route: "/api/appointments",
       appointmentId: appointment.id,
-      userId: sessionUser.id,
-      role: sessionUser.role,
+      userId: sessionResult.user.id,
+      role: sessionResult.user.role,
       timeSlotId: appointment.timeSlotId,
       serviceId: appointment.serviceId,
+      requestId,
+      status: 201,
+      durationMs: Date.now() - startedAt,
     });
 
     return NextResponse.json(appointment, { status: 201 });
   } catch (error) {
-    logger.error({ event: "appointment.create_failed", error }, "No se pudo crear la cita");
+    Sentry.captureException(error);
+    logger.error(
+      {
+        event: "appointment.create_failed",
+        route: "/api/appointments",
+        error,
+        requestId,
+        userId: sessionResult.user.id,
+        status: 409,
+        durationMs: Date.now() - startedAt,
+      },
+      "No se pudo crear la cita",
+    );
     return errorResponse("No se pudo crear la cita.", 409);
   }
 }

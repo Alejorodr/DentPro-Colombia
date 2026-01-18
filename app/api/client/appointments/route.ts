@@ -1,13 +1,16 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { getSessionUser } from "@/app/api/_utils/auth";
 import { errorResponse } from "@/app/api/_utils/response";
 import { getPrismaClient } from "@/lib/prisma";
 import { createReceptionNotifications } from "@/lib/notifications";
 import { AppointmentStatus, TimeSlotStatus } from "@prisma/client";
 import { parseJson } from "@/app/api/_utils/validation";
 import { enforceRateLimit } from "@/app/api/_utils/ratelimit";
+import { getRequestId } from "@/app/api/_utils/request";
+import { logger } from "@/lib/logger";
+import { requireRole, requireSession } from "@/lib/authz";
+import * as Sentry from "@sentry/nextjs";
 
 const patientDetailsSchema = z.object({
   name: z.string().trim().max(80).optional(),
@@ -24,24 +27,47 @@ const createClientAppointmentSchema = z.object({
 });
 
 export async function POST(request: Request) {
-  const sessionUser = await getSessionUser();
+  const requestId = getRequestId(request);
+  const startedAt = Date.now();
+  const sessionResult = await requireSession();
 
-  if (!sessionUser) {
-    return errorResponse("No autorizado.", 401);
+  if ("error" in sessionResult) {
+    logger.warn({
+      event: "client.appointment.unauthorized",
+      route: "/api/client/appointments",
+      requestId,
+      status: sessionResult.error.status,
+    });
+    return errorResponse(sessionResult.error.message, sessionResult.error.status);
   }
 
-  if (sessionUser.role !== "PACIENTE") {
-    return errorResponse("No autorizado.", 403);
+  const roleError = requireRole(sessionResult.user, ["PACIENTE"]);
+  if (roleError) {
+    return errorResponse("No autorizado.", roleError.status);
   }
 
   const rateLimited = await enforceRateLimit(request, "client:appointments:create", {
-    limit: 10,
+    limit: 30,
     window: "1 m",
     windowMs: 60 * 1000,
   });
   if (rateLimited) {
+    logger.warn({
+      event: "client.appointment.rate_limited",
+      route: "/api/client/appointments",
+      requestId,
+      userId: sessionResult.user.id,
+      status: 429,
+    });
     return rateLimited;
   }
+
+  logger.info({
+    event: "client.appointment.start",
+    route: "/api/client/appointments",
+    requestId,
+    userId: sessionResult.user.id,
+  });
 
   const { data: payload, error } = await parseJson(request, createClientAppointmentSchema);
   if (error) {
@@ -54,7 +80,7 @@ export async function POST(request: Request) {
 
   const prisma = getPrismaClient();
   const patient = await prisma.patientProfile.findUnique({
-    where: { userId: sessionUser.id },
+    where: { userId: sessionResult.user.id },
     include: { user: true },
   });
 
@@ -139,9 +165,28 @@ export async function POST(request: Request) {
       entityId: appointment.id,
     });
 
+    logger.info({
+      event: "client.appointment.success",
+      route: "/api/client/appointments",
+      requestId,
+      userId: sessionResult.user.id,
+      appointmentId: appointment.id,
+      status: 201,
+      durationMs: Date.now() - startedAt,
+    });
+
     return NextResponse.json(appointment, { status: 201 });
   } catch (error) {
-    console.error("No se pudo crear la cita del paciente", error);
+    Sentry.captureException(error);
+    logger.error({
+      event: "client.appointment.failed",
+      route: "/api/client/appointments",
+      requestId,
+      userId: sessionResult.user.id,
+      status: 409,
+      durationMs: Date.now() - startedAt,
+      error,
+    });
     return errorResponse("No se pudo crear la cita.", 409);
   }
 }

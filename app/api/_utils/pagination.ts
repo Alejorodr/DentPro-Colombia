@@ -17,5 +17,5 @@ export function getPaginationParams(searchParams: URLSearchParams) {
 
 export function buildPaginatedResponse<T>(data: T[], page: number, pageSize: number, total: number) {
   const totalPages = total === 0 ? 0 : Math.ceil(total / pageSize);
-  return { data, page, pageSize, total, totalPages };
+  return { items: data, data, page, pageSize, total, totalPages };
 }

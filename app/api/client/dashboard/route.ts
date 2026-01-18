@@ -1,23 +1,23 @@
 import { NextResponse } from "next/server";
 
-import { getSessionUser } from "@/app/api/_utils/auth";
 import { errorResponse } from "@/app/api/_utils/response";
 import { getPrismaClient } from "@/lib/prisma";
 import { getClientDashboardData } from "@/lib/portal/client-dashboard";
+import { requireRole, requireSession } from "@/lib/authz";
 
 export async function GET() {
-  const sessionUser = await getSessionUser();
-
-  if (!sessionUser) {
-    return errorResponse("No autorizado.", 401);
+  const sessionResult = await requireSession();
+  if ("error" in sessionResult) {
+    return errorResponse(sessionResult.error.message, sessionResult.error.status);
   }
 
-  if (sessionUser.role !== "PACIENTE") {
-    return errorResponse("No autorizado.", 403);
+  const roleError = requireRole(sessionResult.user, ["PACIENTE"]);
+  if (roleError) {
+    return errorResponse(roleError.message, roleError.status);
   }
 
   const prisma = getPrismaClient();
-  const dashboard = await getClientDashboardData(prisma, sessionUser.id);
+  const dashboard = await getClientDashboardData(prisma, sessionResult.user.id);
 
   if (!dashboard) {
     return errorResponse("Perfil de paciente no encontrado.", 404);

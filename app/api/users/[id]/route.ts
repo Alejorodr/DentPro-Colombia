@@ -3,11 +3,11 @@ import bcrypt from "bcryptjs";
 import { z } from "zod";
 
 import { getPrismaClient } from "@/lib/prisma";
-import { getSessionUser, isAuthorized } from "@/app/api/_utils/auth";
 import { errorResponse } from "@/app/api/_utils/response";
 import { parseJson } from "@/app/api/_utils/validation";
 import { isUserRole, type UserRole } from "@/lib/auth/roles";
 import { logger } from "@/lib/logger";
+import { requireRole, requireSession } from "@/lib/authz";
 
 const updateUserSchema = z.object({
   email: z.string().trim().email().max(120).optional(),
@@ -23,15 +23,14 @@ const updateUserSchema = z.object({
 });
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const sessionUser = await getSessionUser();
-
-  if (!sessionUser) {
-    return errorResponse("No autorizado.", 401);
+  const sessionResult = await requireSession();
+  if ("error" in sessionResult) {
+    return errorResponse(sessionResult.error.message, sessionResult.error.status);
   }
 
   const { id } = await params;
-  const canManagePatients = isAuthorized(sessionUser.role, ["ADMINISTRADOR", "RECEPCIONISTA"]);
-  if (!canManagePatients) {
+  const roleError = requireRole(sessionResult.user, ["ADMINISTRADOR"]);
+  if (roleError) {
     return errorResponse("No tienes permisos para actualizar usuarios.", 403);
   }
 
@@ -52,18 +51,6 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     return errorResponse("Rol inválido.");
   }
 
-  if (sessionUser.role === "RECEPCIONISTA") {
-    if (existing.role !== "PACIENTE") {
-      return errorResponse("Recepción solo puede editar pacientes.", 403);
-    }
-    if (requestedRole && requestedRole !== "PACIENTE") {
-      return errorResponse("Recepción no puede cambiar el rol.", 403);
-    }
-    if (payload.specialtyId || payload.slotDurationMinutes) {
-      return errorResponse("Recepción no puede editar profesionales.", 403);
-    }
-  }
-
   const passwordHash = payload.password ? await bcrypt.hash(payload.password, 10) : undefined;
 
   const updated = await prisma.user.update({
@@ -72,20 +59,20 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       email: payload.email?.toLowerCase() ?? undefined,
       name: payload.name?.trim() ?? undefined,
       lastName: payload.lastName?.trim() ?? undefined,
-      role: sessionUser.role === "RECEPCIONISTA" ? undefined : requestedRole ?? undefined,
-      passwordHash: sessionUser.role === "RECEPCIONISTA" ? undefined : passwordHash ?? undefined,
+      role: requestedRole ?? undefined,
+      passwordHash: passwordHash ?? undefined,
     },
   });
 
-  const targetRole = (sessionUser.role === "RECEPCIONISTA" ? existing.role : requestedRole) ?? existing.role;
+  const targetRole = requestedRole ?? existing.role;
   if (existing.role !== targetRole) {
     logger.info({
       event: "user.role_changed",
       userId: id,
       previousRole: existing.role,
       nextRole: targetRole,
-      actorId: sessionUser.id,
-      actorRole: sessionUser.role,
+      actorId: sessionResult.user.id,
+      actorRole: sessionResult.user.role,
     });
   }
 
@@ -152,31 +139,24 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 }
 
 export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const sessionUser = await getSessionUser();
-
-  if (!sessionUser) {
-    return errorResponse("No autorizado.", 401);
+  const sessionResult = await requireSession();
+  if ("error" in sessionResult) {
+    return errorResponse(sessionResult.error.message, sessionResult.error.status);
   }
 
   const { id } = await params;
-  const canManagePatients = isAuthorized(sessionUser.role, ["ADMINISTRADOR", "RECEPCIONISTA"]);
-  if (!canManagePatients) {
+  const roleError = requireRole(sessionResult.user, ["ADMINISTRADOR"]);
+  if (roleError) {
     return errorResponse("No tienes permisos para eliminar usuarios.", 403);
   }
 
   const prisma = getPrismaClient();
-  if (sessionUser.role === "RECEPCIONISTA") {
-    const user = await prisma.user.findUnique({ where: { id } });
-    if (!user || user.role !== "PACIENTE") {
-      return errorResponse("Recepción solo puede eliminar pacientes.", 403);
-    }
-  }
   await prisma.user.delete({ where: { id } });
   logger.info({
     event: "user.deleted",
     userId: id,
-    actorId: sessionUser.id,
-    actorRole: sessionUser.role,
+    actorId: sessionResult.user.id,
+    actorRole: sessionResult.user.role,
   });
   return NextResponse.json({ ok: true });
 }
