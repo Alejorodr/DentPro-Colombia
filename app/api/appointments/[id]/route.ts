@@ -7,7 +7,7 @@ import { parseJson } from "@/app/api/_utils/validation";
 import { createReceptionNotifications } from "@/lib/notifications";
 import { AppointmentStatus, TimeSlotStatus } from "@prisma/client";
 import { requireOwnershipOrRole, requireRole, requireSession } from "@/lib/authz";
-import { sendAppointmentEmail } from "@/lib/appointments/email";
+import { sendAppointmentEmail } from "@/lib/notifications/email";
 import { logger } from "@/lib/logger";
 
 const updateAppointmentSchema = z.object({

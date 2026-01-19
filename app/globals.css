@@ -1,22 +1,9 @@
+@config "../tailwind.config.js";
 @import 'tailwindcss';
 
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-  --color-brand-teal: #0a3d91;
-  --color-brand-indigo: #1f6cd3;
-  --color-brand-sky: #4cc3f1;
-  --color-brand-light: #e6f4ff;
-  --color-brand-midnight: #031536;
-
-  --color-accent-cyan: #5bd0ff;
-
-  --color-surface-base: #0f172a;
-  --color-surface-muted: #1e293b;
-  --color-surface-elevated: #111b2d;
-
-  --color-card-dark: #10243d;
-
   --shadow-glow: 0 28px 70px -25px rgba(10, 61, 145, 0.45);
   --shadow-glow-dark: 0 30px 80px -30px rgba(91, 208, 255, 0.38);
   --shadow-surface-dark: 0 36px 90px -35px rgba(3, 21, 54, 0.65);
@@ -213,6 +200,26 @@
 
 @layer base {
   :root {
+    --color-brand-teal: #0a3d91;
+    --color-brand-indigo: #1f6cd3;
+    --color-brand-sky: #4cc3f1;
+    --color-brand-light: #e6f4ff;
+    --color-brand-midnight: #031536;
+    --color-accent-cyan: #5bd0ff;
+    --color-surface-base: #f8fafc;
+    --color-surface-muted: #e2e8f0;
+    --color-surface-elevated: #ffffff;
+    --color-card-dark: #10243d;
+  }
+
+  :root.dark {
+    --color-surface-base: #0f172a;
+    --color-surface-muted: #1e293b;
+    --color-surface-elevated: #111b2d;
+    --color-card-dark: #10243d;
+  }
+
+  :root {
     color-scheme: light;
   }
 
@@ -232,6 +239,10 @@
 
   body {
     @apply bg-slate-50 text-slate-900 antialiased transition-colors duration-300 dark:bg-surface-base dark:text-slate-100;
+  }
+
+  main {
+    @apply px-4 sm:px-6;
   }
 
 }

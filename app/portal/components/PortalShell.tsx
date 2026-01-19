@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 
@@ -23,8 +24,13 @@ import { Topbar } from "@/app/portal/components/layout/Topbar";
 import { ClientPortalShell } from "@/app/portal/client/components/ClientPortalShell";
 import { ReceptionistShell } from "@/app/portal/receptionist/components/ReceptionistShell";
 import { ProfessionalShell } from "@/app/portal/professional/components/ProfessionalShell";
-import { AdminGlobalSearch } from "@/app/portal/admin/_components/GlobalSearchBox";
-import { NotificationsDropdown } from "@/app/portal/admin/_components/NotificationsDropdown";
+const AdminGlobalSearch = dynamic(() => import("@/app/portal/admin/_components/GlobalSearchBox").then((mod) => mod.AdminGlobalSearch), {
+  ssr: false,
+});
+const NotificationsDropdown = dynamic(
+  () => import("@/app/portal/admin/_components/NotificationsDropdown").then((mod) => mod.NotificationsDropdown),
+  { ssr: false },
+);
 
 interface PortalShellProps {
   children: React.ReactNode;

@@ -147,22 +147,25 @@ function makeClient(): PrismaClient {
     throw new Error("DATABASE_URL is not set");
   }
 
-  const pool =
-    globalThis.__prismaPool ??
-    new Pool({
-      connectionString: databaseUrl,
-      // Neon pooled connections may require relaxed TLS in some environments.
-      // Prefer DATABASE_URL with sslmode=verify-full and remove this override if possible.
-      ssl: { rejectUnauthorized: false },
-    });
+  let client: PrismaClient;
 
-  const adapter = new PrismaPg(pool);
+  if (process.env.NODE_ENV === "production") {
+    const pool =
+      globalThis.__prismaPool ??
+      new Pool({
+        connectionString: databaseUrl,
+        // Neon pooled connections may require relaxed TLS in some environments.
+        // Prefer DATABASE_URL with sslmode=verify-full and remove this override if possible.
+        ssl: { rejectUnauthorized: false },
+      });
 
-  if (process.env.NODE_ENV !== "production") {
+    const adapter = new PrismaPg(pool);
+
     globalThis.__prismaPool = pool;
+    client = new PrismaClient({ adapter });
+  } else {
+    client = new PrismaClient({ datasourceUrl: databaseUrl });
   }
-
-  const client = new PrismaClient({ adapter });
   const extended = client.$extends({
     query: {
       $allModels: {
