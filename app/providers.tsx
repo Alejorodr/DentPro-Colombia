@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { SessionProvider, useSession } from "next-auth/react";
 
 import type { UserRole } from "@/lib/auth/roles";
+import PwaRegister from "@/components/PwaRegister";
 
 export function useAuthRole() {
   const { data: session, status } = useSession();
@@ -36,9 +37,9 @@ export function AppProviders({ children }: { children: ReactNode }) {
   return (
     <SessionProvider>
       <QueryClientProvider client={queryClient}>
+        <PwaRegister />
         {children}
       </QueryClientProvider>
     </SessionProvider>
   );
 }
-
