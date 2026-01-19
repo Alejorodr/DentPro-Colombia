@@ -23,6 +23,7 @@ interface RescheduleModalProps {
 export function RescheduleModal({ appointmentId, open, onClose, onUpdated }: RescheduleModalProps) {
   const [date, setDate] = useState(() => formatDateInput(new Date(), "America/Bogota"));
   const [slots, setSlots] = useState<Slot[]>([]);
+  const [suggestions, setSuggestions] = useState<Array<{ id: string; startAt: string; endAt: string }>>([]);
   const [selectedSlotId, setSelectedSlotId] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -50,11 +51,13 @@ export function RescheduleModal({ appointmentId, open, onClose, onUpdated }: Res
   const submit = async () => {
     if (!appointmentId || !selectedSlotId) {
       setError("Selecciona un slot disponible.");
+      setSuggestions([]);
       return;
     }
 
     setLoading(true);
     setError(null);
+    setSuggestions([]);
     const response = await fetch(`/api/appointments/${appointmentId}/reschedule`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -66,8 +69,12 @@ export function RescheduleModal({ appointmentId, open, onClose, onUpdated }: Res
       onClose();
       setSelectedSlotId("");
     } else {
-      const body = (await response.json().catch(() => null)) as { error?: string } | null;
+      const body = (await response.json().catch(() => null)) as {
+        error?: string;
+        suggestions?: Array<{ id: string; startAt: string; endAt: string }>;
+      } | null;
       setError(body?.error ?? "No se pudo reprogramar.");
+      setSuggestions(body?.suggestions ?? []);
     }
 
     setLoading(false);
@@ -95,7 +102,7 @@ export function RescheduleModal({ appointmentId, open, onClose, onUpdated }: Res
             Fecha
             <input
               type="date"
-              className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 dark:border-surface-muted dark:bg-surface-base dark:text-slate-200"
+              className="input mt-2"
               value={date}
               onChange={(event) => setDate(event.target.value)}
             />
@@ -103,7 +110,7 @@ export function RescheduleModal({ appointmentId, open, onClose, onUpdated }: Res
           <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
             Slot disponible
             <select
-              className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 dark:border-surface-muted dark:bg-surface-base dark:text-slate-200"
+              className="input mt-2"
               value={selectedSlotId}
               onChange={(event) => setSelectedSlotId(event.target.value)}
             >
@@ -119,19 +126,32 @@ export function RescheduleModal({ appointmentId, open, onClose, onUpdated }: Res
               })}
             </select>
           </label>
+          {suggestions.length > 0 ? (
+            <div className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600 dark:border-surface-muted dark:bg-surface-base dark:text-slate-200">
+              <p className="font-semibold text-slate-700 dark:text-slate-100">Próximos slots sugeridos</p>
+              <ul className="mt-2 space-y-1">
+                {suggestions.map((slot) => (
+                  <li key={slot.id}>
+                    {new Date(slot.startAt).toLocaleString("es-CO", { dateStyle: "short", timeStyle: "short" })} -{" "}
+                    {new Date(slot.endAt).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
           {error ? <p className="text-sm text-red-600">{error}</p> : null}
         </div>
         <div className="mt-6 flex justify-end gap-2">
           <button
             type="button"
-            className="rounded-full border border-slate-200 px-4 py-2 text-xs font-semibold uppercase text-slate-600 dark:border-surface-muted dark:text-slate-200"
+            className="btn btn-secondary px-4 py-2 text-xs"
             onClick={onClose}
           >
             Cancelar
           </button>
           <button
             type="button"
-            className="rounded-full bg-brand-teal px-4 py-2 text-xs font-semibold uppercase text-white"
+            className="btn btn-primary px-4 py-2 text-xs"
             onClick={submit}
             disabled={loading}
           >

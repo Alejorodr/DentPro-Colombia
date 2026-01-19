@@ -6,6 +6,7 @@ import { CalendarMonth } from "@/app/portal/receptionist/components/CalendarMont
 import { AppointmentTable } from "@/app/portal/receptionist/components/AppointmentTable";
 import { Card } from "@/app/portal/components/ui/Card";
 import { NewAppointmentModal } from "@/app/portal/receptionist/components/NewAppointmentModal";
+import { Skeleton } from "@/app/portal/components/ui/Skeleton";
 
 const viewOptions = [
   { value: "day", label: "Day" },
@@ -74,6 +75,16 @@ function endOfWeek(date: Date) {
   return end;
 }
 
+function buildRangeDays(start: Date, end: Date) {
+  const days: Date[] = [];
+  const cursor = new Date(start);
+  while (cursor <= end) {
+    days.push(new Date(cursor));
+    cursor.setDate(cursor.getDate() + 1);
+  }
+  return days;
+}
+
 export function ReceptionistSchedule() {
   const [view, setView] = useState<ViewMode>("day");
   const [selectedDate, setSelectedDate] = useState(() => new Date());
@@ -94,6 +105,13 @@ export function ReceptionistSchedule() {
     }
     return { from: selectedDate, to: selectedDate };
   }, [selectedDate, view]);
+
+  const summaryDays = useMemo(() => {
+    if (view === "month") {
+      return [];
+    }
+    return buildRangeDays(range.from, range.to);
+  }, [range.from, range.to, view]);
 
   const refresh = useCallback(async (pageOverride?: number) => {
     const params = new URLSearchParams({
@@ -145,7 +163,7 @@ export function ReceptionistSchedule() {
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
-            className="rounded-full border border-slate-200 px-4 py-2 text-xs font-semibold uppercase text-slate-600 dark:border-surface-muted dark:text-slate-200"
+            className="rounded-full border border-slate-200 px-4 py-2 text-xs font-semibold uppercase text-slate-600 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-indigo/60 dark:border-surface-muted dark:text-slate-200"
             onClick={() => {
               const params = new URLSearchParams({ date: formatDateInput(selectedDate), view });
               window.open(`/portal/receptionist/print?${params.toString()}`, "_blank", "noopener,noreferrer");
@@ -155,7 +173,7 @@ export function ReceptionistSchedule() {
           </button>
           <button
             type="button"
-            className="rounded-full bg-brand-teal px-4 py-2 text-xs font-semibold uppercase text-white"
+            className="rounded-full bg-brand-teal px-4 py-2 text-xs font-semibold uppercase text-white focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-indigo/60"
             onClick={() => setIsNewOpen(true)}
           >
             + New Appointment
@@ -196,6 +214,32 @@ export function ReceptionistSchedule() {
               ))}
             </div>
           </div>
+          {view !== "month" ? (
+            <div className="grid gap-3 md:grid-cols-3">
+              {data ? (
+                summaryDays.map((day) => {
+                  const key = formatDateInput(day);
+                  const summary = calendarSummary[key];
+                  return (
+                    <div key={key} className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-xs dark:border-surface-muted dark:bg-surface-elevated/70">
+                      <p className="font-semibold text-slate-900 dark:text-white">
+                        {day.toLocaleDateString("es-CO", { weekday: "short", day: "2-digit", month: "short" })}
+                      </p>
+                      <p className="text-slate-500">
+                        {summary ? `${summary.total} turnos · ${summary.confirmed} confirmados` : "Sin datos"}
+                      </p>
+                    </div>
+                  );
+                })
+              ) : (
+                Array.from({ length: view === "day" ? 1 : 7 }).map((_, index) => (
+                  <Skeleton key={index} className="h-16" />
+                ))
+              )}
+            </div>
+          ) : (
+            <p className="text-sm text-slate-500 dark:text-slate-400">Vista mensual disponible en el calendario.</p>
+          )}
           {data ? (
             <AppointmentTable
               appointments={data.appointments}
@@ -205,7 +249,7 @@ export function ReceptionistSchedule() {
               onRefresh={() => refresh(page)}
             />
           ) : (
-            <p className="text-sm text-slate-500 dark:text-slate-400">Cargando agenda…</p>
+            <Skeleton className="h-48 w-full" />
           )}
         </Card>
       </section>

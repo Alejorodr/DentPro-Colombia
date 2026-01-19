@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { getPrismaClient } from "@/lib/prisma";
 import { addDaysZoned, formatDateInput, fromZonedDateParts, getAnalyticsTimeZone } from "@/lib/dates/tz";
 import { TimeSlotStatus } from "@prisma/client";
+import { getAppointmentBufferMinutes, hasBufferConflict } from "@/lib/appointments/scheduling";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -32,7 +33,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Servicio no disponible." }, { status: 404 });
   }
 
-  const slots = await prisma.timeSlot.findMany({
+  let slots = await prisma.timeSlot.findMany({
     where: {
       status: TimeSlotStatus.AVAILABLE,
       startAt: { gte: startAt, lt: endAt },
@@ -46,6 +47,33 @@ export async function GET(request: Request) {
     },
     orderBy: { startAt: "asc" },
   });
+
+  const bufferMinutes = getAppointmentBufferMinutes();
+  if (bufferMinutes > 0 && slots.length > 0) {
+    const bufferMs = bufferMinutes * 60_000;
+    const professionalIds = [...new Set(slots.map((slot) => slot.professionalId))];
+    const bookedSlots = await prisma.timeSlot.findMany({
+      where: {
+        professionalId: { in: professionalIds },
+        status: TimeSlotStatus.BOOKED,
+        startAt: { lt: new Date(endAt.getTime() + bufferMs) },
+        endAt: { gt: new Date(startAt.getTime() - bufferMs) },
+      },
+      select: { professionalId: true, startAt: true, endAt: true },
+    });
+
+    const bookedByProfessional = bookedSlots.reduce((acc, slot) => {
+      const list = acc.get(slot.professionalId) ?? [];
+      list.push(slot);
+      acc.set(slot.professionalId, list);
+      return acc;
+    }, new Map<string, Array<{ startAt: Date; endAt: Date }>>());
+
+    slots = slots.filter((slot) => {
+      const booked = bookedByProfessional.get(slot.professionalId) ?? [];
+      return !hasBufferConflict({ startAt: slot.startAt, endAt: slot.endAt }, booked, bufferMinutes);
+    });
+  }
 
   return NextResponse.json({
     date: formatDateInput(startAt, timeZone),

@@ -57,6 +57,9 @@ export async function getTestPrisma(): Promise<TestPrisma> {
     const reset = async () => {
       await prisma.appointment.deleteMany();
       await prisma.timeSlot.deleteMany();
+      await prisma.notificationPreference.deleteMany();
+      await prisma.availabilityBlock.deleteMany();
+      await prisma.clinicHoliday.deleteMany();
       await prisma.passwordResetToken.deleteMany();
       await prisma.patientProfile.deleteMany();
       await prisma.professionalProfile.deleteMany();

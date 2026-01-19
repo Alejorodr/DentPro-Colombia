@@ -23,6 +23,12 @@ const availabilitySchema = z.union([
     endTime: z.string().trim().optional(),
     reason: z.string().trim().max(200).optional(),
   }),
+  z.object({
+    type: z.literal("block"),
+    startAt: z.string().trim().min(1),
+    endAt: z.string().trim().min(1),
+    reason: z.string().trim().max(200).optional(),
+  }),
 ]);
 
 function getRangeFromQuery(rangeParam: string | null) {
@@ -47,7 +53,7 @@ export async function GET(request: Request) {
   const prisma = getPrismaClient();
   const professional = await prisma.professionalProfile.findUnique({
     where: { userId: sessionResult.user.id },
-    include: { availabilityRules: true, availabilityExceptions: true },
+    include: { availabilityRules: true, availabilityExceptions: true, availabilityBlocks: true },
   });
 
   if (!professional) {
@@ -56,10 +62,13 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const { start, end } = getRangeFromQuery(searchParams.get("range"));
+  const clinicHolidays = await prisma.clinicHoliday.findMany();
 
   const slots = expandAvailability(
     professional.availabilityRules.filter((rule) => rule.active),
     professional.availabilityExceptions,
+    professional.availabilityBlocks,
+    clinicHolidays,
     start,
     end,
   );
@@ -67,6 +76,8 @@ export async function GET(request: Request) {
   return NextResponse.json({
     rules: professional.availabilityRules,
     exceptions: professional.availabilityExceptions,
+    blocks: professional.availabilityBlocks,
+    holidays: clinicHolidays,
     slots: slots.map((slot) => ({
       startAt: slot.startAt.toISOString(),
       endAt: slot.endAt.toISOString(),
@@ -115,14 +126,54 @@ export async function POST(request: Request) {
     return NextResponse.json({ rule }, { status: 201 });
   }
 
+  if (payload.type === "block") {
+    const startAt = new Date(payload.startAt);
+    const endAt = new Date(payload.endAt);
+
+    if (Number.isNaN(startAt.getTime()) || Number.isNaN(endAt.getTime()) || startAt >= endAt) {
+      return errorResponse("Rango inválido para el bloqueo.");
+    }
+
+    const overlapping = await prisma.availabilityBlock.findFirst({
+      where: {
+        professionalId: professional.id,
+        startAt: { lt: endAt },
+        endAt: { gt: startAt },
+      },
+    });
+
+    if (overlapping) {
+      return errorResponse("El bloqueo se solapa con uno existente.", 409);
+    }
+
+    const block = await prisma.availabilityBlock.create({
+      data: {
+        professionalId: professional.id,
+        startAt,
+        endAt,
+        reason: payload.reason ?? null,
+      },
+    });
+
+    return NextResponse.json({ block }, { status: 201 });
+  }
+
   if (!payload.date) {
     return errorResponse("Fecha inválida.");
+  }
+
+  const exceptionDate = new Date(`${payload.date}T00:00:00`);
+  const existingException = await prisma.availabilityException.findFirst({
+    where: { professionalId: professional.id, date: exceptionDate },
+  });
+  if (existingException) {
+    return errorResponse("Ya existe una excepción para esa fecha.", 409);
   }
 
   const exception = await prisma.availabilityException.create({
     data: {
       professionalId: professional.id,
-      date: new Date(`${payload.date}T00:00:00`),
+      date: exceptionDate,
       isAvailable: Boolean(payload.isAvailable),
       startTime: payload.startTime || null,
       endTime: payload.endTime || null,

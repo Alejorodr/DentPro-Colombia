@@ -7,6 +7,7 @@ import { parseJson } from "@/app/api/_utils/validation";
 import { createReceptionNotifications } from "@/lib/notifications";
 import { AppointmentStatus, TimeSlotStatus } from "@prisma/client";
 import { requireOwnershipOrRole, requireRole, requireSession } from "@/lib/authz";
+import { sendAppointmentEmail } from "@/lib/appointments/email";
 
 const updateAppointmentSchema = z.object({
   status: z.nativeEnum(AppointmentStatus),
@@ -133,6 +134,94 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       entityId: updated.id,
     });
   }
+
+  if (previousStatus !== AppointmentStatus.CANCELLED && updated.status === AppointmentStatus.CANCELLED) {
+    await sendAppointmentEmail("cancellation", updated);
+  }
+
+  return NextResponse.json(updated);
+}
+
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const sessionResult = await requireSession();
+  if ("error" in sessionResult) {
+    return errorResponse(sessionResult.error.message, sessionResult.error.status);
+  }
+
+  const roleError = requireRole(sessionResult.user, [
+    "PACIENTE",
+    "PROFESIONAL",
+    "RECEPCIONISTA",
+    "ADMINISTRADOR",
+  ]);
+  if (roleError) {
+    return errorResponse(roleError.message, roleError.status);
+  }
+
+  const { id } = await params;
+  const prisma = getPrismaClient();
+  const appointment = await prisma.appointment.findUnique({
+    where: { id },
+    include: {
+      timeSlot: true,
+      patient: { include: { user: true } },
+      professional: { include: { user: true } },
+      service: true,
+    },
+  });
+
+  if (!appointment) {
+    return errorResponse("Cita no encontrada.", 404);
+  }
+
+  if (sessionResult.user.role === "PACIENTE") {
+    const patient = await prisma.patientProfile.findUnique({ where: { userId: sessionResult.user.id } });
+    const ownershipError = requireOwnershipOrRole({
+      user: sessionResult.user,
+      ownerId: patient?.userId,
+      rolesAllowed: ["ADMINISTRADOR", "RECEPCIONISTA"],
+    });
+    if (!patient || appointment.patientId !== patient.id || ownershipError) {
+      return errorResponse("No autorizado.", 403);
+    }
+
+    if (!canCancelWithLimit(appointment.timeSlot.startAt)) {
+      return errorResponse("Solo puedes cancelar con 24h de anticipación.", 409);
+    }
+  }
+
+  if (sessionResult.user.role === "PROFESIONAL") {
+    const professional = await prisma.professionalProfile.findUnique({ where: { userId: sessionResult.user.id } });
+    if (!professional || appointment.professionalId !== professional.id) {
+      return errorResponse("No autorizado.", 403);
+    }
+  }
+
+  const updated = await prisma.appointment.update({
+    where: { id },
+    data: {
+      status: AppointmentStatus.CANCELLED,
+      timeSlot: {
+        update: { status: TimeSlotStatus.AVAILABLE },
+      },
+    },
+    include: {
+      patient: { include: { user: true } },
+      professional: { include: { user: true, specialty: true } },
+      timeSlot: true,
+      service: true,
+    },
+  });
+
+  await createReceptionNotifications({
+    type: "appointment_status",
+    title: "Turno cancelado",
+    body: `Se canceló el turno ${updated.id}.`,
+    entityType: "appointment",
+    entityId: updated.id,
+  });
+
+  await sendAppointmentEmail("cancellation", updated);
 
   return NextResponse.json(updated);
 }

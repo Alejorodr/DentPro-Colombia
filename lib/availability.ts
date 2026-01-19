@@ -15,6 +15,15 @@ interface AvailabilityExceptionInput {
   endTime?: string | null;
 }
 
+interface AvailabilityBlockInput {
+  startAt: Date;
+  endAt: Date;
+}
+
+interface ClinicHolidayInput {
+  date: Date;
+}
+
 export interface AvailabilitySlot {
   startAt: Date;
   endAt: Date;
@@ -31,6 +40,8 @@ function applyTime(baseDate: Date, time: string): Date {
 export function expandAvailability(
   rules: AvailabilityRuleInput[],
   exceptions: AvailabilityExceptionInput[],
+  blocks: AvailabilityBlockInput[],
+  holidays: ClinicHolidayInput[],
   rangeStart: Date,
   rangeEnd: Date,
 ): AvailabilitySlot[] {
@@ -39,12 +50,16 @@ export function expandAvailability(
   const exceptionMap = new Map(
     exceptions.map((exception) => [exception.date.toDateString(), exception]),
   );
+  const holidaySet = new Set(holidays.map((holiday) => holiday.date.toDateString()));
 
   for (const rule of rules) {
     const ruleSet = RRule.fromString(rule.rrule);
     const dates = ruleSet.between(rangeStart, rangeEnd, true);
 
     for (const date of dates) {
+      if (holidaySet.has(date.toDateString())) {
+        continue;
+      }
       const exception = exceptionMap.get(date.toDateString());
       if (exception && !exception.isAvailable) {
         continue;
@@ -61,6 +76,11 @@ export function expandAvailability(
       const endAt = applyTime(date, endTime);
 
       if (startAt < rangeStart || endAt > rangeEnd) {
+        continue;
+      }
+
+      const blocked = blocks.some((block) => block.startAt < endAt && block.endAt > startAt);
+      if (blocked) {
         continue;
       }
 

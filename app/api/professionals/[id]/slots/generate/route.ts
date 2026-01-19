@@ -6,29 +6,13 @@ import { getSessionUser, isAuthorized } from "@/app/api/_utils/auth";
 import { errorResponse } from "@/app/api/_utils/response";
 import { parseJson } from "@/app/api/_utils/validation";
 import { TimeSlotStatus } from "@prisma/client";
+import { buildSlotsWithBuffer, getAppointmentBufferMinutes } from "@/lib/appointments/scheduling";
 
 const generateSlotsSchema = z.object({
   startAt: z.string().trim().min(1),
   endAt: z.string().trim().min(1),
   slotDurationMinutes: z.number().int().min(5).max(240).optional(),
 });
-
-function buildSlots(startAt: Date, endAt: Date, durationMinutes: number) {
-  const slots: Array<{ startAt: Date; endAt: Date }> = [];
-  let cursor = new Date(startAt);
-
-  while (cursor < endAt) {
-    const slotStart = new Date(cursor);
-    const slotEnd = new Date(slotStart.getTime() + durationMinutes * 60_000);
-    if (slotEnd > endAt) {
-      break;
-    }
-    slots.push({ startAt: slotStart, endAt: slotEnd });
-    cursor = slotEnd;
-  }
-
-  return slots;
-}
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const sessionUser = await getSessionUser();
@@ -70,7 +54,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     return errorResponse("Duración inválida.");
   }
 
-  const slots = buildSlots(startAt, endAt, duration);
+  const bufferMinutes = getAppointmentBufferMinutes();
+  const slots = buildSlotsWithBuffer(startAt, endAt, duration, bufferMinutes);
 
   const created = await prisma.timeSlot.createMany({
     data: slots.map((slot) => ({
