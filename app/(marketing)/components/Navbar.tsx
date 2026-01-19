@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { List, UserCircle, X } from "@/components/ui/Icon";
 
 import { ThemeToggle } from "@/components/ThemeToggle";
+import PwaInstallButton from "@/components/PwaInstallButton";
 import { LoginModal } from "./LoginModal";
 
 interface NavLink {
@@ -113,6 +114,7 @@ export function Navbar({ brand, links, cta, login }: NavbarProps) {
           ))}
         </nav>
         <div className="flex items-center gap-4">
+          <PwaInstallButton className="hidden lg:inline-flex" />
           <ThemeToggle />
           {login ? (
             <div className="relative">
@@ -163,6 +165,7 @@ export function Navbar({ brand, links, cta, login }: NavbarProps) {
                 {link.label}
               </a>
             ))}
+            <PwaInstallButton className="w-full justify-center lg:hidden" />
             <a href={cta.href} className="btn-primary" onClick={closeMenu}>
               {cta.label}
             </a>
