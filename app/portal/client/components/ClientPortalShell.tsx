@@ -6,10 +6,8 @@ import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import {
   CalendarCheck,
-  ClipboardText,
   Gear,
   House,
-  SignOut,
   UserCircle,
   ClockCounterClockwise,
   FileText,
@@ -18,6 +16,11 @@ import {
 import type { AuthSession } from "@/auth";
 import type { ClinicInfo } from "@/lib/clinic";
 import { fetchWithRetry } from "@/lib/http";
+import { Sidebar } from "@/app/portal/components/layout/Sidebar";
+import { Topbar } from "@/app/portal/components/layout/Topbar";
+import { Card } from "@/app/portal/components/ui/Card";
+import { AvatarFallback } from "@/app/portal/components/ui/AvatarFallback";
+import { buttonClasses } from "@/components/ui/Button";
 
 type PatientSummary = {
   name: string;
@@ -36,17 +39,9 @@ const navItems = [
   { label: "Treatment History", href: "/portal/client/treatment-history", icon: ClockCounterClockwise },
   { label: "Consents", href: "/portal/client/consents", icon: FileText },
   { label: "Profile", href: "/portal/client/profile", icon: UserCircle },
-  { label: "Settings", href: "/portal/client/settings", icon: Gear },
 ];
 
-function getInitials(name: string) {
-  return name
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join("");
-}
+const settingsItems = [{ label: "Settings", href: "/portal/client/settings", icon: Gear }];
 
 export function ClientPortalShell({
   children,
@@ -59,6 +54,7 @@ export function ClientPortalShell({
 }) {
   const pathname = usePathname();
   const [patient, setPatient] = useState<PatientSummary | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -94,73 +90,59 @@ export function ClientPortalShell({
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-surface-base dark:text-white">
-      <div className="mx-auto flex min-h-screen w-full max-w-[1440px] flex-col lg:flex-row">
-        <aside className="flex w-full flex-col border-b border-slate-200 bg-white px-6 py-6 dark:border-surface-muted/70 dark:bg-surface-elevated lg:w-72 lg:border-b-0 lg:border-r">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-100 text-blue-600 dark:bg-surface-muted/80 dark:text-accent-cyan">
-              <ClipboardText size={20} weight="duotone" />
-            </div>
-            <div>
-              <p className="text-sm font-semibold">{clinic.name}</p>
-              <p className="text-xs text-slate-500 dark:text-slate-400">{clinic.city}</p>
-            </div>
-          </div>
-
-          <div className="mt-6 flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-surface-muted/70 dark:bg-surface-muted/30">
-            {avatarUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={avatarUrl} alt={userName} className="h-12 w-12 rounded-full object-cover" />
-            ) : (
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 text-sm font-semibold text-blue-700 dark:bg-surface-muted dark:text-accent-cyan">
-                {getInitials(userName)}
-              </div>
-            )}
-            <div>
-              <p className="text-sm font-semibold">{userName}</p>
-              <p className="text-xs text-slate-500 dark:text-slate-400">ID: #{patientCode}</p>
-            </div>
-          </div>
-
-          <nav className="mt-6 flex flex-1 flex-col gap-1">
-            {navItems.map((item) => {
-              const isActive = pathname === item.href;
-              const Icon = item.icon;
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`flex items-center gap-3 rounded-xl px-4 py-2 text-sm font-medium transition ${
-                    isActive
-                      ? "bg-blue-50 text-blue-700 dark:bg-surface-muted dark:text-accent-cyan"
-                      : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-surface-muted/60"
-                  }`}
-                >
-                  <Icon size={18} weight={isActive ? "fill" : "regular"} />
-                  {item.label}
-                </Link>
-              );
-            })}
-          </nav>
-
-          <div className="mt-6 space-y-4">
-            <button
-              type="button"
-              className="flex w-full items-center justify-center rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:border-slate-300 dark:border-surface-muted/70 dark:text-slate-200"
-              onClick={() => signOut({ callbackUrl: "/auth/login" })}
-            >
-              <SignOut size={16} className="mr-2" />
-              Log Out
-            </button>
+      <Sidebar
+        items={navItems}
+        settingsItems={settingsItems}
+        pathname={pathname}
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+        onSignOut={() => signOut({ callbackUrl: "/auth/login" })}
+        brandTitle={clinic.name ?? "DentPro"}
+        brandSubtitle="Portal paciente"
+      />
+      <div className="flex min-h-screen flex-col md:pl-72">
+        <Topbar
+          roleLabel="Paciente"
+          userName={userName}
+          onMenuClick={() => setIsSidebarOpen(true)}
+          title="Portal Paciente"
+          subtitle={clinic.city ?? "Panel de control"}
+          extra={
             <Link
               href="/portal/client/book"
-              className="flex w-full items-center justify-center rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
+              className={buttonClasses({ variant: "primary", size: "sm" })}
+              aria-label="Agendar una cita"
+              title="Agendar una cita"
             >
-              Book Appointment
+              Agendar cita
             </Link>
+          }
+        />
+        <main className="flex-1 px-6 py-8">
+          <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
+            <Card className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <div className="flex items-center gap-4">
+                {avatarUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={avatarUrl} alt={userName} className="h-14 w-14 rounded-full object-cover" />
+                ) : (
+                  <AvatarFallback name={userName} className="h-14 w-14 text-base" />
+                )}
+                <div>
+                  <p className="text-sm font-semibold text-slate-900 dark:text-white">{userName}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">ID: #{patientCode}</p>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-2 text-xs text-slate-500 dark:text-slate-300">
+                <span className="rounded-full bg-brand-light/80 px-3 py-1 text-brand-teal dark:bg-surface-muted/60 dark:text-accent-cyan">
+                  {clinic.name}
+                </span>
+                {clinic.city ? <span className="px-2 py-1">{clinic.city}</span> : null}
+              </div>
+            </Card>
+            {children}
           </div>
-        </aside>
-
-        <main className="flex-1 px-6 py-8 lg:px-10">{children}</main>
+        </main>
       </div>
     </div>
   );

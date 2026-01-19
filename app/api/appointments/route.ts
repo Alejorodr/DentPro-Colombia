@@ -12,7 +12,7 @@ import { logger } from "@/lib/logger";
 import { getRequestId } from "@/app/api/_utils/request";
 import { requireRole, requireSession } from "@/lib/authz";
 import { getAppointmentBufferMinutes, hasBufferConflict } from "@/lib/appointments/scheduling";
-import { sendAppointmentEmail } from "@/lib/appointments/email";
+import { sendAppointmentEmail } from "@/lib/notifications/email";
 import * as Sentry from "@sentry/nextjs";
 
 const createAppointmentSchema = z.object({

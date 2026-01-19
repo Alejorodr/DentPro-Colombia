@@ -38,3 +38,13 @@ Operar la capa de email transaccional para pacientes y staff con SMTP simple, ev
 - Crear un turno como paciente y verificar que el email de confirmación se envía.
 - Desactivar `emailEnabled` en `/api/users/me/notifications` y confirmar que no se envían emails.
 
+## Pruebas manuales de citas (QA previo a producción)
+1. **Crear cita (confirmación)**
+   - Crear una cita nueva desde el portal y confirmar que el paciente y el profesional reciben el email de confirmación.
+   - Verifica que el asunto contenga la fecha y el nombre del profesional.
+2. **Reprogramar cita**
+   - Usar la acción de reprogramación y confirmar que el email llega al mismo paciente con el nuevo horario.
+   - Valida que el profesional también recibe el aviso actualizado.
+3. **Cancelar cita**
+   - Cancelar desde el portal o API y verificar que el email de cancelación llega al paciente correcto.
+   - Confirmar que no se envía a usuarios con `emailEnabled=false`.

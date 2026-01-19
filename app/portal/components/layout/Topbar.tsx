@@ -36,6 +36,7 @@ export function Topbar({
           className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition hover:text-slate-900 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-teal/60 dark:border-surface-muted dark:text-slate-300 md:hidden"
           onClick={onMenuClick}
           aria-label="Abrir menú"
+          title="Abrir menú"
         >
           <List aria-hidden="true" size={20} weight="bold" />
         </button>
@@ -67,6 +68,7 @@ export function Topbar({
             type="button"
             className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition hover:text-slate-900 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-teal/60 dark:border-surface-muted dark:text-slate-200"
             aria-label="Ver notificaciones"
+            title="Ver notificaciones"
           >
             <Bell aria-hidden="true" className="h-5 w-5" weight="bold" />
           </button>
@@ -75,6 +77,7 @@ export function Topbar({
           type="button"
           className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition hover:text-slate-900 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-teal/60 dark:border-surface-muted dark:text-slate-200"
           aria-label="Ayuda"
+          title="Ayuda"
         >
           <Question aria-hidden="true" className="h-5 w-5" weight="bold" />
         </button>

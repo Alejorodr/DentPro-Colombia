@@ -11,13 +11,13 @@ import {
 import { isEmailEnabledForUser } from "@/lib/notification-preferences";
 import { logger } from "@/lib/logger";
 
+export type AppointmentEmailType = "confirmation" | "reminder" | "reschedule" | "cancellation";
+
 type AppointmentSnapshot = Appointment & {
   patient: (PatientProfile & { user: User }) | null;
   professional: (ProfessionalProfile & { user: User }) | null;
   timeSlot: TimeSlot;
 };
-
-type EmailType = "confirmation" | "reminder" | "reschedule" | "cancellation";
 
 type Recipient = {
   userId: string;
@@ -52,7 +52,7 @@ function buildEmailData(appointment: AppointmentSnapshot) {
   };
 }
 
-function buildTemplate(type: EmailType, appointment: AppointmentSnapshot) {
+function buildTemplate(type: AppointmentEmailType, appointment: AppointmentSnapshot) {
   const data = buildEmailData(appointment);
   if (type === "confirmation") {
     return buildAppointmentConfirmationEmail(data);
@@ -90,7 +90,10 @@ function getRecipients(appointment: AppointmentSnapshot): Recipient[] {
   return recipients;
 }
 
-export async function sendAppointmentEmail(type: EmailType, appointment: AppointmentSnapshot): Promise<boolean> {
+export async function sendAppointmentEmail(
+  type: AppointmentEmailType,
+  appointment: AppointmentSnapshot,
+): Promise<boolean> {
   const template = buildTemplate(type, appointment);
   const recipients = getRecipients(appointment);
   let sentCount = 0;

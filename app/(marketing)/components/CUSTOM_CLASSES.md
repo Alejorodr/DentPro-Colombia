@@ -20,4 +20,4 @@ La siguiente tabla resume las utilidades y componentes CSS personalizados utiliz
 | `form-feedback` | Mensajes de estado para el formulario. | `BookingForm.tsx` |
 | `modal-backdrop`, `modal-content`, `modal-grid`, `modal-card`, `modal-close` | Estructura del modal de login con blur y sombras. | `LoginModal.tsx` |
 
-Otras utilidades derivan de la paleta extendida definida en `tailwind.config.ts`, por ejemplo `text-brand-teal`, `bg-brand-light/80`, `dark:bg-surface-elevated/80`, `shadow-glow` o `shadow-surface-dark`.
+Otras utilidades derivan de la paleta extendida definida en `tailwind.config.js`, por ejemplo `text-brand-teal`, `bg-brand-light/80`, `dark:bg-surface-elevated/80`, `shadow-glow` o `shadow-surface-dark`.

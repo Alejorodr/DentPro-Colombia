@@ -5,6 +5,7 @@ import Link from "next/link";
 import type { ComponentType, SVGProps } from "react";
 
 import { SignOut, X } from "@/components/ui/Icon";
+import { Button } from "@/components/ui/Button";
 
 const iconWeight = "bold" as const;
 
@@ -74,6 +75,7 @@ export function Sidebar({
             className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-slate-500 transition hover:text-slate-900 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-teal/50 dark:border-surface-muted dark:text-slate-300 md:hidden"
             onClick={onClose}
             aria-label="Cerrar menú"
+            title="Cerrar menú"
           >
             <X aria-hidden="true" size={18} weight="bold" />
           </button>
@@ -131,14 +133,17 @@ export function Sidebar({
           ) : null}
         </nav>
         <div className="border-t border-slate-200 px-4 py-4 dark:border-surface-muted/70">
-          <button
+          <Button
             type="button"
+            variant="ghost"
             onClick={onSignOut}
-            className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-teal/60 dark:text-slate-300 dark:hover:bg-surface-muted/70"
+            className="w-full justify-start gap-3 rounded-xl px-3 py-2 text-sm font-medium"
+            aria-label="Cerrar sesión"
+            title="Cerrar sesión"
           >
             <SignOut aria-hidden="true" className="h-5 w-5" weight="bold" />
             Cerrar sesión
-          </button>
+          </Button>
         </div>
       </aside>
     </>

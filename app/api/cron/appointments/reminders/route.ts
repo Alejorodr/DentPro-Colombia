@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { getPrismaClient } from "@/lib/prisma";
 import { AppointmentStatus } from "@prisma/client";
-import { sendAppointmentEmail } from "@/lib/appointments/email";
+import { sendAppointmentEmail } from "@/lib/notifications/email";
 import { logger } from "@/lib/logger";
 import { getRequestId } from "@/app/api/_utils/request";
 
