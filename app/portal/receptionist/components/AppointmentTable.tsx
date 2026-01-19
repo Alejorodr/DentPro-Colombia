@@ -113,7 +113,7 @@ export function AppointmentTable({ appointments, page, totalPages, onPageChange,
         </div>
         <button
           type="button"
-          className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-xs font-semibold uppercase text-slate-600 dark:border-surface-muted dark:text-slate-200"
+          className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-xs font-semibold uppercase text-slate-600 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-indigo/60 dark:border-surface-muted dark:text-slate-200"
           onClick={exportCsv}
         >
           Export
@@ -173,14 +173,14 @@ export function AppointmentTable({ appointments, page, totalPages, onPageChange,
                       <div className="flex flex-wrap items-center gap-2">
                         <Link
                           href={`/portal/receptionist/schedule?appointment=${appointment.id}`}
-                          className="inline-flex items-center gap-1 rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold uppercase text-slate-600 dark:border-surface-muted dark:text-slate-200"
+                          className="inline-flex items-center gap-1 rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold uppercase text-slate-600 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-indigo/60 dark:border-surface-muted dark:text-slate-200"
                         >
                           <Eye size={14} />
                           View
                         </Link>
                         <button
                           type="button"
-                          className="inline-flex items-center gap-1 rounded-full border border-brand-teal px-3 py-1 text-xs font-semibold uppercase text-brand-teal"
+                          className="inline-flex items-center gap-1 rounded-full border border-brand-teal px-3 py-1 text-xs font-semibold uppercase text-brand-teal focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-indigo/60"
                           onClick={() => setRescheduleId(appointment.id)}
                           disabled={busyId === appointment.id}
                         >
@@ -189,7 +189,7 @@ export function AppointmentTable({ appointments, page, totalPages, onPageChange,
                         </button>
                         <button
                           type="button"
-                          className="inline-flex items-center gap-1 rounded-full border border-emerald-200 px-3 py-1 text-xs font-semibold uppercase text-emerald-700 disabled:opacity-50 dark:border-emerald-300/40"
+                          className="inline-flex items-center gap-1 rounded-full border border-emerald-200 px-3 py-1 text-xs font-semibold uppercase text-emerald-700 disabled:opacity-50 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-indigo/60 dark:border-emerald-300/40"
                           onClick={() => updateStatus(appointment.id, AppointmentStatus.CONFIRMED)}
                           disabled={
                             busyId === appointment.id ||
@@ -202,7 +202,7 @@ export function AppointmentTable({ appointments, page, totalPages, onPageChange,
                         </button>
                         <button
                           type="button"
-                          className="inline-flex items-center gap-1 rounded-full border border-blue-200 px-3 py-1 text-xs font-semibold uppercase text-blue-700 disabled:opacity-50 dark:border-blue-300/40"
+                          className="inline-flex items-center gap-1 rounded-full border border-blue-200 px-3 py-1 text-xs font-semibold uppercase text-blue-700 disabled:opacity-50 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-indigo/60 dark:border-blue-300/40"
                           onClick={() => updateStatus(appointment.id, AppointmentStatus.COMPLETED)}
                           disabled={
                             busyId === appointment.id ||
@@ -215,7 +215,7 @@ export function AppointmentTable({ appointments, page, totalPages, onPageChange,
                         </button>
                         <button
                           type="button"
-                          className="inline-flex items-center gap-1 rounded-full border border-rose-200 px-3 py-1 text-xs font-semibold uppercase text-rose-700 disabled:opacity-50 dark:border-rose-300/40"
+                          className="inline-flex items-center gap-1 rounded-full border border-rose-200 px-3 py-1 text-xs font-semibold uppercase text-rose-700 disabled:opacity-50 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-indigo/60 dark:border-rose-300/40"
                           onClick={() => updateStatus(appointment.id, AppointmentStatus.CANCELLED)}
                           disabled={busyId === appointment.id || appointment.status === AppointmentStatus.CANCELLED}
                         >
@@ -236,7 +236,7 @@ export function AppointmentTable({ appointments, page, totalPages, onPageChange,
             <div className="flex items-center gap-2">
               <button
                 type="button"
-                className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 text-slate-500 disabled:opacity-40 dark:border-surface-muted"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 text-slate-500 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-indigo/60 disabled:opacity-40 dark:border-surface-muted"
                 onClick={() => onPageChange(Math.max(page - 1, 1))}
                 disabled={page <= 1}
               >
@@ -244,7 +244,7 @@ export function AppointmentTable({ appointments, page, totalPages, onPageChange,
               </button>
               <button
                 type="button"
-                className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 text-slate-500 disabled:opacity-40 dark:border-surface-muted"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 text-slate-500 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-indigo/60 disabled:opacity-40 dark:border-surface-muted"
                 onClick={() => onPageChange(Math.min(page + 1, totalPages))}
                 disabled={page >= totalPages}
               >

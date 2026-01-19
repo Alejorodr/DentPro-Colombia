@@ -11,6 +11,8 @@ import { enforceRateLimit } from "@/app/api/_utils/ratelimit";
 import { logger } from "@/lib/logger";
 import { getRequestId } from "@/app/api/_utils/request";
 import { requireRole, requireSession } from "@/lib/authz";
+import { getAppointmentBufferMinutes, hasBufferConflict } from "@/lib/appointments/scheduling";
+import { sendAppointmentEmail } from "@/lib/appointments/email";
 import * as Sentry from "@sentry/nextjs";
 
 const createAppointmentSchema = z.object({
@@ -22,6 +24,22 @@ const createAppointmentSchema = z.object({
   notes: z.string().trim().max(1000).optional(),
   status: z.nativeEnum(AppointmentStatus).optional(),
 });
+
+function parseDateRange(searchParams: URLSearchParams) {
+  const from = searchParams.get("from");
+  const to = searchParams.get("to");
+  if (!from || !to) {
+    return null;
+  }
+
+  const start = new Date(`${from}T00:00:00`);
+  const end = new Date(`${to}T23:59:59`);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || start > end) {
+    return null;
+  }
+
+  return { start, end };
+}
 
 export async function GET(request: Request) {
   const sessionResult = await requireSession();
@@ -42,10 +60,19 @@ export async function GET(request: Request) {
   const prisma = getPrismaClient();
   const { searchParams } = new URL(request.url);
   const { page, pageSize, skip, take } = getPaginationParams(searchParams);
+  const dateRange = parseDateRange(searchParams);
+  const dateFilter = dateRange
+    ? {
+        timeSlot: {
+          startAt: { gte: dateRange.start, lte: dateRange.end },
+        },
+      }
+    : {};
 
   if (["ADMINISTRADOR", "RECEPCIONISTA"].includes(sessionResult.user.role)) {
     const [appointments, total] = await Promise.all([
       prisma.appointment.findMany({
+        where: dateFilter,
         include: {
           patient: { include: { user: true } },
           professional: { include: { user: true, specialty: true } },
@@ -56,7 +83,7 @@ export async function GET(request: Request) {
         skip,
         take,
       }),
-      prisma.appointment.count(),
+      prisma.appointment.count({ where: dateFilter }),
     ]);
     return NextResponse.json(buildPaginatedResponse(appointments, page, pageSize, total));
   }
@@ -70,7 +97,7 @@ export async function GET(request: Request) {
       return NextResponse.json(buildPaginatedResponse([], page, pageSize, 0));
     }
 
-    const where = { professionalId: professional.id };
+    const where = { professionalId: professional.id, ...dateFilter };
     const [appointments, total] = await Promise.all([
       prisma.appointment.findMany({
         where,
@@ -98,7 +125,7 @@ export async function GET(request: Request) {
     return NextResponse.json(buildPaginatedResponse([], page, pageSize, 0));
   }
 
-  const where = { patientId: patient.id };
+  const where = { patientId: patient.id, ...dateFilter };
   const [appointments, total] = await Promise.all([
     prisma.appointment.findMany({
       where,
@@ -232,6 +259,32 @@ export async function POST(request: Request) {
     return errorResponse("El profesional no coincide con el slot.");
   }
 
+  const bufferMinutes = getAppointmentBufferMinutes();
+  if (bufferMinutes > 0) {
+    const bufferMs = bufferMinutes * 60_000;
+    const bufferStart = new Date(timeSlot.startAt.getTime() - bufferMs);
+    const bufferEnd = new Date(timeSlot.endAt.getTime() + bufferMs);
+    const bookedSlots = await prisma.timeSlot.findMany({
+      where: {
+        professionalId,
+        status: TimeSlotStatus.BOOKED,
+        id: { not: timeSlot.id },
+        startAt: { lt: bufferEnd },
+        endAt: { gt: bufferStart },
+      },
+      select: { startAt: true, endAt: true },
+    });
+
+    const conflict = hasBufferConflict(
+      { startAt: timeSlot.startAt, endAt: timeSlot.endAt },
+      bookedSlots,
+      bufferMinutes,
+    );
+    if (conflict) {
+      return errorResponse("El horario seleccionado no respeta el buffer entre turnos.", 409);
+    }
+  }
+
   try {
     const appointment = await prisma.$transaction(async (tx) => {
       const updated = await tx.timeSlot.updateMany({
@@ -278,6 +331,8 @@ export async function POST(request: Request) {
         entityId: appointment.id,
       });
     }
+
+    await sendAppointmentEmail("confirmation", appointment);
 
     logger.info({
       event: "appointment.created",

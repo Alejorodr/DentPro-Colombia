@@ -9,6 +9,8 @@ import { TimeSlotStatus } from "@prisma/client";
 import { getRequestId } from "@/app/api/_utils/request";
 import { logger } from "@/lib/logger";
 import { requireOwnershipOrRole, requireRole, requireSession } from "@/lib/authz";
+import { getAppointmentBufferMinutes, hasBufferConflict } from "@/lib/appointments/scheduling";
+import { sendAppointmentEmail } from "@/lib/appointments/email";
 import * as Sentry from "@sentry/nextjs";
 
 const rescheduleSchema = z.object({
@@ -18,6 +20,47 @@ const rescheduleSchema = z.object({
 function canRescheduleWithLimit(startAt: Date): boolean {
   const diff = startAt.getTime() - Date.now();
   return diff >= 24 * 60 * 60 * 1000;
+}
+
+async function getSuggestedSlots(
+  prisma: ReturnType<typeof getPrismaClient>,
+  professionalId: string,
+  from: Date,
+  excludeSlotId: string,
+) {
+  const bufferMinutes = getAppointmentBufferMinutes();
+  const bufferMs = bufferMinutes * 60_000;
+  const rangeEnd = new Date(from.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+  const candidates = await prisma.timeSlot.findMany({
+    where: {
+      professionalId,
+      status: TimeSlotStatus.AVAILABLE,
+      startAt: { gt: from, lt: rangeEnd },
+    },
+    orderBy: { startAt: "asc" },
+    take: 6,
+    select: { id: true, startAt: true, endAt: true },
+  });
+
+  if (bufferMinutes <= 0 || candidates.length === 0) {
+    return candidates;
+  }
+
+  const bookedSlots = await prisma.timeSlot.findMany({
+    where: {
+      professionalId,
+      status: TimeSlotStatus.BOOKED,
+      id: { not: excludeSlotId },
+      startAt: { lt: new Date(rangeEnd.getTime() + bufferMs) },
+      endAt: { gt: new Date(from.getTime() - bufferMs) },
+    },
+    select: { startAt: true, endAt: true },
+  });
+
+  return candidates.filter((candidate) =>
+    !hasBufferConflict({ startAt: candidate.startAt, endAt: candidate.endAt }, bookedSlots, bufferMinutes),
+  );
 }
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -101,7 +144,43 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   }
 
   if (newSlot.status !== TimeSlotStatus.AVAILABLE) {
-    return errorResponse("El nuevo slot no está disponible.", 409);
+    const suggestions = await getSuggestedSlots(prisma, newSlot.professionalId, newSlot.startAt, appointment.timeSlotId);
+    return NextResponse.json(
+      {
+        error: "El nuevo slot no está disponible.",
+        suggestions,
+      },
+      { status: 409 },
+    );
+  }
+
+  const bufferMinutes = getAppointmentBufferMinutes();
+  if (bufferMinutes > 0) {
+    const bufferMs = bufferMinutes * 60_000;
+    const bufferStart = new Date(newSlot.startAt.getTime() - bufferMs);
+    const bufferEnd = new Date(newSlot.endAt.getTime() + bufferMs);
+    const bookedSlots = await prisma.timeSlot.findMany({
+      where: {
+        professionalId: newSlot.professionalId,
+        status: TimeSlotStatus.BOOKED,
+        id: { not: appointment.timeSlotId },
+        startAt: { lt: bufferEnd },
+        endAt: { gt: bufferStart },
+      },
+      select: { startAt: true, endAt: true },
+    });
+
+    const conflict = hasBufferConflict({ startAt: newSlot.startAt, endAt: newSlot.endAt }, bookedSlots, bufferMinutes);
+    if (conflict) {
+      const suggestions = await getSuggestedSlots(prisma, newSlot.professionalId, newSlot.startAt, appointment.timeSlotId);
+      return NextResponse.json(
+        {
+          error: "El nuevo horario no respeta el buffer entre turnos.",
+          suggestions,
+        },
+        { status: 409 },
+      );
+    }
   }
 
   try {
@@ -144,6 +223,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       entityType: "appointment",
       entityId: updated.id,
     });
+
+    await sendAppointmentEmail("reschedule", updated);
 
     logger.info({
       event: "appointment.reschedule.success",

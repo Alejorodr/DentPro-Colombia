@@ -100,6 +100,7 @@ model User {
   professional ProfessionalProfile?
   patient      PatientProfile?
   notifications Notification[]
+  notificationPreference NotificationPreference?
   resetTokens  PasswordResetToken[]
   clinicalNotesAuthored ClinicalNote[] @relation("ClinicalNoteAuthor")
   clinicalNotesDeleted ClinicalNote[] @relation("ClinicalNoteDeletedBy")
@@ -125,6 +126,7 @@ model ProfessionalProfile {
   appointments        Appointment[]
   availabilityRules   AvailabilityRule[]
   availabilityExceptions AvailabilityException[]
+  availabilityBlocks AvailabilityBlock[]
   clinicalEpisodes    ClinicalEpisode[]
   prescriptions       Prescription[]
 }
@@ -196,6 +198,7 @@ model Appointment {
   checkedInAt    DateTime?
   createdAt      DateTime            @default(now())
   updatedAt      DateTime            @updatedAt
+  reminderSentAt DateTime?
   patient        PatientProfile      @relation(fields: [patientId], references: [id], onDelete: Restrict)
   professional   ProfessionalProfile @relation(fields: [professionalId], references: [id], onDelete: Restrict)
   timeSlot       TimeSlot            @relation(fields: [timeSlotId], references: [id], onDelete: Restrict)
@@ -446,6 +449,39 @@ model AvailabilityException {
 
   @@index([professionalId])
   @@index([date])
+}
+
+model AvailabilityBlock {
+  id             String               @id @default(uuid())
+  professionalId String
+  startAt        DateTime
+  endAt          DateTime
+  reason         String?
+  createdAt      DateTime             @default(now())
+  professional   ProfessionalProfile  @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+
+  @@index([professionalId])
+  @@index([startAt])
+}
+
+model ClinicHoliday {
+  id        String   @id @default(uuid())
+  date      DateTime @unique
+  name      String
+  createdAt DateTime @default(now())
+
+  @@index([date])
+}
+
+model NotificationPreference {
+  id           String   @id @default(uuid())
+  userId       String   @unique @db.Uuid
+  emailEnabled Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model Notification {

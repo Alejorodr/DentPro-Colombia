@@ -28,6 +28,7 @@ model User {
   professional ProfessionalProfile?
   patient      PatientProfile?
   resetTokens  PasswordResetToken[]
+  notificationPreference NotificationPreference?
 }
 
 model ProfessionalProfile {
@@ -40,6 +41,7 @@ model ProfessionalProfile {
   specialty           Specialty     @relation(fields: [specialtyId], references: [id], onDelete: Restrict)
   timeSlots           TimeSlot[]
   appointments        Appointment[]
+  availabilityBlocks  AvailabilityBlock[]
 }
 
 model PatientProfile {
@@ -100,6 +102,7 @@ model Appointment {
   status         String              @default("PENDING")
   createdAt      DateTime            @default(now())
   updatedAt      DateTime            @updatedAt
+  reminderSentAt DateTime?
   patient        PatientProfile      @relation(fields: [patientId], references: [id], onDelete: Restrict)
   professional   ProfessionalProfile @relation(fields: [professionalId], references: [id], onDelete: Restrict)
   timeSlot       TimeSlot            @relation(fields: [timeSlotId], references: [id], onDelete: Restrict)
@@ -121,4 +124,37 @@ model PasswordResetToken {
 
   @@index([userId])
   @@index([expiresAt])
+}
+
+model AvailabilityBlock {
+  id             String              @id @default(uuid())
+  professionalId String
+  startAt        DateTime
+  endAt          DateTime
+  reason         String?
+  createdAt      DateTime            @default(now())
+  professional   ProfessionalProfile @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+
+  @@index([professionalId])
+  @@index([startAt])
+}
+
+model ClinicHoliday {
+  id        String   @id @default(uuid())
+  date      DateTime @unique
+  name      String
+  createdAt DateTime @default(now())
+
+  @@index([date])
+}
+
+model NotificationPreference {
+  id           String   @id @default(uuid())
+  userId       String   @unique
+  emailEnabled Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
