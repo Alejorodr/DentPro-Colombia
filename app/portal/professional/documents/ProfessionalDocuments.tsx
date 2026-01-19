@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 import { FileText } from "@/components/ui/Icon";
 import { AttachmentKind } from "@prisma/client";
+import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
 
 interface AttachmentItem {
   id: string;
@@ -27,7 +28,7 @@ export function ProfessionalDocuments() {
   const [uploadError, setUploadError] = useState<string | null>(null);
 
   const loadAttachments = async () => {
-    const response = await fetch(`/api/professional/attachments?kind=${AttachmentKind.DOCUMENT}`);
+    const response = await fetchWithRetry(`/api/professional/attachments?kind=${AttachmentKind.DOCUMENT}`);
     if (!response.ok) return;
     const data = (await response.json()) as { attachments: AttachmentItem[] };
     setAttachments(data.attachments ?? []);
@@ -36,7 +37,7 @@ export function ProfessionalDocuments() {
   useEffect(() => {
     void loadAttachments();
     const loadPatients = async () => {
-      const response = await fetch("/api/professional/patients?pageSize=50");
+      const response = await fetchWithRetry("/api/professional/patients?pageSize=50");
       if (!response.ok) return;
       const data = (await response.json()) as { data: PatientOption[] };
       setPatients(data.data ?? []);
@@ -69,7 +70,7 @@ export function ProfessionalDocuments() {
       return;
     }
 
-    const response = await fetch("/api/professional/attachments", {
+    const response = await fetchWithTimeout("/api/professional/attachments", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

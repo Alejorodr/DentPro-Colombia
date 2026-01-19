@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 
+import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
+
 type PatientProfile = {
   phone?: string | null;
   documentId?: string | null;
@@ -51,7 +53,7 @@ export function ClientProfileForm() {
 
   useEffect(() => {
     let isMounted = true;
-    fetch("/api/users/me")
+    fetchWithRetry("/api/users/me")
       .then((res) => (res.ok ? res.json() : null))
       .then((data: UserProfile | null) => {
         if (!isMounted || !data) {
@@ -90,7 +92,7 @@ export function ClientProfileForm() {
     setSaving(true);
     setStatus(null);
 
-    const response = await fetch("/api/users/me", {
+    const response = await fetchWithTimeout("/api/users/me", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(formState),

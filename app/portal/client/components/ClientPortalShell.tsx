@@ -17,6 +17,7 @@ import {
 
 import type { AuthSession } from "@/auth";
 import type { ClinicInfo } from "@/lib/clinic";
+import { fetchWithRetry } from "@/lib/http";
 
 type PatientSummary = {
   name: string;
@@ -62,7 +63,7 @@ export function ClientPortalShell({
   useEffect(() => {
     let isMounted = true;
 
-    fetch("/api/client/dashboard")
+    fetchWithRetry("/api/client/dashboard")
       .then((res) => (res.ok ? res.json() : null))
       .then((data: DashboardResponse | null) => {
         if (!isMounted || !data?.patient) {

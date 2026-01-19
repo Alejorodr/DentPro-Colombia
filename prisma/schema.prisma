@@ -112,6 +112,8 @@ model User {
   clinicalEpisodesUpdated ClinicalEpisode[] @relation("ClinicalEpisodesUpdated")
   clinicalEpisodesDeleted ClinicalEpisode[] @relation("ClinicalEpisodesDeleted")
   accessLogs AccessLog[]
+
+  @@index([role])
 }
 
 model ProfessionalProfile {
@@ -211,6 +213,8 @@ model Appointment {
   @@index([patientId])
   @@index([professionalId])
   @@index([serviceId])
+  @@index([status])
+  @@index([createdAt])
 }
 
 model ClinicalNote {

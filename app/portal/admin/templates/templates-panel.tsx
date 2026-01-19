@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
 const templateTypes = [
   { value: "CONSENT", label: "Consentimiento" },
   { value: "QUOTE", label: "Presupuesto" },
@@ -40,7 +41,7 @@ export function AdminTemplatesPanel() {
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch("/api/admin/templates");
+        const response = await fetchWithRetry("/api/admin/templates");
         if (!response.ok) {
           throw new Error("No se pudieron cargar las plantillas.");
         }
@@ -85,7 +86,7 @@ export function AdminTemplatesPanel() {
     };
 
     try {
-      const response = await fetch(
+      const response = await fetchWithTimeout(
         selectedId ? `/api/admin/templates/${selectedId}` : "/api/admin/templates",
         {
           method: selectedId ? "PATCH" : "POST",

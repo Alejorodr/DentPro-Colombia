@@ -1,3 +1,5 @@
+import { fetchWithTimeout } from "@/lib/http";
+
 type PasswordResetEmailPayload = {
   to: string;
   resetLink: string;
@@ -26,7 +28,7 @@ export async function sendPasswordResetEmail({ to, resetLink }: PasswordResetEma
     return;
   }
 
-  const response = await fetch("https://api.resend.com/emails", {
+  const response = await fetchWithTimeout("https://api.resend.com/emails", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${resendApiKey}`,

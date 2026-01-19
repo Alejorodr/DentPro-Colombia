@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import type { UserRole } from "@/lib/auth/roles";
+import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
 
 type Specialty = {
   id: string;
@@ -49,21 +50,21 @@ export function NewAppointmentForm({ role }: NewAppointmentFormProps) {
   const [status, setStatus] = useState<string | null>(null);
 
   useEffect(() => {
-    void fetch("/api/specialties")
+    void fetchWithRetry("/api/specialties")
       .then((res) => res.json())
       .then(setSpecialties)
       .catch(() => setSpecialties([]));
   }, []);
 
   useEffect(() => {
-    void fetch("/api/professionals?pageSize=50")
+    void fetchWithRetry("/api/professionals?pageSize=50")
       .then((res) => res.json())
       .then((payload) => setProfessionals(payload.data ?? []))
       .catch(() => setProfessionals([]));
   }, []);
 
   useEffect(() => {
-    void fetch("/api/services?active=true&pageSize=50")
+    void fetchWithRetry("/api/services?active=true&pageSize=50")
       .then((res) => res.json())
       .then((payload) => setServices(payload.data ?? []))
       .catch(() => setServices([]));
@@ -80,7 +81,7 @@ export function NewAppointmentForm({ role }: NewAppointmentFormProps) {
       return;
     }
 
-    void fetch(`/api/professionals/${professionalId}/slots`)
+    void fetchWithRetry(`/api/professionals/${professionalId}/slots`)
       .then((res) => res.json())
       .then(setSlots)
       .catch(() => setSlots([]));
@@ -103,7 +104,7 @@ export function NewAppointmentForm({ role }: NewAppointmentFormProps) {
     event.preventDefault();
     setStatus(null);
 
-    const response = await fetch("/api/appointments", {
+    const response = await fetchWithTimeout("/api/appointments", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

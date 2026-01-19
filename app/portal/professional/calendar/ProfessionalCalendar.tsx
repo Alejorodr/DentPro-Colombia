@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { CalendarBlank } from "@/components/ui/Icon";
 import { Skeleton } from "@/app/portal/components/ui/Skeleton";
+import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
 
 interface AvailabilityRule {
   id: string;
@@ -89,8 +90,8 @@ export function ProfessionalCalendar() {
     setLoading(true);
     setError(null);
     const [availabilityResponse, appointmentsResponse] = await Promise.all([
-      fetch("/api/professional/availability?range=30"),
-      fetch(`/api/appointments?from=${agendaRange.from}&to=${agendaRange.to}`),
+      fetchWithRetry("/api/professional/availability?range=30"),
+      fetchWithRetry(`/api/appointments?from=${agendaRange.from}&to=${agendaRange.to}`),
     ]);
 
     if (!availabilityResponse.ok) {
@@ -125,7 +126,7 @@ export function ProfessionalCalendar() {
   }, []);
 
   const createRule = async () => {
-    const response = await fetch("/api/professional/availability", {
+    const response = await fetchWithTimeout("/api/professional/availability", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ type: "rule", ...ruleForm }),
@@ -142,7 +143,7 @@ export function ProfessionalCalendar() {
   };
 
   const createException = async () => {
-    const response = await fetch("/api/professional/availability", {
+    const response = await fetchWithTimeout("/api/professional/availability", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ type: "exception", ...exceptionForm }),
@@ -154,7 +155,7 @@ export function ProfessionalCalendar() {
   };
 
   const createBlock = async () => {
-    const response = await fetch("/api/professional/availability", {
+    const response = await fetchWithTimeout("/api/professional/availability", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ type: "block", ...blockForm }),

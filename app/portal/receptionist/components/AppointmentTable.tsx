@@ -17,6 +17,7 @@ import { AppointmentStatus } from "@prisma/client";
 
 import { Table } from "@/app/portal/components/ui/Table";
 import { RescheduleModal } from "@/app/portal/receptionist/components/RescheduleModal";
+import { fetchWithTimeout } from "@/lib/http";
 
 type AppointmentSummary = {
   id: string;
@@ -57,7 +58,7 @@ export function AppointmentTable({ appointments, page, totalPages, onPageChange,
 
   const updateStatus = async (id: string, status: AppointmentStatus) => {
     setBusyId(id);
-    const response = await fetch(`/api/appointments/${id}`, {
+    const response = await fetchWithTimeout(`/api/appointments/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status }),

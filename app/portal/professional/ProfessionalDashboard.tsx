@@ -18,6 +18,7 @@ import { AppointmentStatus, AttachmentKind, PrescriptionItemType } from "@prisma
 import { cn } from "@/lib/utils";
 import { calculateAge, maskId, maskName } from "@/lib/professional";
 import { useProfessionalPreferences } from "@/app/portal/professional/components/ProfessionalContext";
+import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
 import type {
   ProfessionalAppointmentDetail,
   ProfessionalDashboardAppointment,
@@ -81,7 +82,7 @@ export function ProfessionalDashboard() {
     let active = true;
     const loadSchedule = async () => {
       try {
-        const response = await fetch(`/api/professional/dashboard?date=${selectedDate}`);
+        const response = await fetchWithRetry(`/api/professional/dashboard?date=${selectedDate}`);
         if (!response.ok) return;
         const data = (await response.json()) as { appointments: ProfessionalDashboardAppointment[] };
         if (!active) return;
@@ -121,7 +122,7 @@ export function ProfessionalDashboard() {
     let active = true;
     const loadDetail = async () => {
       try {
-        const response = await fetch(`/api/professional/appointment/${selectedAppointmentId}`);
+        const response = await fetchWithRetry(`/api/professional/appointment/${selectedAppointmentId}`);
         if (!response.ok) return;
         const data = (await response.json()) as ProfessionalAppointmentDetail;
         if (!active) return;
@@ -182,7 +183,7 @@ export function ProfessionalDashboard() {
   const persistNotes = async () => {
     if (!selectedAppointmentId) return;
     try {
-      await fetch(`/api/professional/appointment/${selectedAppointmentId}/notes`, {
+      await fetchWithTimeout(`/api/professional/appointment/${selectedAppointmentId}/notes`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ content: notesContent }),
@@ -201,7 +202,7 @@ export function ProfessionalDashboard() {
   const addPrescriptionItem = async () => {
     if (!selectedAppointmentId || !prescriptionForm.name.trim()) return;
     try {
-      const response = await fetch(`/api/professional/appointment/${selectedAppointmentId}/prescription`, {
+      const response = await fetchWithTimeout(`/api/professional/appointment/${selectedAppointmentId}/prescription`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ item: { ...prescriptionForm, name: prescriptionForm.name.trim() } }),
@@ -250,7 +251,7 @@ export function ProfessionalDashboard() {
 
     setUploading(true);
     try {
-      const response = await fetch(`/api/professional/appointment/${selectedAppointmentId}/attachments`, {
+      const response = await fetchWithTimeout(`/api/professional/appointment/${selectedAppointmentId}/attachments`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -278,13 +279,13 @@ export function ProfessionalDashboard() {
     try {
       await persistNotes();
       if (markCompleted) {
-        await fetch(`/api/appointments/${selectedAppointmentId}`, {
+        await fetchWithTimeout(`/api/appointments/${selectedAppointmentId}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ status: AppointmentStatus.COMPLETED }),
         });
       }
-      const response = await fetch(`/api/professional/appointment/${selectedAppointmentId}`);
+      const response = await fetchWithRetry(`/api/professional/appointment/${selectedAppointmentId}`);
       if (response.ok) {
         const data = (await response.json()) as ProfessionalAppointmentDetail;
         setAppointmentDetail(data);

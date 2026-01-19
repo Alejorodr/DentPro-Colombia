@@ -6,6 +6,7 @@ import { X } from "@/components/ui/Icon";
 import { AppointmentStatus } from "@prisma/client";
 
 import { formatDateInput } from "@/lib/dates/tz";
+import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
 
 type PatientOption = { id: string; user: { name: string; lastName: string; email: string } };
 
@@ -69,9 +70,9 @@ export function NewAppointmentModal({ open, onClose, onCreated }: NewAppointment
 
     const loadOptions = async () => {
       const [patientsResponse, professionalsResponse, servicesResponse] = await Promise.all([
-        fetch("/api/patients?active=true&pageSize=50"),
-        fetch("/api/professionals?pageSize=50"),
-        fetch("/api/services?active=true&pageSize=50"),
+        fetchWithRetry("/api/patients?active=true&pageSize=50"),
+        fetchWithRetry("/api/professionals?pageSize=50"),
+        fetchWithRetry("/api/services?active=true&pageSize=50"),
       ]);
 
       if (patientsResponse.ok) {
@@ -101,7 +102,7 @@ export function NewAppointmentModal({ open, onClose, onCreated }: NewAppointment
       if (form.serviceId) {
         params.set("serviceId", form.serviceId);
       }
-      const response = await fetch(`/api/slots?${params.toString()}`);
+      const response = await fetchWithRetry(`/api/slots?${params.toString()}`);
       if (response.ok) {
         const data = (await response.json()) as { slots: SlotOption[] };
         const filteredSlots = form.professionalId
@@ -126,7 +127,7 @@ export function NewAppointmentModal({ open, onClose, onCreated }: NewAppointment
 
     setLoading(true);
     setError(null);
-    const response = await fetch("/api/appointments", {
+    const response = await fetchWithTimeout("/api/appointments", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

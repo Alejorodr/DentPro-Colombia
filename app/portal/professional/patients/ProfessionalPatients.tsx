@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { MagnifyingGlass } from "@/components/ui/Icon";
+import { fetchWithRetry } from "@/lib/http";
 
 interface PatientItem {
   id: string;
@@ -23,7 +24,7 @@ export function ProfessionalPatients() {
     const controller = new AbortController();
 
     const load = async () => {
-      const response = await fetch(`/api/professional/patients?q=${encodeURIComponent(query)}&pageSize=50`, {
+      const response = await fetchWithRetry(`/api/professional/patients?q=${encodeURIComponent(query)}&pageSize=50`, {
         signal: controller.signal,
       });
       if (!response.ok) return;

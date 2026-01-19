@@ -6,6 +6,7 @@ import {
   CLINICAL_ATTACHMENT_ALLOWED_TYPES,
   CLINICAL_ATTACHMENT_MAX_BYTES,
 } from "@/lib/clinical/attachments";
+import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
 
 const MAX_LABEL = `${Math.round(CLINICAL_ATTACHMENT_MAX_BYTES / (1024 * 1024))}MB`;
 
@@ -60,7 +61,7 @@ export function ClinicalHistoryPanel({ patientId }: { patientId: string }) {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`/api/clinical/patients/${patientId}/episodes?pageSize=20`);
+      const response = await fetchWithRetry(`/api/clinical/patients/${patientId}/episodes?pageSize=20`);
       if (!response.ok) {
         throw new Error("No se pudo cargar la historia clínica.");
       }
@@ -83,7 +84,7 @@ export function ClinicalHistoryPanel({ patientId }: { patientId: string }) {
     setError(null);
 
     try {
-      const response = await fetch(`/api/clinical/patients/${patientId}/episodes`, {
+      const response = await fetchWithTimeout(`/api/clinical/patients/${patientId}/episodes`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -210,9 +211,9 @@ function EpisodeCard({ episode }: { episode: EpisodeSummary }) {
     setError(null);
     try {
       const [notesResponse, prescriptionsResponse, attachmentsResponse] = await Promise.all([
-        fetch(`/api/clinical/episodes/${episode.id}/notes`),
-        fetch(`/api/clinical/episodes/${episode.id}/prescriptions`),
-        fetch(`/api/clinical/episodes/${episode.id}/attachments`),
+        fetchWithRetry(`/api/clinical/episodes/${episode.id}/notes`),
+        fetchWithRetry(`/api/clinical/episodes/${episode.id}/prescriptions`),
+        fetchWithRetry(`/api/clinical/episodes/${episode.id}/attachments`),
       ]);
       if (!notesResponse.ok || !prescriptionsResponse.ok || !attachmentsResponse.ok) {
         throw new Error("No se pudo cargar el detalle del episodio.");
@@ -241,7 +242,7 @@ function EpisodeCard({ episode }: { episode: EpisodeSummary }) {
     }
     setError(null);
 
-    const response = await fetch(`/api/clinical/episodes/${episode.id}/notes`, {
+    const response = await fetchWithTimeout(`/api/clinical/episodes/${episode.id}/notes`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ type: noteType, content: noteContent }),
@@ -263,7 +264,7 @@ function EpisodeCard({ episode }: { episode: EpisodeSummary }) {
     }
     setError(null);
 
-    const response = await fetch(`/api/clinical/episodes/${episode.id}/prescriptions`, {
+    const response = await fetchWithTimeout(`/api/clinical/episodes/${episode.id}/prescriptions`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ content: prescriptionContent }),
@@ -292,7 +293,7 @@ function EpisodeCard({ episode }: { episode: EpisodeSummary }) {
     formData.set("visibleToPatient", visibleAttachment ? "true" : "false");
 
     try {
-      const response = await fetch(`/api/clinical/episodes/${episode.id}/attachments`, {
+      const response = await fetchWithTimeout(`/api/clinical/episodes/${episode.id}/attachments`, {
         method: "POST",
         body: formData,
       });

@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { errorResponse } from "@/app/api/_utils/response";
-import { getPrismaClient } from "@/lib/prisma";
+import { errorResponse, serviceUnavailableResponse } from "@/app/api/_utils/response";
+import { getPrismaClient, isDatabaseUnavailableError } from "@/lib/prisma";
 import { createReceptionNotifications } from "@/lib/notifications";
 import { AppointmentStatus, TimeSlotStatus } from "@prisma/client";
 import { parseJson } from "@/app/api/_utils/validation";
@@ -78,37 +78,37 @@ export async function POST(request: Request) {
     return errorResponse("Servicio y slot son obligatorios.");
   }
 
-  const prisma = getPrismaClient();
-  const patient = await prisma.patientProfile.findUnique({
-    where: { userId: sessionResult.user.id },
-    include: { user: true },
-  });
-
-  if (!patient) {
-    return errorResponse("Perfil de paciente no encontrado.", 404);
-  }
-
-  const service = await prisma.service.findUnique({
-    where: { id: payload.serviceId },
-  });
-
-  if (!service || !service.active) {
-    return errorResponse("Servicio no disponible.", 404);
-  }
-
-  const timeSlot = await prisma.timeSlot.findUnique({
-    where: { id: payload.slotId },
-  });
-
-  if (!timeSlot) {
-    return errorResponse("Slot no encontrado.", 404);
-  }
-
-  if (timeSlot.status !== TimeSlotStatus.AVAILABLE) {
-    return errorResponse("El slot no está disponible.", 409);
-  }
-
   try {
+    const prisma = getPrismaClient();
+    const patient = await prisma.patientProfile.findUnique({
+      where: { userId: sessionResult.user.id },
+      include: { user: true },
+    });
+
+    if (!patient) {
+      return errorResponse("Perfil de paciente no encontrado.", 404);
+    }
+
+    const service = await prisma.service.findUnique({
+      where: { id: payload.serviceId },
+    });
+
+    if (!service || !service.active) {
+      return errorResponse("Servicio no disponible.", 404);
+    }
+
+    const timeSlot = await prisma.timeSlot.findUnique({
+      where: { id: payload.slotId },
+    });
+
+    if (!timeSlot) {
+      return errorResponse("Slot no encontrado.", 404);
+    }
+
+    if (timeSlot.status !== TimeSlotStatus.AVAILABLE) {
+      return errorResponse("El slot no está disponible.", 409);
+    }
+
     const appointment = await prisma.$transaction(async (tx) => {
       const updatedSlot = await tx.timeSlot.updateMany({
         where: { id: timeSlot.id, status: TimeSlotStatus.AVAILABLE },
@@ -177,6 +177,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json(appointment, { status: 201 });
   } catch (error) {
+    if (isDatabaseUnavailableError(error)) {
+      return serviceUnavailableResponse("Base de datos temporalmente no disponible.", error.retryAfterMs);
+    }
     Sentry.captureException(error);
     logger.error({
       event: "client.appointment.failed",

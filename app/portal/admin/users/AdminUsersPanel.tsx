@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { roleLabels, userRoles, type UserRole } from "@/lib/auth/roles";
+import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
 
 type Specialty = {
   id: string;
@@ -63,8 +64,8 @@ export function AdminUsersPanel() {
       setError(null);
       setLoading(true);
       const [usersResponse, specialtiesResponse] = await Promise.all([
-        fetch("/api/users?pageSize=50"),
-        fetch("/api/specialties"),
+        fetchWithRetry("/api/users?pageSize=50"),
+        fetchWithRetry("/api/specialties"),
       ]);
 
       if (!usersResponse.ok) {
@@ -113,7 +114,7 @@ export function AdminUsersPanel() {
           : undefined,
     };
 
-    const response = await fetch("/api/users", {
+    const response = await fetchWithTimeout("/api/users", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
@@ -149,7 +150,7 @@ export function AdminUsersPanel() {
     setSaving(true);
     setError(null);
 
-    const response = await fetch(`/api/users/${user.id}`, {
+    const response = await fetchWithTimeout(`/api/users/${user.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -183,7 +184,7 @@ export function AdminUsersPanel() {
     setSaving(true);
     setError(null);
 
-    const response = await fetch(`/api/users/${user.id}`, {
+    const response = await fetchWithTimeout(`/api/users/${user.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ password: newPassword }),
@@ -204,7 +205,7 @@ export function AdminUsersPanel() {
 
     setSaving(true);
     setError(null);
-    const response = await fetch(`/api/users/${user.id}`, { method: "DELETE" });
+    const response = await fetchWithTimeout(`/api/users/${user.id}`, { method: "DELETE" });
 
     if (response.ok) {
       setUsers((prev) => prev.filter((item) => item.id !== user.id));

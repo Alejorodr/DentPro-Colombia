@@ -6,6 +6,7 @@ import { MagnifyingGlass, PencilSimple, Trash } from "@/components/ui/Icon";
 
 import { Card } from "@/app/portal/components/ui/Card";
 import { Table } from "@/app/portal/components/ui/Table";
+import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
 
 type ServiceRecord = {
   id: string;
@@ -41,7 +42,7 @@ export function AdminServicesPanel() {
       params.set("q", query.trim());
     }
     params.set("pageSize", "50");
-    const response = await fetch(`/api/services?${params.toString()}`);
+    const response = await fetchWithRetry(`/api/services?${params.toString()}`);
     if (response.ok) {
       const data = (await response.json()) as { data: ServiceRecord[] };
       setServices(data.data ?? []);
@@ -67,7 +68,7 @@ export function AdminServicesPanel() {
 
     setSaving(true);
     setError(null);
-    const response = await fetch("/api/services", {
+    const response = await fetchWithTimeout("/api/services", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -96,7 +97,7 @@ export function AdminServicesPanel() {
     }
     setSaving(true);
     setError(null);
-    const response = await fetch(`/api/services/${editing.id}`, {
+    const response = await fetchWithTimeout(`/api/services/${editing.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -124,7 +125,7 @@ export function AdminServicesPanel() {
       return;
     }
     setSaving(true);
-    await fetch(`/api/services/${service.id}`, { method: "DELETE" });
+    await fetchWithTimeout(`/api/services/${service.id}`, { method: "DELETE" });
     await loadServices();
     setSaving(false);
   };

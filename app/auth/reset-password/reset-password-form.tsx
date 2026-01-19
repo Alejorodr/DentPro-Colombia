@@ -4,6 +4,7 @@ import { useMemo, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
+import { fetchWithTimeout } from "@/lib/http";
 const passwordPolicyMessage =
   "La contraseña debe tener al menos 10 caracteres, una mayúscula, una minúscula y un número.";
 
@@ -49,7 +50,7 @@ export default function ResetPasswordForm({ token }: ResetPasswordFormProps) {
     setStatusMessage(null);
 
     try {
-      const response = await fetch("/api/auth/reset-password", {
+      const response = await fetchWithTimeout("/api/auth/reset-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token, password }),

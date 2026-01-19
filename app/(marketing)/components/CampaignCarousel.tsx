@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
+import { fetchWithRetry } from "@/lib/http";
 type Campaign = {
   id: string | number;
   title: string;
@@ -24,7 +25,7 @@ export function CampaignCarousel() {
     let cancelled = false;
     (async () => {
       try {
-        const response = await fetch("/api/campaigns", { cache: "no-store" });
+        const response = await fetchWithRetry("/api/campaigns", { cache: "no-store" });
         if (!response.ok) {
           throw new Error(`Failed to load campaigns: ${response.status}`);
         }

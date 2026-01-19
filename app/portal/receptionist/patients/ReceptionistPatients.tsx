@@ -6,6 +6,7 @@ import { MagnifyingGlass, PencilSimple, Trash, UserMinus } from "@/components/ui
 
 import { Card } from "@/app/portal/components/ui/Card";
 import { Table } from "@/app/portal/components/ui/Table";
+import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
 
 const emptyForm = {
   name: "",
@@ -39,7 +40,7 @@ export function ReceptionistPatients() {
       params.set("q", query.trim());
     }
     params.set("pageSize", "50");
-    const response = await fetch(`/api/patients?${params.toString()}`);
+    const response = await fetchWithRetry(`/api/patients?${params.toString()}`);
     if (response.ok) {
       const data = (await response.json()) as { data: PatientRecord[] };
       setPatients(data.data ?? []);
@@ -65,7 +66,7 @@ export function ReceptionistPatients() {
 
     setSaving(true);
     setError(null);
-    const response = await fetch("/api/patients", {
+    const response = await fetchWithTimeout("/api/patients", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -97,7 +98,7 @@ export function ReceptionistPatients() {
 
     setSaving(true);
     setError(null);
-    const response = await fetch(`/api/patients/${editing.id}`, {
+    const response = await fetchWithTimeout(`/api/patients/${editing.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -123,7 +124,7 @@ export function ReceptionistPatients() {
 
   const toggleActive = async (patient: PatientRecord) => {
     setSaving(true);
-    await fetch(`/api/patients/${patient.id}`, {
+    await fetchWithTimeout(`/api/patients/${patient.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ active: !patient.active }),
@@ -137,7 +138,7 @@ export function ReceptionistPatients() {
       return;
     }
     setSaving(true);
-    await fetch(`/api/patients/${patient.id}`, { method: "DELETE" });
+    await fetchWithTimeout(`/api/patients/${patient.id}`, { method: "DELETE" });
     await loadPatients();
     setSaving(false);
   };

@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 
+import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
+
 type Specialty = {
   id: string;
   name: string;
@@ -17,7 +19,7 @@ export function AdminSpecialtiesPanel() {
   const [error, setError] = useState<string | null>(null);
 
   const loadSpecialties = async () => {
-    const response = await fetch("/api/specialties");
+    const response = await fetchWithRetry("/api/specialties");
     if (response.ok) {
       const data = (await response.json()) as Specialty[];
       setSpecialties(data);
@@ -36,7 +38,7 @@ export function AdminSpecialtiesPanel() {
 
     setSaving(true);
     setError(null);
-    const response = await fetch("/api/specialties", {
+    const response = await fetchWithTimeout("/api/specialties", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name, defaultSlotDurationMinutes: Number(duration) }),
@@ -58,7 +60,7 @@ export function AdminSpecialtiesPanel() {
   const updateSpecialty = async (specialty: Specialty, updates: Partial<Specialty>) => {
     setSaving(true);
     setError(null);
-    const response = await fetch(`/api/specialties/${specialty.id}`, {
+    const response = await fetchWithTimeout(`/api/specialties/${specialty.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(updates),
@@ -82,7 +84,7 @@ export function AdminSpecialtiesPanel() {
 
     setSaving(true);
     setError(null);
-    const response = await fetch(`/api/specialties/${specialty.id}`, { method: "DELETE" });
+    const response = await fetchWithTimeout(`/api/specialties/${specialty.id}`, { method: "DELETE" });
 
     if (response.ok) {
       setSpecialties((prev) => prev.filter((item) => item.id !== specialty.id));
