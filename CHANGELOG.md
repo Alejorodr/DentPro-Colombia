@@ -1,4 +1,4 @@
 # Changelog
 
 ## [Unreleased]
-- Aún no hay cambios registrados.
+- Eliminado `vercel.json` inválido y actualizado Prisma/CI para despliegues y builds estables.
