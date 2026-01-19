@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import { Bell } from "@/components/ui/Icon";
+import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
 
 type NotificationItem = {
   id: string;
@@ -19,7 +20,7 @@ export function NotificationsBell() {
   const containerRef = useRef<HTMLDivElement>(null);
 
   const loadNotifications = async () => {
-    const response = await fetch("/api/notifications?limit=5");
+    const response = await fetchWithRetry("/api/notifications?limit=5");
     if (response.ok) {
       const data = (await response.json()) as { notifications: NotificationItem[]; unreadCount: number };
       setNotifications(data.notifications);
@@ -43,7 +44,7 @@ export function NotificationsBell() {
   }, []);
 
   const markAsRead = async (id: string) => {
-    const response = await fetch(`/api/notifications/${id}`, { method: "PATCH" });
+    const response = await fetchWithTimeout(`/api/notifications/${id}`, { method: "PATCH" });
     if (response.ok) {
       setNotifications((prev) => prev.map((item) => (item.id === id ? { ...item, readAt: new Date().toISOString() } : item)));
       setUnreadCount((prev) => Math.max(prev - 1, 0));

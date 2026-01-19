@@ -14,6 +14,7 @@ import {
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { cn } from "@/lib/utils";
 import { useProfessionalPreferences } from "@/app/portal/professional/components/ProfessionalContext";
+import { fetchWithRetry } from "@/lib/http";
 
 interface ProfessionalTopbarProps {
   userName: string;
@@ -55,7 +56,7 @@ export function ProfessionalTopbar({ userName, onMenuClick }: ProfessionalTopbar
     let active = true;
     const loadNotifications = async () => {
       try {
-        const response = await fetch("/api/professional/notifications");
+        const response = await fetchWithRetry("/api/professional/notifications");
         if (!response.ok) return;
         const data = (await response.json()) as { notifications: NotificationItem[] };
         if (active) {
@@ -81,7 +82,7 @@ export function ProfessionalTopbar({ userName, onMenuClick }: ProfessionalTopbar
     const timeout = setTimeout(async () => {
       setIsSearching(true);
       try {
-        const response = await fetch(`/api/search?q=${encodeURIComponent(query)}&scope=professional`, {
+        const response = await fetchWithRetry(`/api/search?q=${encodeURIComponent(query)}&scope=professional`, {
           signal: controller.signal,
         });
         if (!response.ok) return;

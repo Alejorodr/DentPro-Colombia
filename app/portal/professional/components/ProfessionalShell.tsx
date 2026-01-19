@@ -8,6 +8,7 @@ import type { ClinicInfo } from "@/lib/clinic";
 import { ProfessionalSidebar } from "@/app/portal/professional/components/ProfessionalSidebar";
 import { ProfessionalTopbar } from "@/app/portal/professional/components/ProfessionalTopbar";
 import { ProfessionalPreferencesProvider } from "@/app/portal/professional/components/ProfessionalContext";
+import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
 
 interface ProfessionalShellProps {
   session: AuthSession;
@@ -32,7 +33,7 @@ export function ProfessionalShell({ session, clinic, children }: ProfessionalShe
     }
     const loadPreferences = async () => {
       try {
-        const response = await fetch("/api/professional/preferences");
+        const response = await fetchWithRetry("/api/professional/preferences");
         if (!response.ok) {
           return;
         }
@@ -54,7 +55,7 @@ export function ProfessionalShell({ session, clinic, children }: ProfessionalShe
   const updatePrivacyMode = async (value: boolean) => {
     setPrivacyMode(value);
     try {
-      await fetch("/api/professional/preferences", {
+      await fetchWithTimeout("/api/professional/preferences", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ privacyMode: value }),

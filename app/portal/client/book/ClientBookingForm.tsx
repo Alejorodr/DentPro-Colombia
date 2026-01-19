@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
 type Service = {
   id: string;
   name: string;
@@ -74,14 +75,14 @@ export function ClientBookingForm() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    void fetch("/api/services?active=true&pageSize=50")
+    void fetchWithRetry("/api/services?active=true&pageSize=50")
       .then((res) => (res.ok ? res.json() : []))
       .then((data: { data?: Service[] }) => setServices(data.data ?? []))
       .catch(() => setServices([]));
   }, []);
 
   useEffect(() => {
-    void fetch("/api/users/me")
+    void fetchWithRetry("/api/users/me")
       .then((res) => (res.ok ? res.json() : null))
       .then((data: UserProfile | null) => {
         if (!data) {
@@ -99,7 +100,7 @@ export function ClientBookingForm() {
   }, []);
 
   useEffect(() => {
-    void fetch("/api/client/dashboard")
+    void fetchWithRetry("/api/client/dashboard")
       .then((res) => (res.ok ? res.json() : null))
       .then((data: DashboardResponse | null) => {
         if (data?.clinic) {
@@ -120,7 +121,7 @@ export function ClientBookingForm() {
     }
     query.set("date", selectedDate);
 
-    void fetch(`/api/slots?${query.toString()}`)
+    void fetchWithRetry(`/api/slots?${query.toString()}`)
       .then((res) => (res.ok ? res.json() : null))
       .then((data: { slots?: Slot[] } | null) => {
         setSlots(data?.slots ?? []);
@@ -138,7 +139,7 @@ export function ClientBookingForm() {
     setSubmitting(true);
     setStatus(null);
 
-    const response = await fetch("/api/client/appointments", {
+    const response = await fetchWithTimeout("/api/client/appointments", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { MagnifyingGlass } from "@/components/ui/Icon";
+import { fetchWithRetry } from "@/lib/http";
 
 type SearchResult = {
   type: string;
@@ -42,7 +43,7 @@ export function AdminGlobalSearch() {
     const handler = window.setTimeout(async () => {
       setLoading(true);
       try {
-        const response = await fetch(`/api/search?q=${encodeURIComponent(query.trim())}&scope=admin`);
+        const response = await fetchWithRetry(`/api/search?q=${encodeURIComponent(query.trim())}&scope=admin`);
         if (response.ok) {
           const data = (await response.json()) as { results: SearchResult[] };
           setResults(data.results);

@@ -9,6 +9,7 @@ import { StatCard } from "@/app/portal/components/ui/StatCard";
 import { AppointmentTable } from "@/app/portal/receptionist/components/AppointmentTable";
 import { CalendarMonth } from "@/app/portal/receptionist/components/CalendarMonth";
 import { NewAppointmentModal } from "@/app/portal/receptionist/components/NewAppointmentModal";
+import { fetchWithRetry } from "@/lib/http";
 
 const viewOptions = [
   { value: "day", label: "Day" },
@@ -131,7 +132,7 @@ export function ReceptionistDashboard() {
       page: String(pageOverride ?? page),
       pageSize: "8",
     });
-    const response = await fetch(`/api/analytics/receptionist?${params.toString()}`);
+    const response = await fetchWithRetry(`/api/analytics/receptionist?${params.toString()}`);
     if (response.ok) {
       const payload = (await response.json()) as AnalyticsResponse;
       setData(payload);
@@ -150,7 +151,7 @@ export function ReceptionistDashboard() {
 
   useEffect(() => {
     const loadCalendar = async () => {
-      const response = await fetch(`/api/analytics/receptionist/calendar?month=${formatMonthInput(month)}`);
+      const response = await fetchWithRetry(`/api/analytics/receptionist/calendar?month=${formatMonthInput(month)}`);
       if (response.ok) {
         const payload = (await response.json()) as CalendarSummaryResponse;
         const nextSummary = payload.days.reduce((acc, day) => {

@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 
+import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
+
 type Template = {
   id: string;
   title: string;
@@ -25,7 +27,7 @@ export function ClientConsentsPanel() {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch("/api/client/consents");
+      const response = await fetchWithRetry("/api/client/consents");
       if (!response.ok) {
         throw new Error("No se pudo cargar la información de consentimientos.");
       }
@@ -45,7 +47,7 @@ export function ClientConsentsPanel() {
 
   const handleAccept = async (templateId: string) => {
     setError(null);
-    const response = await fetch("/api/client/consents", {
+    const response = await fetchWithTimeout("/api/client/consents", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ templateId }),

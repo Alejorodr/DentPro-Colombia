@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
 
+import { fetchWithTimeout } from "@/lib/http";
 const genericMessage =
   "Si el correo existe, te enviaremos instrucciones para restablecer tu contraseña.";
 
@@ -24,7 +25,7 @@ export default function ForgotPasswordPage() {
     setStatusMessage(null);
 
     try {
-      const response = await fetch("/api/auth/forgot-password", {
+      const response = await fetchWithTimeout("/api/auth/forgot-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),

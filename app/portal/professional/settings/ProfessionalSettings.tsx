@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { ShieldCheck } from "@/components/ui/Icon";
 
 import { useProfessionalPreferences } from "@/app/portal/professional/components/ProfessionalContext";
+import { fetchWithRetry } from "@/lib/http";
 
 interface ProfileInfo {
   name: string;
@@ -19,7 +20,7 @@ export function ProfessionalSettings() {
 
   useEffect(() => {
     const load = async () => {
-      const response = await fetch("/api/professional/profile");
+      const response = await fetchWithRetry("/api/professional/profile");
       if (!response.ok) return;
       const data = (await response.json()) as { profile: ProfileInfo };
       setProfile(data.profile);

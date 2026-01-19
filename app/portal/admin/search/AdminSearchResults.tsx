@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
+import { fetchWithRetry } from "@/lib/http";
 type SearchResult = {
   type: string;
   id: string;
@@ -38,7 +39,7 @@ export function AdminSearchResults() {
     const load = async () => {
       setLoading(true);
       try {
-        const response = await fetch(`/api/search?q=${encodeURIComponent(query)}&scope=admin&limit=10`);
+        const response = await fetchWithRetry(`/api/search?q=${encodeURIComponent(query)}&scope=admin&limit=10`);
         if (response.ok) {
           const data = (await response.json()) as { results: SearchResult[] };
           setResults(data.results);

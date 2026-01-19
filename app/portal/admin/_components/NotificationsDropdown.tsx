@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 
 import { Bell } from "@/components/ui/Icon";
+import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
 
 type NotificationItem = {
   id: string;
@@ -43,7 +44,7 @@ export function NotificationsDropdown({ scope = "user" }: NotificationsDropdownP
   const containerRef = useRef<HTMLDivElement>(null);
 
   const loadNotifications = useCallback(async () => {
-    const response = await fetch(`/api/notifications?limit=6&scope=${scope}`);
+    const response = await fetchWithRetry(`/api/notifications?limit=6&scope=${scope}`);
     if (response.ok) {
       const data = (await response.json()) as { notifications: NotificationItem[]; unreadCount: number };
       setNotifications(data.notifications);
@@ -67,7 +68,7 @@ export function NotificationsDropdown({ scope = "user" }: NotificationsDropdownP
   }, []);
 
   const markAsRead = async (id: string) => {
-    const response = await fetch(`/api/notifications/${id}`, { method: "PATCH" });
+    const response = await fetchWithTimeout(`/api/notifications/${id}`, { method: "PATCH" });
     if (response.ok) {
       setNotifications((prev) => prev.map((item) => (item.id === id ? { ...item, readAt: new Date().toISOString() } : item)));
       setUnreadCount((prev) => Math.max(prev - 1, 0));

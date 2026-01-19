@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { Card } from "@/app/portal/components/ui/Card";
 import { Table } from "@/app/portal/components/ui/Table";
+import { fetchWithRetry } from "@/lib/http";
 
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(amount);
@@ -21,7 +22,7 @@ export function ReceptionistBilling() {
 
   useEffect(() => {
     const loadServices = async () => {
-      const response = await fetch("/api/services?active=true&pageSize=50");
+      const response = await fetchWithRetry("/api/services?active=true&pageSize=50");
       if (response.ok) {
         const data = (await response.json()) as { data: ServiceItem[] };
         setServices(data.data ?? []);

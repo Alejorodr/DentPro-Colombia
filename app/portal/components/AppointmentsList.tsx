@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import type { UserRole } from "@/lib/auth/roles";
+import { fetchWithTimeout } from "@/lib/http";
 
 type AppointmentItem = {
   id: string;
@@ -37,7 +38,7 @@ export function AppointmentsList({ initialAppointments, role }: AppointmentsList
 
   const updateStatus = async (id: string, status: string) => {
     setBusyId(id);
-    const response = await fetch(`/api/appointments/${id}`, {
+    const response = await fetchWithTimeout(`/api/appointments/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status }),
@@ -58,7 +59,7 @@ export function AppointmentsList({ initialAppointments, role }: AppointmentsList
     }
 
     setBusyId(id);
-    const response = await fetch(`/api/appointments/${id}/reschedule`, {
+    const response = await fetchWithTimeout(`/api/appointments/${id}/reschedule`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ timeSlotId }),

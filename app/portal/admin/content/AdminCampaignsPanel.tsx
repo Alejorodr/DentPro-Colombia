@@ -6,6 +6,7 @@ import { MagnifyingGlass, PencilSimple, Trash } from "@/components/ui/Icon";
 
 import { Card } from "@/app/portal/components/ui/Card";
 import { Table } from "@/app/portal/components/ui/Table";
+import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
 
 type CampaignRecord = {
   id: string;
@@ -39,7 +40,7 @@ export function AdminCampaignsPanel() {
   const [error, setError] = useState<string | null>(null);
 
   const loadCampaigns = useCallback(async () => {
-    const response = await fetch("/api/campaigns");
+    const response = await fetchWithRetry("/api/campaigns");
     if (response.ok) {
       const data = (await response.json()) as CampaignRecord[];
       setCampaigns(data);
@@ -67,7 +68,7 @@ export function AdminCampaignsPanel() {
     }
     setSaving(true);
     setError(null);
-    const response = await fetch("/api/campaigns", {
+    const response = await fetchWithTimeout("/api/campaigns", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -99,7 +100,7 @@ export function AdminCampaignsPanel() {
     }
     setSaving(true);
     setError(null);
-    const response = await fetch(`/api/campaigns/${editing.id}`, {
+    const response = await fetchWithTimeout(`/api/campaigns/${editing.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -130,7 +131,7 @@ export function AdminCampaignsPanel() {
       return;
     }
     setSaving(true);
-    await fetch(`/api/campaigns/${campaign.id}`, { method: "DELETE" });
+    await fetchWithTimeout(`/api/campaigns/${campaign.id}`, { method: "DELETE" });
     await loadCampaigns();
     setSaving(false);
   };

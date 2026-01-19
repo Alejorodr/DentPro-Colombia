@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { getPrismaClient } from "@/lib/prisma";
-import { errorResponse } from "@/app/api/_utils/response";
+import { getPrismaClient, isDatabaseUnavailableError } from "@/lib/prisma";
+import { errorResponse, serviceUnavailableResponse } from "@/app/api/_utils/response";
 import { buildPaginatedResponse, getPaginationParams } from "@/app/api/_utils/pagination";
 import { createReceptionNotifications } from "@/lib/notifications";
 import { AppointmentStatus, TimeSlotStatus } from "@prisma/client";
@@ -57,47 +57,76 @@ export async function GET(request: Request) {
     return errorResponse("No autorizado.", roleError.status);
   }
 
-  const prisma = getPrismaClient();
-  const { searchParams } = new URL(request.url);
-  const { page, pageSize, skip, take } = getPaginationParams(searchParams);
-  const dateRange = parseDateRange(searchParams);
-  const dateFilter = dateRange
-    ? {
-        timeSlot: {
-          startAt: { gte: dateRange.start, lte: dateRange.end },
-        },
+  try {
+    const prisma = getPrismaClient();
+    const { searchParams } = new URL(request.url);
+    const { page, pageSize, skip, take } = getPaginationParams(searchParams);
+    const dateRange = parseDateRange(searchParams);
+    const dateFilter = dateRange
+      ? {
+          timeSlot: {
+            startAt: { gte: dateRange.start, lte: dateRange.end },
+          },
+        }
+      : {};
+
+    if (["ADMINISTRADOR", "RECEPCIONISTA"].includes(sessionResult.user.role)) {
+      const [appointments, total] = await Promise.all([
+        prisma.appointment.findMany({
+          where: dateFilter,
+          include: {
+            patient: { include: { user: true } },
+            professional: { include: { user: true, specialty: true } },
+            timeSlot: true,
+            service: true,
+          },
+          orderBy: { timeSlot: { startAt: "asc" } },
+          skip,
+          take,
+        }),
+        prisma.appointment.count({ where: dateFilter }),
+      ]);
+      return NextResponse.json(buildPaginatedResponse(appointments, page, pageSize, total));
+    }
+
+    if (sessionResult.user.role === "PROFESIONAL") {
+      const professional = await prisma.professionalProfile.findUnique({
+        where: { userId: sessionResult.user.id },
+      });
+
+      if (!professional) {
+        return NextResponse.json(buildPaginatedResponse([], page, pageSize, 0));
       }
-    : {};
 
-  if (["ADMINISTRADOR", "RECEPCIONISTA"].includes(sessionResult.user.role)) {
-    const [appointments, total] = await Promise.all([
-      prisma.appointment.findMany({
-        where: dateFilter,
-        include: {
-          patient: { include: { user: true } },
-          professional: { include: { user: true, specialty: true } },
-          timeSlot: true,
-          service: true,
-        },
-        orderBy: { timeSlot: { startAt: "asc" } },
-        skip,
-        take,
-      }),
-      prisma.appointment.count({ where: dateFilter }),
-    ]);
-    return NextResponse.json(buildPaginatedResponse(appointments, page, pageSize, total));
-  }
+      const where = { professionalId: professional.id, ...dateFilter };
+      const [appointments, total] = await Promise.all([
+        prisma.appointment.findMany({
+          where,
+          include: {
+            patient: { include: { user: true } },
+            professional: { include: { user: true, specialty: true } },
+            timeSlot: true,
+            service: true,
+          },
+          orderBy: { timeSlot: { startAt: "asc" } },
+          skip,
+          take,
+        }),
+        prisma.appointment.count({ where }),
+      ]);
 
-  if (sessionResult.user.role === "PROFESIONAL") {
-    const professional = await prisma.professionalProfile.findUnique({
+      return NextResponse.json(buildPaginatedResponse(appointments, page, pageSize, total));
+    }
+
+    const patient = await prisma.patientProfile.findUnique({
       where: { userId: sessionResult.user.id },
     });
 
-    if (!professional) {
+    if (!patient) {
       return NextResponse.json(buildPaginatedResponse([], page, pageSize, 0));
     }
 
-    const where = { professionalId: professional.id, ...dateFilter };
+    const where = { patientId: patient.id, ...dateFilter };
     const [appointments, total] = await Promise.all([
       prisma.appointment.findMany({
         where,
@@ -115,34 +144,12 @@ export async function GET(request: Request) {
     ]);
 
     return NextResponse.json(buildPaginatedResponse(appointments, page, pageSize, total));
+  } catch (error) {
+    if (isDatabaseUnavailableError(error)) {
+      return serviceUnavailableResponse("Base de datos temporalmente no disponible.", error.retryAfterMs);
+    }
+    throw error;
   }
-
-  const patient = await prisma.patientProfile.findUnique({
-    where: { userId: sessionResult.user.id },
-  });
-
-  if (!patient) {
-    return NextResponse.json(buildPaginatedResponse([], page, pageSize, 0));
-  }
-
-  const where = { patientId: patient.id, ...dateFilter };
-  const [appointments, total] = await Promise.all([
-    prisma.appointment.findMany({
-      where,
-      include: {
-        patient: { include: { user: true } },
-        professional: { include: { user: true, specialty: true } },
-        timeSlot: true,
-        service: true,
-      },
-      orderBy: { timeSlot: { startAt: "asc" } },
-      skip,
-      take,
-    }),
-    prisma.appointment.count({ where }),
-  ]);
-
-  return NextResponse.json(buildPaginatedResponse(appointments, page, pageSize, total));
 }
 
 export async function POST(request: Request) {
@@ -332,7 +339,20 @@ export async function POST(request: Request) {
       });
     }
 
-    await sendAppointmentEmail("confirmation", appointment);
+    try {
+      await sendAppointmentEmail("confirmation", appointment);
+    } catch (emailError) {
+      logger.warn(
+        {
+          event: "appointment.email.skipped",
+          route: "/api/appointments",
+          appointmentId: appointment.id,
+          requestId,
+          error: emailError,
+        },
+        "No se pudo enviar email, pero la cita fue creada.",
+      );
+    }
 
     logger.info({
       event: "appointment.created",
@@ -349,6 +369,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json(appointment, { status: 201 });
   } catch (error) {
+    if (isDatabaseUnavailableError(error)) {
+      return serviceUnavailableResponse("Base de datos temporalmente no disponible.", error.retryAfterMs);
+    }
     Sentry.captureException(error);
     logger.error(
       {

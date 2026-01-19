@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { Table } from "@/app/portal/components/ui/Table";
+import { fetchWithRetry } from "@/lib/http";
 
 interface ReceptionistPrintViewProps {
   date?: string;
@@ -78,7 +79,7 @@ export function ReceptionistPrintView({ date, view }: ReceptionistPrintViewProps
         page: "1",
         pageSize: "50",
       });
-      const response = await fetch(`/api/analytics/receptionist?${params.toString()}`);
+      const response = await fetchWithRetry(`/api/analytics/receptionist?${params.toString()}`);
       if (response.ok) {
         const data = (await response.json()) as AnalyticsResponse;
         setAppointments(data.appointments);

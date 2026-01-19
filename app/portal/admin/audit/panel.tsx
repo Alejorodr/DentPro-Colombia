@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 
+import { fetchWithRetry } from "@/lib/http";
+
 const defaultFilters = {
   patientId: "",
   userId: "",
@@ -37,7 +39,7 @@ export function AdminAuditPanel() {
     query.set("pageSize", "20");
 
     try {
-      const response = await fetch(`/api/admin/audit/access-logs?${query.toString()}`);
+      const response = await fetchWithRetry(`/api/admin/audit/access-logs?${query.toString()}`);
       if (!response.ok) {
         throw new Error("No se pudieron cargar los logs.");
       }

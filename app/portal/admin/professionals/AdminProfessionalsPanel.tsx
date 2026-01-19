@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 
+import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
+
 type Specialty = {
   id: string;
   name: string;
@@ -36,8 +38,8 @@ export function AdminProfessionalsPanel() {
 
   const loadData = async () => {
     const [professionalsResponse, specialtiesResponse] = await Promise.all([
-      fetch("/api/professionals?pageSize=50"),
-      fetch("/api/specialties"),
+      fetchWithRetry("/api/professionals?pageSize=50"),
+      fetchWithRetry("/api/specialties"),
     ]);
 
     if (professionalsResponse.ok) {
@@ -63,7 +65,7 @@ export function AdminProfessionalsPanel() {
 
     setSaving(true);
     setError(null);
-    const response = await fetch("/api/professionals", {
+    const response = await fetchWithTimeout("/api/professionals", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -98,7 +100,7 @@ export function AdminProfessionalsPanel() {
   const updateProfessional = async (professional: Professional, updates: Partial<Professional>) => {
     setSaving(true);
     setError(null);
-    const response = await fetch(`/api/professionals/${professional.id}`, {
+    const response = await fetchWithTimeout(`/api/professionals/${professional.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(updates),
@@ -122,7 +124,7 @@ export function AdminProfessionalsPanel() {
 
     setSaving(true);
     setError(null);
-    const response = await fetch(`/api/professionals/${professional.id}`, { method: "DELETE" });
+    const response = await fetchWithTimeout(`/api/professionals/${professional.id}`, { method: "DELETE" });
 
     if (response.ok) {
       setProfessionals((prev) => prev.filter((item) => item.id !== professional.id));

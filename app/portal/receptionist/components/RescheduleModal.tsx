@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { X } from "@/components/ui/Icon";
 
 import { formatDateInput } from "@/lib/dates/tz";
+import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
 
 type Slot = {
   id: string;
@@ -34,7 +35,7 @@ export function RescheduleModal({ appointmentId, open, onClose, onUpdated }: Res
     }
 
     const loadSlots = async () => {
-      const response = await fetch(`/api/slots?date=${date}`);
+      const response = await fetchWithRetry(`/api/slots?date=${date}`);
       if (response.ok) {
         const data = (await response.json()) as { slots: Slot[] };
         setSlots(data.slots);
@@ -58,7 +59,7 @@ export function RescheduleModal({ appointmentId, open, onClose, onUpdated }: Res
     setLoading(true);
     setError(null);
     setSuggestions([]);
-    const response = await fetch(`/api/appointments/${appointmentId}/reschedule`, {
+    const response = await fetchWithTimeout(`/api/appointments/${appointmentId}/reschedule`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ timeSlotId: selectedSlotId }),

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { AppointmentsList } from "@/app/portal/components/AppointmentsList";
+import { fetchWithRetry } from "@/lib/http";
 
 type AppointmentItem = Parameters<typeof AppointmentsList>[0]["initialAppointments"][number];
 
@@ -14,7 +15,7 @@ export function AdminAppointmentsPanel() {
   const loadAppointments = async () => {
     setLoading(true);
     setError(null);
-    const response = await fetch("/api/appointments?pageSize=50");
+    const response = await fetchWithRetry("/api/appointments?pageSize=50");
 
     if (response.ok) {
       const data = (await response.json()) as { data: AppointmentItem[] };

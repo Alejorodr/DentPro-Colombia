@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { AppointmentsList } from "@/app/portal/components/AppointmentsList";
+import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
 
 type AppointmentItem = Parameters<typeof AppointmentsList>[0]["initialAppointments"][number];
 
@@ -36,9 +37,9 @@ export function ReceptionistPanel() {
 
   const loadData = async () => {
     const [appointmentsResponse, specialtiesResponse, professionalsResponse] = await Promise.all([
-      fetch("/api/appointments?pageSize=50"),
-      fetch("/api/specialties"),
-      fetch("/api/professionals?pageSize=50"),
+      fetchWithRetry("/api/appointments?pageSize=50"),
+      fetchWithRetry("/api/specialties"),
+      fetchWithRetry("/api/professionals?pageSize=50"),
     ]);
 
     if (appointmentsResponse.ok) {
@@ -81,7 +82,7 @@ export function ReceptionistPanel() {
 
     setSavingPatient(true);
     setError(null);
-    const response = await fetch("/api/patients", {
+    const response = await fetchWithTimeout("/api/patients", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

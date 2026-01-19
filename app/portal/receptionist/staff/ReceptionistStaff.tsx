@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { Card } from "@/app/portal/components/ui/Card";
+import { fetchWithRetry } from "@/lib/http";
 
 const formatDateInput = (date: Date) => {
   const year = date.getFullYear();
@@ -30,7 +31,7 @@ export function ReceptionistStaff() {
   useEffect(() => {
     const loadStaff = async () => {
       const params = new URLSearchParams({ from: date, to: date, date });
-      const response = await fetch(`/api/analytics/receptionist?${params.toString()}`);
+      const response = await fetchWithRetry(`/api/analytics/receptionist?${params.toString()}`);
       if (response.ok) {
         const data = (await response.json()) as AnalyticsResponse;
         setStaff(data.staffOnDuty ?? []);
