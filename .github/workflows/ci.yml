@@ -10,7 +10,7 @@ jobs:
   build-test:
     runs-on: ubuntu-latest
     env:
-      NODE_VERSION: "20"
+      NODE_VERSION: "22"
       DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/dentpro"
       NEXTAUTH_SECRET: "test-secret"
       AUTH_TRUST_HOST: "true"
@@ -19,7 +19,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Use Node.js 20
+      - name: Use Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -28,13 +28,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Restore Next.js cache
-        uses: actions/cache/restore@v4
+      - name: Cache Next.js build
+        uses: actions/cache@v4
         with:
           path: .next/cache
-          key: next-cache-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-${{ env.NODE_VERSION }}
-          restore-keys: |
-            next-cache-${{ runner.os }}-
+          key: ${{ runner.os }}-next-${{ hashFiles('package-lock.json', 'next.config.*', 'tsconfig.json', 'tailwind.config.*') }}
+          restore-keys: ${{ runner.os }}-next-
 
       - name: Lint
         run: npm run lint
@@ -47,9 +46,3 @@ jobs:
 
       - name: Build
         run: npm run build
-
-      - name: Save Next.js cache
-        uses: actions/cache/save@v4
-        with:
-          path: .next/cache
-          key: next-cache-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-${{ env.NODE_VERSION }}

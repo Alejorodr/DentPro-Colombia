@@ -4,12 +4,14 @@ const isProd = process.env.NODE_ENV === "production";
 const csp = [
   "base-uri 'self'",
   "frame-ancestors 'none'",
+  "form-action 'self'",
   "object-src 'none'",
   "img-src 'self' data: https:",
-  "script-src 'self' 'unsafe-eval'",
+  `script-src 'self'${isProd ? "" : " 'unsafe-eval'"}`,
   "style-src 'self' 'unsafe-inline'",
   "font-src 'self' data: https:",
-  "connect-src 'self' https:",
+  `connect-src 'self' https:${isProd ? "" : " http: ws: wss:"}`,
+  "frame-src 'self' https://www.google.com",
 ].join("; ");
 
 const securityHeaders = [
@@ -28,7 +30,7 @@ const securityHeaders = [
     key: "Permissions-Policy",
     value: "camera=(), microphone=(), geolocation=(), interest-cohort=()",
   },
-  { key: "Content-Security-Policy-Report-Only", value: csp },
+  { key: isProd ? "Content-Security-Policy" : "Content-Security-Policy-Report-Only", value: csp },
 ];
 
 const nextConfig: NextConfig = {
@@ -37,7 +39,6 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       { protocol: "https", hostname: "images.unsplash.com" },
       { protocol: "https", hostname: "plus.unsplash.com" },
-      { protocol: "https", hostname: "**" },
     ],
   },
   async headers() {

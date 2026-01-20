@@ -141,31 +141,40 @@ async function withRetry<T>(operation: () => Promise<T>) {
   }
 }
 
+function assertNeonSslMode(url: string | undefined, name: string) {
+  if (!url) {
+    return;
+  }
+  const normalizedUrl = url.toLowerCase();
+  if (!normalizedUrl.includes(".neon.tech")) {
+    return;
+  }
+  if (!normalizedUrl.includes("sslmode=verify-full")) {
+    throw new Error(`Set sslmode=verify-full on ${name}.`);
+  }
+}
+
 function makeClient(): PrismaClient {
   const pooledUrl = process.env.DATABASE_URL;
-  const directUrl = process.env.DATABASE_URL_UNPOOLED ?? pooledUrl;
   if (!pooledUrl) {
     throw new Error("DATABASE_URL is not set");
   }
 
+  if (process.env.NODE_ENV === "production") {
+    assertNeonSslMode(pooledUrl, "DATABASE_URL");
+    assertNeonSslMode(process.env.DATABASE_URL_UNPOOLED, "DATABASE_URL_UNPOOLED");
+  }
+
+  const directUrl = process.env.DATABASE_URL_UNPOOLED ?? pooledUrl;
   const selectedUrl = process.env.NODE_ENV === "production" ? pooledUrl : directUrl;
   if (!selectedUrl) {
     throw new Error("DATABASE_URL is not set");
   }
 
-  const normalizedUrl = selectedUrl.toLowerCase();
-  const isLocalhost =
-    normalizedUrl.includes("localhost") ||
-    normalizedUrl.includes("127.0.0.1") ||
-    normalizedUrl.includes("[::1]");
-  const isNeonHost = normalizedUrl.includes(".neon.tech") || normalizedUrl.includes("neon");
-  const shouldRelaxTls = !isLocalhost && isNeonHost;
-
   const pool =
     globalThis.__prismaPool ??
     new Pool({
       connectionString: selectedUrl,
-      ...(shouldRelaxTls ? { ssl: { rejectUnauthorized: false } } : {}),
     });
   const adapter = new PrismaPg(pool);
 
