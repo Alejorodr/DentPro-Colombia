@@ -4,8 +4,9 @@ import { AppointmentStatus, InsuranceStatus, Role, TimeSlotStatus } from "@prism
 
 import { getPrismaClient } from "@/lib/prisma";
 import {
-  enforceRateLimit,
+  enforceOpsRateLimit,
   getOpsKey,
+  isOpsIpAllowed,
   isOpsEnabled,
   respondGenericError,
   respondNotFound,
@@ -28,7 +29,11 @@ export async function POST(request: Request) {
     return respondNotFound();
   }
 
-  const rateLimitResponse = enforceRateLimit(request);
+  if (!isOpsIpAllowed(request)) {
+    return respondUnauthorized();
+  }
+
+  const rateLimitResponse = await enforceOpsRateLimit(request);
   if (rateLimitResponse) {
     return rateLimitResponse;
   }

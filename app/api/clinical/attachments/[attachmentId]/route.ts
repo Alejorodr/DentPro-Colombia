@@ -1,6 +1,4 @@
 import { NextResponse } from "next/server";
-import { del } from "@vercel/blob";
-
 import { errorResponse } from "@/app/api/_utils/response";
 import { getRouteFromRequest, getRequestId } from "@/app/api/clinical/_utils";
 import { logClinicalAccess } from "@/lib/clinical/access-log";
@@ -46,8 +44,6 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ a
       deletedByUserId: sessionResult.user.id,
     },
   });
-
-  await del(attachment.storageKey);
 
   await logClinicalAccess({
     userId: sessionResult.user.id,

@@ -3,10 +3,6 @@ import { getToken } from "next-auth/jwt";
 
 import { getDefaultDashboardPath, isUserRole, roleFromSlug, type UserRole } from "@/lib/auth/roles";
 
-const API_RATE_LIMIT_WINDOW_MS = 60_000;
-const API_RATE_LIMIT_MAX = 60;
-const apiRateLimitStore = new Map<string, { count: number; resetAt: number }>();
-
 function resolveRequestId(request: NextRequest) {
   const existing = request.headers.get("x-request-id");
   if (existing) {
@@ -16,14 +12,6 @@ function resolveRequestId(request: NextRequest) {
     return crypto.randomUUID();
   }
   return Math.random().toString(16).slice(2);
-}
-
-function getClientIp(request: NextRequest) {
-  const forwarded = request.headers.get("x-forwarded-for");
-  if (forwarded) {
-    return forwarded.split(",")[0]?.trim() ?? "unknown";
-  }
-  return request.headers.get("x-real-ip")?.trim() || request.headers.get("cf-connecting-ip")?.trim() || "unknown";
 }
 
 function withRequestId(response: NextResponse, requestId: string) {
@@ -55,7 +43,11 @@ export default async function proxy(request: NextRequest) {
   const token = await getToken({ req: request, secret });
   let role = resolveRole(token);
   const testRoleCookie = request.cookies.get("dentpro-test-role")?.value ?? "";
-  const bypassEnabled = isLocalhost && testRoleCookie.length > 0;
+  const bypassEnabled =
+    process.env.NODE_ENV !== "production" &&
+    process.env.TEST_AUTH_BYPASS === "1" &&
+    isLocalhost &&
+    testRoleCookie.length > 0;
 
   if (!role && bypassEnabled) {
     const testRole = testRoleCookie || "ADMINISTRADOR";
@@ -65,32 +57,6 @@ export default async function proxy(request: NextRequest) {
   }
   const isLoginRoute = pathname === "/auth/login" || pathname === "/login";
   const isPortalRoute = pathname.startsWith("/portal");
-
-  if (pathname.startsWith("/api/")) {
-    const ip = getClientIp(request);
-    const key = `${ip}:${pathname}`;
-    const now = Date.now();
-    const entry = apiRateLimitStore.get(key);
-    if (!entry || entry.resetAt <= now) {
-      apiRateLimitStore.set(key, { count: 1, resetAt: now + API_RATE_LIMIT_WINDOW_MS });
-    } else {
-      entry.count += 1;
-      if (entry.count > API_RATE_LIMIT_MAX) {
-        const retryAfter = Math.max(1, Math.ceil((entry.resetAt - now) / 1000));
-        const response = NextResponse.json(
-          { error: "Demasiadas solicitudes.", retryAfter },
-          {
-            status: 429,
-            headers: {
-              "Retry-After": retryAfter.toString(),
-            },
-          },
-        );
-        return withRequestId(response, requestId);
-      }
-      apiRateLimitStore.set(key, entry);
-    }
-  }
 
   if (isLoginRoute && role) {
     const redirectUrl = request.nextUrl.clone();

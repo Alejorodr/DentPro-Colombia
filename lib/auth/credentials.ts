@@ -56,6 +56,7 @@ export async function authorizeCredentials(credentials?: CredentialsInput) {
     role: user.role,
     professionalId: user.professionalId ?? null,
     patientId: user.patientId ?? null,
+    passwordChangedAt: user.passwordChangedAt ?? null,
     defaultDashboardPath: getDefaultDashboardPath(user.role),
   } as const;
 }

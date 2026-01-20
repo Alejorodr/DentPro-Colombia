@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { put } from "@vercel/blob";
 
 import { errorResponse } from "@/app/api/_utils/response";
 import { getRouteFromRequest, getRequestId } from "@/app/api/clinical/_utils";
@@ -9,7 +8,10 @@ import { getProfessionalProfile } from "@/lib/clinical/access";
 import {
   CLINICAL_ATTACHMENT_ALLOWED_TYPES,
   CLINICAL_ATTACHMENT_MAX_BYTES,
+  buildClinicalAttachmentChecksum,
+  buildClinicalAttachmentStorageKey,
   isAllowedClinicalAttachmentType,
+  sanitizeClinicalAttachmentFilename,
 } from "@/lib/clinical/attachments";
 import { getPrismaClient } from "@/lib/prisma";
 import { requireSession } from "@/lib/authz";
@@ -146,22 +148,22 @@ export async function POST(request: Request, { params }: { params: Promise<{ epi
     );
   }
 
-  const key = `clinical/${episodeId}/${crypto.randomUUID()}-${file.name}`;
-  const blob = await put(key, file, {
-    access: "public",
-    contentType: file.type,
-  });
+  const sanitizedFilename = sanitizeClinicalAttachmentFilename(file.name, file.type);
+  const key = buildClinicalAttachmentStorageKey({ episodeId, filename: sanitizedFilename });
+  const checksum = await buildClinicalAttachmentChecksum(file);
+  const fileBuffer = Buffer.from(await file.arrayBuffer());
 
   const attachment = await prisma.clinicalAttachment.create({
     data: {
       episodeId: episode.id,
       patientId: episode.patientId,
       uploadedByUserId: sessionResult.user.id,
-      filename: file.name,
+      filename: sanitizedFilename,
       mimeType: file.type,
       size: file.size,
-      storageKey: blob.pathname ?? key,
-      url: blob.url,
+      storageKey: key,
+      data: fileBuffer,
+      checksum,
       visibleToPatient: parsed.data.visibleToPatient ?? false,
     },
   });
@@ -175,7 +177,19 @@ export async function POST(request: Request, { params }: { params: Promise<{ epi
     metadata: { episodeId, attachmentId: attachment.id, mimeType: file.type },
   });
 
-  return NextResponse.json({ attachment }, { status: 201 });
+  return NextResponse.json(
+    {
+      attachment: {
+        id: attachment.id,
+        filename: attachment.filename,
+        mimeType: attachment.mimeType,
+        size: attachment.size,
+        createdAt: attachment.createdAt,
+        visibleToPatient: attachment.visibleToPatient,
+      },
+    },
+    { status: 201 },
+  );
 }
 
 export const allowedAttachmentTypes = CLINICAL_ATTACHMENT_ALLOWED_TYPES;

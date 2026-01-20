@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { head } from "@vercel/blob";
 
 import { errorResponse } from "@/app/api/_utils/response";
 import { getRouteFromRequest, getRequestId } from "@/app/api/clinical/_utils";
@@ -32,12 +31,21 @@ export async function GET(request: Request, { params }: { params: Promise<{ atta
     return errorResponse("Adjunto no encontrado.", 404);
   }
 
+  if (!attachment.data) {
+    return errorResponse("Adjunto no disponible.", 410);
+  }
+
   if (role === "PACIENTE") {
     const patient = await prisma.patientProfile.findUnique({
       where: { userId: sessionResult.user.id },
       select: { id: true },
     });
-    if (!patient || patient.id !== attachment.patientId || !attachment.visibleToPatient) {
+    if (
+      !patient ||
+      patient.id !== attachment.patientId ||
+      !attachment.visibleToPatient ||
+      !attachment.episode.visibleToPatient
+    ) {
       return errorResponse("No autorizado.", 403);
     }
   }
@@ -49,7 +57,10 @@ export async function GET(request: Request, { params }: { params: Promise<{ atta
     }
   }
 
-  const blob = await head(attachment.url);
+  const safeFilename = attachment.filename.replace(/[\r\n"]/g, "_");
+  const contentDisposition = `attachment; filename="${safeFilename}"; filename*=UTF-8''${encodeURIComponent(
+    safeFilename,
+  )}`;
 
   await logClinicalAccess({
     userId: sessionResult.user.id,
@@ -60,5 +71,13 @@ export async function GET(request: Request, { params }: { params: Promise<{ atta
     metadata: { attachmentId },
   });
 
-  return NextResponse.redirect(blob.downloadUrl);
+  return new NextResponse(attachment.data, {
+    status: 200,
+    headers: {
+      "Content-Type": attachment.mimeType,
+      "Content-Length": attachment.size.toString(),
+      "Content-Disposition": contentDisposition,
+      "Cache-Control": "private, no-store",
+    },
+  });
 }
