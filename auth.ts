@@ -17,6 +17,7 @@ type AuthenticatedUser = {
   professionalId?: string | null;
   patientId?: string | null;
   defaultDashboardPath?: string;
+  passwordChangedAt?: Date | null;
 };
 export type AuthSession = { user?: AuthenticatedUser | null } | null;
 type SessionToken = JWT & {
@@ -25,6 +26,8 @@ type SessionToken = JWT & {
   professionalId?: string | null;
   patientId?: string | null;
   defaultDashboardPath?: string;
+  passwordChangedAt?: string | null;
+  invalidated?: boolean;
 };
 
 const appBaseUrl = process.env.NEXTAUTH_URL ?? "";
@@ -56,6 +59,7 @@ export const authOptions = {
       return baseUrl;
     },
     async jwt({ token, user }: { token: SessionToken; user?: AuthenticatedUser | null }) {
+      let dbUser: Awaited<ReturnType<typeof findUserById>> | null = null;
       if (user) {
         const roleCandidate =
           typeof (user as { role?: unknown }).role === "string" ? (user as { role: string }).role : "";
@@ -67,6 +71,8 @@ export const authOptions = {
         token.userId = userIdCandidate ?? token.userId ?? token.sub ?? "";
         token.professionalId = (user as { professionalId?: string | null }).professionalId ?? token.professionalId;
         token.patientId = (user as { patientId?: string | null }).patientId ?? token.patientId;
+        token.passwordChangedAt =
+          user.passwordChangedAt instanceof Date ? user.passwordChangedAt.toISOString() : token.passwordChangedAt;
 
         const defaultPathCandidate =
           typeof (user as { defaultDashboardPath?: unknown }).defaultDashboardPath === "string"
@@ -75,11 +81,12 @@ export const authOptions = {
 
         token.defaultDashboardPath = defaultPathCandidate ?? token.defaultDashboardPath;
       } else if (token.sub && !token.role) {
-        const dbUser = await findUserById(token.sub);
+        dbUser = await findUserById(token.sub);
         if (dbUser) {
           token.role = dbUser.role;
           token.professionalId = dbUser.professionalId ?? null;
           token.patientId = dbUser.patientId ?? null;
+          token.passwordChangedAt = dbUser.passwordChangedAt ? dbUser.passwordChangedAt.toISOString() : null;
         }
       }
 
@@ -88,6 +95,18 @@ export const authOptions = {
       }
       if (!token.role) {
         token.role = "PACIENTE";
+      }
+
+      const tokenIssuedAt = typeof token.iat === "number" ? token.iat * 1000 : null;
+      if (token.sub) {
+        if (!dbUser) {
+          dbUser = await findUserById(token.sub);
+        }
+        if (dbUser?.passwordChangedAt && tokenIssuedAt) {
+          token.invalidated = tokenIssuedAt < dbUser.passwordChangedAt.getTime();
+        } else {
+          token.invalidated = false;
+        }
       }
 
       return token;
@@ -99,6 +118,10 @@ export const authOptions = {
       session: { user?: AuthenticatedUser | null } & Record<string, unknown>;
       token: SessionToken;
     }) {
+      if (token.invalidated) {
+        return null;
+      }
+
       const role = token.role ?? "";
       const resolvedRole = isUserRole(role) ? role : "PACIENTE";
       const userId =
@@ -142,7 +165,8 @@ export async function auth(): Promise<AuthSession> {
 
   const baseUrl = process.env.NEXTAUTH_URL ?? "";
   const isLocalhost = baseUrl.includes("localhost") || baseUrl.includes("127.0.0.1");
-  const allowTestSession = process.env.NODE_ENV !== "production" && isLocalhost;
+  const allowTestSession =
+    process.env.NODE_ENV !== "production" && isLocalhost && process.env.TEST_AUTH_BYPASS === "1";
   if (!allowTestSession) {
     return session;
   }

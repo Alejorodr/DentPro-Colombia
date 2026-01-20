@@ -47,6 +47,7 @@ describe("auth options", () => {
       role: "RECEPCIONISTA",
       professionalId: null,
       patientId: null,
+      passwordChangedAt: null,
     });
 
     const jwtCallback = authOptions.callbacks.jwt as unknown as (params: {
@@ -82,5 +83,42 @@ describe("auth options", () => {
         role: "PACIENTE",
       },
     });
+  });
+
+  it("invalidates sessions issued before a password reset", async () => {
+    const passwordChangedAt = new Date("2024-01-02T00:00:00.000Z");
+    mockedFindUserById.mockResolvedValue({
+      id: "user-5",
+      name: "User",
+      email: "user@dentpro.test",
+      role: "ADMINISTRADOR",
+      professionalId: null,
+      patientId: null,
+      passwordChangedAt,
+    });
+
+    const jwtCallback = authOptions.callbacks.jwt as unknown as (params: {
+      token: Record<string, unknown>;
+      user?: Record<string, unknown> | null;
+    }) => Promise<Record<string, unknown>>;
+
+    const sessionCallback = authOptions.callbacks.session as unknown as (params: {
+      session: Record<string, unknown>;
+      token: Record<string, unknown>;
+    }) => Promise<Record<string, unknown> | null>;
+
+    const token = await jwtCallback({
+      token: { sub: "user-5", iat: Math.floor(new Date("2024-01-01T00:00:00.000Z").getTime() / 1000) },
+      user: null,
+    });
+
+    expect(token).toMatchObject({ invalidated: true });
+
+    const session = await sessionCallback({
+      session: { user: { name: "User", email: "user@dentpro.test", image: null } },
+      token,
+    });
+
+    expect(session).toBeNull();
   });
 });

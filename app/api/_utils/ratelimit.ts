@@ -51,6 +51,7 @@ function getRatelimiter(config: RateLimitConfig) {
 export async function enforceRateLimit(request: Request, key: string, config: RateLimitConfig) {
   const ip = getClientIp(request);
   const identifier = `${key}:${ip}`;
+  const isProd = process.env.NODE_ENV === "production";
 
   const limiter = getRatelimiter(config);
   if (limiter) {
@@ -68,6 +69,10 @@ export async function enforceRateLimit(request: Request, key: string, config: Ra
         },
       );
     }
+    return null;
+  }
+
+  if (isProd) {
     return null;
   }
 

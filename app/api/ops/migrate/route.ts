@@ -5,8 +5,9 @@ import { promisify } from "node:util";
 import { getRequestId } from "@/app/api/_utils/request";
 import { logger } from "@/lib/logger";
 import {
-  enforceRateLimit,
+  enforceOpsRateLimit,
   getOpsKey,
+  isOpsIpAllowed,
   isOpsEnabled,
   respondGenericError,
   respondNotFound,
@@ -32,7 +33,17 @@ export async function POST(request: Request) {
     return respondNotFound();
   }
 
-  const rateLimitResponse = enforceRateLimit(request);
+  if (!isOpsIpAllowed(request)) {
+    logger.warn({
+      event: "ops.migrate.ip_blocked",
+      route: "/api/ops/migrate",
+      requestId,
+      status: 403,
+    });
+    return respondUnauthorized();
+  }
+
+  const rateLimitResponse = await enforceOpsRateLimit(request);
   if (rateLimitResponse) {
     logger.warn({
       event: "ops.migrate.rate_limited",

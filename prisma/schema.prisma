@@ -96,6 +96,7 @@ model User {
   lastName     String
   privacyMode  Boolean              @default(false)
   createdAt    DateTime             @default(now())
+  passwordChangedAt DateTime?
   updatedAt    DateTime             @updatedAt
   professional ProfessionalProfile?
   patient      PatientProfile?
@@ -257,7 +258,6 @@ model Prescription {
   items         PrescriptionItem[]
 
   @@index([episodeId])
-  @@index([patientId])
   @@index([professionalId])
 }
 
@@ -351,7 +351,7 @@ model ClinicalAttachment {
   mimeType        String
   size            Int
   storageKey      String
-  url             String
+  data            Bytes?
   checksum        String?
   visibleToPatient Boolean    @default(false)
   createdAt       DateTime    @default(now())

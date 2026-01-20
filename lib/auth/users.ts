@@ -7,6 +7,7 @@ type UserRecord = {
   name: string;
   email: string;
   role: string;
+  passwordChangedAt?: Date | null;
   professional?: { id: string } | null;
   patient?: { id: string } | null;
 };
@@ -18,6 +19,7 @@ export interface DatabaseUser {
   role: UserRole;
   professionalId?: string | null;
   patientId?: string | null;
+  passwordChangedAt?: Date | null;
 }
 
 function mapUser(user: UserRecord | null): DatabaseUser | null {
@@ -36,6 +38,7 @@ function mapUser(user: UserRecord | null): DatabaseUser | null {
     role: user.role,
     professionalId: user.professional?.id ?? null,
     patientId: user.patient?.id ?? null,
+    passwordChangedAt: user.passwordChangedAt ?? null,
   };
 }
 
@@ -51,6 +54,7 @@ export async function authenticateUser(email: string, password: string): Promise
       email: true,
       passwordHash: true,
       role: true,
+      passwordChangedAt: true,
       professional: { select: { id: true } },
       patient: { select: { id: true } },
     },
@@ -79,6 +83,7 @@ export async function findUserById(id: string): Promise<DatabaseUser | null> {
       name: true,
       email: true,
       role: true,
+      passwordChangedAt: true,
       professional: { select: { id: true } },
       patient: { select: { id: true } },
     },
