@@ -7,7 +7,7 @@ This phase focuses on critical quick wins: rate limiting, input validation, pagi
 - **Rate limiting** on sensitive endpoints (forgot/reset password, appointment creation, search) with Upstash Redis support and an in-memory fallback for local development.
 - **Input validation** with Zod for auth and appointment creation, plus bounded search queries.
 - **Pagination** for large listings (`/api/appointments`, `/api/patients`, `/api/professionals`, `/api/services`, `/api/professional/patients`).
-- **Security headers** (HSTS in production, CSP report-only, Permissions-Policy, Referrer-Policy, X-Frame-Options, X-Content-Type-Options).
+- **Security headers** (HSTS in production, CSP enforced in prod/report-only in dev, Permissions-Policy, Referrer-Policy, X-Frame-Options, X-Content-Type-Options).
 - **Environment separation** documented for Vercel.
 - **Observability baseline** with Sentry client/server initialization and `/api/_monitoring` endpoint.
 - **Structured audit logs** for appointment creation and user role changes/deletions.
@@ -15,7 +15,7 @@ This phase focuses on critical quick wins: rate limiting, input validation, pagi
 
 ## Pending / Phase 2-3
 - Alerting/notification routing for Sentry events and dashboards.
-- Stronger CSP with nonces and removal of `unsafe-eval` where possible.
+- Stronger CSP with nonces and CSP reporting endpoint.
 - Additional authorization checks for remaining ID-based endpoints not touched in this phase.
 
 ## Dependency audit (Phase 4-7)
@@ -34,8 +34,7 @@ This phase focuses on critical quick wins: rate limiting, input validation, pagi
 
 ## Environment warnings & recommendations
 - `npm warn Unknown env config "http-proxy"` appears in CI; no `.npmrc` exists in the repo, so this likely comes from runner environment configuration (unset `http-proxy` if possible).
-- `pg` TLS defaults may tighten in future releases; update Vercel `DATABASE_URL` to include `sslmode=verify-full` (preferred) or `uselibpqcompat=true&sslmode=require`.
-- Prisma's pooled Postgres client currently sets `ssl.rejectUnauthorized=false` for provider compatibility; remove once the connection string enforces `sslmode=verify-full`.
+- `pg` TLS defaults may tighten in future releases; update Vercel `DATABASE_URL` and `DATABASE_URL_UNPOOLED` to include `sslmode=verify-full`.
 
 ## Environment configuration (Vercel)
 ### Prisma (database connection)

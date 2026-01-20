@@ -17,9 +17,15 @@ if (!databaseUrl) {
   throw new Error("DATABASE_URL is not set");
 }
 
+if (process.env.NODE_ENV === "production") {
+  const normalizedUrl = databaseUrl.toLowerCase();
+  if (normalizedUrl.includes(".neon.tech") && !normalizedUrl.includes("sslmode=verify-full")) {
+    throw new Error("Set sslmode=verify-full on DATABASE_URL.");
+  }
+}
+
 const pool = new Pool({
   connectionString: databaseUrl,
-  ssl: { rejectUnauthorized: false },
 });
 
 const prisma = new PrismaClient({ adapter: new PrismaPg(pool) });
