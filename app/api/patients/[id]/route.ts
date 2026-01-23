@@ -5,6 +5,7 @@ import { errorResponse } from "@/app/api/_utils/response";
 import { parseJson } from "@/app/api/_utils/validation";
 import { requireRole, requireSession } from "@/lib/authz";
 import { getPrismaClient } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 
 const updatePatientSchema = z.object({
   name: z.string().trim().min(1).max(120).optional(),
@@ -42,24 +43,34 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     return errorResponse("Paciente no encontrado.", 404);
   }
 
-  const updated = await prisma.user.update({
-    where: { id: patient.userId },
-    data: {
-      email: payload.email?.toLowerCase() ?? undefined,
-      name: payload.name?.trim() ?? undefined,
-      lastName: payload.lastName?.trim() ?? undefined,
-      patient: {
-        update: {
-          phone: payload.phone?.trim() || undefined,
-          documentId: payload.documentId?.trim() || undefined,
-          active: typeof payload.active === "boolean" ? payload.active : undefined,
+  try {
+    const updated = await prisma.user.update({
+      where: { id: patient.userId },
+      data: {
+        email: payload.email?.toLowerCase() ?? undefined,
+        name: payload.name?.trim() ?? undefined,
+        lastName: payload.lastName?.trim() ?? undefined,
+        patient: {
+          update: {
+            phone: payload.phone?.trim() || undefined,
+            documentId: payload.documentId?.trim() || undefined,
+            active: typeof payload.active === "boolean" ? payload.active : undefined,
+          },
         },
       },
-    },
-    include: { patient: true },
-  });
+      include: { patient: true },
+    });
 
-  return NextResponse.json(updated);
+    return NextResponse.json(updated);
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      const target = Array.isArray(error.meta?.target) ? error.meta?.target : [];
+      if (target.includes("email")) {
+        return errorResponse("El correo ya existe.", 400);
+      }
+    }
+    return errorResponse("No se pudo actualizar el paciente.");
+  }
 }
 
 export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {

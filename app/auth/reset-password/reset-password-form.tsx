@@ -5,8 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { fetchWithTimeout } from "@/lib/http";
-const passwordPolicyMessage =
-  "La contraseña debe tener al menos 10 caracteres, una mayúscula, una minúscula y un número.";
+import { PASSWORD_POLICY_MESSAGE, PASSWORD_POLICY_REGEX } from "@/lib/auth/password-policy";
 
 type ResetPasswordFormProps = {
   token: string;
@@ -24,9 +23,7 @@ export default function ResetPasswordForm({ token }: ResetPasswordFormProps) {
     return token.length > 0 && password.length > 0 && confirmPassword.length > 0 && !isSubmitting;
   }, [token, password, confirmPassword, isSubmitting]);
 
-  const passwordPolicyOk = useMemo(() => {
-    return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{10,}$/.test(password);
-  }, [password]);
+  const passwordPolicyOk = useMemo(() => PASSWORD_POLICY_REGEX.test(password), [password]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -36,7 +33,7 @@ export default function ResetPasswordForm({ token }: ResetPasswordFormProps) {
     }
 
     if (!passwordPolicyOk) {
-      setErrorMessage(passwordPolicyMessage);
+      setErrorMessage(PASSWORD_POLICY_MESSAGE);
       return;
     }
 
@@ -141,7 +138,7 @@ export default function ResetPasswordForm({ token }: ResetPasswordFormProps) {
             />
           </label>
 
-          <p className="text-xs text-slate-500 dark:text-slate-400">{passwordPolicyMessage}</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400">{PASSWORD_POLICY_MESSAGE}</p>
 
           <button type="submit" className="btn-primary w-full justify-center text-sm" disabled={!canSubmit}>
             {isSubmitting ? "Actualizando..." : "Guardar contraseña"}

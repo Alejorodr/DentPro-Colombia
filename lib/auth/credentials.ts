@@ -49,6 +49,7 @@ export async function authorizeCredentials(credentials?: CredentialsInput) {
     return null;
   }
 
+  // TODO: Implement 2FA verification for ADMINISTRADOR/PROFESIONAL when mfaEnabled is true.
   return {
     id: user.id,
     name: user.name,

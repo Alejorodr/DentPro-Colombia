@@ -7,7 +7,6 @@ import {
   enforceOpsRateLimit,
   getOpsKey,
   isOpsIpAllowed,
-  isOpsEnabled,
   respondGenericError,
   respondNotFound,
   respondUnauthorized,
@@ -25,7 +24,7 @@ function requireSeedEnv(name: string): string {
 
 // TEMPORAL: endpoint de emergencia para crear/actualizar el admin.
 export async function POST(request: Request) {
-  if (!isOpsEnabled()) {
+  if (process.env.NODE_ENV !== "development") {
     return respondNotFound();
   }
 

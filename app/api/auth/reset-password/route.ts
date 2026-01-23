@@ -4,6 +4,7 @@ import { z } from "zod";
 
 import { getPrismaClient } from "@/lib/prisma";
 import { hashPasswordResetToken, validatePasswordPolicy } from "@/lib/auth/password-reset";
+import { PASSWORD_POLICY_MESSAGE, PASSWORD_POLICY_REGEX } from "@/lib/auth/password-policy";
 import { parseJson } from "@/app/api/_utils/validation";
 import { enforceRateLimit } from "@/app/api/_utils/ratelimit";
 import { getRequestId } from "@/app/api/_utils/request";
@@ -12,7 +13,7 @@ import * as Sentry from "@sentry/nextjs";
 
 const resetPasswordSchema = z.object({
   token: z.string().trim().min(10).max(256),
-  password: z.string().min(10).max(200),
+  password: z.string().min(8).max(200).regex(PASSWORD_POLICY_REGEX, PASSWORD_POLICY_MESSAGE),
 });
 
 export async function POST(request: Request) {

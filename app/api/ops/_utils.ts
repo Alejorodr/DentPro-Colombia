@@ -8,10 +8,6 @@ const OPS_RATE_LIMIT_CONFIG = {
   windowMs: 60_000,
 } as const;
 
-export function isOpsEnabled(): boolean {
-  return process.env.OPS_ENABLED === "true";
-}
-
 export function getOpsKey(): string | null {
   const value = process.env.OPS_KEY?.trim();
   return value && value.length > 0 ? value : null;

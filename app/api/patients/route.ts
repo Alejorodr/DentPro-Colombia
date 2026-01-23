@@ -8,10 +8,11 @@ import { parseJson } from "@/app/api/_utils/validation";
 import { getPrismaClient } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import { requireRole, requireSession } from "@/lib/authz";
+import { PASSWORD_POLICY_MESSAGE, PASSWORD_POLICY_REGEX } from "@/lib/auth/password-policy";
 
 const createPatientSchema = z.object({
   email: z.string().trim().email().max(120),
-  password: z.string().min(8).max(200),
+  password: z.string().min(8).max(200).regex(PASSWORD_POLICY_REGEX, PASSWORD_POLICY_MESSAGE),
   name: z.string().trim().min(1).max(120),
   lastName: z.string().trim().min(1).max(120),
   phone: z.string().trim().max(30).optional(),
@@ -102,7 +103,13 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json(user, { status: 201 });
-  } catch {
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      const target = Array.isArray(error.meta?.target) ? error.meta?.target : [];
+      if (target.includes("email")) {
+        return errorResponse("El correo ya existe.", 400);
+      }
+    }
     return errorResponse("No se pudo crear el paciente.");
   }
 }

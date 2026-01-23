@@ -95,6 +95,7 @@ model User {
   name         String
   lastName     String
   privacyMode  Boolean              @default(false)
+  mfaEnabled   Boolean              @default(false)
   createdAt    DateTime             @default(now())
   passwordChangedAt DateTime?
   updatedAt    DateTime             @updatedAt

@@ -5,6 +5,7 @@ import { getPrismaClient } from "@/lib/prisma";
 import { getSessionUser, isAuthorized } from "@/app/api/_utils/auth";
 import { errorResponse } from "@/app/api/_utils/response";
 import { parseJson } from "@/app/api/_utils/validation";
+import { Prisma } from "@prisma/client";
 
 const specialtySchema = z.object({
   name: z.string().trim().min(1).max(120),
@@ -42,13 +43,24 @@ export async function POST(request: Request) {
   }
 
   const prisma = getPrismaClient();
-  const specialty = await prisma.specialty.create({
-    data: {
-      name: payload.name.trim(),
-      defaultSlotDurationMinutes: payload.defaultSlotDurationMinutes,
-      active: payload.active ?? true,
-    },
-  });
 
-  return NextResponse.json(specialty, { status: 201 });
+  try {
+    const specialty = await prisma.specialty.create({
+      data: {
+        name: payload.name.trim(),
+        defaultSlotDurationMinutes: payload.defaultSlotDurationMinutes,
+        active: payload.active ?? true,
+      },
+    });
+
+    return NextResponse.json(specialty, { status: 201 });
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      const target = Array.isArray(error.meta?.target) ? error.meta?.target : [];
+      if (target.includes("name")) {
+        return errorResponse("Ya existe una especialidad con ese nombre.", 400);
+      }
+    }
+    return errorResponse("No se pudo crear la especialidad.");
+  }
 }

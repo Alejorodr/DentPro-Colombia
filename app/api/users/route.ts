@@ -8,10 +8,12 @@ import { buildPaginatedResponse, getPaginationParams } from "@/app/api/_utils/pa
 import { parseJson } from "@/app/api/_utils/validation";
 import { isUserRole, type UserRole } from "@/lib/auth/roles";
 import { requireRole, requireSession } from "@/lib/authz";
+import { PASSWORD_POLICY_MESSAGE, PASSWORD_POLICY_REGEX } from "@/lib/auth/password-policy";
+import { Prisma } from "@prisma/client";
 
 const createUserSchema = z.object({
   email: z.string().trim().email().max(120),
-  password: z.string().min(8).max(200),
+  password: z.string().min(8).max(200).regex(PASSWORD_POLICY_REGEX, PASSWORD_POLICY_MESSAGE),
   role: z.string().optional(),
   name: z.string().trim().min(1).max(120),
   lastName: z.string().trim().min(1).max(120),
@@ -75,38 +77,47 @@ export async function POST(request: Request) {
     return errorResponse("La especialidad es obligatoria para profesionales.");
   }
 
-
   const prisma = getPrismaClient();
   const passwordHash = await bcrypt.hash(payload.password, 10);
   const professionalSpecialtyId = payload.specialtyId;
 
-  const user = await prisma.user.create({
-    data: {
-      email: payload.email.toLowerCase(),
-      passwordHash,
-      role,
-      name: payload.name.trim(),
-      lastName: payload.lastName.trim(),
-      patient: role === "PACIENTE"
-        ? {
-            create: {
-              phone: payload.phone?.trim() || null,
-              documentId: payload.documentId?.trim() || null,
-              active: true,
-            },
-          }
-        : undefined,
-      professional: role === "PROFESIONAL"
-        ? {
-            create: {
-              specialty: { connect: { id: professionalSpecialtyId! } },
-              slotDurationMinutes: payload.slotDurationMinutes ?? null,
-              active: true,
-            },
-          }
-        : undefined,
-    },
-  });
+  try {
+    const user = await prisma.user.create({
+      data: {
+        email: payload.email.toLowerCase(),
+        passwordHash,
+        role,
+        name: payload.name.trim(),
+        lastName: payload.lastName.trim(),
+        patient: role === "PACIENTE"
+          ? {
+              create: {
+                phone: payload.phone?.trim() || null,
+                documentId: payload.documentId?.trim() || null,
+                active: true,
+              },
+            }
+          : undefined,
+        professional: role === "PROFESIONAL"
+          ? {
+              create: {
+                specialty: { connect: { id: professionalSpecialtyId! } },
+                slotDurationMinutes: payload.slotDurationMinutes ?? null,
+                active: true,
+              },
+            }
+          : undefined,
+      },
+    });
 
-  return NextResponse.json(user, { status: 201 });
+    return NextResponse.json(user, { status: 201 });
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      const target = Array.isArray(error.meta?.target) ? error.meta?.target : [];
+      if (target.includes("email")) {
+        return errorResponse("El correo ya existe.", 400);
+      }
+    }
+    return errorResponse("No se pudo crear el usuario.");
+  }
 }

@@ -8,7 +8,6 @@ import {
   enforceOpsRateLimit,
   getOpsKey,
   isOpsIpAllowed,
-  isOpsEnabled,
   respondGenericError,
   respondNotFound,
   respondUnauthorized,
@@ -29,7 +28,7 @@ async function runCommand(command: string) {
 export async function POST(request: Request) {
   const requestId = getRequestId(request);
   const startedAt = Date.now();
-  if (!isOpsEnabled()) {
+  if (process.env.NODE_ENV !== "development") {
     return respondNotFound();
   }
 

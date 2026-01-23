@@ -1,8 +1,8 @@
 import crypto from "crypto";
 
-export const PASSWORD_RESET_TOKEN_TTL_MS = 60 * 60 * 1000;
+import { PASSWORD_POLICY_MESSAGE, PASSWORD_POLICY_REGEX } from "@/lib/auth/password-policy";
 
-const PASSWORD_POLICY_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{10,}$/;
+export const PASSWORD_RESET_TOKEN_TTL_MS = 60 * 60 * 1000;
 
 export function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
@@ -28,7 +28,7 @@ export function validatePasswordPolicy(password: string): { valid: boolean; mess
   if (!PASSWORD_POLICY_REGEX.test(password)) {
     return {
       valid: false,
-      message: "La contraseña debe tener al menos 10 caracteres, una mayúscula, una minúscula y un número.",
+      message: PASSWORD_POLICY_MESSAGE,
     };
   }
 

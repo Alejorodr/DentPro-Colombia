@@ -6,6 +6,7 @@ import { parseJson } from "@/app/api/_utils/validation";
 import { getPrismaClient } from "@/lib/prisma";
 import { requireSession, requireRole } from "@/lib/authz";
 import { ClinicDocumentTemplateType } from "@prisma/client";
+import { sanitizeConsentHtml } from "@/lib/security/sanitize-html";
 
 const templateSchema = z.object({
   type: z.nativeEnum(ClinicDocumentTemplateType),
@@ -49,12 +50,13 @@ export async function POST(request: Request) {
     return error;
   }
 
+  const sanitizedContent = sanitizeConsentHtml(payload.contentHtml);
   const prisma = getPrismaClient();
   const template = await prisma.clinicDocumentTemplate.create({
     data: {
       type: payload.type,
       title: payload.title,
-      contentHtml: payload.contentHtml,
+      contentHtml: sanitizedContent,
       active: payload.active ?? true,
     },
   });

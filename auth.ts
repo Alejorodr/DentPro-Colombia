@@ -35,6 +35,12 @@ const appBaseUrl = process.env.NEXTAUTH_URL ?? "";
 export const authOptions = {
   secret: getJwtSecretString(),
   useSecureCookies: appBaseUrl.startsWith("https://"),
+  cookies: {
+    sessionToken: {
+      name: appBaseUrl.startsWith("https://") ? "__Secure-next-auth.session-token" : "next-auth.session-token",
+      options: { sameSite: "strict" },
+    },
+  },
   session: { strategy: "jwt" },
   providers: [
     CredentialsProvider({
