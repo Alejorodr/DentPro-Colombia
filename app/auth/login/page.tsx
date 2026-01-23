@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
+import { Alert } from "@/components/ui/Alert";
 import { getDefaultDashboardPath } from "@/lib/auth/roles";
 import { LoginForm } from "@/app/(marketing)/login/LoginForm";
 
@@ -11,6 +12,12 @@ type LoginPageProps = {
 export default async function AuthLoginPage(props: any) {
   const resolvedProps = props as LoginPageProps;
   const searchParams = (await resolvedProps?.searchParams) ?? {};
+  const errorParam = typeof searchParams?.error === "string" ? searchParams.error : null;
+  const errorMessages: Record<string, string> = {
+    CredentialsSignin: "Correo o contraseña incorrectos.",
+    InvalidEmail: "Debes ingresar un correo válido.",
+  };
+  const loginErrorMessage = errorParam ? errorMessages[errorParam] ?? "No pudimos iniciar sesión." : null;
   const callbackUrlRaw = searchParams?.callbackUrl;
   const callbackUrl = typeof callbackUrlRaw === "string" && callbackUrlRaw.trim().length > 0 ? callbackUrlRaw : undefined;
   const hasValidCallback =
@@ -42,6 +49,15 @@ export default async function AuthLoginPage(props: any) {
         </div>
 
         <div className="w-full max-w-xl">
+          {loginErrorMessage ? (
+            <div className="mb-4">
+              <Alert
+                variant="error"
+                title="No se pudo iniciar sesión"
+                description={loginErrorMessage}
+              />
+            </div>
+          ) : null}
           <LoginForm callbackUrl={callbackUrl} />
         </div>
       </div>

@@ -16,7 +16,7 @@ import {
 import { AppointmentStatus } from "@prisma/client";
 
 import { Table } from "@/app/portal/components/ui/Table";
-import { RescheduleModal } from "@/app/portal/receptionist/components/RescheduleModal";
+import { RescheduleModal } from "@/app/portal/components/RescheduleModal";
 import { fetchWithTimeout } from "@/lib/http";
 
 type AppointmentSummary = {
@@ -259,7 +259,7 @@ export function AppointmentTable({ appointments, page, totalPages, onPageChange,
         appointmentId={rescheduleId}
         open={Boolean(rescheduleId)}
         onClose={() => setRescheduleId(null)}
-        onUpdated={onRefresh}
+        onUpdated={() => onRefresh()}
       />
     </div>
   );

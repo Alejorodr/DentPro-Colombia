@@ -20,6 +20,10 @@ type Professional = {
 
 export function ReceptionistPanel() {
   const [appointments, setAppointments] = useState<AppointmentItem[]>([]);
+  const [appointmentsPage, setAppointmentsPage] = useState(1);
+  const [appointmentsTotalPages, setAppointmentsTotalPages] = useState(1);
+  const [appointmentsLoading, setAppointmentsLoading] = useState(false);
+  const [appointmentsError, setAppointmentsError] = useState<string | null>(null);
   const [specialties, setSpecialties] = useState<Specialty[]>([]);
   const [professionals, setProfessionals] = useState<Professional[]>([]);
   const [filterSpecialty, setFilterSpecialty] = useState("");
@@ -35,17 +39,33 @@ export function ReceptionistPanel() {
   const [savingPatient, setSavingPatient] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const loadAppointments = async (page = 1, { append = false }: { append?: boolean } = {}) => {
+    setAppointmentsLoading(true);
+    setAppointmentsError(null);
+    const response = await fetchWithRetry(`/api/appointments?page=${page}&pageSize=20`);
+
+    if (response.ok) {
+      const data = (await response.json()) as {
+        data: AppointmentItem[];
+        page?: number;
+        totalPages?: number;
+      };
+      setAppointments((prev) => (append ? [...prev, ...(data.data ?? [])] : data.data ?? []));
+      setAppointmentsPage(data.page ?? page);
+      setAppointmentsTotalPages(data.totalPages ?? 1);
+    } else {
+      setAppointmentsError("No pudimos cargar las citas.");
+    }
+
+    setAppointmentsLoading(false);
+  };
+
   const loadData = async () => {
-    const [appointmentsResponse, specialtiesResponse, professionalsResponse] = await Promise.all([
-      fetchWithRetry("/api/appointments?pageSize=50"),
+    void loadAppointments(1);
+    const [specialtiesResponse, professionalsResponse] = await Promise.all([
       fetchWithRetry("/api/specialties"),
       fetchWithRetry("/api/professionals?pageSize=50"),
     ]);
-
-    if (appointmentsResponse.ok) {
-      const data = (await appointmentsResponse.json()) as { data: AppointmentItem[] };
-      setAppointments(data.data ?? []);
-    }
 
     if (specialtiesResponse.ok) {
       const data = (await specialtiesResponse.json()) as Specialty[];
@@ -207,11 +227,26 @@ export function ReceptionistPanel() {
           </div>
         </div>
         <div className="mt-4">
+          {/* Implementación de paginación en citas recepcionista */}
+          {appointmentsError ? <p className="text-sm text-red-600">{appointmentsError}</p> : null}
           <AppointmentsList
             key={`${filterSpecialty}-${filterProfessional}`}
             initialAppointments={filteredAppointments}
             role="RECEPCIONISTA"
           />
+          {appointmentsTotalPages > appointmentsPage ? (
+            <div className="mt-4 flex justify-center">
+              <button
+                type="button"
+                className="rounded-full border border-slate-200 px-4 py-2 text-xs font-semibold uppercase text-slate-600 disabled:opacity-60"
+                onClick={() => loadAppointments(appointmentsPage + 1, { append: true })}
+                disabled={appointmentsLoading}
+              >
+                {appointmentsLoading ? "Cargando..." : "Cargar más"}
+              </button>
+            </div>
+          ) : null}
+          {/* TODO: agregar paginación para listas de profesionales y especialidades cuando crezcan. */}
         </div>
       </section>
     </div>

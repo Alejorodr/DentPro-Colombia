@@ -14,11 +14,28 @@ type Slot = {
   professional: { user: { name: string; lastName: string } };
 };
 
+export type RescheduledAppointment = {
+  id: string;
+  reason: string;
+  notes?: string | null;
+  status: string;
+  timeSlot: { startAt: string; endAt: string };
+  patient: { user: { name: string; lastName: string } } | null;
+  professional:
+    | {
+        id: string;
+        user: { name: string; lastName: string };
+        specialty: { id: string; name: string };
+      }
+    | null;
+  service?: { id: string; name: string } | null;
+};
+
 interface RescheduleModalProps {
   appointmentId: string | null;
   open: boolean;
   onClose: () => void;
-  onUpdated: () => void;
+  onUpdated?: (appointment?: RescheduledAppointment) => void;
 }
 
 export function RescheduleModal({ appointmentId, open, onClose, onUpdated }: RescheduleModalProps) {
@@ -28,6 +45,19 @@ export function RescheduleModal({ appointmentId, open, onClose, onUpdated }: Res
   const [selectedSlotId, setSelectedSlotId] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!open) {
+      setSlots([]);
+      setSuggestions([]);
+      setSelectedSlotId("");
+      setError(null);
+      setLoading(false);
+      return;
+    }
+
+    setDate(formatDateInput(new Date(), "America/Bogota"));
+  }, [open]);
 
   useEffect(() => {
     if (!open) {
@@ -66,7 +96,8 @@ export function RescheduleModal({ appointmentId, open, onClose, onUpdated }: Res
     });
 
     if (response.ok) {
-      onUpdated();
+      const updated = (await response.json()) as RescheduledAppointment;
+      onUpdated?.(updated);
       onClose();
       setSelectedSlotId("");
     } else {
