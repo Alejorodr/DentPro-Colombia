@@ -37,17 +37,26 @@ const defaultFormState = {
   slotDurationMinutes: "",
 };
 
-export function AdminUsersPanel() {
+interface AdminUsersPanelProps {
+  roleFilter?: UserRole;
+  roleLock?: UserRole;
+}
+
+export function AdminUsersPanel({ roleFilter, roleLock }: AdminUsersPanelProps) {
   const [users, setUsers] = useState<UserRecord[]>([]);
   const [specialties, setSpecialties] = useState<Specialty[]>([]);
-  const [formState, setFormState] = useState(defaultFormState);
+  const [formState, setFormState] = useState(() => ({
+    ...defaultFormState,
+    role: roleLock ?? defaultFormState.role,
+  }));
   const [drafts, setDrafts] = useState<Record<string, UserDraft>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const canSubmit = useMemo(() => {
-    const requiresSpecialty = formState.role === "PROFESIONAL" && !formState.specialtyId;
+    const effectiveRole = roleLock ?? formState.role;
+    const requiresSpecialty = effectiveRole === "PROFESIONAL" && !formState.specialtyId;
     return (
       formState.email.trim().length > 0 &&
       formState.password.trim().length > 0 &&
@@ -57,7 +66,7 @@ export function AdminUsersPanel() {
       !saving &&
       !loading
     );
-  }, [formState, loading, saving]);
+  }, [formState, loading, roleLock, saving]);
 
   const loadData = async () => {
     try {
@@ -99,17 +108,18 @@ export function AdminUsersPanel() {
     setSaving(true);
     setError(null);
 
+    const resolvedRole = roleLock ?? formState.role;
     const payload = {
       email: formState.email,
       password: formState.password,
       name: formState.name,
       lastName: formState.lastName,
-      role: formState.role,
-      phone: formState.role === "PACIENTE" ? formState.phone : undefined,
-      documentId: formState.role === "PACIENTE" ? formState.documentId : undefined,
-      specialtyId: formState.role === "PROFESIONAL" ? formState.specialtyId : undefined,
+      role: resolvedRole,
+      phone: resolvedRole === "PACIENTE" ? formState.phone : undefined,
+      documentId: resolvedRole === "PACIENTE" ? formState.documentId : undefined,
+      specialtyId: resolvedRole === "PROFESIONAL" ? formState.specialtyId : undefined,
       slotDurationMinutes:
-        formState.role === "PROFESIONAL" && formState.slotDurationMinutes
+        resolvedRole === "PROFESIONAL" && formState.slotDurationMinutes
           ? Number(formState.slotDurationMinutes)
           : undefined,
     };
@@ -123,7 +133,10 @@ export function AdminUsersPanel() {
     if (response.ok) {
       const created = (await response.json()) as UserRecord;
       setUsers((prev) => [created, ...prev]);
-      setFormState(defaultFormState);
+      setFormState({
+        ...defaultFormState,
+        role: roleLock ?? defaultFormState.role,
+      });
     } else {
       const body = (await response.json().catch(() => null)) as { error?: string } | null;
       setError(body?.error ?? "No pudimos crear el usuario.");
@@ -138,11 +151,12 @@ export function AdminUsersPanel() {
 
   const applyDraft = async (user: UserRecord) => {
     const draft = drafts[user.id];
-    if (!draft || !draft.role) {
+    const resolvedRole = draft?.role ?? roleLock;
+    if (!draft || !resolvedRole) {
       return;
     }
 
-    if (draft.role === "PROFESIONAL" && !(draft.specialtyId ?? user.professional?.specialty?.id)) {
+    if (resolvedRole === "PROFESIONAL" && !(draft.specialtyId ?? user.professional?.specialty?.id)) {
       setError("Selecciona una especialidad para el profesional.");
       return;
     }
@@ -154,8 +168,9 @@ export function AdminUsersPanel() {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        role: draft.role,
-        specialtyId: draft.role === "PROFESIONAL" ? draft.specialtyId ?? user.professional?.specialty?.id : undefined,
+        role: resolvedRole,
+        specialtyId:
+          resolvedRole === "PROFESIONAL" ? draft.specialtyId ?? user.professional?.specialty?.id : undefined,
       }),
     });
 
@@ -254,19 +269,25 @@ export function AdminUsersPanel() {
             onChange={(event) => setFormState((prev) => ({ ...prev, password: event.target.value }))}
             disabled={saving}
           />
-          <select
-            className="input h-11 text-sm"
-            value={formState.role}
-            onChange={(event) => setFormState((prev) => ({ ...prev, role: event.target.value as UserRole }))}
-            disabled={saving}
-          >
-            {userRoles.map((role) => (
-              <option key={role} value={role}>
-                {roleLabels[role]}
-              </option>
-            ))}
-          </select>
-          {formState.role === "PROFESIONAL" ? (
+          {roleLock ? (
+            <div className="input flex h-11 items-center text-sm text-slate-600 dark:text-slate-300">
+              {roleLabels[roleLock]}
+            </div>
+          ) : (
+            <select
+              className="input h-11 text-sm"
+              value={formState.role}
+              onChange={(event) => setFormState((prev) => ({ ...prev, role: event.target.value as UserRole }))}
+              disabled={saving}
+            >
+              {userRoles.map((role) => (
+                <option key={role} value={role}>
+                  {roleLabels[role]}
+                </option>
+              ))}
+            </select>
+          )}
+          {(roleLock ?? formState.role) === "PROFESIONAL" ? (
             <select
               className="input h-11 text-sm"
               value={formState.specialtyId}
@@ -281,7 +302,7 @@ export function AdminUsersPanel() {
               ))}
             </select>
           ) : null}
-          {formState.role === "PROFESIONAL" ? (
+          {(roleLock ?? formState.role) === "PROFESIONAL" ? (
             <input
               className="input h-11 text-sm"
               placeholder="Duración slot (min)"
@@ -290,7 +311,7 @@ export function AdminUsersPanel() {
               disabled={saving}
             />
           ) : null}
-          {formState.role === "PACIENTE" ? (
+          {(roleLock ?? formState.role) === "PACIENTE" ? (
             <input
               className="input h-11 text-sm"
               placeholder="Teléfono"
@@ -299,7 +320,7 @@ export function AdminUsersPanel() {
               disabled={saving}
             />
           ) : null}
-          {formState.role === "PACIENTE" ? (
+          {(roleLock ?? formState.role) === "PACIENTE" ? (
             <input
               className="input h-11 text-sm"
               placeholder="Documento"
@@ -342,9 +363,9 @@ export function AdminUsersPanel() {
           <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">Cargando usuarios...</p>
         ) : (
           <div className="mt-4 space-y-3">
-            {users.map((user) => {
+            {(roleFilter ? users.filter((user) => user.role === roleFilter) : users).map((user) => {
               const draft = drafts[user.id] ?? {};
-              const selectedRole = draft.role ?? user.role;
+              const selectedRole = roleLock ?? draft.role ?? user.role;
               return (
                 <div
                   key={user.id}
@@ -360,27 +381,35 @@ export function AdminUsersPanel() {
                         Rol actual: {roleLabels[user.role]}{" "}
                         {user.professional?.specialty?.name ? `· ${user.professional.specialty.name}` : ""}
                       </p>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      <select
-                        className="input h-9 text-xs"
-                        value={selectedRole}
-                        onChange={(event) =>
-                          updateDraft(user.id, { role: event.target.value as UserRole, specialtyId: "" })
-                        }
-                        disabled={saving}
-                      >
-                        {userRoles.map((role) => (
-                          <option key={role} value={role}>
-                            {roleLabels[role]}
-                          </option>
-                        ))}
-                      </select>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                      {roleLock ? (
+                        <div className="input flex h-9 items-center text-xs text-slate-600 dark:text-slate-300">
+                          {roleLabels[roleLock]}
+                        </div>
+                      ) : (
+                        <select
+                          className="input h-9 text-xs"
+                          value={selectedRole}
+                          onChange={(event) =>
+                            updateDraft(user.id, { role: event.target.value as UserRole, specialtyId: "" })
+                          }
+                          disabled={saving}
+                        >
+                          {userRoles.map((role) => (
+                            <option key={role} value={role}>
+                              {roleLabels[role]}
+                            </option>
+                          ))}
+                        </select>
+                      )}
                       {selectedRole === "PROFESIONAL" ? (
                         <select
                           className="input h-9 text-xs"
                           value={draft.specialtyId ?? user.professional?.specialty?.id ?? ""}
-                          onChange={(event) => updateDraft(user.id, { specialtyId: event.target.value })}
+                          onChange={(event) =>
+                            updateDraft(user.id, { specialtyId: event.target.value, role: selectedRole })
+                          }
                           disabled={saving}
                         >
                           <option value="">Especialidad</option>
@@ -395,7 +424,7 @@ export function AdminUsersPanel() {
                         type="button"
                         className="rounded-full border border-brand-teal px-3 py-1 text-xs font-semibold uppercase text-brand-teal"
                         onClick={() => applyDraft(user)}
-                        disabled={saving || !draft.role}
+                        disabled={saving || (!draft.role && !roleLock)}
                       >
                         Guardar rol
                       </button>

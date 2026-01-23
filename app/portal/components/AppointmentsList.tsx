@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import type { UserRole } from "@/lib/auth/roles";
 import { fetchWithTimeout } from "@/lib/http";
+import { RescheduleModal, type RescheduledAppointment } from "@/app/portal/components/RescheduleModal";
 
 type AppointmentItem = {
   id: string;
@@ -35,6 +36,8 @@ function formatDateRange(startAt: string, endAt: string) {
 export function AppointmentsList({ initialAppointments, role }: AppointmentsListProps) {
   const [appointments, setAppointments] = useState(initialAppointments);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [showRescheduleModal, setShowRescheduleModal] = useState(false);
+  const [rescheduleTargetId, setRescheduleTargetId] = useState<string | null>(null);
 
   const updateStatus = async (id: string, status: string) => {
     setBusyId(id);
@@ -52,25 +55,22 @@ export function AppointmentsList({ initialAppointments, role }: AppointmentsList
     setBusyId(null);
   };
 
-  const reschedule = async (id: string) => {
-    const timeSlotId = window.prompt("Ingresa el ID del nuevo slot disponible:");
-    if (!timeSlotId) {
+  const openReschedule = (id: string) => {
+    setRescheduleTargetId(id);
+    setShowRescheduleModal(true);
+  };
+
+  const handleRescheduleUpdated = (updated?: RescheduledAppointment) => {
+    if (!updated) {
       return;
     }
 
-    setBusyId(id);
-    const response = await fetchWithTimeout(`/api/appointments/${id}/reschedule`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ timeSlotId }),
-    });
+    setAppointments((prev) => prev.map((item) => (item.id === updated.id ? updated : item)));
+  };
 
-    if (response.ok) {
-      const updated = await response.json();
-      setAppointments((prev) => prev.map((item) => (item.id === id ? updated : item)));
-    }
-
-    setBusyId(null);
+  const closeRescheduleModal = () => {
+    setShowRescheduleModal(false);
+    setRescheduleTargetId(null);
   };
 
   return (
@@ -116,7 +116,7 @@ export function AppointmentsList({ initialAppointments, role }: AppointmentsList
                       type="button"
                       className="rounded-full border border-brand-teal px-4 py-2 text-xs font-semibold uppercase text-brand-teal"
                       disabled={busyId === appointment.id}
-                      onClick={() => reschedule(appointment.id)}
+                      onClick={() => openReschedule(appointment.id)}
                     >
                       Reprogramar
                     </button>
@@ -164,7 +164,7 @@ export function AppointmentsList({ initialAppointments, role }: AppointmentsList
                       type="button"
                       className="rounded-full border border-brand-teal px-4 py-2 text-xs font-semibold uppercase text-brand-teal"
                       disabled={busyId === appointment.id}
-                      onClick={() => reschedule(appointment.id)}
+                      onClick={() => openReschedule(appointment.id)}
                     >
                       Reprogramar
                     </button>
@@ -178,6 +178,12 @@ export function AppointmentsList({ initialAppointments, role }: AppointmentsList
           </div>
         ))
       )}
+      <RescheduleModal
+        appointmentId={rescheduleTargetId}
+        open={showRescheduleModal}
+        onClose={closeRescheduleModal}
+        onUpdated={handleRescheduleUpdated}
+      />
     </div>
   );
 }
