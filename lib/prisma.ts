@@ -13,7 +13,7 @@ const PRISMA_QUERY_TIMEOUT_MS = Number.parseInt(process.env.PRISMA_QUERY_TIMEOUT
 const PRISMA_READ_RETRY_COUNT = Number.parseInt(process.env.PRISMA_READ_RETRY_COUNT ?? "1", 10);
 const PRISMA_CIRCUIT_FAILURE_THRESHOLD = Number.parseInt(process.env.PRISMA_CIRCUIT_FAILURE_THRESHOLD ?? "3", 10);
 const PRISMA_CIRCUIT_RESET_MS = Number.parseInt(process.env.PRISMA_CIRCUIT_RESET_MS ?? "30000", 10);
-const PRISMA_FIND_MANY_TAKE_DEFAULT = Number.parseInt(process.env.PRISMA_FIND_MANY_TAKE_DEFAULT ?? "100", 10);
+const PRISMA_FIND_MANY_TAKE_DEFAULT = Number.parseInt(process.env.PRISMA_FIND_MANY_TAKE_DEFAULT ?? "50", 10);
 
 const READ_ACTIONS = new Set([
   "findUnique",

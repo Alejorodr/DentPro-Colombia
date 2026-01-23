@@ -40,3 +40,17 @@ export async function buildClinicalAttachmentChecksum(file: File): Promise<strin
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   return hashArray.map((byte) => byte.toString(16).padStart(2, "0")).join("");
 }
+
+export async function uploadToBlob(
+  file: File | Buffer,
+  key: string,
+  contentType?: string,
+): Promise<string> {
+  const { put } = await import("@vercel/blob");
+  const result = await put(key, file, {
+    access: "public",
+    addRandomSuffix: false,
+    contentType,
+  });
+  return result.pathname;
+}

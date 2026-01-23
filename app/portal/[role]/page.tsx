@@ -1,9 +1,9 @@
 import { notFound, redirect } from "next/navigation";
 
 import { auth } from "@/auth";
-import { getPrismaClient } from "@/lib/prisma";
 import { getDefaultDashboardPath, roleFromSlug, roleLabels } from "@/lib/auth/roles";
 import { AppointmentsList } from "@/app/portal/components/AppointmentsList";
+import { getAppointmentsForRole } from "@/lib/appointments";
 
 export default async function PortalRolePage({ params }: { params: Promise<{ role: string }> }) {
   const { role } = await params;
@@ -23,58 +23,11 @@ export default async function PortalRolePage({ params }: { params: Promise<{ rol
     redirect(getDefaultDashboardPath(session.user.role));
   }
 
-  const prisma = getPrismaClient();
-  let appointments: any[] = [];
-
-  if (requestedRole === "ADMINISTRADOR" || requestedRole === "RECEPCIONISTA") {
-    appointments = await prisma.appointment.findMany({
-      include: {
-        patient: { include: { user: true } },
-        professional: { include: { user: true, specialty: true } },
-        timeSlot: true,
-      },
-      orderBy: { timeSlot: { startAt: "asc" } },
-      take: 20,
-    });
-  }
-
-  if (requestedRole === "PROFESIONAL") {
-    const professional = await prisma.professionalProfile.findUnique({
-      where: { userId: session.user.id ?? "" },
-    });
-
-    if (professional) {
-      appointments = await prisma.appointment.findMany({
-        where: { professionalId: professional.id },
-        include: {
-          patient: { include: { user: true } },
-          professional: { include: { user: true, specialty: true } },
-          timeSlot: true,
-        },
-        orderBy: { timeSlot: { startAt: "asc" } },
-        take: 20,
-      });
-    }
-  }
-
-  if (requestedRole === "PACIENTE") {
-    const patient = await prisma.patientProfile.findUnique({
-      where: { userId: session.user.id ?? "" },
-    });
-
-    if (patient) {
-      appointments = await prisma.appointment.findMany({
-        where: { patientId: patient.id },
-        include: {
-          patient: { include: { user: true } },
-          professional: { include: { user: true, specialty: true } },
-          timeSlot: true,
-        },
-        orderBy: { timeSlot: { startAt: "asc" } },
-        take: 20,
-      });
-    }
-  }
+  const appointments = await getAppointmentsForRole({
+    userId: session.user.id ?? "",
+    role: requestedRole,
+    take: 20,
+  });
 
   return (
     <div className="space-y-6">

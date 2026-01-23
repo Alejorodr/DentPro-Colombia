@@ -12,6 +12,7 @@ import {
   buildClinicalAttachmentStorageKey,
   isAllowedClinicalAttachmentType,
   sanitizeClinicalAttachmentFilename,
+  uploadToBlob,
 } from "@/lib/clinical/attachments";
 import { getPrismaClient } from "@/lib/prisma";
 import { requireSession } from "@/lib/authz";
@@ -73,6 +74,14 @@ export async function GET(request: Request, { params }: { params: Promise<{ epis
       ...(role === "PACIENTE" ? { visibleToPatient: true } : {}),
     },
     orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      filename: true,
+      mimeType: true,
+      size: true,
+      createdAt: true,
+      visibleToPatient: true,
+    },
   });
 
   await logClinicalAccess({
@@ -84,16 +93,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ epis
     metadata: { episodeId },
   });
 
-  return NextResponse.json({
-    attachments: attachments.map((attachment) => ({
-      id: attachment.id,
-      filename: attachment.filename,
-      mimeType: attachment.mimeType,
-      size: attachment.size,
-      createdAt: attachment.createdAt,
-      visibleToPatient: attachment.visibleToPatient,
-    })),
-  });
+  return NextResponse.json({ attachments });
 }
 
 export async function POST(request: Request, { params }: { params: Promise<{ episodeId: string }> }) {
@@ -153,6 +153,9 @@ export async function POST(request: Request, { params }: { params: Promise<{ epi
   const checksum = await buildClinicalAttachmentChecksum(file);
   const fileBuffer = Buffer.from(await file.arrayBuffer());
 
+  // Upload to external Blob storage; access is gated by this API before sharing download URLs.
+  const storageKey = await uploadToBlob(fileBuffer, key, file.type);
+
   const attachment = await prisma.clinicalAttachment.create({
     data: {
       episodeId: episode.id,
@@ -161,8 +164,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ epi
       filename: sanitizedFilename,
       mimeType: file.type,
       size: file.size,
-      storageKey: key,
-      data: fileBuffer,
+      storageKey,
       checksum,
       visibleToPatient: parsed.data.visibleToPatient ?? false,
     },
