@@ -85,6 +85,10 @@ describe("auth options", () => {
     });
   });
 
+  it("uses strict sameSite cookies for the session token", () => {
+    expect(authOptions.cookies?.sessionToken.options.sameSite).toBe("strict");
+  });
+
   it("invalidates sessions issued before a password reset", async () => {
     const passwordChangedAt = new Date("2024-01-02T00:00:00.000Z");
     mockedFindUserById.mockResolvedValue({
