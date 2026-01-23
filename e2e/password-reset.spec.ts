@@ -30,8 +30,8 @@ test("reset password accepts new password", async ({ page }) => {
   });
 
   await page.goto("/auth/reset-password?token=test-token");
-  await page.getByLabel("Nueva contraseña").fill("PasswordSeguro1");
-  await page.getByLabel("Confirmar contraseña").fill("PasswordSeguro1");
+  await page.getByLabel("Nueva contraseña").fill("PasswordSeguro1!");
+  await page.getByLabel("Confirmar contraseña").fill("PasswordSeguro1!");
   await page.getByRole("button", { name: "Guardar contraseña" }).click();
 
   await expect(page.getByText(/Contraseña actualizada/i)).toBeVisible();
@@ -53,8 +53,8 @@ test("reset token reuse fails", async ({ page }) => {
   });
 
   await page.goto("/auth/reset-password?token=used-token");
-  await page.getByLabel("Nueva contraseña").fill("PasswordSeguro1");
-  await page.getByLabel("Confirmar contraseña").fill("PasswordSeguro1");
+  await page.getByLabel("Nueva contraseña").fill("PasswordSeguro1!");
+  await page.getByLabel("Confirmar contraseña").fill("PasswordSeguro1!");
   await page.getByRole("button", { name: "Guardar contraseña" }).click();
 
   await expect(page.getByText(/inválido|expiró/i)).toBeVisible();
