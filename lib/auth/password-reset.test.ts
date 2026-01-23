@@ -29,6 +29,7 @@ describe("password reset helpers", () => {
   it("validates password policy", () => {
     expect(validatePasswordPolicy("short").valid).toBe(false);
     expect(validatePasswordPolicy("longbutnocaps1").valid).toBe(false);
-    expect(validatePasswordPolicy("ValidPass123").valid).toBe(true);
+    expect(validatePasswordPolicy("ValidPass123").valid).toBe(false);
+    expect(validatePasswordPolicy("ValidPass123!").valid).toBe(true);
   });
 });

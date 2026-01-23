@@ -8,10 +8,12 @@ import { parseJson } from "@/app/api/_utils/validation";
 import { isUserRole, type UserRole } from "@/lib/auth/roles";
 import { logger } from "@/lib/logger";
 import { requireRole, requireSession } from "@/lib/authz";
+import { PASSWORD_POLICY_MESSAGE, PASSWORD_POLICY_REGEX } from "@/lib/auth/password-policy";
+import { Prisma } from "@prisma/client";
 
 const updateUserSchema = z.object({
   email: z.string().trim().email().max(120).optional(),
-  password: z.string().min(8).max(200).optional(),
+  password: z.string().min(8).max(200).regex(PASSWORD_POLICY_REGEX, PASSWORD_POLICY_MESSAGE).optional(),
   role: z.string().optional(),
   name: z.string().trim().min(1).max(120).optional(),
   lastName: z.string().trim().min(1).max(120).optional(),
@@ -53,16 +55,27 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
   const passwordHash = payload.password ? await bcrypt.hash(payload.password, 10) : undefined;
 
-  const updated = await prisma.user.update({
-    where: { id },
-    data: {
-      email: payload.email?.toLowerCase() ?? undefined,
-      name: payload.name?.trim() ?? undefined,
-      lastName: payload.lastName?.trim() ?? undefined,
-      role: requestedRole ?? undefined,
-      passwordHash: passwordHash ?? undefined,
-    },
-  });
+  let updated;
+  try {
+    updated = await prisma.user.update({
+      where: { id },
+      data: {
+        email: payload.email?.toLowerCase() ?? undefined,
+        name: payload.name?.trim() ?? undefined,
+        lastName: payload.lastName?.trim() ?? undefined,
+        role: requestedRole ?? undefined,
+        passwordHash: passwordHash ?? undefined,
+      },
+    });
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      const target = Array.isArray(error.meta?.target) ? error.meta?.target : [];
+      if (target.includes("email")) {
+        return errorResponse("El correo ya existe.", 400);
+      }
+    }
+    return errorResponse("No se pudo actualizar el usuario.");
+  }
 
   const targetRole = requestedRole ?? existing.role;
   if (existing.role !== targetRole) {

@@ -5,6 +5,7 @@ import { getPrismaClient } from "@/lib/prisma";
 import { getSessionUser, isAuthorized } from "@/app/api/_utils/auth";
 import { errorResponse } from "@/app/api/_utils/response";
 import { parseJson } from "@/app/api/_utils/validation";
+import { Prisma } from "@prisma/client";
 
 const updateSpecialtySchema = z.object({
   name: z.string().trim().min(1).max(120).optional(),
@@ -30,16 +31,26 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   }
 
   const prisma = getPrismaClient();
-  const updated = await prisma.specialty.update({
-    where: { id },
-    data: {
-      name: payload.name?.trim() || undefined,
-      defaultSlotDurationMinutes: payload.defaultSlotDurationMinutes ?? undefined,
-      active: typeof payload.active === "boolean" ? payload.active : undefined,
-    },
-  });
+  try {
+    const updated = await prisma.specialty.update({
+      where: { id },
+      data: {
+        name: payload.name?.trim() || undefined,
+        defaultSlotDurationMinutes: payload.defaultSlotDurationMinutes ?? undefined,
+        active: typeof payload.active === "boolean" ? payload.active : undefined,
+      },
+    });
 
-  return NextResponse.json(updated);
+    return NextResponse.json(updated);
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      const target = Array.isArray(error.meta?.target) ? error.meta?.target : [];
+      if (target.includes("name")) {
+        return errorResponse("Ya existe una especialidad con ese nombre.", 400);
+      }
+    }
+    return errorResponse("No se pudo actualizar la especialidad.");
+  }
 }
 
 export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {

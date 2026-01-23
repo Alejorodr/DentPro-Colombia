@@ -23,6 +23,7 @@ model User {
   role         String
   name         String
   lastName     String
+  mfaEnabled   Boolean              @default(false)
   createdAt    DateTime             @default(now())
   passwordChangedAt DateTime?
   updatedAt    DateTime             @updatedAt

@@ -7,6 +7,7 @@ import { MagnifyingGlass, PencilSimple, Trash, UserMinus } from "@/components/ui
 import { Card } from "@/app/portal/components/ui/Card";
 import { Table } from "@/app/portal/components/ui/Table";
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
+import { PASSWORD_POLICY_MESSAGE, PASSWORD_POLICY_REGEX } from "@/lib/auth/password-policy";
 
 const emptyForm = {
   name: "",
@@ -61,6 +62,10 @@ export function ReceptionistPatients() {
   const createPatient = async () => {
     if (!form.name || !form.lastName || !form.email || !form.password) {
       setError("Nombre, apellido, correo y contraseña son obligatorios.");
+      return;
+    }
+    if (!PASSWORD_POLICY_REGEX.test(form.password)) {
+      setError(PASSWORD_POLICY_MESSAGE);
       return;
     }
 
