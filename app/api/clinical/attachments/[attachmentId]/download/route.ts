@@ -7,6 +7,7 @@ import { getProfessionalProfile } from "@/lib/clinical/access";
 import { getPrismaClient } from "@/lib/prisma";
 import { requireSession } from "@/lib/authz";
 import { AccessLogAction } from "@prisma/client";
+import { head } from "@vercel/blob";
 
 export async function GET(request: Request, { params }: { params: Promise<{ attachmentId: string }> }) {
   const sessionResult = await requireSession();
@@ -24,14 +25,28 @@ export async function GET(request: Request, { params }: { params: Promise<{ atta
 
   const attachment = await prisma.clinicalAttachment.findFirst({
     where: { id: attachmentId, deletedAt: null },
-    include: { episode: true },
+    select: {
+      id: true,
+      patientId: true,
+      filename: true,
+      mimeType: true,
+      size: true,
+      storageKey: true,
+      visibleToPatient: true,
+      episode: {
+        select: {
+          professionalId: true,
+          visibleToPatient: true,
+        },
+      },
+    },
   });
 
   if (!attachment) {
     return errorResponse("Adjunto no encontrado.", 404);
   }
 
-  if (!attachment.data) {
+  if (!attachment.storageKey) {
     return errorResponse("Adjunto no disponible.", 410);
   }
 
@@ -57,11 +72,6 @@ export async function GET(request: Request, { params }: { params: Promise<{ atta
     }
   }
 
-  const safeFilename = attachment.filename.replace(/[\r\n"]/g, "_");
-  const contentDisposition = `attachment; filename="${safeFilename}"; filename*=UTF-8''${encodeURIComponent(
-    safeFilename,
-  )}`;
-
   await logClinicalAccess({
     userId: sessionResult.user.id,
     patientId: attachment.patientId,
@@ -71,13 +81,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ atta
     metadata: { attachmentId },
   });
 
-  return new NextResponse(attachment.data, {
-    status: 200,
-    headers: {
-      "Content-Type": attachment.mimeType,
-      "Content-Length": attachment.size.toString(),
-      "Content-Disposition": contentDisposition,
-      "Cache-Control": "private, no-store",
-    },
-  });
+  // Blob URLs are public but unguessable; access is enforced by this authenticated endpoint.
+  const blob = await head(attachment.storageKey);
+  return NextResponse.redirect(blob.downloadUrl, 302);
 }

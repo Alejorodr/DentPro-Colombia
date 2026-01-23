@@ -35,6 +35,7 @@ cp .env.example .env
 - `SENTRY_ENVIRONMENT` (opcional)
 - `SENTRY_TRACES_SAMPLE_RATE` (opcional, default 0.1)
 - `LOG_LEVEL` (opcional, default `info`)
+- `CRON_SECRET` (opcional, protege el cron de recordatorios)
 
 > Nota: `scripts/vercel-prisma.mjs` exige `DATABASE_URL` en deploys de Vercel para ejecutar `prisma migrate deploy`.
 

@@ -185,10 +185,14 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
   try {
     const updated = await prisma.$transaction(async (tx) => {
-      await tx.timeSlot.update({
-        where: { id: appointment.timeSlotId },
+      const previousSlotUpdate = await tx.timeSlot.updateMany({
+        where: { id: appointment.timeSlotId, status: TimeSlotStatus.BOOKED },
         data: { status: TimeSlotStatus.AVAILABLE },
       });
+
+      if (previousSlotUpdate.count === 0) {
+        throw new Error("Slot original modificado");
+      }
 
       const slotUpdate = await tx.timeSlot.updateMany({
         where: { id: newSlot.id, status: TimeSlotStatus.AVAILABLE },
@@ -216,15 +220,35 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       return updatedAppointment;
     });
 
-    await createReceptionNotifications({
-      type: "appointment_rescheduled",
-      title: "Turno reprogramado",
-      body: `Se reprogramó el turno ${updated.id}.`,
-      entityType: "appointment",
-      entityId: updated.id,
-    });
+    try {
+      await createReceptionNotifications({
+        type: "appointment_rescheduled",
+        title: "Turno reprogramado",
+        body: `Se reprogramó el turno ${updated.id}.`,
+        entityType: "appointment",
+        entityId: updated.id,
+      });
+    } catch (notificationError) {
+      logger.warn({
+        event: "appointment.reschedule.notification_failed",
+        route: "/api/appointments/[id]/reschedule",
+        requestId,
+        appointmentId: updated.id,
+        error: notificationError,
+      });
+    }
 
-    await sendAppointmentEmail("reschedule", updated);
+    try {
+      await sendAppointmentEmail("reschedule", updated);
+    } catch (emailError) {
+      logger.warn({
+        event: "appointment.reschedule.email_failed",
+        route: "/api/appointments/[id]/reschedule",
+        requestId,
+        appointmentId: updated.id,
+        error: emailError,
+      });
+    }
 
     logger.info({
       event: "appointment.reschedule.success",
