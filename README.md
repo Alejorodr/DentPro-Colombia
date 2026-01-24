@@ -6,6 +6,8 @@ Sistema de gestión de turnos clínicos con Next.js App Router, Prisma y NextAut
 
 - Node.js 20+
 - Base de datos Postgres (Neon recomendado)
+- Vercel Blob (adjuntos clínicos en producción)
+- Upstash Redis (rate limiting global, recomendado)
 
 ## Configuración
 
@@ -20,8 +22,6 @@ cp .env.example .env
 - `DATABASE_URL`
 - `DATABASE_URL_UNPOOLED` (opcional en Vercel/Neon: usado para migraciones y diff)
 - `SHADOW_DATABASE_URL` (opcional, recomendado: base shadow para validar drift con Prisma)
-- `OPS_ENABLED=false`
-- `OPS_KEY`
 - `NEXTAUTH_SECRET`
 - `NEXTAUTH_URL=https://dent-pro-colombia.vercel.app/`
 - `AUTH_TRUST_HOST=true`
@@ -29,7 +29,11 @@ cp .env.example .env
 - `SEED_ADMIN_PASSWORD`
 - `RESEND_API_KEY` (producción)
 - `EMAIL_FROM` (producción)
+- `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` (emails de citas por SMTP)
 - `NEXT_PUBLIC_APP_URL` (local)
+- `UPSTASH_REDIS_REST_URL` (rate limiting persistente)
+- `UPSTASH_REDIS_REST_TOKEN` (rate limiting persistente)
+- `BLOB_READ_WRITE_TOKEN` (Vercel Blob para adjuntos clínicos)
 - `SENTRY_DSN` (observabilidad en server)
 - `NEXT_PUBLIC_SENTRY_DSN` (observabilidad en client)
 - `SENTRY_ENVIRONMENT` (opcional)
@@ -64,33 +68,12 @@ El seed crea usuarios de demostración para probar el portal recepcionista:
 
 Para que `scripts/vercel-prisma.mjs` pueda validar drift en Vercel, configura `SHADOW_DATABASE_URL` apuntando a una base vacía en el mismo proyecto de Neon (puede ser otro database). Luego agrega esa URL como variable de entorno en Vercel.
 
-## Operaciones de producción (temporal, remover luego)
+## Adjuntos clínicos (Blob storage)
 
-Estos endpoints están pensados solo para la inicialización de la base de datos en producción. **Remuévelos después de usarlos**.
+Los adjuntos clínicos se almacenan en Vercel Blob y se referencian por `storageKey`. Por defecto, el tamaño máximo es **10MB** y los tipos permitidos son **PDF, JPG, PNG**.
 
-1. En Vercel, configura variables:
-   - `OPS_ENABLED=true`
-   - `OPS_KEY=<clave-secreta>`
-   - `SEED_ADMIN_EMAIL=kevinrodr@hotmail.com`
-   - `SEED_ADMIN_PASSWORD=<password-seguro>`
-2. Ejecuta migraciones:
-
-```bash
-curl -X POST https://dent-pro-colombia.vercel.app/api/ops/migrate \\
-  -H "X-OPS-KEY: <clave-secreta>"
-```
-
-3. Crea/actualiza el admin:
-
-```bash
-curl -X POST https://dent-pro-colombia.vercel.app/api/ops/seed-admin \\
-  -H "X-OPS-KEY: <clave-secreta>"
-```
-
-4. Desactiva el acceso temporal:
-   - `OPS_ENABLED=false`
-   - Redeploy
-5. Inicia sesión con el admin configurado.
+- Si usas el plan free de Vercel Blob (límite 5MB por archivo), ajusta el límite o sube de plan para soportar 10MB.
+- Mantén respaldos separados del storage de blobs (ver runbook de backups).
 
 
 ## Seed del admin (manual)
@@ -118,6 +101,8 @@ RESEND_API_KEY=tu_api_key
 EMAIL_FROM="DentPro <no-reply@tu-dominio.com>"
 NEXTAUTH_URL=https://dent-pro-colombia.vercel.app/
 ```
+
+Para emails de citas (confirmaciones, recordatorios, reprogramaciones) configura SMTP con `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`.
 
 ### Flujo local rápido
 
