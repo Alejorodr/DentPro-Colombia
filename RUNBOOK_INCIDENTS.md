@@ -11,7 +11,7 @@ Responder rápidamente a incidentes operativos sin detener la clínica.
 ## Checklist inicial
 1. Verificar despliegue en Vercel y últimos logs.
 2. Validar conectividad a Neon (`DATABASE_URL`).
-3. Confirmar variables críticas (`SMTP_*`, `EMAIL_FROM`, `CRON_SECRET`).
+3. Confirmar variables críticas (`RESEND_API_KEY`, `SMTP_*`, `EMAIL_FROM`, `CRON_SECRET`).
 
 ## Mitigaciones rápidas
 - **Emails fallando**: la app debe continuar; revisar credenciales SMTP y configurar.
@@ -30,4 +30,3 @@ Responder rápidamente a incidentes operativos sin detener la clínica.
 - Impacto
 - Causa raíz
 - Acciones preventivas
-

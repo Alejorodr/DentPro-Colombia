@@ -16,6 +16,7 @@ Configura las siguientes variables en Vercel:
 - `SENTRY_ORG`
 - `SENTRY_PROJECT`
 - `SENTRY_TRACES_SAMPLE_RATE` (ej. `0.05`)
+- `LOG_LEVEL` (recomendado `info` o `warn` en producción)
 
 > Nota: si `SENTRY_DSN` no está configurado, la integración queda desactivada automáticamente.
 

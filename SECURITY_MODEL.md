@@ -50,6 +50,10 @@
 - `DELETE /api/clinical/attachments/[attachmentId]` → **ADMINISTRADOR**, **PROFESIONAL** (solo sus episodios)
 - `GET /api/admin/audit/access-logs` → **ADMINISTRADOR**
 
+**Adjuntos clínicos**
+- Almacenamiento en Vercel Blob con referencia por `storageKey`.
+- Tamaño máximo: 10MB (PDF/JPG/PNG).
+
 ## IDOR checklist aplicado
 - Recursos con `[id]` validan pertenencia (paciente o profesional) antes de leer/modificar.
 - Roles elevados (`ADMINISTRADOR`, `RECEPCIONISTA`) pueden operar sobre recursos compartidos.

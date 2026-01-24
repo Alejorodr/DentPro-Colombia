@@ -352,7 +352,7 @@ model ClinicalAttachment {
   mimeType        String
   size            Int
   storageKey      String
-  data            Bytes?
+  data            Bytes?     // DEPRECATED: now using external storage
   checksum        String?
   visibleToPatient Boolean    @default(false)
   createdAt       DateTime    @default(now())

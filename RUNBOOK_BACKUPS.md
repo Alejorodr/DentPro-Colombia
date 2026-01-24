@@ -24,6 +24,7 @@ Definir el procedimiento operativo para verificar backups automáticos y ejecuta
 - [ ] Verificar acceso a la app con `npm run vercel-build`.
 - [ ] Validar endpoints críticos (login, citas, historia clínica).
 - [ ] Verificar variables de entorno (tokens, secretos, Blob, Sentry).
+- [ ] Confirmar acceso a archivos en Vercel Blob (adjuntos clínicos).
 
 ## Purga manual / solicitudes de borrado
 1. Crear un export o respaldo legal si aplica.
@@ -33,3 +34,7 @@ Definir el procedimiento operativo para verificar backups automáticos y ejecuta
 ## Política de retención (placeholder)
 - Retención mínima recomendada: **5 años**.
 - Ajustar según regulación local y políticas internas.
+
+## Respaldo de archivos (Vercel Blob)
+- Exporta periódicamente los objetos con prefijo `clinical/` y almacénalos en un bucket externo seguro.
+- Verifica que el plan de blob soporta el tamaño máximo de adjuntos configurado (10MB).
