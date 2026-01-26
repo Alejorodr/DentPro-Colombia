@@ -59,9 +59,9 @@ describe("appointment rescheduling", () => {
       id: "appt-1",
       patientId: "patient-1",
       professionalId: "prof-1",
-      timeSlotId: "slot-old",
+      timeSlotId: "11111111-1111-4111-8111-111111111111",
       timeSlot: {
-        id: "slot-old",
+        id: "11111111-1111-4111-8111-111111111111",
         professionalId: "prof-1",
         startAt: new Date("2030-01-01T10:00:00Z"),
         endAt: new Date("2030-01-01T11:00:00Z"),
@@ -69,7 +69,7 @@ describe("appointment rescheduling", () => {
       },
     };
     const availableSlot = {
-      id: "slot-new",
+      id: "22222222-2222-4222-8222-222222222222",
       professionalId: "prof-1",
       startAt: new Date("2030-01-02T10:00:00Z"),
       endAt: new Date("2030-01-02T11:00:00Z"),
