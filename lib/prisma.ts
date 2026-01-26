@@ -48,6 +48,13 @@ export class DatabaseCircuitOpenError extends Error {
   }
 }
 
+export class DatabaseConfigurationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "DatabaseConfigurationError";
+  }
+}
+
 class PrismaTimeoutError extends Error {
   constructor(timeoutMs: number) {
     super(`Prisma query exceeded ${timeoutMs}ms timeout.`);
@@ -154,11 +161,18 @@ function assertNeonSslMode(url: string | undefined, name: string) {
   }
 }
 
-function makeClient(): PrismaClient {
+function requireDatabaseUrl() {
   const pooledUrl = process.env.DATABASE_URL;
   if (!pooledUrl) {
-    throw new Error("DATABASE_URL is not set");
+    throw new DatabaseConfigurationError(
+      "DATABASE_URL no está configurada. Configura DATABASE_URL para usar la base de datos.",
+    );
   }
+  return pooledUrl;
+}
+
+function makeClient(): PrismaClient {
+  const pooledUrl = requireDatabaseUrl();
 
   if (process.env.NODE_ENV === "production") {
     assertNeonSslMode(pooledUrl, "DATABASE_URL");
@@ -168,7 +182,9 @@ function makeClient(): PrismaClient {
   const directUrl = process.env.DATABASE_URL_UNPOOLED ?? pooledUrl;
   const selectedUrl = process.env.NODE_ENV === "production" ? pooledUrl : directUrl;
   if (!selectedUrl) {
-    throw new Error("DATABASE_URL is not set");
+    throw new DatabaseConfigurationError(
+      "DATABASE_URL no está configurada. Configura DATABASE_URL para usar la base de datos.",
+    );
   }
 
   const pool =

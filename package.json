@@ -2,6 +2,9 @@
   "name": "dentpro-colombia",
   "version": "1.0.0",
   "private": true,
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
     "dev": "next dev --turbo",
     "build": "node scripts/run-ci-command.mjs \"prisma generate && next build\"",
