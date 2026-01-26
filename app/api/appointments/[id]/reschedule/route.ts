@@ -13,9 +13,15 @@ import { getAppointmentBufferMinutes, hasBufferConflict } from "@/lib/appointmen
 import { sendAppointmentEmail } from "@/lib/notifications/email";
 import * as Sentry from "@sentry/nextjs";
 
-const rescheduleSchema = z.object({
-  timeSlotId: z.string().uuid(),
-});
+const rescheduleSchema = z
+  .object({
+    timeSlotId: z.string().uuid().optional(),
+    slotId: z.string().uuid().optional(),
+  })
+  .refine((data) => data.timeSlotId || data.slotId, {
+    message: "timeSlotId es requerido.",
+    path: ["timeSlotId"],
+  });
 
 function canRescheduleWithLimit(startAt: Date): boolean {
   const diff = startAt.getTime() - Date.now();
@@ -137,7 +143,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     // sin restricciones
   }
 
-  const newSlot = await prisma.timeSlot.findUnique({ where: { id: payload.timeSlotId } });
+  const requestedSlotId = payload.timeSlotId ?? payload.slotId;
+  const newSlot = await prisma.timeSlot.findUnique({ where: { id: requestedSlotId } });
 
   if (!newSlot) {
     return errorResponse("Nuevo slot no encontrado.", 404);

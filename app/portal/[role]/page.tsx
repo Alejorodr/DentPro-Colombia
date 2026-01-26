@@ -28,6 +28,14 @@ export default async function PortalRolePage({ params }: { params: Promise<{ rol
     role: requestedRole,
     take: 20,
   });
+  const normalizedAppointments = appointments.map((appointment) => ({
+    ...appointment,
+    timeSlot: {
+      ...appointment.timeSlot,
+      startAt: appointment.timeSlot.startAt.toISOString(),
+      endAt: appointment.timeSlot.endAt.toISOString(),
+    },
+  }));
 
   return (
     <div className="space-y-6">
@@ -55,7 +63,7 @@ export default async function PortalRolePage({ params }: { params: Promise<{ rol
           ) : null}
         </div>
         <div className="mt-6">
-          <AppointmentsList initialAppointments={appointments} role={requestedRole} />
+          <AppointmentsList initialAppointments={normalizedAppointments} role={requestedRole} />
         </div>
       </section>
     </div>
