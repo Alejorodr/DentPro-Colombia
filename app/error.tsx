@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 type ErrorProps = {
   error: Error & { digest?: string };
@@ -8,6 +9,14 @@ type ErrorProps = {
 };
 
 export default function GlobalError({ error, reset }: ErrorProps) {
+  const [requestId, setRequestId] = useState<string | null>(null);
+
+  useEffect(() => {
+    console.error("Route error", error);
+    const id = globalThis?.document?.body?.dataset?.requestId ?? null;
+    setRequestId(id);
+  }, [error]);
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-50 px-6 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
       <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
@@ -17,6 +26,9 @@ export default function GlobalError({ error, reset }: ErrorProps) {
         </p>
         {error?.digest ? (
           <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">Referencia: {error.digest}</p>
+        ) : null}
+        {requestId ? (
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Request ID: {requestId}</p>
         ) : null}
         <div className="mt-4 flex flex-wrap gap-3">
           <button

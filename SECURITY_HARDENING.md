@@ -15,7 +15,7 @@ This phase focuses on critical quick wins: rate limiting, input validation, pagi
 
 ## Pending / Phase 2-3
 - Alerting/notification routing for Sentry events and dashboards.
-- Stronger CSP with nonces and CSP reporting endpoint.
+- Stronger CSP with nonces/hashes and CSP reporting endpoint (current prod CSP allows inline scripts to avoid blank screens).
 - Additional authorization checks for remaining ID-based endpoints not touched in this phase.
 
 ## Dependency audit (Phase 4-7)

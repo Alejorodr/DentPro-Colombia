@@ -118,6 +118,7 @@ Para emails de citas (confirmaciones, recordatorios, reprogramaciones) configura
 - `npm run lint`: lint
 - `npm run test`: tests unitarios
 - `npm run test:e2e`: E2E (opt-in, requiere browsers instalados)
+- `npm run e2e:prod`: E2E en modo producción (opt-in, requiere browsers instalados)
 
 ### Playwright (E2E)
 
@@ -131,6 +132,12 @@ Luego habilita los E2E con:
 
 ```bash
 RUN_E2E=1 npm run test:e2e
+```
+
+Para ejecutar contra build de producción (incluye `NEXT_TELEMETRY_DISABLED=1` en el servidor de Playwright):
+
+```bash
+npm run e2e:prod
 ```
 
 ## Roles soportados

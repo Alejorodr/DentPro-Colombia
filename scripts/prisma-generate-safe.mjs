@@ -2,7 +2,13 @@
 
 import { spawn } from "node:child_process";
 
+const isVercel = process.env.VERCEL === "1" || Boolean(process.env.VERCEL_ENV);
 const databaseUrl = process.env.DATABASE_URL ?? process.env.DATABASE_URL_UNPOOLED;
+
+if (isVercel) {
+  console.log("[prisma-generate-safe] Vercel detectado. Omitiendo prisma generate en postinstall.");
+  process.exit(0);
+}
 
 if (!databaseUrl) {
   console.warn(

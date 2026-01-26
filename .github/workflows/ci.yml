@@ -10,7 +10,7 @@ jobs:
   build-test:
     runs-on: ubuntu-latest
     env:
-      NODE_VERSION: "22"
+      NODE_VERSION: "24"
       DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/dentpro"
       NEXTAUTH_SECRET: "test-secret"
       AUTH_TRUST_HOST: "true"

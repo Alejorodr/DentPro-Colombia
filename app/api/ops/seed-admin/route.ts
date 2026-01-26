@@ -22,9 +22,12 @@ function requireSeedEnv(name: string): string {
   return value;
 }
 
-// TEMPORAL: endpoint de emergencia para crear/actualizar el admin.
+// Endpoint de emergencia para crear/actualizar el admin en entornos locales.
 export async function POST(request: Request) {
-  if (process.env.NODE_ENV !== "development") {
+  const isProductionEnv = process.env.NODE_ENV === "production" || process.env.VERCEL_ENV === "production";
+  const isVercelRuntime = process.env.VERCEL === "1" || Boolean(process.env.VERCEL_ENV);
+
+  if (isProductionEnv || isVercelRuntime || process.env.NODE_ENV !== "development") {
     return respondNotFound();
   }
 
