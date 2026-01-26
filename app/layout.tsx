@@ -1,12 +1,14 @@
 import Script from "next/script";
 import { Suspense } from "react";
+import { headers } from "next/headers";
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
 import { AppProviders } from "./providers";
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const requestId = (await headers()).get("x-request-id") ?? undefined;
   return (
     <html lang="es" className="h-full">
       <head>
@@ -69,7 +71,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           rel="stylesheet"
         />
       </head>
-      <body className="min-h-screen bg-white dark:bg-neutral-900">
+      <body className="min-h-screen bg-white dark:bg-neutral-900" data-request-id={requestId}>
         <Suspense fallback={null}>
           <AppProviders>
             {children}

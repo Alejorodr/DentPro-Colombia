@@ -43,8 +43,9 @@ export default async function proxy(request: NextRequest) {
   const token = await getToken({ req: request, secret });
   let role = resolveRole(token);
   const testRoleCookie = request.cookies.get("dentpro-test-role")?.value ?? "";
+  const isProductionEnv = process.env.NODE_ENV === "production" || process.env.VERCEL_ENV === "production";
   const bypassEnabled =
-    process.env.NODE_ENV !== "production" &&
+    !isProductionEnv &&
     process.env.TEST_AUTH_BYPASS === "1" &&
     isLocalhost &&
     testRoleCookie.length > 0;

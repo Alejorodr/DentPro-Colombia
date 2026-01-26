@@ -11,6 +11,7 @@ export type RateLimitConfig = {
 };
 
 const ratelimiters = new Map<string, Ratelimit>();
+let warnedMissingUpstashConfig = false;
 
 const hasUpstashConfig = Boolean(
   process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN,
@@ -70,6 +71,13 @@ export async function enforceRateLimit(request: Request, key: string, config: Ra
       );
     }
     return null;
+  }
+
+  if (isProd && !warnedMissingUpstashConfig) {
+    console.warn(
+      "[ratelimit] Upstash no configurado en producción. Se omite el rate limit por Redis.",
+    );
+    warnedMissingUpstashConfig = true;
   }
 
   if (isProd) {

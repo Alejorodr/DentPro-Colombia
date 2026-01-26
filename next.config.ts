@@ -7,7 +7,7 @@ const csp = [
   "form-action 'self'",
   "object-src 'none'",
   "img-src 'self' data: https:",
-  `script-src 'self'${isProd ? "" : " 'unsafe-eval'"}`,
+  `script-src 'self'${isProd ? " 'unsafe-inline'" : " 'unsafe-eval'"}`,
   "style-src 'self' 'unsafe-inline'",
   "font-src 'self' data: https:",
   `connect-src 'self' https:${isProd ? "" : " http: ws: wss:"}`,
