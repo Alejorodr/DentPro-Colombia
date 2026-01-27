@@ -22,9 +22,9 @@ cp .env.example .env
 - `DATABASE_URL`
 - `DATABASE_URL_UNPOOLED` (opcional en Vercel/Neon: usado para migraciones y diff)
 - `SHADOW_DATABASE_URL` (opcional, recomendado: base shadow para validar drift con Prisma)
-- `NEXTAUTH_SECRET`
-- `NEXTAUTH_URL=https://dent-pro-colombia.vercel.app/`
-- `AUTH_TRUST_HOST=true`
+- `NEXTAUTH_SECRET` (o `AUTH_JWT_SECRET` / `AUTH_SECRET`)
+- `NEXTAUTH_URL=https://dent-pro-colombia.vercel.app/` (opcional en Vercel si `VERCEL_URL` está definido)
+- `AUTH_TRUST_HOST=true` (opcional: requerido solo si tu proxy necesita trust host manual)
 - `SEED_ADMIN_EMAIL`
 - `SEED_ADMIN_PASSWORD`
 - `RESEND_API_KEY` (producción)

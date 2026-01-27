@@ -5,6 +5,12 @@ import type { JWT } from "next-auth/jwt";
 import { cookies } from "next/headers";
 
 import { getJwtSecretString } from "@/lib/auth/jwt";
+import {
+  getInferredAuthBaseUrl,
+  getTrustHostSetting,
+  isProductionRuntime,
+  shouldUseSecureCookies,
+} from "@/lib/auth/runtime";
 import { isUserRole } from "@/lib/auth/roles";
 import { authorizeCredentials } from "@/lib/auth/credentials";
 import { findUserById } from "@/lib/auth/users";
@@ -30,14 +36,21 @@ type SessionToken = JWT & {
   invalidated?: boolean;
 };
 
-const appBaseUrl = process.env.NEXTAUTH_URL ?? "";
+const inferredBaseUrl = getInferredAuthBaseUrl();
+const usesSecureCookies = shouldUseSecureCookies(inferredBaseUrl);
+const trustHost = getTrustHostSetting();
+
+if (isProductionRuntime() && !inferredBaseUrl) {
+  console.warn("[auth] Missing NEXTAUTH_URL or VERCEL_URL; check production auth configuration.");
+}
 
 export const authOptions = {
   secret: getJwtSecretString(),
-  useSecureCookies: appBaseUrl.startsWith("https://"),
+  useSecureCookies: usesSecureCookies,
+  ...(trustHost ? { trustHost } : {}),
   cookies: {
     sessionToken: {
-      name: appBaseUrl.startsWith("https://") ? "__Secure-next-auth.session-token" : "next-auth.session-token",
+      name: usesSecureCookies ? "__Secure-next-auth.session-token" : "next-auth.session-token",
       options: { sameSite: "strict" },
     },
   },
@@ -169,7 +182,7 @@ export async function auth(): Promise<AuthSession> {
     return session;
   }
 
-  const baseUrl = process.env.NEXTAUTH_URL ?? "";
+  const baseUrl = inferredBaseUrl;
   const isLocalhost = baseUrl.includes("localhost") || baseUrl.includes("127.0.0.1");
   const allowTestSession =
     process.env.NODE_ENV !== "production" && isLocalhost && process.env.TEST_AUTH_BYPASS === "1";

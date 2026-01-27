@@ -38,6 +38,23 @@ test("login succeeds and persists across refresh", async ({ page, context }) => 
   await expect(page.getByText("Portal Administrador")).toBeVisible();
 });
 
+test("login with bypass credentials returns session", async ({ page }) => {
+  const bypassEnabled = process.env.TEST_AUTH_BYPASS === "1";
+  test.skip(!bypassEnabled, "TEST_AUTH_BYPASS is required for bypass login test.");
+
+  await page.goto("/auth/login");
+  await page.locator("#login-email").fill(authUser.email);
+  await page.locator("#login-password").fill(authUser.password);
+  await page.getByRole("button", { name: "Ingresar" }).click();
+
+  await expect(page).toHaveURL(/\/portal\/admin/);
+
+  const sessionResponse = await page.request.get("/api/auth/session");
+  expect(sessionResponse.ok()).toBeTruthy();
+  const sessionData = await sessionResponse.json();
+  expect(sessionData?.user?.email).toBeTruthy();
+});
+
 test("rejects invalid credentials and protects portal routes", async ({ page }) => {
   await page.goto("/auth/login");
 
