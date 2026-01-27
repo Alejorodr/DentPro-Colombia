@@ -117,9 +117,24 @@ export function LoginFormCard({
     });
 
     if (result?.error) {
-      setFormError(errorMessages[result.error] ?? errorMessages.Default);
+      const baseMessage = errorMessages[result.error] ?? errorMessages.Default;
+      const extraMessage =
+        result.error === "CredentialsSignin" ? "" : " Error de configuración o servidor. Intenta más tarde.";
+      setFormError(`${baseMessage}${extraMessage}`);
+      if (process.env.NODE_ENV !== "production") {
+        console.warn("[login] signIn error", result);
+      }
       setIsSubmitting(false);
       return;
+    }
+
+    if (process.env.NODE_ENV !== "production") {
+      try {
+        const sessionResponse = await fetch("/api/auth/session", { cache: "no-store" });
+        console.info("[login] session check", { status: sessionResponse.status });
+      } catch (error) {
+        console.warn("[login] session check failed", error);
+      }
     }
 
     const resolvedSession = await getSession();

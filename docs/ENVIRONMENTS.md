@@ -5,7 +5,7 @@ This project separates **Development**, **Preview/Staging**, and **Production** 
 ## Required variables (all environments)
 - `DATABASE_URL`
 - `DATABASE_URL_UNPOOLED`
-- `NEXTAUTH_URL`
+- `NEXTAUTH_URL` (optional on Vercel if `VERCEL_URL` is set)
 - `NEXTAUTH_SECRET` (or `AUTH_JWT_SECRET` / `AUTH_SECRET`)
 - `NEXT_PUBLIC_APP_URL`
 - `AUTH_TRUST_HOST`
@@ -36,4 +36,3 @@ Add environment-specific workflow:
 - `npm run prisma generate` (already included in build)
 - `npx prisma migrate deploy` (staging/production)
 - `npx prisma db push` (development only)
-
