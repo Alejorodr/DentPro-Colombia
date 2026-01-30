@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { getSession, signIn, useSession } from "next-auth/react";
 import { ArrowRight, EnvelopeSimple, Lock, ShieldCheck, WarningCircle } from "@/components/ui/Icon";
+import { Button } from "@/components/ui/Button";
 
 import { getDefaultDashboardPath, isUserRole, type UserRole } from "@/lib/auth/roles";
 
@@ -231,24 +232,15 @@ export function LoginFormCard({
           </div>
         </div>
 
-        <button
+        <Button
           type="submit"
-          className="btn-primary w-full justify-center gap-2 text-sm"
+          className="h-12 w-full"
           disabled={!canSubmit}
-          aria-busy={isSubmitting}
+          isLoading={isSubmitting}
         >
-          {isSubmitting ? (
-            <span className="inline-flex items-center gap-2">
-              <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/60 border-t-white" aria-hidden="true" />
-              Validando credenciales...
-            </span>
-          ) : (
-            <span className="inline-flex items-center gap-2">
-              <ArrowRight className="h-4 w-4" weight="bold" aria-hidden="true" />
-              Ingresar
-            </span>
-          )}
-        </button>
+          {!isSubmitting && <ArrowRight className="h-4 w-4" weight="bold" aria-hidden="true" />}
+          {isSubmitting ? "Validando credenciales..." : "Ingresar"}
+        </Button>
       </form>
 
       <p className="text-center text-xs text-slate-500 dark:text-slate-300">

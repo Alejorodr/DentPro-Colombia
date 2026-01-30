@@ -1,4 +1,5 @@
 import type { ButtonHTMLAttributes } from "react";
+import { CircleNotch } from "@/components/ui/Icon";
 
 import { cn } from "@/lib/utils";
 
@@ -34,8 +35,29 @@ export function buttonClasses({ variant = "primary", size = "md", className }: B
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
   size?: ButtonSize;
+  isLoading?: boolean;
 }
 
-export function Button({ className, variant, size, type = "button", ...props }: ButtonProps) {
-  return <button type={type} className={buttonClasses({ variant, size, className })} {...props} />;
+export function Button({
+  className,
+  variant,
+  size,
+  type = "button",
+  isLoading,
+  disabled,
+  children,
+  ...props
+}: ButtonProps) {
+  return (
+    <button
+      type={type}
+      className={buttonClasses({ variant, size, className })}
+      disabled={isLoading || disabled}
+      aria-busy={isLoading}
+      {...props}
+    >
+      {isLoading && <CircleNotch className="h-4 w-4 animate-spin" aria-hidden="true" />}
+      {children}
+    </button>
+  );
 }
