@@ -86,18 +86,8 @@ export async function getAdminKpis(
   prisma: PrismaClient,
   { from, to, useSql = true }: { from: Date; to: Date; useSql?: boolean },
 ): Promise<AdminKpis> {
-  const [totalAppointments, statusRows, newPatients, totalSlots, bookedSlots, activeWithAppointments, activeTotal, revenueData, pendingApprovals] =
+  const [statusRows, newPatients, totalSlots, bookedSlots, activeProGroups, activeTotal, revenueData, pendingApprovals] =
     await Promise.all([
-      prisma.appointment.count({
-        where: {
-          timeSlot: {
-            startAt: {
-              gte: from,
-              lt: to,
-            },
-          },
-        },
-      }),
       prisma.appointment.groupBy({
         by: ["status"],
         where: {
@@ -137,7 +127,8 @@ export async function getAdminKpis(
           status: TimeSlotStatus.BOOKED,
         },
       }),
-      prisma.appointment.findMany({
+      prisma.appointment.groupBy({
+        by: ["professionalId"],
         where: {
           timeSlot: {
             startAt: {
@@ -149,8 +140,6 @@ export async function getAdminKpis(
             active: true,
           },
         },
-        distinct: ["professionalId"],
-        select: { professionalId: true },
       }),
       prisma.professionalProfile.count({ where: { active: true } }),
       useSql
@@ -176,6 +165,7 @@ export async function getAdminKpis(
               servicePriceCents: true,
               service: { select: { priceCents: true } },
             },
+            take: 5000,
           }),
       prisma.appointment.count({
         where: {
@@ -198,13 +188,15 @@ export async function getAdminKpis(
     {} as Record<AppointmentStatus, number>,
   );
 
+  let totalAppointments = 0;
   for (const row of statusRows) {
     statusCounts[row.status] = row._count.status;
+    totalAppointments += row._count.status;
   }
 
   const utilizationRate = totalSlots > 0 ? bookedSlots / totalSlots : 0;
   // Si no hay citas en el rango, reportamos el total de profesionales activos.
-  const activeProfessionals = totalAppointments > 0 ? activeWithAppointments.length : activeTotal;
+  const activeProfessionals = totalAppointments > 0 ? (activeProGroups as any).length : activeTotal;
   const cancellations = statusCounts[AppointmentStatus.CANCELLED] ?? 0;
   const revenueCents = useSql
     ? Number((revenueData as Array<{ total: bigint | null }>)[0]?.total ?? 0)
@@ -271,6 +263,7 @@ export async function getAdminTrend(
         },
       },
       select: { timeSlot: { select: { startAt: true } } },
+      take: 5000, // Bypass global 50-limit for analytics
     });
 
     for (const appointment of appointments) {
@@ -301,34 +294,60 @@ export async function getAdminRevenueTrend(
     to,
     bucket,
     timeZone,
+    useSql = true,
   }: {
     from: Date;
     to: Date;
     bucket: AnalyticsBucket;
     timeZone?: string;
+    useSql?: boolean;
   },
 ): Promise<AdminRevenueTrend> {
   const resolvedZone = timeZone ?? getAnalyticsTimeZone();
   const bucketValue = bucket;
 
-  const rows = await prisma.$queryRaw<Array<{ bucket: Date; total: bigint }>>(
-    Prisma.sql`
-      SELECT
-        date_trunc(${bucketValue}, t."startAt" AT TIME ZONE ${resolvedZone}) AS bucket,
-        COALESCE(SUM(COALESCE(a."servicePriceCents", s."priceCents")), 0)::bigint AS total
-      FROM "Appointment" a
-      INNER JOIN "TimeSlot" t ON t."id" = a."timeSlotId"
-      INNER JOIN "Service" s ON s."id" = a."serviceId"
-      WHERE t."startAt" >= ${from} AND t."startAt" < ${to}
-      GROUP BY 1
-      ORDER BY 1
-    `,
-  );
-
   const totals = new Map<string, number>();
-  for (const row of rows) {
-    const normalized = normalizeBucketStart(toUtcFromZonedDate(row.bucket, resolvedZone), bucket, resolvedZone);
-    totals.set(normalized.toISOString(), Number(row.total));
+
+  if (useSql) {
+    const rows = await prisma.$queryRaw<Array<{ bucket: Date; total: bigint }>>(
+      Prisma.sql`
+        SELECT
+          date_trunc(${bucketValue}, t."startAt" AT TIME ZONE ${resolvedZone}) AS bucket,
+          COALESCE(SUM(COALESCE(a."servicePriceCents", s."priceCents")), 0)::bigint AS total
+        FROM "Appointment" a
+        INNER JOIN "TimeSlot" t ON t."id" = a."timeSlotId"
+        INNER JOIN "Service" s ON s."id" = a."serviceId"
+        WHERE t."startAt" >= ${from} AND t."startAt" < ${to}
+        GROUP BY 1
+        ORDER BY 1
+      `,
+    );
+
+    for (const row of rows) {
+      const normalized = normalizeBucketStart(toUtcFromZonedDate(row.bucket, resolvedZone), bucket, resolvedZone);
+      totals.set(normalized.toISOString(), Number(row.total));
+    }
+  } else {
+    const appointments = await prisma.appointment.findMany({
+      where: {
+        timeSlot: {
+          startAt: { gte: from, lt: to },
+        },
+      },
+      select: {
+        servicePriceCents: true,
+        service: { select: { priceCents: true } },
+        timeSlot: { select: { startAt: true } },
+      },
+      take: 5000,
+    });
+
+    for (const appt of appointments) {
+      const normalized = normalizeBucketStart(appt.timeSlot.startAt, bucket, resolvedZone);
+      const key = normalized.toISOString();
+      const amount = appt.servicePriceCents ?? appt.service?.priceCents ?? 0;
+      totals.set(key, (totals.get(key) ?? 0) + amount);
+    }
   }
 
   const bucketStarts = buildBucketStarts(from, to, bucket, resolvedZone);
@@ -351,27 +370,29 @@ export async function getAdminStaffOnDuty(prisma: PrismaClient): Promise<AdminSt
   const endOfDay = new Date(startOfDay);
   endOfDay.setDate(endOfDay.getDate() + 1);
 
-  const [professionals, todaysAppointments] = await Promise.all([
-    prisma.professionalProfile.findMany({
-      where: { active: true },
-      include: { user: true, specialty: true },
-      orderBy: { user: { name: "asc" } },
-    }),
-    prisma.appointment.findMany({
-      where: {
-        timeSlot: {
-          startAt: {
-            gte: startOfDay,
-            lt: endOfDay,
+  const professionals = await prisma.professionalProfile.findMany({
+    where: { active: true },
+    include: {
+      user: true,
+      specialty: true,
+      appointments: {
+        where: {
+          timeSlot: {
+            startAt: {
+              gte: startOfDay,
+              lt: endOfDay,
+            },
           },
         },
+        include: { timeSlot: true },
       },
-      include: { timeSlot: true, professional: true },
-    }),
-  ]);
+    },
+    orderBy: { user: { name: "asc" } },
+    take: 5,
+  });
 
-  return professionals.slice(0, 5).map((professional) => {
-    const appointments = todaysAppointments.filter((appointment) => appointment.professionalId === professional.id);
+  return professionals.map((professional) => {
+    const appointments = professional.appointments;
     const isBusy = appointments.some(
       (appointment) => appointment.timeSlot.startAt <= now && appointment.timeSlot.endAt >= now,
     );
