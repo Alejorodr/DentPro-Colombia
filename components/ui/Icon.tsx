@@ -14,6 +14,7 @@ export const {
   ChartLineUp,
   ChatCircleDots,
   CheckCircle,
+  CircleNotch,
   ClipboardText,
   ClockCounterClockwise,
   Clock,

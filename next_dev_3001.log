@@ -1,0 +1,20 @@
+ WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.22.0","pnpm":"10.28.0"})
+
+> dentpro-colombia@1.0.0 dev /app
+> next dev --turbo --port 3001
+
+▲ Next.js 16.1.6 (Turbopack)
+- Local:         http://localhost:3001
+- Network:       http://192.168.0.2:3001
+- Environments: .env
+
+✓ Starting...
+⚠ Turbopack's filesystem cache has been deleted because we previously detected an internal error in Turbopack. Builds or page loads may be slower as a result.
+✓ Ready in 2.6s
+NEXTAUTH_SECRET is not configured.
+○ Compiling /auth/login ...
+✓ Finished writing to filesystem cache in 32.8s
+NEXTAUTH_SECRET is not configured.
+ GET /auth/login 200 in 491ms (compile: 13ms, proxy.ts: 92ms, render: 386ms)
+NEXTAUTH_SECRET is not configured.
+NEXTAUTH_SECRET is not configured.
