@@ -93,3 +93,95 @@
 
 ### Middleware / proxy
 - `proxy.ts` (matcher para `/portal/:path*`, `/auth/login`, `/login`, `/api/:path*`).
+
+
+## 5) Inventario de APIs y rol requerido (resumen operativo)
+
+> Nota: los roles se deducen de guards (`requireRole`, `isAuthorized`, validaciones de sesión) y segmentación por dominio.
+
+### Auth / público
+- `GET|POST /api/auth/[...nextauth]`: público (NextAuth gestiona sesión/cookies).
+- `POST /api/auth/forgot-password`: público con rate limit.
+- `POST /api/auth/reset-password`: público con token válido.
+
+### Cliente (PACIENTE)
+- `GET|POST /api/client/appointments`: PACIENTE.
+- `GET|POST /api/client/consents`: PACIENTE.
+- `GET /api/client/dashboard`: PACIENTE.
+- `GET /api/client/data-export`: PACIENTE.
+
+### Citas transversales
+- `GET|POST /api/appointments`: ADMINISTRADOR / RECEPCIONISTA / PACIENTE (según operación).
+- `GET|PATCH|DELETE /api/appointments/[id]`: ADMINISTRADOR / RECEPCIONISTA / PACIENTE / PROFESIONAL (según operación).
+- `GET /api/appointments/[id]/calendar.ics`: sesión válida del actor autorizado sobre la cita.
+- `POST /api/appointments/[id]/reschedule`: actor autorizado sobre la cita (PACIENTE o staff según reglas).
+
+### Profesionales
+- `GET|POST /api/professionals`: ADMINISTRADOR (gestión).
+- `GET|PATCH /api/professionals/[id]`: ADMINISTRADOR.
+- `GET /api/professionals/[id]/slots`: autenticado (consulta disponibilidad).
+- `POST /api/professionals/[id]/slots/generate`: ADMINISTRADOR / RECEPCIONISTA.
+- `GET|PUT /api/professional/profile`: PROFESIONAL.
+- `GET|PUT /api/professional/preferences`: PROFESIONAL.
+- `GET|POST /api/professional/availability`: PROFESIONAL.
+- `GET /api/professional/dashboard`: PROFESIONAL.
+- `GET /api/professional/patients`: PROFESIONAL.
+- `GET|POST /api/professional/attachments`: PROFESIONAL.
+- `GET|POST /api/professional/appointment/[id]/notes`: PROFESIONAL.
+- `GET|POST /api/professional/appointment/[id]/attachments`: PROFESIONAL.
+- `GET|POST /api/professional/appointment/[id]/prescription`: PROFESIONAL.
+
+### Clínica
+- `GET|POST /api/clinical/patients/[patientId]/episodes`: PROFESIONAL (y staff autorizado según contexto).
+- `GET|PATCH /api/clinical/episodes/[episodeId]`: PROFESIONAL.
+- `GET|POST /api/clinical/episodes/[episodeId]/notes`: PROFESIONAL.
+- `GET|POST /api/clinical/episodes/[episodeId]/prescriptions`: PROFESIONAL.
+- `GET|POST /api/clinical/episodes/[episodeId]/attachments`: PROFESIONAL.
+- `GET /api/clinical/attachments/[attachmentId]/download`: usuario autenticado con acceso al paciente/episodio.
+- `DELETE /api/clinical/attachments/[attachmentId]`: PROFESIONAL (o actor autorizado por política clínica).
+
+### Administración / catálogo
+- `GET|POST /api/users`: ADMINISTRADOR.
+- `PATCH|DELETE /api/users/[id]`: ADMINISTRADOR.
+- `GET|PATCH /api/users/me`: autenticado.
+- `GET|PATCH /api/users/me/notifications`: autenticado.
+- `GET|POST /api/services`: ADMINISTRADOR.
+- `PATCH|DELETE /api/services/[id]`: ADMINISTRADOR.
+- `GET|POST /api/specialties`: ADMINISTRADOR.
+- `PATCH|DELETE /api/specialties/[id]`: ADMINISTRADOR.
+- `GET|POST /api/admin/templates`: ADMINISTRADOR.
+- `GET|PATCH|DELETE /api/admin/templates/[id]`: ADMINISTRADOR.
+- `GET /api/admin/metrics/appointments`: ADMINISTRADOR.
+- `GET /api/admin/audit/access-logs`: ADMINISTRADOR.
+- `GET /api/admin/patients/[id]/export`: ADMINISTRADOR.
+- `GET|POST /api/admin/holidays`: ADMINISTRADOR.
+
+### Recepción / analytics
+- `GET /api/analytics/receptionist`: RECEPCIONISTA / ADMINISTRADOR.
+- `GET /api/analytics/receptionist/calendar`: RECEPCIONISTA / ADMINISTRADOR.
+- `GET /api/analytics/admin`: ADMINISTRADOR.
+- `GET /api/search`: RECEPCIONISTA / ADMINISTRADOR.
+- `GET|POST /api/patients`: RECEPCIONISTA / ADMINISTRADOR.
+- `GET|PATCH /api/patients/[id]`: RECEPCIONISTA / ADMINISTRADOR.
+
+### Campañas / notificaciones
+- `GET|POST /api/campaigns`: ADMINISTRADOR.
+- `GET|PATCH|DELETE /api/campaigns/[id]`: ADMINISTRADOR.
+- `GET|POST /api/notifications`: autenticado (scope por rol/usuario).
+- `PATCH|DELETE /api/notifications/[id]`: autenticado sobre recurso propio o staff.
+
+### Ops / test / monitoreo
+- `GET /api/_monitoring`: interno/observabilidad.
+- `POST /api/cron/appointments/reminders`: cron protegido por secreto.
+- `GET /api/ops/auth-diagnostics`: protegido con `OPS_KEY`, allowlist IP y rate limit.
+- `POST /api/ops/migrate`: solo `development` + `OPS_KEY` + allowlist + rate limit.
+- `POST /api/ops/seed-admin`: solo `development` + no Vercel/prod + `OPS_KEY`.
+- `POST /api/test/seed`: solo `test` y 404 en producción.
+
+## 6) Inventario adicional de infraestructura
+
+- **Auth runtime**: `auth.ts`, `app/api/auth/[...nextauth]/route.ts`, `lib/auth/**`, `types/next-auth.d.ts`.
+- **DB y acceso**: `prisma/schema.prisma`, `prisma/migrations/**`, `lib/prisma.ts`, `prisma/seed.ts`.
+- **Proxy/middleware**: `proxy.ts` (gating de `/portal/**`, login y APIs).
+- **Jobs/Cron**: `app/api/cron/appointments/reminders/route.ts`.
+- **Tests**: `tests/**` (Vitest unit/integration) y `e2e/**` (Playwright smoke/flujo).
