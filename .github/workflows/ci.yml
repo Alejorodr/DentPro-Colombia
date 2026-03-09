@@ -21,16 +21,21 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.13.1
+          run_install: false
+
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "pnpm"
 
-      - name: Enable corepack
+      - name: Verify toolchain
         run: |
-          corepack enable
-          corepack prepare pnpm@10.13.1 --activate
+          node -v
           pnpm -v
 
       - name: Install dependencies
@@ -51,6 +56,9 @@ jobs:
 
       - name: Typecheck
         run: pnpm run typecheck
+
+      - name: Prisma generate
+        run: pnpm exec prisma generate --schema prisma/schema.prisma
 
       - name: Build
         run: pnpm run build
