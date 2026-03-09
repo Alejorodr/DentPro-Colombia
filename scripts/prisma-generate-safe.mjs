@@ -18,8 +18,8 @@ if (!databaseUrl) {
 }
 
 const child = spawn(
-  "npx",
-  ["--yes", "prisma", "generate", "--schema", "prisma/schema.prisma"],
+  "pnpm",
+  ["exec", "prisma", "generate", "--schema", "prisma/schema.prisma"],
   { stdio: "inherit" }
 );
 

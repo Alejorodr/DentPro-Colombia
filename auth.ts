@@ -40,20 +40,42 @@ const inferredBaseUrl = getInferredAuthBaseUrl();
 const usesSecureCookies = shouldUseSecureCookies(inferredBaseUrl);
 const trustHost = getTrustHostSetting();
 
+type AuthWarnKey = "missing-base-url" | "missing-secret" | "insecure-cookies";
+const authWarningState = globalThis as typeof globalThis & {
+  __authWarningsLogged?: Set<AuthWarnKey>;
+};
+
+function warnAuthOnce(key: AuthWarnKey, message: string): void {
+  if (!isProductionRuntime()) {
+    return;
+  }
+
+  if (!authWarningState.__authWarningsLogged) {
+    authWarningState.__authWarningsLogged = new Set<AuthWarnKey>();
+  }
+
+  if (authWarningState.__authWarningsLogged.has(key)) {
+    return;
+  }
+
+  authWarningState.__authWarningsLogged.add(key);
+  console.warn(message);
+}
+
 function hasAuthSecretConfigured(): boolean {
   return Boolean(process.env.AUTH_JWT_SECRET || process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET);
 }
 
-if (isProductionRuntime() && !inferredBaseUrl) {
-  console.warn("[auth] Missing NEXTAUTH_URL or VERCEL_URL; check production auth configuration.");
+if (!inferredBaseUrl) {
+  warnAuthOnce("missing-base-url", "[auth] Missing NEXTAUTH_URL or VERCEL_URL; check production auth configuration.");
 }
 
-if (isProductionRuntime() && !hasAuthSecretConfigured()) {
-  console.warn("[auth] Missing AUTH_JWT_SECRET/NEXTAUTH_SECRET/AUTH_SECRET in production.");
+if (!hasAuthSecretConfigured()) {
+  warnAuthOnce("missing-secret", "[auth] Missing AUTH_JWT_SECRET/NEXTAUTH_SECRET/AUTH_SECRET in production.");
 }
 
-if (isProductionRuntime() && !usesSecureCookies) {
-  console.warn("[auth] Secure cookies are disabled in production; review NEXTAUTH_URL/VERCEL_URL.");
+if (!usesSecureCookies) {
+  warnAuthOnce("insecure-cookies", "[auth] Secure cookies are disabled in production; review NEXTAUTH_URL/VERCEL_URL.");
 }
 
 export const authOptions = {
