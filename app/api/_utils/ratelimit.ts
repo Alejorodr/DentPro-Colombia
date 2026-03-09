@@ -75,7 +75,7 @@ export async function enforceRateLimit(request: Request, key: string, config: Ra
 
   if (isProd && !warnedMissingUpstashConfig) {
     console.warn(
-      "[ratelimit] Upstash no configurado en producción. Se omite el rate limit por Redis.",
+      "[ratelimit] Upstash not configured; rate limit disabled in production.",
     );
     warnedMissingUpstashConfig = true;
   }
