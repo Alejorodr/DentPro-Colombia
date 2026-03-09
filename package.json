@@ -12,14 +12,14 @@
     "start": "next start",
     "lint": "eslint .",
     "test": "node scripts/run-ci-command.mjs \"vitest run\"",
-    "e2e": "npm run test:e2e",
+    "e2e": "pnpm run test:e2e",
     "prisma": "prisma",
     "db:seed": "prisma db seed",
     "prisma:seed": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' prisma/seed.ts",
     "postinstall": "node scripts/prisma-generate-safe.mjs",
     "typecheck": "tsc --noEmit",
     "test:e2e": "node scripts/run-e2e.mjs",
-    "e2e:prod": "E2E_ENV=production RUN_E2E=1 npm run test:e2e"
+    "e2e:prod": "E2E_ENV=production RUN_E2E=1 pnpm run test:e2e"
   },
   "dependencies": {
     "@auth/core": "0.34.3",
@@ -55,6 +55,7 @@
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^24.0.0",
     "@types/nodemailer": "^7.0.5",
+    "@types/pg": "^8.15.6",
     "@types/react": "19.2.8",
     "@types/react-dom": "19.2.3",
     "@typescript-eslint/eslint-plugin": "^8.53.0",
@@ -64,6 +65,7 @@
     "better-sqlite3": "^11.6.0",
     "eslint": "^9.39.2",
     "eslint-config-next": "^16.1.2",
+    "globals": "^17.4.0",
     "jsdom": "27.4.0",
     "postcss": "^8.5.6",
     "prisma": "^7.2.0",
@@ -80,5 +82,17 @@
   },
   "prisma": {
     "seed": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' prisma/seed.ts"
+  },
+  "packageManager": "pnpm@10.13.1",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@prisma/engines",
+      "prisma",
+      "esbuild",
+      "sharp",
+      "@sentry/cli",
+      "better-sqlite3",
+      "unrs-resolver"
+    ]
   }
 }
