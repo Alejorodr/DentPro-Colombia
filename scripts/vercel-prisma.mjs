@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 
-import 'dotenv/config';
 import { spawn } from 'node:child_process';
 import { readdir } from 'node:fs/promises';
 import path from 'node:path';
@@ -95,6 +94,8 @@ const run = async () => {
   }
 
   const databaseUrl = process.env.DATABASE_URL || process.env.DATABASE_URL_UNPOOLED;
+  const hasDatabaseUrl = Boolean(databaseUrl && databaseUrl.trim());
+  logStep(`DATABASE_URL status: ${hasDatabaseUrl ? 'present' : 'missing'}`);
 
   if (isInvalidDatabaseUrl(databaseUrl)) {
     throw new Error('DATABASE_URL inválida o placeholder. Configure DATABASE_URL en Vercel.');
