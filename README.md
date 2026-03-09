@@ -4,7 +4,7 @@ Sistema de gestión de turnos clínicos con Next.js App Router, Prisma y NextAut
 
 ## Requisitos
 
-- Node.js 20+
+- Node.js 24.x
 - Base de datos Postgres (Neon recomendado)
 - Vercel Blob (adjuntos clínicos en producción)
 - Upstash Redis (rate limiting global, recomendado)
@@ -31,6 +31,7 @@ cp .env.example .env
 - `EMAIL_FROM` (producción)
 - `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` (emails de citas por SMTP)
 - `NEXT_PUBLIC_APP_URL` (local)
+- `NEXT_TELEMETRY_DISABLED=1` (opcional para desactivar telemetría de Next.js en CI/logs)
 - `UPSTASH_REDIS_REST_URL` (rate limiting persistente)
 - `UPSTASH_REDIS_REST_TOKEN` (rate limiting persistente)
 - `BLOB_READ_WRITE_TOKEN` (Vercel Blob para adjuntos clínicos)
@@ -192,6 +193,6 @@ Timezone:
 
 ## Notas de producción
 
-- Tailwind CSS v4 exige Node.js 20+.
+- Tailwind CSS v4 exige Node.js 20+ (proyecto alineado en Node.js 24.x).
 - `prisma generate` debe ejecutarse en postinstall.
 - `prisma migrate deploy` debe ejecutarse en el pipeline de producción.

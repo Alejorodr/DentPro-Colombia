@@ -5,7 +5,8 @@ import { AppointmentStatus, Role, TimeSlotStatus } from "@prisma/client";
 import { getPrismaClient } from "@/lib/prisma";
 
 export async function POST() {
-  if (process.env.NODE_ENV !== "test") {
+  const isProductionEnv = process.env.NODE_ENV === "production" || process.env.VERCEL_ENV === "production";
+  if (isProductionEnv || process.env.NODE_ENV !== "test") {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 

@@ -40,8 +40,20 @@ const inferredBaseUrl = getInferredAuthBaseUrl();
 const usesSecureCookies = shouldUseSecureCookies(inferredBaseUrl);
 const trustHost = getTrustHostSetting();
 
+function hasAuthSecretConfigured(): boolean {
+  return Boolean(process.env.AUTH_JWT_SECRET || process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET);
+}
+
 if (isProductionRuntime() && !inferredBaseUrl) {
   console.warn("[auth] Missing NEXTAUTH_URL or VERCEL_URL; check production auth configuration.");
+}
+
+if (isProductionRuntime() && !hasAuthSecretConfigured()) {
+  console.warn("[auth] Missing AUTH_JWT_SECRET/NEXTAUTH_SECRET/AUTH_SECRET in production.");
+}
+
+if (isProductionRuntime() && !usesSecureCookies) {
+  console.warn("[auth] Secure cookies are disabled in production; review NEXTAUTH_URL/VERCEL_URL.");
 }
 
 export const authOptions = {

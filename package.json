@@ -46,6 +46,7 @@
     "zod": "^4.3.5"
   },
   "devDependencies": {
+    "@next/eslint-plugin-next": "^16.1.6",
     "@playwright/test": "^1.49.0",
     "@prisma/adapter-better-sqlite3": "^7.2.0",
     "@tailwindcss/postcss": "^4.1.18",
