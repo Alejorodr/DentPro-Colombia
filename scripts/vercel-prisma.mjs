@@ -7,8 +7,6 @@ import { fileURLToPath } from 'node:url';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
-const prismaArgs = (...args) => ['--yes', 'prisma', ...args];
-
 const runCommand = (command, args) =>
   new Promise((resolve, reject) => {
     const child = spawn(command, args, {
@@ -35,7 +33,7 @@ const logStep = (message) => {
   console.log(`\n[vercel-prisma] ${message}`);
 };
 
-const runPrisma = async (args) => runCommand('npx', prismaArgs(...args));
+const runPrisma = async (args) => runCommand('pnpm', ['exec', 'prisma', ...args]);
 
 const listMigrationDirectories = async () => {
   const migrationsPath = path.join(repoRoot, 'prisma', 'migrations');

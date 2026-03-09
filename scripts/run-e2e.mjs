@@ -17,7 +17,7 @@ const defaultBrowserPath =
     : path.join(os.homedir(), ".cache", "ms-playwright");
 
 if (!existsSync(defaultBrowserPath)) {
-  console.log("Playwright browsers not installed. Run `npx playwright install --with-deps chromium` and retry.");
+  console.log("Playwright browsers not installed. Run `pnpm exec playwright install --with-deps chromium` and retry.");
   process.exit(0);
 }
 
@@ -33,4 +33,4 @@ const run = (command) =>
     });
   });
 
-await run("npx playwright test");
+await run("pnpm exec playwright test");
