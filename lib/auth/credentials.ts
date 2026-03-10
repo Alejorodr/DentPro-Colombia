@@ -1,5 +1,6 @@
 import { getDefaultDashboardPath, isUserRole } from "@/lib/auth/roles";
 import { authenticateUser } from "@/lib/auth/users";
+import { logger } from "@/lib/logger";
 
 type CredentialsInput = {
   email?: string;
@@ -11,6 +12,7 @@ export async function authorizeCredentials(credentials?: CredentialsInput) {
   const password = credentials?.password;
 
   if (!email || !password) {
+    logger.warn({ event: "auth.credentials.validation_failed" });
     return null;
   }
 
@@ -41,13 +43,17 @@ export async function authorizeCredentials(credentials?: CredentialsInput) {
       } as const;
     }
 
+    logger.warn({ event: "auth.credentials.bypass_denied" });
     return null;
   }
 
   const user = await authenticateUser(email, password);
   if (!user) {
+    logger.warn({ event: "auth.credentials.invalid" });
     return null;
   }
+
+  logger.info({ event: "auth.credentials.success", userId: user.id, role: user.role });
 
   // TODO: Implement 2FA verification for ADMINISTRADOR/PROFESIONAL when mfaEnabled is true.
   return {

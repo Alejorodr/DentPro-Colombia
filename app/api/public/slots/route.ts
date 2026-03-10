@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { getPrismaClient } from "@/lib/prisma";
 import { TimeSlotStatus } from "@prisma/client";
+import { logger } from "@/lib/logger";
 
 const querySchema = z.object({
   limit: z.coerce.number().int().min(1).max(12).default(6),
@@ -15,6 +16,7 @@ export async function GET(request: Request) {
   });
 
   if (!parsedQuery.success) {
+    logger.warn({ event: "public.slots.validation_failed", issues: parsedQuery.error.flatten() });
     return NextResponse.json({ error: "Parámetros inválidos." }, { status: 400 });
   }
 
@@ -49,6 +51,7 @@ export async function GET(request: Request) {
       specialty: slot.professional.specialty.name,
     }));
 
+    logger.info({ event: "public.slots.success", limit: parsedQuery.data.limit, returned: payload.length });
     return NextResponse.json(
       { slots: payload, generatedAt: now.toISOString() },
       {
@@ -57,7 +60,8 @@ export async function GET(request: Request) {
         },
       },
     );
-  } catch {
+  } catch (error) {
+    logger.error({ event: "public.slots.failed", error });
     return NextResponse.json({ error: "No fue posible consultar disponibilidad." }, { status: 500 });
   }
 }
