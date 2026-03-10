@@ -19,9 +19,20 @@ const viewOptions = [
 type ViewMode = (typeof viewOptions)[number]["value"];
 
 type AnalyticsResponse = {
+  metrics?: {
+    totalAppointments: number;
+    pending: number;
+    confirmed: number;
+    checkedIn: number;
+    completed: number;
+    noShow: number;
+    cancellations: number;
+  };
   appointments: Array<{
     id: string;
     status: "PENDING" | "CONFIRMED" | "CANCELLED" | "COMPLETED";
+    checkedInAt?: string | null;
+    notes?: string | null;
     startAt: string;
     endAt: string;
     patient: { id: string; name: string } | null;
@@ -98,6 +109,7 @@ export function ReceptionistSchedule() {
   const [calendarSummary, setCalendarSummary] = useState<Record<string, CalendarDaySummary>>({});
   const [professionalFilter, setProfessionalFilter] = useState("all");
   const [specialtyFilter, setSpecialtyFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
 
   const range = useMemo(() => {
     if (view === "week") return { from: startOfWeek(selectedDate), to: endOfWeek(selectedDate) };
@@ -172,9 +184,14 @@ export function ReceptionistSchedule() {
     return list.filter((appointment) => {
       const matchesProfessional = professionalFilter === "all" || appointment.professional?.id === professionalFilter;
       const matchesSpecialty = specialtyFilter === "all" || appointment.professional?.specialty === specialtyFilter;
-      return matchesProfessional && matchesSpecialty;
+      const matchesStatus =
+        statusFilter === "all" ||
+        (statusFilter === "no_show"
+          ? appointment.status === "CANCELLED" && Boolean(appointment.notes?.includes("[NO_SHOW]"))
+          : appointment.status === statusFilter);
+      return matchesProfessional && matchesSpecialty && matchesStatus;
     });
-  }, [data?.appointments, professionalFilter, specialtyFilter]);
+  }, [data?.appointments, professionalFilter, specialtyFilter, statusFilter]);
 
   return (
     <div className="space-y-6" data-testid="receptionist-schedule-page">
@@ -212,7 +229,7 @@ export function ReceptionistSchedule() {
             </div>
           </div>
 
-          <div className="grid gap-3 md:grid-cols-2">
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
             <label className="text-xs font-semibold text-slate-500 dark:text-slate-300">Profesional
               <select className="input mt-1" value={professionalFilter} onChange={(event) => setProfessionalFilter(event.target.value)}>
                 <option value="all">Todos</option>
@@ -225,7 +242,28 @@ export function ReceptionistSchedule() {
                 {specialtyOptions.map((specialty) => <option key={specialty} value={specialty}>{specialty}</option>)}
               </select>
             </label>
+            <label className="text-xs font-semibold text-slate-500 dark:text-slate-300">Estado
+              <select className="input mt-1" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
+                <option value="all">Todos</option>
+                <option value="PENDING">Programadas</option>
+                <option value="CONFIRMED">Confirmadas</option>
+                <option value="COMPLETED">Atendidas</option>
+                <option value="CANCELLED">Canceladas</option>
+                <option value="no_show">No asistió</option>
+              </select>
+            </label>
           </div>
+
+          {data?.metrics ? (
+            <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-6">
+              <div className="rounded-xl border border-slate-200 px-3 py-2 text-xs">Total: {data.metrics.totalAppointments}</div>
+              <div className="rounded-xl border border-slate-200 px-3 py-2 text-xs">Confirmadas: {data.metrics.confirmed}</div>
+              <div className="rounded-xl border border-slate-200 px-3 py-2 text-xs">En sala: {data.metrics.checkedIn}</div>
+              <div className="rounded-xl border border-slate-200 px-3 py-2 text-xs">Atendidas: {data.metrics.completed}</div>
+              <div className="rounded-xl border border-slate-200 px-3 py-2 text-xs">Canceladas: {data.metrics.cancellations}</div>
+              <div className="rounded-xl border border-slate-200 px-3 py-2 text-xs">No-show: {data.metrics.noShow}</div>
+            </div>
+          ) : null}
 
           {error ? <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p> : null}
 

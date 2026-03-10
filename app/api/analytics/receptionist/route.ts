@@ -11,6 +11,7 @@ import {
   startOfZonedDay,
 } from "@/lib/dates/tz";
 import { AppointmentStatus, TimeSlotStatus } from "@prisma/client";
+import { isNoShow } from "@/lib/appointments/status";
 
 function parseDateInput(value?: string | null) {
   if (!value) {
@@ -167,11 +168,15 @@ export async function GET(request: Request) {
       pending: statusCounts[AppointmentStatus.PENDING] ?? 0,
       confirmed: statusCounts[AppointmentStatus.CONFIRMED] ?? 0,
       checkedIn: checkedInCount,
+      completed: statusCounts[AppointmentStatus.COMPLETED] ?? 0,
+      noShow: appointments.filter((appointment) => isNoShow(appointment.notes)).length,
       cancellations: statusCounts[AppointmentStatus.CANCELLED] ?? 0,
     },
     appointments: appointments.map((appointment) => ({
       id: appointment.id,
       status: appointment.status,
+      checkedInAt: appointment.checkedInAt,
+      notes: appointment.notes,
       startAt: appointment.timeSlot.startAt,
       endAt: appointment.timeSlot.endAt,
       patient: appointment.patient

@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 
 import { CalendarBlank } from "@/components/ui/Icon";
 import { Skeleton } from "@/app/portal/components/ui/Skeleton";
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
+import { operationalStatusLabel, toOperationalStatus } from "@/lib/appointments/status";
 
 interface AvailabilityRule {
   id: string;
@@ -45,6 +47,9 @@ interface ClinicHoliday {
 interface AppointmentSummary {
   id: string;
   status: "PENDING" | "CONFIRMED" | "CANCELLED" | "COMPLETED";
+  checkedInAt?: string | null;
+  notes?: string | null;
+  patientId?: string;
   timeSlot: { startAt: string; endAt: string };
   patient: { user: { name: string; lastName: string } } | null;
   service: { name: string } | null;
@@ -366,6 +371,12 @@ export function ProfessionalCalendar() {
                       ? `${appointment.patient.user.name} ${appointment.patient.user.lastName}`
                       : "Paciente"}
                   </p>
+                  <p className="text-slate-500">Estado: {operationalStatusLabel(toOperationalStatus(appointment))}</p>
+                  {appointment.patientId ? (
+                    <Link href={`/portal/professional/patients/${appointment.patientId}`} className="font-semibold text-brand-teal">
+                      Abrir paciente
+                    </Link>
+                  ) : null}
                 </div>
               ))
             )}

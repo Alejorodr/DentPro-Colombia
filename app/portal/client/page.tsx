@@ -5,6 +5,7 @@ import { getPrismaClient } from "@/lib/prisma";
 import { getClientDashboardData } from "@/lib/portal/client-dashboard";
 import { formatInTimeZone, getAnalyticsTimeZone } from "@/lib/dates/tz";
 import { NextVisitActions } from "@/app/portal/client/components/NextVisitActions";
+import { operationalStatusLabel, toOperationalStatus } from "@/lib/appointments/status";
 
 function formatDate(date: Date) {
   const timeZone = getAnalyticsTimeZone();
@@ -88,7 +89,7 @@ export default async function ClientPortalPage() {
               {nextAppointment ? (
                 <div className="space-y-4">
                   <span className="inline-flex w-fit rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-blue-600 dark:bg-surface-muted dark:text-accent-cyan">
-                    {nextAppointment.status}
+                    {operationalStatusLabel(toOperationalStatus(nextAppointment))}
                   </span>
                   <div>
                     <p className="text-2xl font-semibold text-slate-900 dark:text-white">
