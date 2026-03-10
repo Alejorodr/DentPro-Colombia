@@ -47,6 +47,7 @@ export const {
   Question,
   ShieldCheck,
   ShieldWarning,
+  SignIn,
   SignOut,
   Smiley,
   Sparkle,

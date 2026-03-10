@@ -88,11 +88,11 @@ const marketingContent: MarketingContent = {
       "Agenda tu valoración en DentPro Colombia y accede a tratamientos preventivos y especializados sin salir de Chía.",
     primaryCta: {
       href: "#agenda",
-      label: "Agenda tu cita",
+      label: "Ver disponibilidad",
     },
     secondaryCta: {
-      href: "#contacto",
-      label: "Cómo llegar",
+      href: "#agenda",
+      label: "Te contactamos",
     },
     stats: [
       { label: "+2.500 sonrisas", description: "atendidas en Cundinamarca" },
@@ -228,7 +228,7 @@ const marketingContent: MarketingContent = {
   },
   booking: {
     title: "Agenda tu valoración integral",
-    description: "Responde este formulario y nuestro equipo de Patient Care se comunicará contigo en minutos para confirmar tu cita.",
+    description: "Revisa la disponibilidad inicial y elige si prefieres reservar tu turno ahora o que nuestro equipo te contacte para ayudarte.",
     selectLabel: "¿Qué tratamiento te interesa?",
     options: [
       { value: "limpieza", label: "Limpieza y profilaxis" },

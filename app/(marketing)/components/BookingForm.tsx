@@ -85,6 +85,28 @@ export function BookingFormSection({
   const feedbackClasses = `form-feedback text-sm font-semibold ${
     error ? "text-red-100 dark:text-red-300" : "text-white"
   }`;
+  const quickSlots = useMemo(() => {
+    const slots: string[] = [];
+    const now = new Date();
+    const candidate = new Date(now);
+    candidate.setDate(candidate.getDate() + 1);
+
+    while (slots.length < 3) {
+      const day = candidate.getDay();
+      const isSunday = day === 0;
+      if (!isSunday) {
+        const formatted = candidate.toLocaleDateString("es-CO", {
+          weekday: "short",
+          day: "2-digit",
+          month: "short",
+        });
+        slots.push(`${formatted} · ${slots.length === 2 ? "3:00 p. m." : "9:00 a. m."}`);
+      }
+      candidate.setDate(candidate.getDate() + 1);
+    }
+
+    return slots;
+  }, []);
 
   return (
     <section id="agenda" className="py-20 transition-colors duration-300 dark:bg-surface-base">
@@ -92,6 +114,22 @@ export function BookingFormSection({
         <div className="rounded-3xl bg-gradient p-10 text-white shadow-xl transition-colors duration-500 dark:bg-card-dark dark:text-slate-100 dark:shadow-glow-dark">
           <h2 className="text-3xl font-bold">{title}</h2>
           <p className="mt-4 text-base text-brand-light">{description}</p>
+          <div className="mt-6 grid gap-3 rounded-2xl border border-white/25 bg-white/10 p-4 text-sm">
+            <div className="flex flex-wrap items-center gap-3">
+              <a href="/appointments/new" className="btn-primary">
+                Reservar turno
+              </a>
+              <a href="#contacto" className="btn-secondary border-white/60 text-white hover:bg-white/15 dark:text-white">
+                Te contactamos
+              </a>
+            </div>
+            <p className="text-xs text-brand-light/90">Próxima disponibilidad estimada:</p>
+            <ul className="grid gap-1 text-xs text-brand-light">
+              {quickSlots.map((slot) => (
+                <li key={slot}>• {slot}</li>
+              ))}
+            </ul>
+          </div>
           <form
             className="mt-8 grid gap-6"
             id="bookingForm"
@@ -162,18 +200,6 @@ export function BookingFormSection({
                   {fieldErrors.email}
                 </p>
               ) : null}
-            </div>
-            <div className="grid gap-2">
-              <label htmlFor="email" className="text-sm font-semibold">
-                Correo electrónico
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                className="input dark:bg-surface-muted dark:text-slate-100 dark:placeholder:text-slate-500"
-                placeholder="Ej. nombre@correo.com"
-              />
             </div>
             <div className="grid gap-2">
               <label htmlFor="service" className="text-sm font-semibold">
@@ -263,4 +289,3 @@ export function BookingFormSection({
     </section>
   );
 }
-
