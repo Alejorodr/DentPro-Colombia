@@ -55,15 +55,26 @@ export async function GET(request: Request) {
   });
 
   let sentCount = 0;
+  let skippedAlreadySent = 0;
+  let failedCount = 0;
 
   for (const appointment of appointments) {
-    const sent = await sendAppointmentEmail("reminder", appointment);
-    if (sent) {
-      sentCount += 1;
-      await prisma.appointment.update({
-        where: { id: appointment.id },
-        data: { reminderSentAt: new Date() },
-      });
+    try {
+      const sent = await sendAppointmentEmail("reminder", appointment);
+      if (sent) {
+        const updated = await prisma.appointment.updateMany({
+          where: { id: appointment.id, reminderSentAt: null },
+          data: { reminderSentAt: new Date() },
+        });
+        if (updated.count > 0) {
+          sentCount += 1;
+        } else {
+          skippedAlreadySent += 1;
+        }
+      }
+    } catch (error) {
+      failedCount += 1;
+      logger.warn({ event: "cron.reminders.send_failed", requestId, appointmentId: appointment.id, error });
     }
   }
 
@@ -73,7 +84,14 @@ export async function GET(request: Request) {
     requestId,
     appointmentCount: appointments.length,
     sentCount,
+    skippedAlreadySent,
+    failedCount,
   });
 
-  return NextResponse.json({ processed: appointments.length, sent: sentCount });
+  return NextResponse.json({
+    processed: appointments.length,
+    sent: sentCount,
+    skippedAlreadySent,
+    failed: failedCount,
+  });
 }

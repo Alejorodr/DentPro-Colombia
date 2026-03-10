@@ -10,10 +10,12 @@ import { AppointmentStatus, TimeSlotStatus } from "@prisma/client";
 import { requireOwnershipOrRole, requireRole, requireSession } from "@/lib/authz";
 import { sendAppointmentEmail } from "@/lib/notifications/email";
 import { logger } from "@/lib/logger";
+import { normalizeNoShowNotes } from "@/lib/appointments/status";
 
 const updateAppointmentSchema = z.object({
   status: z.nativeEnum(AppointmentStatus),
   notes: z.string().max(1000).nullable().optional(),
+  action: z.enum(["mark_no_show", "check_in"]).optional(),
 });
 
 function canCancelWithLimit(startAt: Date): boolean {
@@ -94,17 +96,23 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     }
 
     const previousStatus = appointment.status;
+    const previousSlotId = appointment.timeSlotId;
+    const isNoShowAction = payload.action === "mark_no_show";
+    const isCheckInAction = payload.action === "check_in";
     const updated = await prisma.appointment.update({
       where: { id },
       data: {
-        status: payload.status,
-        notes: payload.notes ?? undefined,
-        checkedInAt:
-          payload.status === AppointmentStatus.COMPLETED ? appointment.checkedInAt ?? new Date() : null,
+        status: isNoShowAction ? AppointmentStatus.CANCELLED : payload.status,
+        notes: isNoShowAction ? normalizeNoShowNotes(payload.notes ?? appointment.notes) : payload.notes ?? undefined,
+        checkedInAt: isCheckInAction
+          ? appointment.checkedInAt ?? new Date()
+          : payload.status === AppointmentStatus.COMPLETED
+            ? appointment.checkedInAt ?? new Date()
+            : null,
         timeSlot: {
           update: {
             status:
-              payload.status === AppointmentStatus.CANCELLED
+              payload.status === AppointmentStatus.CANCELLED || isNoShowAction
                 ? TimeSlotStatus.AVAILABLE
                 : TimeSlotStatus.BOOKED,
           },
@@ -157,6 +165,20 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     }
 
     logger.info({ event: "appointment.update.success", requestId, appointmentId: updated.id, status: updated.status });
+    logger.info({
+      event: "appointment.audit.status_changed",
+      requestId,
+      actorUserId: sessionResult.user.id,
+      actorRole: sessionResult.user.role,
+      appointmentId: updated.id,
+      fromStatus: previousStatus,
+      toStatus: updated.status,
+      action: isNoShowAction ? "mark_no_show" : isCheckInAction ? "check_in" : "status_update",
+      result: "success",
+      previousSlotId,
+      newSlotId: updated.timeSlotId,
+      timestamp: new Date().toISOString(),
+    });
     return NextResponse.json(updated);
   } catch (error) {
     logger.error({ event: "appointment.update.failed", requestId, error });
@@ -263,6 +285,16 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     }
 
     logger.info({ event: "appointment.cancel.success", requestId, appointmentId: updated.id });
+    logger.info({
+      event: "appointment.audit.cancelled",
+      requestId,
+      actorUserId: sessionResult.user.id,
+      actorRole: sessionResult.user.role,
+      appointmentId: updated.id,
+      action: "cancel",
+      result: "success",
+      timestamp: new Date().toISOString(),
+    });
     return NextResponse.json(updated);
   } catch (error) {
     logger.error({ event: "appointment.cancel.failed", requestId, error });

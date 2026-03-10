@@ -266,6 +266,18 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       status: 200,
       durationMs: Date.now() - startedAt,
     });
+    logger.info({
+      event: "appointment.audit.rescheduled",
+      requestId,
+      actorUserId: sessionResult.user.id,
+      actorRole: sessionResult.user.role,
+      appointmentId: updated.id,
+      action: "reschedule",
+      result: "success",
+      previousSlotId: appointment.timeSlotId,
+      newSlotId: updated.timeSlotId,
+      timestamp: new Date().toISOString(),
+    });
 
     return NextResponse.json(updated);
   } catch (error) {
