@@ -3,7 +3,7 @@
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
-import { List, UserCircle, X } from "@/components/ui/Icon";
+import { List, SignIn, UserCircle, X } from "@/components/ui/Icon";
 
 import { ThemeToggle } from "@/components/ThemeToggle";
 import PwaInstallButton from "@/components/PwaInstallButton";
@@ -121,7 +121,7 @@ export function Navbar({ brand, links, cta, login }: NavbarProps) {
               <button
                 type="button"
                 ref={loginButtonRef}
-                className="btn-secondary inline-flex h-11 w-11 items-center justify-center rounded-full"
+                className="btn-secondary inline-flex h-11 items-center justify-center gap-2 rounded-full px-4"
                 aria-haspopup="dialog"
                 aria-expanded={isLoginModalOpen}
                 aria-controls="loginModal"
@@ -129,6 +129,8 @@ export function Navbar({ brand, links, cta, login }: NavbarProps) {
                 onClick={toggleLoginModal}
               >
                 <UserCircle className="h-5 w-5" weight="bold" aria-hidden="true" />
+                <span className="hidden text-sm font-semibold lg:inline">{login.label}</span>
+                <SignIn className="hidden h-4 w-4 lg:inline" weight="bold" aria-hidden="true" />
               </button>
               <LoginModal open={isLoginModalOpen} onClose={closeLoginModal} />
             </div>
