@@ -4,6 +4,7 @@ import { z } from "zod";
 import { getPrismaClient, isDatabaseUnavailableError } from "@/lib/prisma";
 import { errorResponse, serviceUnavailableResponse } from "@/app/api/_utils/response";
 import { parseJson } from "@/app/api/_utils/validation";
+import { getRequestId } from "@/app/api/_utils/request";
 import { createReceptionNotifications } from "@/lib/notifications";
 import { AppointmentStatus, TimeSlotStatus } from "@prisma/client";
 import { requireOwnershipOrRole, requireRole, requireSession } from "@/lib/authz";
@@ -21,6 +22,7 @@ function canCancelWithLimit(startAt: Date): boolean {
 }
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const requestId = getRequestId(request);
   const sessionResult = await requireSession();
   if ("error" in sessionResult) {
     return errorResponse(sessionResult.error.message, sessionResult.error.status);
@@ -37,8 +39,10 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   }
 
   const { id } = await params;
+  logger.info({ event: "appointment.update.start", requestId, appointmentId: id, role: sessionResult.user.role });
   const { data: payload, error } = await parseJson(request, updateAppointmentSchema);
   if (error) {
+    logger.warn({ event: "appointment.update.validation_failed", requestId, appointmentId: id });
     return error;
   }
 
@@ -152,8 +156,10 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       }
     }
 
+    logger.info({ event: "appointment.update.success", requestId, appointmentId: updated.id, status: updated.status });
     return NextResponse.json(updated);
   } catch (error) {
+    logger.error({ event: "appointment.update.failed", requestId, error });
     if (isDatabaseUnavailableError(error)) {
       return serviceUnavailableResponse("Base de datos temporalmente no disponible.", error.retryAfterMs);
     }
@@ -162,6 +168,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 }
 
 export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const requestId = getRequestId(request);
   const sessionResult = await requireSession();
   if ("error" in sessionResult) {
     return errorResponse(sessionResult.error.message, sessionResult.error.status);
@@ -178,6 +185,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
   }
 
   const { id } = await params;
+  logger.info({ event: "appointment.cancel.start", requestId, appointmentId: id, role: sessionResult.user.role });
   try {
     const prisma = getPrismaClient();
     const appointment = await prisma.appointment.findUnique({
@@ -254,8 +262,10 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
       );
     }
 
+    logger.info({ event: "appointment.cancel.success", requestId, appointmentId: updated.id });
     return NextResponse.json(updated);
   } catch (error) {
+    logger.error({ event: "appointment.cancel.failed", requestId, error });
     if (isDatabaseUnavailableError(error)) {
       return serviceUnavailableResponse("Base de datos temporalmente no disponible.", error.retryAfterMs);
     }

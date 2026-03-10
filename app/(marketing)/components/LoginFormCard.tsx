@@ -12,6 +12,8 @@ import { getDefaultDashboardPath, isUserRole, type UserRole } from "@/lib/auth/r
 const errorMessages: Record<string, string> = {
   CredentialsSignin: "Correo o contraseña incorrectos.",
   InvalidEmail: "Debes ingresar un correo válido.",
+  NetworkError: "No pudimos conectarnos. Revisa tu conexión e inténtalo de nuevo.",
+  SessionRequired: "Tu sesión expiró. Inicia sesión nuevamente.",
   Default: "No pudimos procesar tu solicitud. Inténtalo más tarde.",
 };
 
@@ -111,11 +113,18 @@ export function LoginFormCard({
     setIsSubmitting(true);
     setFormError(null);
 
-    const result = await signIn("credentials", {
-      email,
-      password,
-      redirect: false,
-    });
+    let result: Awaited<ReturnType<typeof signIn>>;
+    try {
+      result = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
+    } catch {
+      setFormError(errorMessages.NetworkError);
+      setIsSubmitting(false);
+      return;
+    }
 
     if (result?.error) {
       const baseMessage = errorMessages[result.error] ?? errorMessages.Default;
@@ -162,7 +171,7 @@ export function LoginFormCard({
       </div>
 
       {formError ? (
-        <div className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-500/40 dark:bg-red-500/10 dark:text-red-100" role="alert">
+        <div className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-500/40 dark:bg-red-500/10 dark:text-red-100" role="alert" aria-live="assertive">
           <WarningCircle className="mt-0.5 h-5 w-5" weight="bold" aria-hidden="true" />
           <div>
             <p className="font-semibold">No se pudo iniciar sesión</p>
@@ -171,7 +180,7 @@ export function LoginFormCard({
         </div>
       ) : null}
 
-      <form className="space-y-4" onSubmit={handleSubmit}>
+      <form className="space-y-4" onSubmit={handleSubmit} aria-busy={isSubmitting}>
         <label className="block space-y-1.5 text-left" htmlFor="login-email">
           <span className="text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300">
             Correo electrónico

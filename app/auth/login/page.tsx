@@ -16,6 +16,8 @@ export default async function AuthLoginPage(props: any) {
   const errorMessages: Record<string, string> = {
     CredentialsSignin: "Correo o contraseña incorrectos.",
     InvalidEmail: "Debes ingresar un correo válido.",
+    SessionRequired: "Tu sesión expiró. Vuelve a iniciar sesión.",
+    AccessDenied: "No tienes permisos para acceder a este recurso.",
   };
   const loginErrorMessage = errorParam ? errorMessages[errorParam] ?? "No pudimos iniciar sesión." : null;
   const callbackUrlRaw = searchParams?.callbackUrl;

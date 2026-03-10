@@ -1,13 +1,15 @@
 import type { BrowserContext } from "@playwright/test";
 import { encode } from "next-auth/jwt";
 
-export async function seedAdminSession(context: BrowserContext) {
+type SessionRole = "ADMINISTRADOR" | "RECEPCIONISTA" | "PACIENTE";
+
+export async function seedRoleSession(context: BrowserContext, role: SessionRole) {
   const secret = process.env.NEXTAUTH_SECRET ?? "test-secret";
   const token = await encode({
     secret,
     maxAge: 60 * 60 * 2,
     token: {
-      role: "ADMINISTRADOR",
+      role,
       userId: "test-user",
       sub: "test-user",
     },
@@ -24,11 +26,15 @@ export async function seedAdminSession(context: BrowserContext) {
     },
     {
       name: "dentpro-test-role",
-      value: "ADMINISTRADOR",
+      value: role,
       sameSite: "Lax" as const,
       url,
     },
   ]);
 
   await context.addCookies(cookies);
+}
+
+export async function seedAdminSession(context: BrowserContext) {
+  await seedRoleSession(context, "ADMINISTRADOR");
 }
