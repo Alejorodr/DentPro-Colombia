@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 
 import { useBookingForm } from "@/hooks/useBookingForm";
 
@@ -40,6 +40,9 @@ export function BookingFormSection({
 }: BookingFormProps) {
   const { handleSubmit, isSuccess, isPending, error } = useBookingForm();
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [publicSlots, setPublicSlots] = useState<string[]>([]);
+  const [slotsLoading, setSlotsLoading] = useState(true);
+  const [slotsError, setSlotsError] = useState(false);
   const minDate = useMemo(() => new Date().toISOString().split("T")[0], []);
 
   const validateForm = (form: HTMLFormElement) => {
@@ -108,13 +111,64 @@ export function BookingFormSection({
     return slots;
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadPublicSlots = async () => {
+      try {
+        setSlotsLoading(true);
+        setSlotsError(false);
+        const response = await fetch("/api/public/slots?limit=3");
+        if (!response.ok) {
+          throw new Error("slots_error");
+        }
+
+        const payload = (await response.json()) as {
+          slots?: Array<{ startsAt: string; professional: string; specialty: string }>;
+        };
+
+        const mapped = (payload.slots ?? []).map((slot) => {
+          const date = new Date(slot.startsAt);
+          const day = date.toLocaleDateString("es-CO", {
+            weekday: "short",
+            day: "2-digit",
+            month: "short",
+          });
+          const hour = date.toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" });
+          return `${day} · ${hour} · ${slot.specialty} · ${slot.professional}`;
+        });
+
+        if (!cancelled) {
+          setPublicSlots(mapped);
+        }
+      } catch {
+        if (!cancelled) {
+          setSlotsError(true);
+          setPublicSlots([]);
+        }
+      } finally {
+        if (!cancelled) {
+          setSlotsLoading(false);
+        }
+      }
+    };
+
+    void loadPublicSlots();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const renderedSlots = publicSlots.length > 0 ? publicSlots : quickSlots;
+
   return (
     <section id="agenda" className="py-20 transition-colors duration-300 dark:bg-surface-base">
       <div className="container mx-auto grid gap-12 px-6 lg:grid-cols-[1.2fr_1fr]">
         <div className="rounded-3xl bg-gradient p-10 text-white shadow-xl transition-colors duration-500 dark:bg-card-dark dark:text-slate-100 dark:shadow-glow-dark">
           <h2 className="text-3xl font-bold">{title}</h2>
           <p className="mt-4 text-base text-brand-light">{description}</p>
-          <div className="mt-6 grid gap-3 rounded-2xl border border-white/25 bg-white/10 p-4 text-sm">
+          <div className="mt-6 grid gap-3 rounded-2xl border border-white/25 bg-white/10 p-4 text-sm" data-testid="availability-block">
             <div className="flex flex-wrap items-center gap-3">
               <a href="/appointments/new" className="btn-primary">
                 Reservar turno
@@ -123,12 +177,20 @@ export function BookingFormSection({
                 Te contactamos
               </a>
             </div>
-            <p className="text-xs text-brand-light/90">Próxima disponibilidad estimada:</p>
+            <p className="text-xs text-brand-light/90">
+              {publicSlots.length > 0 ? "Próximos turnos disponibles:" : "Disponibilidad orientativa:"}
+            </p>
             <ul className="grid gap-1 text-xs text-brand-light">
-              {quickSlots.map((slot) => (
+              {slotsLoading ? <li>Consultando disponibilidad…</li> : null}
+              {!slotsLoading && renderedSlots.map((slot) => (
                 <li key={slot}>• {slot}</li>
               ))}
             </ul>
+            {slotsError ? (
+              <p className="text-[11px] text-brand-light/80" role="status" aria-live="polite">
+                Mostramos horarios orientativos mientras actualizamos la agenda en línea.
+              </p>
+            ) : null}
           </div>
           <form
             className="mt-8 grid gap-6"
