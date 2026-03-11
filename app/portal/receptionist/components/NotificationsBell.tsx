@@ -35,19 +35,24 @@ export function NotificationsBell() {
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
+  const panelId = "notifications-panel";
 
   const loadNotifications = async (cursor?: string | null) => {
     setError(null);
     const params = new URLSearchParams({ limit: "8" });
     if (cursor) params.set("cursor", cursor);
 
-    const response = await fetchWithRetry(`/api/notifications?${params.toString()}`);
-    if (response.ok) {
-      const data = (await response.json()) as { notifications: NotificationItem[]; unreadCount: number; nextCursor: string | null };
-      setNotifications((prev) => (cursor ? [...prev, ...data.notifications] : data.notifications));
-      setUnreadCount(data.unreadCount);
-      setNextCursor(data.nextCursor ?? null);
-    } else {
+    try {
+      const response = await fetchWithRetry(`/api/notifications?${params.toString()}`);
+      if (response.ok) {
+        const data = (await response.json()) as { notifications: NotificationItem[]; unreadCount: number; nextCursor: string | null };
+        setNotifications((prev) => (cursor ? [...prev, ...data.notifications] : data.notifications));
+        setUnreadCount(data.unreadCount);
+        setNextCursor(data.nextCursor ?? null);
+      } else {
+        setError("No se pudieron cargar las notificaciones.");
+      }
+    } catch {
       setError("No se pudieron cargar las notificaciones.");
     }
   };
@@ -103,6 +108,8 @@ export function NotificationsBell() {
         type="button"
         className="relative inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition hover:text-slate-900 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-teal/60 dark:border-surface-muted dark:text-slate-200"
         aria-label="Ver notificaciones"
+        aria-expanded={open}
+        aria-controls={panelId}
         onClick={() => {
           setOpen((prev) => !prev);
           setIsLoading(true);
@@ -117,7 +124,7 @@ export function NotificationsBell() {
         ) : null}
       </button>
       {open ? (
-        <div ref={panelRef} tabIndex={-1} className="absolute right-0 z-40 mt-3 w-80 rounded-2xl border border-slate-200 bg-white p-4 text-sm shadow-lg shadow-slate-200/40 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-teal/60 dark:border-surface-muted dark:bg-surface-elevated">
+        <div id={panelId} ref={panelRef} tabIndex={-1} className="absolute right-0 z-40 mt-3 w-80 rounded-2xl border border-slate-200 bg-white p-4 text-sm shadow-lg shadow-slate-200/40 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-teal/60 dark:border-surface-muted dark:bg-surface-elevated">
           <div className="flex items-center justify-between gap-2">
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
               Centro de notificaciones
@@ -129,14 +136,28 @@ export function NotificationsBell() {
               </button>
             </div>
           </div>
-          <div className="mt-3 space-y-3" role="status" aria-live="polite">
+          <div className="mt-3 space-y-3" role="status" aria-live="polite" aria-busy={isLoading || isLoadingMore}>
             {isLoading ? (
               <div className="space-y-2">
                 <Skeleton className="h-12 w-full" />
                 <Skeleton className="h-12 w-full" />
               </div>
             ) : null}
-            {error ? <p className="text-xs text-rose-600">{error}</p> : null}
+            {error ? (
+              <div className="rounded-lg border border-rose-200 bg-rose-50 p-2 text-xs text-rose-600" role="alert">
+                <p>{error}</p>
+                <button
+                  type="button"
+                  className="mt-1 font-semibold text-rose-700 underline"
+                  onClick={() => {
+                    setIsLoading(true);
+                    void loadNotifications().finally(() => setIsLoading(false));
+                  }}
+                >
+                  Reintentar
+                </button>
+              </div>
+            ) : null}
             {!isLoading && !error && notifications.length === 0 ? (
               <p className="text-xs text-slate-500 dark:text-slate-400">Sin novedades.</p>
             ) : null}

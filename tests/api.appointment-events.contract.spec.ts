@@ -38,7 +38,7 @@ describe("GET /api/appointments/[id]/events contract", () => {
       },
     ]);
 
-    const response = await GET(new Request("http://localhost"), { params: Promise.resolve({ id: "apt-1" }) });
+    const response = await GET(new Request("http://localhost"), { params: Promise.resolve({ id: "11111111-1111-4111-8111-111111111111" }) });
     const payload = await response.json();
 
     expect(response.status).toBe(200);
@@ -56,17 +56,17 @@ describe("GET /api/appointments/[id]/events contract", () => {
     vi.mocked(requireSession).mockResolvedValue({ user: { id: "other", role: "PACIENTE" } } as any);
     findUnique.mockResolvedValue({ patient: { userId: "owner" }, professional: { userId: "prof-1" } });
 
-    const response = await GET(new Request("http://localhost"), { params: Promise.resolve({ id: "apt-1" }) });
+    const response = await GET(new Request("http://localhost"), { params: Promise.resolve({ id: "11111111-1111-4111-8111-111111111111" }) });
     const payload = await response.json();
     expect(response.status).toBe(403);
     expect(validateContract(apiErrorSchema, payload).valid).toBe(true);
   });
 
-  it("returns 404 when appointment is missing", async () => {
+  it("returns 404 when appointment is 00000000-0000-4000-8000-000000000000", async () => {
     vi.mocked(requireSession).mockResolvedValue({ user: { id: "r-1", role: "RECEPCIONISTA" } } as any);
     findUnique.mockResolvedValue(null);
 
-    const response = await GET(new Request("http://localhost"), { params: Promise.resolve({ id: "missing" }) });
+    const response = await GET(new Request("http://localhost"), { params: Promise.resolve({ id: "00000000-0000-4000-8000-000000000000" }) });
     const payload = await response.json();
     expect(response.status).toBe(404);
     expect(validateContract(apiErrorSchema, payload).valid).toBe(true);

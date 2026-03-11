@@ -23,7 +23,7 @@ describe("GET /api/activity/feed contract", () => {
         {
           id: "event_evt-1",
           type: "appointment_status_changed",
-          appointmentId: "apt-1",
+          appointmentId: "11111111-1111-4111-8111-111111111111",
           actor: "Diana Mora",
           timestamp: "2026-01-01T10:00:00.000Z",
           message: "Estado cambiado a confirmada.",
