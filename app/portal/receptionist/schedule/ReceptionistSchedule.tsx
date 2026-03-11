@@ -30,9 +30,7 @@ type AnalyticsResponse = {
   };
   appointments: Array<{
     id: string;
-    status: "PENDING" | "CONFIRMED" | "CANCELLED" | "COMPLETED";
-    checkedInAt?: string | null;
-    notes?: string | null;
+    status: "SCHEDULED" | "CONFIRMED" | "CHECKED_IN" | "CANCELLED" | "COMPLETED" | "NO_SHOW";
     startAt: string;
     endAt: string;
     patient: { id: string; name: string } | null;
@@ -187,7 +185,7 @@ export function ReceptionistSchedule() {
       const matchesStatus =
         statusFilter === "all" ||
         (statusFilter === "no_show"
-          ? appointment.status === "CANCELLED" && Boolean(appointment.notes?.includes("[NO_SHOW]"))
+          ? appointment.status === "NO_SHOW"
           : appointment.status === statusFilter);
       return matchesProfessional && matchesSpecialty && matchesStatus;
     });
@@ -245,9 +243,10 @@ export function ReceptionistSchedule() {
             <label className="text-xs font-semibold text-slate-500 dark:text-slate-300">Estado
               <select className="input mt-1" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
                 <option value="all">Todos</option>
-                <option value="PENDING">Programadas</option>
+                <option value="SCHEDULED">Programadas</option>
                 <option value="CONFIRMED">Confirmadas</option>
                 <option value="COMPLETED">Atendidas</option>
+                <option value="CHECKED_IN">En sala</option>
                 <option value="CANCELLED">Canceladas</option>
                 <option value="no_show">No asistió</option>
               </select>

@@ -169,7 +169,7 @@ export async function getAdminKpis(
           }),
       prisma.appointment.count({
         where: {
-          status: AppointmentStatus.PENDING,
+          status: AppointmentStatus.SCHEDULED,
           timeSlot: {
             startAt: {
               gte: from,

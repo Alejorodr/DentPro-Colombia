@@ -60,7 +60,7 @@ export const getAdminDashboardSummary = cache(async () => {
         },
       },
     }),
-    prisma.appointment.count({ where: { status: AppointmentStatus.PENDING } }),
+    prisma.appointment.count({ where: { status: AppointmentStatus.SCHEDULED } }),
     prisma.user.count({
       where: {
         OR: [

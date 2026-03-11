@@ -11,7 +11,6 @@ import {
   startOfZonedDay,
 } from "@/lib/dates/tz";
 import { AppointmentStatus, TimeSlotStatus } from "@prisma/client";
-import { isNoShow } from "@/lib/appointments/status";
 
 function parseDateInput(value?: string | null) {
   if (!value) {
@@ -63,7 +62,7 @@ export async function GET(request: Request) {
   const staffEnd = addDaysZoned(staffStart, 1, timeZone);
 
   const prisma = getPrismaClient();
-  const [totalAppointments, statusRows, checkedInCount, appointments, staffProfiles] = await Promise.all([
+  const [totalAppointments, statusRows, appointments, staffProfiles] = await Promise.all([
     prisma.appointment.count({
       where: { timeSlot: { startAt: { gte: rangeStart, lt: rangeEnd } } },
     }),
@@ -71,9 +70,6 @@ export async function GET(request: Request) {
       by: ["status"],
       where: { timeSlot: { startAt: { gte: rangeStart, lt: rangeEnd } } },
       _count: { status: true },
-    }),
-    prisma.appointment.count({
-      where: { checkedInAt: { not: null }, timeSlot: { startAt: { gte: rangeStart, lt: rangeEnd } } },
     }),
     prisma.appointment.findMany({
       where: { timeSlot: { startAt: { gte: rangeStart, lt: rangeEnd } } },
@@ -165,18 +161,16 @@ export async function GET(request: Request) {
     },
     metrics: {
       totalAppointments,
-      pending: statusCounts[AppointmentStatus.PENDING] ?? 0,
+      pending: statusCounts[AppointmentStatus.SCHEDULED] ?? 0,
       confirmed: statusCounts[AppointmentStatus.CONFIRMED] ?? 0,
-      checkedIn: checkedInCount,
+      checkedIn: statusCounts[AppointmentStatus.CHECKED_IN] ?? 0,
       completed: statusCounts[AppointmentStatus.COMPLETED] ?? 0,
-      noShow: appointments.filter((appointment) => isNoShow(appointment.notes)).length,
+      noShow: statusCounts[AppointmentStatus.NO_SHOW] ?? 0,
       cancellations: statusCounts[AppointmentStatus.CANCELLED] ?? 0,
     },
     appointments: appointments.map((appointment) => ({
       id: appointment.id,
       status: appointment.status,
-      checkedInAt: appointment.checkedInAt,
-      notes: appointment.notes,
       startAt: appointment.timeSlot.startAt,
       endAt: appointment.timeSlot.endAt,
       patient: appointment.patient

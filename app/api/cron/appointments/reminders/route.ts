@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 
 import { getPrismaClient } from "@/lib/prisma";
-import { AppointmentStatus } from "@prisma/client";
 import { sendAppointmentEmail } from "@/lib/notifications/email";
 import { logger } from "@/lib/logger";
+import { REMINDABLE_APPOINTMENT_STATUSES } from "@/lib/appointments/status";
 import { getRequestId } from "@/app/api/_utils/request";
 
 function isAuthorizedCron(request: Request): boolean {
@@ -42,7 +42,7 @@ export async function GET(request: Request) {
   const appointments = await prisma.appointment.findMany({
     where: {
       reminderSentAt: null,
-      status: { in: [AppointmentStatus.CONFIRMED, AppointmentStatus.PENDING] },
+      status: { in: REMINDABLE_APPOINTMENT_STATUSES },
       timeSlot: {
         startAt: { gte: windowStart, lt: windowEnd },
       },

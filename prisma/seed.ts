@@ -541,7 +541,7 @@ async function ensureAppointment(professionalId: string, patientId: string, serv
 
   return prisma.appointment.create({
     data: {
-      status: AppointmentStatus.PENDING,
+      status: AppointmentStatus.SCHEDULED,
       reason: "Dolor de encías",
       professional: {
         connect: {

@@ -254,9 +254,9 @@ export async function POST(request: Request) {
       };
 
       const slots = [
-        { date: today, hour: 9, minute: 0, status: AppointmentStatus.PENDING },
+        { date: today, hour: 9, minute: 0, status: AppointmentStatus.SCHEDULED },
         { date: today, hour: 11, minute: 0, status: AppointmentStatus.CONFIRMED },
-        { date: new Date(today.getTime() + 2 * 24 * 60 * 60_000), hour: 10, minute: 0, status: AppointmentStatus.PENDING },
+        { date: new Date(today.getTime() + 2 * 24 * 60 * 60_000), hour: 10, minute: 0, status: AppointmentStatus.SCHEDULED },
         { date: new Date(today.getTime() + 3 * 24 * 60 * 60_000), hour: 14, minute: 0, status: AppointmentStatus.CONFIRMED },
         { date: new Date(today.getTime() - 2 * 24 * 60 * 60_000), hour: 9, minute: 0, status: AppointmentStatus.COMPLETED },
         { date: new Date(today.getTime() - 3 * 24 * 60 * 60_000), hour: 16, minute: 0, status: AppointmentStatus.CANCELLED },

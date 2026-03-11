@@ -24,6 +24,9 @@ const mockPrisma = {
   professionalProfile: {
     findUnique: vi.fn(),
   },
+  appointmentEvent: {
+    create: vi.fn(),
+  },
   $transaction: vi.fn(),
 };
 

@@ -13,6 +13,7 @@ import { getRequestId } from "@/app/api/_utils/request";
 import { requireRole, requireSession } from "@/lib/authz";
 import { getAppointmentBufferMinutes, hasBufferConflict } from "@/lib/appointments/scheduling";
 import { sendAppointmentEmail } from "@/lib/notifications/email";
+import { recordAppointmentEvent } from "@/lib/appointments/events";
 import * as Sentry from "@sentry/nextjs";
 
 const createAppointmentSchema = z.object({
@@ -216,7 +217,7 @@ export async function POST(request: Request) {
 
   const prisma = getPrismaClient();
   const allowedStatuses = new Set<AppointmentStatus>([
-    AppointmentStatus.PENDING,
+    AppointmentStatus.SCHEDULED,
     AppointmentStatus.CONFIRMED,
   ]);
   const canOverrideStatus = ["ADMINISTRADOR", "RECEPCIONISTA"].includes(sessionResult.user.role);
@@ -316,7 +317,7 @@ export async function POST(request: Request) {
           status:
             canOverrideStatus && payload?.status && allowedStatuses.has(payload.status)
               ? payload.status
-              : AppointmentStatus.PENDING,
+              : AppointmentStatus.SCHEDULED,
         },
         include: {
           patient: { include: { user: true } },
@@ -325,6 +326,14 @@ export async function POST(request: Request) {
           service: true,
         },
       });
+
+      await recordAppointmentEvent({
+        appointmentId: created.id,
+        action: "created",
+        actorUserId: sessionResult.user.id,
+        actorRole: sessionResult.user.role,
+        newStatus: created.status,
+      }, tx);
 
       return created;
     });
