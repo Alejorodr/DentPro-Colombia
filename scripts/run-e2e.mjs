@@ -17,8 +17,11 @@ const defaultBrowserPath =
     : path.join(os.homedir(), ".cache", "ms-playwright");
 
 if (!existsSync(defaultBrowserPath)) {
-  console.log("Playwright browsers not installed. Run `pnpm exec playwright install --with-deps chromium` and retry.");
-  process.exit(0);
+  console.log("Playwright browsers not found. Installing chromium...");
+  await new Promise((resolve, reject) => {
+    const child = spawn("pnpm exec playwright install --with-deps chromium", { stdio: "inherit", shell: true, env: process.env });
+    child.on("exit", (code) => (code === 0 ? resolve() : reject(new Error("Playwright browser install failed."))));
+  });
 }
 
 const suite = process.env.E2E_SUITE ?? "full";

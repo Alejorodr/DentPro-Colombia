@@ -2,12 +2,15 @@ import { NextResponse } from "next/server";
 
 import { errorResponse } from "@/app/api/_utils/response";
 import { getPrismaClient } from "@/lib/prisma";
+import { startApiMetric } from "@/lib/observability/metrics";
 import { requireSession } from "@/lib/authz";
 import { logger } from "@/lib/logger";
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const metric = startApiMetric("appointment_event_fetch");
   const sessionResult = await requireSession();
   if ("error" in sessionResult) {
+    metric.end({ status: "error", extra: { code: sessionResult.error.status } });
     return errorResponse(sessionResult.error.message, sessionResult.error.status);
   }
 
@@ -19,6 +22,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   });
 
   if (!appointment) {
+    metric.end({ status: "error", extra: { code: 404 } });
     return errorResponse("Cita no encontrada.", 404);
   }
 
@@ -27,6 +31,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     || appointment.professional?.userId === sessionResult.user.id;
 
   if (!canRead) {
+    metric.end({ status: "error", extra: { code: 403 } });
     return errorResponse("No autorizado.", 403);
   }
 
@@ -45,6 +50,8 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     count: events.length,
     result: "ok",
   });
+
+  metric.end({ status: "ok", itemCount: events.length, extra: { actor: sessionResult.user.role } });
 
   return NextResponse.json({ events });
 }

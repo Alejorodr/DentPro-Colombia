@@ -33,6 +33,13 @@ type FeedCursor = {
   sourceId: string;
 };
 
+type FeedSource = FeedCursor["source"];
+
+const SOURCE_RANK: Record<FeedSource, number> = {
+  event: 1,
+  notification: 2,
+};
+
 function roleAppointmentLink(role: Role, appointmentId: string) {
   if (role === "PACIENTE") return "/portal/client/appointments";
   if (role === "PROFESIONAL") return `/portal/professional?appointment=${appointmentId}`;
@@ -76,12 +83,28 @@ function decodeCursor(cursor?: Date | string): FeedCursor | null {
 
 function buildCursorWhere<T extends Prisma.AppointmentEventWhereInput | Prisma.NotificationWhereInput>(
   cursor: FeedCursor | null,
+  source: FeedSource,
   idField: "id",
   createdAtField: "createdAt",
 ): T | undefined {
   if (!cursor) return undefined;
 
   if (!cursor.sourceId) {
+    return { [createdAtField]: { lt: cursor.timestamp } } as T;
+  }
+
+  const sourceRank = SOURCE_RANK[source];
+  const cursorRank = SOURCE_RANK[cursor.source];
+  if (sourceRank < cursorRank) {
+    return {
+      OR: [
+        { [createdAtField]: { lt: cursor.timestamp } },
+        { [createdAtField]: cursor.timestamp },
+      ],
+    } as T;
+  }
+
+  if (sourceRank > cursorRank) {
     return { [createdAtField]: { lt: cursor.timestamp } } as T;
   }
 
@@ -109,9 +132,16 @@ export async function getActivityFeed(params: {
 }): Promise<ActivityFeedResult> {
   const prisma = params.prismaClient ?? getPrismaClient();
   const limit = Math.min(Math.max(params.limit ?? 20, 1), 100);
-  const windowSize = Math.min(limit + 5, 100);
   const filters = params.filters ?? {};
   const decodedCursor = decodeCursor(params.cursor);
+
+  const sourceHint = filters.type?.startsWith("notification_")
+    ? "notification"
+    : filters.type?.startsWith("appointment_")
+      ? "event"
+      : "mixed";
+  const eventWindowSize = sourceHint === "notification" ? 0 : Math.min(Math.ceil(limit * 0.75) + 5, 100);
+  const notificationWindowSize = sourceHint === "event" ? 0 : Math.min(Math.ceil(limit * 0.75) + 5, 100);
 
   const [patientProfile, professionalProfile] = await Promise.all([
     params.role === "PACIENTE"
@@ -137,7 +167,7 @@ export async function getActivityFeed(params: {
   const appointmentEventWhere: Prisma.AppointmentEventWhereInput = {
     ...appointmentScopedWhere,
     ...(Object.keys(dateFilter).length > 0 ? { createdAt: dateFilter } : {}),
-    ...(buildCursorWhere<Prisma.AppointmentEventWhereInput>(decodedCursor, "id", "createdAt") ?? {}),
+    ...(buildCursorWhere<Prisma.AppointmentEventWhereInput>(decodedCursor, "event", "id", "createdAt") ?? {}),
     ...(filters.appointmentId ? { appointmentId: filters.appointmentId } : {}),
     ...(filters.type?.startsWith("appointment_")
       ? { action: filters.type === "appointment_status_changed" ? "status_updated" : filters.type.replace("appointment_", "") }
@@ -147,31 +177,35 @@ export async function getActivityFeed(params: {
   const notificationWhere: Prisma.NotificationWhereInput = {
     userId: params.userId,
     ...(Object.keys(dateFilter).length > 0 ? { createdAt: dateFilter } : {}),
-    ...(buildCursorWhere<Prisma.NotificationWhereInput>(decodedCursor, "id", "createdAt") ?? {}),
+    ...(buildCursorWhere<Prisma.NotificationWhereInput>(decodedCursor, "notification", "id", "createdAt") ?? {}),
     ...(filters.appointmentId ? { entityType: "appointment", entityId: filters.appointmentId } : {}),
     ...(filters.type?.startsWith("notification_") ? { type: filters.type.replace("notification_", "") } : {}),
   };
 
   const [events, notifications] = await Promise.all([
-    prisma.appointmentEvent.findMany({
-      where: appointmentEventWhere,
-      orderBy: { createdAt: "desc" },
-      take: windowSize,
-      include: {
-        actorUser: { select: { name: true, lastName: true, email: true } },
-        appointment: {
-          select: {
-            id: true,
-            patient: { select: { user: { select: { name: true, lastName: true } } } },
+    eventWindowSize > 0
+      ? prisma.appointmentEvent.findMany({
+        where: appointmentEventWhere,
+        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+        take: eventWindowSize,
+        include: {
+          actorUser: { select: { name: true, lastName: true, email: true } },
+          appointment: {
+            select: {
+              id: true,
+              patient: { select: { user: { select: { name: true, lastName: true } } } },
+            },
           },
         },
-      },
-    }),
-    prisma.notification.findMany({
-      where: notificationWhere,
-      orderBy: { createdAt: "desc" },
-      take: windowSize,
-    }),
+      })
+      : Promise.resolve([]),
+    notificationWindowSize > 0
+      ? prisma.notification.findMany({
+        where: notificationWhere,
+        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+        take: notificationWindowSize,
+      })
+      : Promise.resolve([]),
   ]);
 
   const eventItems: ActivityFeedItem[] = events.map((event) => {
@@ -223,6 +257,10 @@ export async function getActivityFeed(params: {
   const eventsSlice = filteredMerged.slice(0, limit);
   const lastItem = eventsSlice.at(-1);
   const nextCursor = filteredMerged.length > limit && lastItem ? encodeCursor(lastItem) : null;
+
+  // Nota técnica P10: este feed sigue con merge in-memory por compatibilidad.
+  // Próximo paso recomendado (P11+): migrar a stream materializado / SQL UNION feed
+  // para paginación nativa en DB con una sola fuente ordenada.
 
   return {
     events: eventsSlice,

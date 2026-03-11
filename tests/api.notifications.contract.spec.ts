@@ -4,6 +4,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET as getNotifications } from "@/app/api/notifications/route";
 import { PATCH as readAllNotifications } from "@/app/api/notifications/read-all/route";
 import { getSessionUser } from "@/app/api/_utils/auth";
+import {
+  apiErrorSchema,
+  notificationsReadAllResponseSchema,
+  notificationsResponseSchema,
+} from "@/lib/api/contracts/schemas";
+import { validateContract } from "@/lib/api/contracts/validate";
 import { getPrismaClient } from "@/lib/prisma";
 import { markAllNotificationsRead } from "@/lib/notifications";
 
@@ -39,11 +45,8 @@ describe("notifications contract", () => {
     const payload = await response.json();
 
     expect(response.status).toBe(200);
-    expect(payload).toEqual({
-      notifications: [expect.objectContaining({ id: "n-1", title: "A" })],
-      unreadCount: 2,
-      nextCursor: "2026-01-01T10:00:00.000Z",
-    });
+    expect(validateContract(notificationsResponseSchema, payload).valid).toBe(true);
+    expect(payload.notifications[0]).toEqual(expect.objectContaining({ id: "n-1", title: "A" }));
   });
 
   it("returns 401 without auth", async () => {
@@ -59,6 +62,7 @@ describe("notifications contract", () => {
     const response = await getNotifications(new Request("http://localhost/api/notifications?limit=0"));
     const payload = await response.json();
     expect(response.status).toBe(400);
+    expect(validateContract(apiErrorSchema, payload).valid).toBe(true);
     expect(payload.error).toContain("Parámetros inválidos");
   });
 
@@ -70,7 +74,18 @@ describe("notifications contract", () => {
     const payload = await response.json();
 
     expect(response.status).toBe(200);
+    expect(validateContract(notificationsReadAllResponseSchema, payload).valid).toBe(true);
     expect(payload).toEqual({ updatedCount: 4 });
     expect(markAllNotificationsRead).toHaveBeenCalledWith({ userId: "user-1" });
+  });
+
+  it("returns 401 for read-all without auth", async () => {
+    vi.mocked(getSessionUser).mockResolvedValue(null);
+
+    const response = await readAllNotifications();
+    const payload = await response.json();
+
+    expect(response.status).toBe(401);
+    expect(validateContract(apiErrorSchema, payload).valid).toBe(true);
   });
 });

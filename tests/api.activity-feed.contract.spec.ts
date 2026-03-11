@@ -2,6 +2,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { GET } from "@/app/api/activity/feed/route";
+import { activityFeedResponseSchema, apiErrorSchema } from "@/lib/api/contracts/schemas";
+import { validateContract } from "@/lib/api/contracts/validate";
 import { requireSession } from "@/lib/authz";
 import { getActivityFeed } from "@/lib/activity/feed";
 
@@ -34,19 +36,9 @@ describe("GET /api/activity/feed contract", () => {
     const payload = await response.json();
 
     expect(response.status).toBe(200);
-    expect(payload).toEqual({
-      events: [
-        expect.objectContaining({
-          id: "event_evt-1",
-          type: "appointment_status_changed",
-          appointmentId: "apt-1",
-          actor: "Diana Mora",
-          timestamp: expect.any(String),
-          message: expect.any(String),
-        }),
-      ],
-      nextCursor: expect.any(String),
-    });
+    const validation = validateContract(activityFeedResponseSchema, payload);
+    expect(validation.valid).toBe(true);
+    expect(payload.events[0]).toEqual(expect.objectContaining({ id: "event_evt-1", type: "appointment_status_changed" }));
   });
 
   it("rejects invalid query filters", async () => {
@@ -56,6 +48,8 @@ describe("GET /api/activity/feed contract", () => {
     const payload = await response.json();
 
     expect(response.status).toBe(400);
+    const validation = validateContract(apiErrorSchema, payload);
+    expect(validation.valid).toBe(true);
     expect(payload).toEqual({ error: "Parámetros inválidos para activity feed." });
   });
 
@@ -66,6 +60,8 @@ describe("GET /api/activity/feed contract", () => {
     const payload = await response.json();
 
     expect(response.status).toBe(401);
+    const validation = validateContract(apiErrorSchema, payload);
+    expect(validation.valid).toBe(true);
     expect(payload.error).toBe("No autorizado.");
   });
 

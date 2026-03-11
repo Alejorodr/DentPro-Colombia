@@ -7,7 +7,7 @@ const isEnabled = process.env.RUN_E2E === "1";
 test.describe("P9 flujos clínicos en CI", () => {
   test.skip(!isEnabled, "RUN_E2E=1 requerido para ejecutar flujos clínicos reales.");
 
-  test("flujo A: recepción cambia estado y aparece actividad", async ({ page, context, request }) => {
+  test("@smoke flujo A: recepción confirma cita y aparece en actividad", async ({ page, context, request }) => {
     await prepareRoleContext({ request, context, role: "RECEPCIONISTA" });
     await openRolePortal({ role: "RECEPCIONISTA", page });
 
@@ -24,7 +24,7 @@ test.describe("P9 flujos clínicos en CI", () => {
     await expect(page.getByLabel("Feed de actividad clínica")).toBeVisible();
   });
 
-  test("flujo B: reprogramación y notificaciones visibles", async ({ page, context, request }) => {
+  test("flujo B: recepción reprograma y paciente ve notificación", async ({ page, context, request }) => {
     await prepareRoleContext({ request, context, role: "RECEPCIONISTA" });
     await openRolePortal({ role: "RECEPCIONISTA", page });
 
@@ -38,7 +38,7 @@ test.describe("P9 flujos clínicos en CI", () => {
     }
   });
 
-  test("flujo C: paciente cancela y recepción visualiza cambios", async ({ page, context, request }) => {
+  test("flujo C: paciente cancela y recepción visualiza evento", async ({ page, context, request }) => {
     await prepareRoleContext({ request, context, role: "PACIENTE" });
     await openRolePortal({ role: "PACIENTE", page });
     await expect(page.getByTestId("client-dashboard-page")).toBeVisible();

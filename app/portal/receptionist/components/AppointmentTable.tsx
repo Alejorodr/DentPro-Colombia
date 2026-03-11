@@ -117,7 +117,7 @@ export function AppointmentTable({ appointments, page, totalPages, onPageChange,
             className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold uppercase text-slate-600"
             onClick={() => setEventsAppointmentId(null)}
           >
-            Cerrar timeline
+            Cerrar historial
           </button>
         ) : null}
       </div>
@@ -133,12 +133,12 @@ export function AppointmentTable({ appointments, page, totalPages, onPageChange,
 
       {appointments.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-6 text-sm text-slate-500 dark:border-surface-muted/70 dark:bg-surface-elevated/80 dark:text-slate-300">
-          No hay turnos en este rango.
+          No hay turnos en este rango horario.
         </div>
       ) : (
         <>
           <div className="rounded-2xl border border-slate-200 p-4">
-            <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Timeline del día</p>
+            <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Bloques horarios del día</p>
             {groupByProfessional ? (
               <div className="space-y-4">
                 {groupedTimeline.map((group) => (
@@ -221,7 +221,7 @@ export function AppointmentTable({ appointments, page, totalPages, onPageChange,
                           Paciente
                         </Link>
                         <button type="button" className="inline-flex items-center gap-1 rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold uppercase text-slate-600" onClick={() => setEventsAppointmentId(appointment.id)}>
-                          <Eye size={14} />Ver eventos
+                          <Eye size={14} />Ver historial
                         </button>
                         <button type="button" className="inline-flex items-center gap-1 rounded-full border border-brand-teal bg-brand-teal/10 px-3 py-1 text-xs font-semibold uppercase text-brand-teal ring-1 ring-brand-teal/20" onClick={() => setRescheduleId(appointment.id)} disabled={busyId === appointment.id}>
                           <PencilSimple size={14} />Reprogramar

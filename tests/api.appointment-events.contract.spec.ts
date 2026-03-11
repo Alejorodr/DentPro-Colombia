@@ -2,6 +2,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { GET } from "@/app/api/appointments/[id]/events/route";
+import { apiErrorSchema, appointmentEventsResponseSchema } from "@/lib/api/contracts/schemas";
+import { validateContract } from "@/lib/api/contracts/validate";
 import { requireSession } from "@/lib/authz";
 import { getPrismaClient } from "@/lib/prisma";
 
@@ -40,6 +42,7 @@ describe("GET /api/appointments/[id]/events contract", () => {
     const payload = await response.json();
 
     expect(response.status).toBe(200);
+    expect(validateContract(appointmentEventsResponseSchema, payload).valid).toBe(true);
     expect(payload.events).toEqual([
       expect.objectContaining({
         id: "evt-1",
@@ -54,7 +57,9 @@ describe("GET /api/appointments/[id]/events contract", () => {
     findUnique.mockResolvedValue({ patient: { userId: "owner" }, professional: { userId: "prof-1" } });
 
     const response = await GET(new Request("http://localhost"), { params: Promise.resolve({ id: "apt-1" }) });
+    const payload = await response.json();
     expect(response.status).toBe(403);
+    expect(validateContract(apiErrorSchema, payload).valid).toBe(true);
   });
 
   it("returns 404 when appointment is missing", async () => {
@@ -62,6 +67,8 @@ describe("GET /api/appointments/[id]/events contract", () => {
     findUnique.mockResolvedValue(null);
 
     const response = await GET(new Request("http://localhost"), { params: Promise.resolve({ id: "missing" }) });
+    const payload = await response.json();
     expect(response.status).toBe(404);
+    expect(validateContract(apiErrorSchema, payload).valid).toBe(true);
   });
 });

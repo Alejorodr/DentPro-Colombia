@@ -253,7 +253,7 @@ export function ReceptionistSchedule() {
               onClick={toggleGroupByProfessional}
               className={`rounded-full border px-3 py-1 text-xs font-semibold uppercase ${groupByProfessional ? "border-brand-teal bg-brand-teal text-white" : "border-slate-200 text-slate-600"}`}
             >
-              {groupByProfessional ? "Vista agrupada" : "Vista global"}
+              {groupByProfessional ? "Agrupado por profesional" : "Vista general"}
             </button>
               <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-2 py-1 text-xs font-semibold uppercase text-slate-500 dark:border-surface-muted dark:bg-surface-base dark:text-slate-300">
               {viewOptions.map((option) => (
@@ -298,7 +298,7 @@ export function ReceptionistSchedule() {
               <div className="rounded-xl border border-slate-200 px-3 py-2 text-xs">En sala: {data.metrics.checkedIn}</div>
               <div className="rounded-xl border border-slate-200 px-3 py-2 text-xs">Atendidas: {data.metrics.completed}</div>
               <div className="rounded-xl border border-slate-200 px-3 py-2 text-xs">Canceladas: {data.metrics.cancellations}</div>
-              <div className="rounded-xl border border-slate-200 px-3 py-2 text-xs">No-show: {data.metrics.noShow}</div>
+              <div className="rounded-xl border border-slate-200 px-3 py-2 text-xs">No asistió: {data.metrics.noShow}</div>
             </div>
           ) : null}
 
