@@ -35,6 +35,38 @@ describe("authorizeCredentials", () => {
     });
   });
 
+
+
+  it("falls back to database auth when bypass is enabled but credentials do not match bypass user", async () => {
+    process.env.TEST_AUTH_BYPASS = "1";
+    process.env.DATABASE_URL = "postgresql://example";
+    process.env.NEXTAUTH_URL = "http://127.0.0.1:3000";
+    mockedAuthenticateUser.mockResolvedValue({
+      id: "user-2",
+      name: "Neon User",
+      email: "real@dentpro.co",
+      role: "ADMINISTRADOR",
+      professionalId: null,
+      patientId: null,
+    });
+
+    const result = await authorizeCredentials({ email: "real@dentpro.co", password: "secret" });
+
+    expect(mockedAuthenticateUser).toHaveBeenCalledWith("real@dentpro.co", "secret");
+    expect(result).toMatchObject({ id: "user-2", email: "real@dentpro.co" });
+  });
+
+  it("returns null when bypass is enabled, db is unavailable, and bypass credentials are invalid", async () => {
+    process.env.TEST_AUTH_BYPASS = "1";
+    process.env.DATABASE_URL = "";
+    process.env.NEXTAUTH_URL = "http://127.0.0.1:3000";
+
+    const result = await authorizeCredentials({ email: "wrong@dentpro.co", password: "bad" });
+
+    expect(mockedAuthenticateUser).not.toHaveBeenCalled();
+    expect(result).toBeNull();
+  });
+
   it("returns null for invalid credentials", async () => {
     mockedAuthenticateUser.mockResolvedValue(null);
 

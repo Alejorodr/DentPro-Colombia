@@ -21,9 +21,7 @@ export async function authorizeCredentials(credentials?: CredentialsInput) {
   const databaseUrl = process.env.DATABASE_URL ?? "";
 
   const bypassEnabled =
-    process.env.TEST_AUTH_BYPASS === "1" ||
-    (process.env.NODE_ENV !== "production" && isLocalhost && process.env.TEST_AUTH_BYPASS !== "0") ||
-    (!databaseUrl && isLocalhost);
+    process.env.TEST_AUTH_BYPASS === "1" || (!databaseUrl && isLocalhost);
 
   if (bypassEnabled) {
     const bypassEmail = process.env.TEST_AUTH_EMAIL ?? "admin@dentpro.test";
@@ -32,6 +30,7 @@ export async function authorizeCredentials(credentials?: CredentialsInput) {
     const resolvedRole = isUserRole(bypassRoleCandidate) ? bypassRoleCandidate : "ADMINISTRADOR";
 
     if (email.toLowerCase() === bypassEmail.toLowerCase() && password === bypassPassword) {
+      logger.info({ event: "auth.credentials.bypass_success", role: resolvedRole });
       return {
         id: "test-user",
         name: "QA Admin",
@@ -44,7 +43,10 @@ export async function authorizeCredentials(credentials?: CredentialsInput) {
     }
 
     logger.warn({ event: "auth.credentials.bypass_denied" });
-    return null;
+
+    if (!databaseUrl) {
+      return null;
+    }
   }
 
   const user = await authenticateUser(email, password);

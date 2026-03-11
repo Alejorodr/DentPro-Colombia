@@ -27,7 +27,10 @@ export async function POST(request: Request) {
   const isProductionEnv = process.env.NODE_ENV === "production" || process.env.VERCEL_ENV === "production";
   const isVercelRuntime = process.env.VERCEL === "1" || Boolean(process.env.VERCEL_ENV);
 
-  if (isProductionEnv || isVercelRuntime || process.env.NODE_ENV !== "development") {
+  const opsEnabled = process.env.OPS_ENABLED === "1";
+  const isAllowedNodeEnv = process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test";
+
+  if (isProductionEnv || isVercelRuntime || !opsEnabled || !isAllowedNodeEnv) {
     return respondNotFound();
   }
 
