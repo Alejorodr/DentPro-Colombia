@@ -15,7 +15,7 @@ export async function seedRoleSession(context: BrowserContext, role: SessionRole
     },
   });
 
-  const urls = ["http://127.0.0.1:3000", "http://localhost:3000"];
+  const urls = ["http://127.0.0.1:3000"];
   const cookies = urls.flatMap((url) => [
     {
       name: "next-auth.session-token",
