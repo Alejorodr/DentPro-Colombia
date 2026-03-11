@@ -29,7 +29,7 @@ type AnalyticsResponse = {
   };
   appointments: Array<{
     id: string;
-    status: "PENDING" | "CONFIRMED" | "CANCELLED" | "COMPLETED";
+    status: "SCHEDULED" | "CONFIRMED" | "CHECKED_IN" | "CANCELLED" | "COMPLETED" | "NO_SHOW";
     startAt: string;
     endAt: string;
     patient: { id: string; name: string } | null;

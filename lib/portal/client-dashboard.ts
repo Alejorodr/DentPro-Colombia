@@ -25,7 +25,7 @@ export function computeClientDashboardMetrics(
 ): DashboardMetrics {
   const upcomingStatuses = new Set<AppointmentStatus>([
     AppointmentStatus.CONFIRMED,
-    AppointmentStatus.PENDING,
+    AppointmentStatus.SCHEDULED,
   ]);
   const upcoming = appointments
     .filter(

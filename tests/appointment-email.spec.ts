@@ -25,6 +25,9 @@ const mockPrisma = {
   notificationPreference: {
     findUnique: vi.fn(),
   },
+  appointmentEvent: {
+    create: vi.fn(),
+  },
   $transaction: vi.fn(),
 };
 
@@ -43,6 +46,7 @@ vi.mock("@/lib/notifications", () => ({
 
 vi.mock("@/lib/prisma", () => ({
   getPrismaClient: () => mockPrisma,
+  isDatabaseUnavailableError: () => false,
 }));
 
 vi.mock("nodemailer", () => ({
@@ -81,7 +85,7 @@ describe("appointment email notifications", () => {
       timeSlotId: "11111111-1111-4111-8111-111111111111",
       serviceId: "55555555-5555-4555-8555-555555555555",
       reason: "Control",
-      status: "PENDING",
+      status: "SCHEDULED",
       patient: { user: { id: "user-patient", email: "patient@example.com", name: "Ana", lastName: "Lopez", role: "PACIENTE" } },
       professional: { user: { id: "user-prof", email: "prof@example.com", name: "Luis", lastName: "Perez", role: "PROFESIONAL" } },
       timeSlot,
@@ -132,7 +136,7 @@ describe("appointment email notifications", () => {
       timeSlotId: "66666666-6666-4666-8666-666666666666",
       serviceId: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
       reason: "Control",
-      status: "PENDING",
+      status: "SCHEDULED",
       patient: { user: { id: "user-patient-2", email: "patient2@example.com", name: "Ana", lastName: "Lopez", role: "PACIENTE" } },
       professional: { user: { id: "user-prof-2", email: "prof2@example.com", name: "Luis", lastName: "Perez", role: "PROFESIONAL" } },
       timeSlot,

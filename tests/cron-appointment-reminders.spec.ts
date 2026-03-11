@@ -34,7 +34,7 @@ describe("cron appointment reminders", () => {
   it("tracks sent reminders and skips already updated records", async () => {
     mockFindMany.mockResolvedValue([
       { id: "a1", status: "CONFIRMED", timeSlot: { startAt: new Date(), endAt: new Date() }, patient: null, professional: null },
-      { id: "a2", status: "PENDING", timeSlot: { startAt: new Date(), endAt: new Date() }, patient: null, professional: null },
+      { id: "a2", status: "SCHEDULED", timeSlot: { startAt: new Date(), endAt: new Date() }, patient: null, professional: null },
     ]);
     mockSendAppointmentEmail.mockResolvedValue(true);
     mockUpdateMany.mockResolvedValueOnce({ count: 1 }).mockResolvedValueOnce({ count: 0 });

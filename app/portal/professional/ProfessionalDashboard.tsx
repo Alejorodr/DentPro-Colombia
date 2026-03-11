@@ -25,17 +25,21 @@ import type {
 } from "@/app/portal/professional/types";
 
 const statusStyles: Record<AppointmentStatus, string> = {
-  PENDING: "text-amber-400 bg-amber-500/10 border-amber-400/30",
+  SCHEDULED: "text-amber-400 bg-amber-500/10 border-amber-400/30",
   CONFIRMED: "text-emerald-400 bg-emerald-500/10 border-emerald-400/30",
+  CHECKED_IN: "text-cyan-400 bg-cyan-500/10 border-cyan-400/30",
   CANCELLED: "text-rose-400 bg-rose-500/10 border-rose-400/30",
   COMPLETED: "text-blue-400 bg-blue-500/10 border-blue-400/30",
+  NO_SHOW: "text-fuchsia-400 bg-fuchsia-500/10 border-fuchsia-400/30",
 };
 
 const statusLabels: Record<AppointmentStatus, string> = {
-  PENDING: "PENDING",
+  SCHEDULED: "SCHEDULED",
   CONFIRMED: "CONFIRMED",
+  CHECKED_IN: "CHECKED_IN",
   CANCELLED: "CANCELLED",
   COMPLETED: "COMPLETED",
+  NO_SHOW: "NO_SHOW",
 };
 
 const tabOptions = ["Clinical Overview", "X-Rays & Imaging", "History"] as const;

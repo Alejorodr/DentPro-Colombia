@@ -46,8 +46,7 @@ interface ClinicHoliday {
 
 interface AppointmentSummary {
   id: string;
-  status: "PENDING" | "CONFIRMED" | "CANCELLED" | "COMPLETED";
-  checkedInAt?: string | null;
+  status: "SCHEDULED" | "CONFIRMED" | "CHECKED_IN" | "CANCELLED" | "COMPLETED" | "NO_SHOW";
   notes?: string | null;
   patientId?: string;
   timeSlot: { startAt: string; endAt: string };

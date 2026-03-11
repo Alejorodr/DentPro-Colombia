@@ -23,7 +23,7 @@ export default async function ClientAppointmentsPage() {
   const now = new Date();
   const upcomingStatuses = new Set<AppointmentStatus>([
     AppointmentStatus.CONFIRMED,
-    AppointmentStatus.PENDING,
+    AppointmentStatus.SCHEDULED,
   ]);
   const upcoming = appointments.filter(
     (appointment) =>

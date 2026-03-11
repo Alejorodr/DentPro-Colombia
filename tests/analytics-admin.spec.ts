@@ -188,7 +188,7 @@ describe("admin analytics", () => {
         serviceName: service.name,
         servicePriceCents: service.priceCents,
         reason: "Consulta",
-        status: AppointmentStatus.PENDING,
+        status: AppointmentStatus.SCHEDULED,
       },
     });
 

@@ -7,7 +7,7 @@ import { CalendarBlank, CheckCircle, Clock, WarningCircle, XCircle } from "@/com
 
 type AppointmentItem = {
   id: string;
-  status: "PENDING" | "CONFIRMED" | "CANCELLED" | "COMPLETED";
+  status: "SCHEDULED" | "CONFIRMED" | "CHECKED_IN" | "CANCELLED" | "COMPLETED" | "NO_SHOW";
   startsAt: string;
   endsAt: string;
   serviceLabel: string;
@@ -15,17 +15,21 @@ type AppointmentItem = {
 };
 
 const statusStyles: Record<AppointmentItem["status"], string> = {
-  PENDING: "bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-200",
+  SCHEDULED: "bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-200",
   CONFIRMED: "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-200",
+  CHECKED_IN: "bg-blue-50 text-blue-700 dark:bg-blue-500/15 dark:text-blue-200",
   CANCELLED: "bg-rose-50 text-rose-700 dark:bg-rose-500/15 dark:text-rose-200",
   COMPLETED: "bg-sky-50 text-sky-700 dark:bg-sky-500/15 dark:text-sky-200",
+  NO_SHOW: "bg-fuchsia-50 text-fuchsia-700 dark:bg-fuchsia-500/15 dark:text-fuchsia-200",
 };
 
 const statusLabels: Record<AppointmentItem["status"], string> = {
-  PENDING: "Pendiente",
+  SCHEDULED: "Pendiente",
   CONFIRMED: "Confirmada",
+  CHECKED_IN: "En sala",
   CANCELLED: "Cancelada",
   COMPLETED: "Completada",
+  NO_SHOW: "No asistió",
 };
 
 function formatDateTime(date: string) {
@@ -42,7 +46,7 @@ export function ClientAppointmentsPanel({ upcoming, past }: { upcoming: Appointm
   const [rescheduleId, setRescheduleId] = useState<string | null>(null);
 
   const nextActionable = useMemo(
-    () => appointments.filter((appointment) => appointment.status === "CONFIRMED" || appointment.status === "PENDING"),
+    () => appointments.filter((appointment) => appointment.status === "CONFIRMED" || appointment.status === "SCHEDULED"),
     [appointments],
   );
 

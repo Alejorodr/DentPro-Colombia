@@ -12,6 +12,7 @@ import { requireOwnershipOrRole, requireRole, requireSession } from "@/lib/authz
 import { getAppointmentBufferMinutes, hasBufferConflict } from "@/lib/appointments/scheduling";
 import { sendAppointmentEmail } from "@/lib/notifications/email";
 import * as Sentry from "@sentry/nextjs";
+import { recordAppointmentEvent } from "@/lib/appointments/events";
 
 const rescheduleSchema = z
   .object({
@@ -223,6 +224,21 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
           service: true,
         },
       });
+
+      await recordAppointmentEvent({
+        appointmentId: updatedAppointment.id,
+        action: "rescheduled",
+        actorUserId: sessionResult.user.id,
+        actorRole: sessionResult.user.role,
+        previousStatus: appointment.status,
+        newStatus: updatedAppointment.status,
+        metadata: {
+          previousSlotId: appointment.timeSlotId,
+          newSlotId: updatedAppointment.timeSlotId,
+          previousProfessionalId: appointment.professionalId,
+          newProfessionalId: updatedAppointment.professionalId,
+        },
+      }, tx);
 
       return updatedAppointment;
     });

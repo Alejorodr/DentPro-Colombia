@@ -10,7 +10,7 @@ import { AppointmentStatus, TimeSlotStatus } from "@prisma/client";
 import { requireOwnershipOrRole, requireRole, requireSession } from "@/lib/authz";
 import { sendAppointmentEmail } from "@/lib/notifications/email";
 import { logger } from "@/lib/logger";
-import { normalizeNoShowNotes } from "@/lib/appointments/status";
+import { recordAppointmentEvent } from "@/lib/appointments/events";
 
 const updateAppointmentSchema = z.object({
   status: z.nativeEnum(AppointmentStatus),
@@ -85,7 +85,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
         return errorResponse("No autorizado.", 403);
       }
 
-      const allowedStatuses = new Set<AppointmentStatus>([AppointmentStatus.CONFIRMED, AppointmentStatus.COMPLETED]);
+      const allowedStatuses = new Set<AppointmentStatus>([AppointmentStatus.CONFIRMED, AppointmentStatus.CHECKED_IN, AppointmentStatus.COMPLETED, AppointmentStatus.NO_SHOW, AppointmentStatus.CANCELLED]);
       if (!allowedStatuses.has(payload.status)) {
         return errorResponse("No autorizado para este estado.", 403);
       }
@@ -102,17 +102,17 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     const updated = await prisma.appointment.update({
       where: { id },
       data: {
-        status: isNoShowAction ? AppointmentStatus.CANCELLED : payload.status,
-        notes: isNoShowAction ? normalizeNoShowNotes(payload.notes ?? appointment.notes) : payload.notes ?? undefined,
-        checkedInAt: isCheckInAction
-          ? appointment.checkedInAt ?? new Date()
-          : payload.status === AppointmentStatus.COMPLETED
-            ? appointment.checkedInAt ?? new Date()
-            : null,
+        status: isNoShowAction
+          ? AppointmentStatus.NO_SHOW
+          : isCheckInAction
+            ? AppointmentStatus.CHECKED_IN
+            : payload.status,
+        notes: payload.notes ?? undefined,
+        checkedInAt: appointment.checkedInAt ?? null,
         timeSlot: {
           update: {
             status:
-              payload.status === AppointmentStatus.CANCELLED || isNoShowAction
+              payload.status === AppointmentStatus.CANCELLED || payload.status === AppointmentStatus.NO_SHOW || isNoShowAction
                 ? TimeSlotStatus.AVAILABLE
                 : TimeSlotStatus.BOOKED,
           },
@@ -136,9 +136,13 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
           ? "cancelado"
           : updated.status === AppointmentStatus.CONFIRMED
             ? "confirmado"
-            : updated.status === AppointmentStatus.COMPLETED
-              ? "check-in realizado"
-              : "pendiente";
+            : updated.status === AppointmentStatus.CHECKED_IN
+              ? "en sala"
+              : updated.status === AppointmentStatus.NO_SHOW
+                ? "no asistió"
+                : updated.status === AppointmentStatus.COMPLETED
+                  ? "atendido"
+                  : "programado";
 
       await createReceptionNotifications({
         type: "appointment_status",
@@ -163,6 +167,16 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
         );
       }
     }
+
+    await recordAppointmentEvent({
+      appointmentId: updated.id,
+      action: isNoShowAction ? "marked_no_show" : isCheckInAction ? "checked_in" : "status_updated",
+      actorUserId: sessionResult.user.id,
+      actorRole: sessionResult.user.role,
+      previousStatus,
+      newStatus: updated.status,
+      metadata: { previousSlotId, newSlotId: updated.timeSlotId },
+    });
 
     logger.info({ event: "appointment.update.success", requestId, appointmentId: updated.id, status: updated.status });
     logger.info({
@@ -283,6 +297,15 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
         "No se pudo enviar email de cancelación.",
       );
     }
+
+    await recordAppointmentEvent({
+      appointmentId: updated.id,
+      action: "cancelled",
+      actorUserId: sessionResult.user.id,
+      actorRole: sessionResult.user.role,
+      previousStatus: appointment.status,
+      newStatus: AppointmentStatus.CANCELLED,
+    });
 
     logger.info({ event: "appointment.cancel.success", requestId, appointmentId: updated.id });
     logger.info({

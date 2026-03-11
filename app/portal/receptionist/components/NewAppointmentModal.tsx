@@ -53,7 +53,7 @@ export function NewAppointmentModal({ open, onClose, onCreated }: NewAppointment
     date: formatDateInput(new Date(), "America/Bogota"),
     slotId: "",
     reason: "",
-    status: AppointmentStatus.PENDING,
+    status: AppointmentStatus.SCHEDULED,
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -150,7 +150,7 @@ export function NewAppointmentModal({ open, onClose, onCreated }: NewAppointment
         date: form.date,
         slotId: "",
         reason: "",
-        status: AppointmentStatus.PENDING,
+        status: AppointmentStatus.SCHEDULED,
       });
     } else {
       const body = (await response.json().catch(() => null)) as { error?: string } | null;
@@ -264,7 +264,7 @@ export function NewAppointmentModal({ open, onClose, onCreated }: NewAppointment
               value={form.status}
               onChange={(event) => setForm((prev) => ({ ...prev, status: event.target.value as AppointmentStatus }))}
             >
-              <option value={AppointmentStatus.PENDING}>Pendiente</option>
+              <option value={AppointmentStatus.SCHEDULED}>Pendiente</option>
               <option value={AppointmentStatus.CONFIRMED}>Confirmada</option>
             </select>
           </label>

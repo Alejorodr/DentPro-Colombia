@@ -62,7 +62,7 @@ export async function GET(request: Request) {
   const prisma = getPrismaClient();
   const appointments = await prisma.appointment.findMany({
     where: { timeSlot: { startAt: { gte: rangeStart, lt: rangeEnd } } },
-    select: { status: true, checkedInAt: true, timeSlot: { select: { startAt: true } } },
+    select: { status: true, timeSlot: { select: { startAt: true } } },
   });
 
   const days = new Map<
@@ -84,7 +84,7 @@ export async function GET(request: Request) {
     }
     const entry = days.get(dateKey)!;
     entry.total += 1;
-    if (appointment.status === AppointmentStatus.PENDING) {
+    if (appointment.status === AppointmentStatus.SCHEDULED) {
       entry.pending += 1;
     }
     if (appointment.status === AppointmentStatus.CONFIRMED) {
@@ -93,7 +93,7 @@ export async function GET(request: Request) {
     if (appointment.status === AppointmentStatus.CANCELLED) {
       entry.cancelled += 1;
     }
-    if (appointment.checkedInAt) {
+    if (appointment.status === AppointmentStatus.CHECKED_IN) {
       entry.checkedIn += 1;
     }
   }
