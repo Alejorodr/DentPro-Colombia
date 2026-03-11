@@ -21,6 +21,9 @@ if (!existsSync(defaultBrowserPath)) {
   process.exit(0);
 }
 
+const suite = process.env.E2E_SUITE ?? "full";
+const grep = suite === "smoke" ? "--grep @smoke" : "";
+
 const run = (command) =>
   new Promise((resolve, reject) => {
     const child = spawn(command, { stdio: "inherit", shell: true, env: process.env });
@@ -33,4 +36,4 @@ const run = (command) =>
     });
   });
 
-await run("pnpm exec playwright test");
+await run(`pnpm exec playwright test ${grep}`.trim());

@@ -8,7 +8,7 @@ import { logger } from "@/lib/logger";
 
 const querySchema = z.object({
   limit: z.coerce.number().int().min(1).max(50).default(20),
-  cursor: z.string().datetime().optional(),
+  cursor: z.string().min(1).max(160).optional(),
   type: z.string().min(1).max(120).optional(),
   appointmentId: z.string().min(1).max(80).optional(),
   since: z.string().datetime().optional(),
@@ -31,7 +31,7 @@ export async function GET(request: Request) {
     userId: sessionResult.user.id,
     role: sessionResult.user.role,
     limit: parsed.data.limit,
-    cursor: parsed.data.cursor ? new Date(parsed.data.cursor) : undefined,
+    cursor: parsed.data.cursor,
     filters: {
       type: parsed.data.type,
       appointmentId: parsed.data.appointmentId,
@@ -47,6 +47,7 @@ export async function GET(request: Request) {
     appointmentId: parsed.data.appointmentId ?? null,
     timestamp: new Date().toISOString(),
     itemCount: items.events.length,
+    result: "ok",
   });
 
   return NextResponse.json(items);

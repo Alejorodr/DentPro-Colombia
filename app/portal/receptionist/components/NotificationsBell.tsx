@@ -48,7 +48,7 @@ export function NotificationsBell() {
       setUnreadCount(data.unreadCount);
       setNextCursor(data.nextCursor ?? null);
     } else {
-      setError("No se pudo cargar la actividad.");
+      setError("No se pudieron cargar las notificaciones.");
     }
   };
 
@@ -69,7 +69,15 @@ export function NotificationsBell() {
     }
 
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("keydown", handleEscape);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscape);
+    };
   }, []);
 
   const markAsRead = async (id: string) => {
@@ -163,7 +171,7 @@ export function NotificationsBell() {
                           {!notification.readAt ? (
                             <button
                               type="button"
-                              className="text-xs font-semibold text-brand-teal dark:text-accent-cyan"
+                              className="text-xs font-semibold text-brand-teal dark:text-accent-cyan focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-teal/60"
                               onClick={() => void markAsRead(notification.id)}
                             >
                               Marcar

@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 import { seedRoleSession } from "./utils/session";
 
-test("recepcionista abre centro de actividad desde agenda", async ({ page, context }) => {
+test("@smoke recepcionista abre centro de actividad desde agenda", async ({ page, context }) => {
   await seedRoleSession(context, "RECEPCIONISTA");
 
   await page.goto("/portal/receptionist/schedule");

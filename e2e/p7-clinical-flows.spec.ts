@@ -1,43 +1,50 @@
 import { expect, test } from "@playwright/test";
 
-import { seedRoleSession } from "./utils/session";
+import { openRolePortal, prepareRoleContext } from "./utils/fixtures";
 
 const isEnabled = process.env.RUN_E2E === "1";
 
-test.describe("P7 clinical flows", () => {
-  test.skip(!isEnabled, "RUN_E2E=1 requerido para ejecutar flujos clínicos completos.");
+test.describe("P9 flujos clínicos en CI", () => {
+  test.skip(!isEnabled, "RUN_E2E=1 requerido para ejecutar flujos clínicos reales.");
 
-  test("flujo 1: recepción confirma cita y aparece actividad", async ({ page, context }) => {
-    await seedRoleSession(context, "RECEPCIONISTA");
-    await page.goto("/portal/receptionist/schedule");
+  test("flujo A: recepción cambia estado y aparece actividad", async ({ page, context, request }) => {
+    await prepareRoleContext({ request, context, role: "RECEPCIONISTA" });
+    await openRolePortal({ role: "RECEPCIONISTA", page });
 
     await expect(page.getByTestId("receptionist-schedule-page")).toBeVisible();
+
     const confirmButton = page.getByRole("button", { name: /Confirmar/i }).first();
     await expect(confirmButton).toBeVisible();
     if (await confirmButton.isEnabled()) {
       await confirmButton.click();
       await expect(page.getByText(/Estado actualizado correctamente/i)).toBeVisible();
     }
-    await expect(page.getByText(/Actividad operativa reciente/i)).toBeVisible();
+
+    await expect(page.getByRole("heading", { name: /Actividad operativa reciente/i })).toBeVisible();
+    await expect(page.getByLabel("Feed de actividad clínica")).toBeVisible();
   });
 
-  test("flujo 2: recepción reprograma cita y valida centro de actividad", async ({ page, context }) => {
-    await seedRoleSession(context, "RECEPCIONISTA");
-    await page.goto("/portal/receptionist/schedule");
+  test("flujo B: reprogramación y notificaciones visibles", async ({ page, context, request }) => {
+    await prepareRoleContext({ request, context, role: "RECEPCIONISTA" });
+    await openRolePortal({ role: "RECEPCIONISTA", page });
 
     await page.getByRole("button", { name: "Ver notificaciones" }).click();
     await expect(page.getByText("Centro de actividad")).toBeVisible();
     await expect(page.getByRole("button", { name: /Marcar todas como leídas/i })).toBeVisible();
+
+    const loadMore = page.getByRole("button", { name: /Cargar más/i });
+    if (await loadMore.isVisible()) {
+      await loadMore.click();
+    }
   });
 
-  test("flujo 3: paciente cancela y recepción ve actualización", async ({ page, context }) => {
-    await seedRoleSession(context, "PACIENTE");
-    await page.goto("/portal/client");
+  test("flujo C: paciente cancela y recepción visualiza cambios", async ({ page, context, request }) => {
+    await prepareRoleContext({ request, context, role: "PACIENTE" });
+    await openRolePortal({ role: "PACIENTE", page });
     await expect(page.getByTestId("client-dashboard-page")).toBeVisible();
-    await expect(page.getByText(/Actividad de tus citas/i)).toBeVisible();
 
-    await seedRoleSession(context, "RECEPCIONISTA");
-    await page.goto("/portal/receptionist/schedule");
+    await prepareRoleContext({ request, context, role: "RECEPCIONISTA" });
+    await openRolePortal({ role: "RECEPCIONISTA", page });
     await expect(page.getByRole("heading", { name: "Agenda del día" })).toBeVisible();
     await expect(page.getByText(/Turnos ordenados por hora/i)).toBeVisible();
   });

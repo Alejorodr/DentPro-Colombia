@@ -19,6 +19,7 @@ export async function PATCH() {
     appointmentId: null,
     timestamp: new Date().toISOString(),
     updatedCount: result.count,
+    result: "ok",
   });
   return NextResponse.json({ updatedCount: result.count });
 }

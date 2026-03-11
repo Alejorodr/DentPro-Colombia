@@ -27,6 +27,12 @@ export type ActivityFeedResult = {
   nextCursor: string | null;
 };
 
+type FeedCursor = {
+  timestamp: Date;
+  source: "event" | "notification";
+  sourceId: string;
+};
+
 function roleAppointmentLink(role: Role, appointmentId: string) {
   if (role === "PACIENTE") return "/portal/client/appointments";
   if (role === "PROFESIONAL") return `/portal/professional?appointment=${appointmentId}`;
@@ -37,17 +43,75 @@ function normalizeType(action: string) {
   return action === "status_updated" ? "appointment_status_changed" : `appointment_${action}`;
 }
 
+function encodeCursor(item: ActivityFeedItem) {
+  const [source, sourceId] = item.id.split("_", 2);
+  if (!source || !sourceId) return item.timestamp;
+  return `${item.timestamp}|${source}|${sourceId}`;
+}
+
+function decodeCursor(cursor?: Date | string): FeedCursor | null {
+  if (!cursor) return null;
+  if (cursor instanceof Date) {
+    return { timestamp: cursor, source: "event", sourceId: "" };
+  }
+
+  if (!cursor.includes("|")) {
+    const parsed = new Date(cursor);
+    if (Number.isNaN(parsed.getTime())) return null;
+    return { timestamp: parsed, source: "event", sourceId: "" };
+  }
+
+  const [timestamp, source, sourceId] = cursor.split("|");
+  const parsedTimestamp = new Date(timestamp ?? "");
+  if (Number.isNaN(parsedTimestamp.getTime()) || (source !== "event" && source !== "notification")) {
+    return null;
+  }
+
+  return {
+    timestamp: parsedTimestamp,
+    source,
+    sourceId: sourceId ?? "",
+  };
+}
+
+function buildCursorWhere<T extends Prisma.AppointmentEventWhereInput | Prisma.NotificationWhereInput>(
+  cursor: FeedCursor | null,
+  idField: "id",
+  createdAtField: "createdAt",
+): T | undefined {
+  if (!cursor) return undefined;
+
+  if (!cursor.sourceId) {
+    return { [createdAtField]: { lt: cursor.timestamp } } as T;
+  }
+
+  return {
+    OR: [
+      { [createdAtField]: { lt: cursor.timestamp } },
+      { [createdAtField]: cursor.timestamp, [idField]: { lt: cursor.sourceId } },
+    ],
+  } as T;
+}
+
+function compareItemsDesc(a: ActivityFeedItem, b: ActivityFeedItem) {
+  const dateDiff = new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
+  if (dateDiff !== 0) return dateDiff;
+  return b.id.localeCompare(a.id);
+}
+
 export async function getActivityFeed(params: {
   userId: string;
   role: Role;
   limit?: number;
-  cursor?: Date;
+  cursor?: Date | string;
   filters?: ActivityFeedFilters;
   prismaClient?: PrismaClient;
 }): Promise<ActivityFeedResult> {
   const prisma = params.prismaClient ?? getPrismaClient();
   const limit = Math.min(Math.max(params.limit ?? 20, 1), 100);
+  const windowSize = Math.min(limit + 5, 100);
   const filters = params.filters ?? {};
+  const decodedCursor = decodeCursor(params.cursor);
 
   const [patientProfile, professionalProfile] = await Promise.all([
     params.role === "PACIENTE"
@@ -66,7 +130,6 @@ export async function getActivityFeed(params: {
         : {};
 
   const dateFilter: Prisma.DateTimeFilter = {
-    ...(params.cursor ? { lt: params.cursor } : {}),
     ...(filters.since ? { gte: filters.since } : {}),
     ...(filters.until ? { lte: filters.until } : {}),
   };
@@ -74,6 +137,7 @@ export async function getActivityFeed(params: {
   const appointmentEventWhere: Prisma.AppointmentEventWhereInput = {
     ...appointmentScopedWhere,
     ...(Object.keys(dateFilter).length > 0 ? { createdAt: dateFilter } : {}),
+    ...(buildCursorWhere<Prisma.AppointmentEventWhereInput>(decodedCursor, "id", "createdAt") ?? {}),
     ...(filters.appointmentId ? { appointmentId: filters.appointmentId } : {}),
     ...(filters.type?.startsWith("appointment_")
       ? { action: filters.type === "appointment_status_changed" ? "status_updated" : filters.type.replace("appointment_", "") }
@@ -83,6 +147,7 @@ export async function getActivityFeed(params: {
   const notificationWhere: Prisma.NotificationWhereInput = {
     userId: params.userId,
     ...(Object.keys(dateFilter).length > 0 ? { createdAt: dateFilter } : {}),
+    ...(buildCursorWhere<Prisma.NotificationWhereInput>(decodedCursor, "id", "createdAt") ?? {}),
     ...(filters.appointmentId ? { entityType: "appointment", entityId: filters.appointmentId } : {}),
     ...(filters.type?.startsWith("notification_") ? { type: filters.type.replace("notification_", "") } : {}),
   };
@@ -91,7 +156,7 @@ export async function getActivityFeed(params: {
     prisma.appointmentEvent.findMany({
       where: appointmentEventWhere,
       orderBy: { createdAt: "desc" },
-      take: limit + 1,
+      take: windowSize,
       include: {
         actorUser: { select: { name: true, lastName: true, email: true } },
         appointment: {
@@ -105,7 +170,7 @@ export async function getActivityFeed(params: {
     prisma.notification.findMany({
       where: notificationWhere,
       orderBy: { createdAt: "desc" },
-      take: limit + 1,
+      take: windowSize,
     }),
   ]);
 
@@ -148,7 +213,8 @@ export async function getActivityFeed(params: {
   }));
 
   const merged = [...eventItems, ...notificationItems]
-    .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    .sort(compareItemsDesc)
+    .filter((item, index, all) => all.findIndex((candidate) => candidate.id === item.id) === index);
 
   const filteredMerged = filters.type
     ? merged.filter((item) => item.type === filters.type)
@@ -156,7 +222,7 @@ export async function getActivityFeed(params: {
 
   const eventsSlice = filteredMerged.slice(0, limit);
   const lastItem = eventsSlice.at(-1);
-  const nextCursor = filteredMerged.length > limit && lastItem ? lastItem.timestamp : null;
+  const nextCursor = filteredMerged.length > limit && lastItem ? encodeCursor(lastItem) : null;
 
   return {
     events: eventsSlice,

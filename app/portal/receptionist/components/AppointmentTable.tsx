@@ -129,7 +129,7 @@ export function AppointmentTable({ appointments, page, totalPages, onPageChange,
         </div>
       ) : null}
 
-      {feedback ? <p className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs">{feedback}</p> : null}
+      {feedback ? <p aria-live="polite" className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs">{feedback}</p> : null}
 
       {appointments.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-6 text-sm text-slate-500 dark:border-surface-muted/70 dark:bg-surface-elevated/80 dark:text-slate-300">
@@ -221,7 +221,7 @@ export function AppointmentTable({ appointments, page, totalPages, onPageChange,
                           Paciente
                         </Link>
                         <button type="button" className="inline-flex items-center gap-1 rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold uppercase text-slate-600" onClick={() => setEventsAppointmentId(appointment.id)}>
-                          <Eye size={14} />Eventos
+                          <Eye size={14} />Ver eventos
                         </button>
                         <button type="button" className="inline-flex items-center gap-1 rounded-full border border-brand-teal bg-brand-teal/10 px-3 py-1 text-xs font-semibold uppercase text-brand-teal ring-1 ring-brand-teal/20" onClick={() => setRescheduleId(appointment.id)} disabled={busyId === appointment.id}>
                           <PencilSimple size={14} />Reprogramar
@@ -236,7 +236,7 @@ export function AppointmentTable({ appointments, page, totalPages, onPageChange,
                           <CheckCircle size={14} />Atendida
                         </button>
                         <button type="button" className="inline-flex items-center gap-1 rounded-full border border-fuchsia-200 px-3 py-1 text-xs font-semibold uppercase text-fuchsia-700 disabled:opacity-50" onClick={() => updateStatus(appointment.id, AppointmentStatus.NO_SHOW, "mark_no_show")} disabled={busyId === appointment.id || ([AppointmentStatus.CANCELLED, AppointmentStatus.COMPLETED, AppointmentStatus.NO_SHOW] as AppointmentStatus[]).includes(appointment.status)}>
-                          <WarningCircle size={14} />No-show
+                          <WarningCircle size={14} />No asistió
                         </button>
                         <button type="button" className="inline-flex items-center gap-1 rounded-full border border-rose-200 px-3 py-1 text-xs font-semibold uppercase text-rose-700 disabled:opacity-50" onClick={() => updateStatus(appointment.id, AppointmentStatus.CANCELLED)} disabled={busyId === appointment.id || ([AppointmentStatus.CANCELLED, AppointmentStatus.NO_SHOW] as AppointmentStatus[]).includes(appointment.status)}>
                           <XCircle size={14} />Cancelar

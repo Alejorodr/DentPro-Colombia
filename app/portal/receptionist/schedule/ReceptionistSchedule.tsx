@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { CalendarMonth } from "@/app/portal/receptionist/components/CalendarMonth";
 import { AppointmentTable } from "@/app/portal/receptionist/components/AppointmentTable";
@@ -13,9 +13,9 @@ import { ActivityFeed } from "@/app/portal/components/activity/ActivityFeed";
 import { fetchWithRetry } from "@/lib/http";
 
 const viewOptions = [
-  { value: "day", label: "Day" },
-  { value: "week", label: "Week" },
-  { value: "month", label: "Month" },
+  { value: "day", label: "Día" },
+  { value: "week", label: "Semana" },
+  { value: "month", label: "Mes" },
 ] as const;
 
 type ViewMode = (typeof viewOptions)[number]["value"];
@@ -100,6 +100,8 @@ function buildRangeDays(start: Date, end: Date) {
 
 export function ReceptionistSchedule() {
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
   const [view, setView] = useState<ViewMode>("day");
   const [selectedDate, setSelectedDate] = useState(() => new Date());
   const [month, setMonth] = useState(() => new Date());
@@ -111,7 +113,8 @@ export function ReceptionistSchedule() {
   const [professionalFilter, setProfessionalFilter] = useState("all");
   const [specialtyFilter, setSpecialtyFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [groupByProfessional, setGroupByProfessional] = useState(false);
+  const [groupByProfessional, setGroupByProfessional] = useState(() => searchParams.get("group") === "professional");
+  const [isLoadingSchedule, setIsLoadingSchedule] = useState(false);
 
   const range = useMemo(() => {
     if (view === "week") return { from: startOfWeek(selectedDate), to: endOfWeek(selectedDate) };
@@ -127,6 +130,7 @@ export function ReceptionistSchedule() {
 
   const refresh = useCallback(async (pageOverride?: number) => {
     setError(null);
+    setIsLoadingSchedule(true);
     const params = new URLSearchParams({
       from: formatDateInput(range.from),
       to: formatDateInput(range.to),
@@ -137,10 +141,12 @@ export function ReceptionistSchedule() {
     const response = await fetchWithRetry(`/api/analytics/receptionist?${params.toString()}`);
     if (!response.ok) {
       setError("No se pudo cargar la agenda. Intenta actualizar.");
+      setIsLoadingSchedule(false);
       return;
     }
     const payload = (await response.json()) as AnalyticsResponse;
     setData(payload);
+    setIsLoadingSchedule(false);
   }, [page, range.from, range.to, selectedDate]);
 
   useEffect(() => {
@@ -181,6 +187,25 @@ export function ReceptionistSchedule() {
     return Array.from(specialties.values());
   }, [data?.appointments]);
 
+
+
+  useEffect(() => {
+    const next = searchParams.get("group") === "professional";
+    setGroupByProfessional(next);
+  }, [searchParams]);
+
+  const toggleGroupByProfessional = useCallback(() => {
+    const nextValue = !groupByProfessional;
+    const params = new URLSearchParams(searchParams.toString());
+    if (nextValue) {
+      params.set("group", "professional");
+    } else {
+      params.delete("group");
+    }
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    setGroupByProfessional(nextValue);
+  }, [groupByProfessional, pathname, router, searchParams]);
+
   const filteredAppointments = useMemo(() => {
     const list = data?.appointments ?? [];
     return list.filter((appointment) => {
@@ -199,7 +224,7 @@ export function ReceptionistSchedule() {
     <div className="space-y-6" data-testid="receptionist-schedule-page">
       <section className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-brand-teal dark:text-accent-cyan">Schedule</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-brand-teal dark:text-accent-cyan">Agenda</p>
           <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">Agenda del día</h1>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -225,10 +250,10 @@ export function ReceptionistSchedule() {
             <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={() => setGroupByProfessional((prev) => !prev)}
+              onClick={toggleGroupByProfessional}
               className={`rounded-full border px-3 py-1 text-xs font-semibold uppercase ${groupByProfessional ? "border-brand-teal bg-brand-teal text-white" : "border-slate-200 text-slate-600"}`}
             >
-              {groupByProfessional ? "Agrupado por profesional" : "Vista global"}
+              {groupByProfessional ? "Vista agrupada" : "Vista global"}
             </button>
               <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-2 py-1 text-xs font-semibold uppercase text-slate-500 dark:border-surface-muted dark:bg-surface-base dark:text-slate-300">
               {viewOptions.map((option) => (
@@ -278,6 +303,7 @@ export function ReceptionistSchedule() {
           ) : null}
 
           {error ? <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p> : null}
+          {!error && isLoadingSchedule ? <p className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-xs text-slate-600">Actualizando agenda...</p> : null}
 
           {view !== "month" ? (
             <div className="grid gap-3 md:grid-cols-3">
