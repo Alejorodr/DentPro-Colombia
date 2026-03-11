@@ -5,6 +5,7 @@ import { getSessionUser, isAuthorized } from "@/app/api/_utils/auth";
 import { errorResponse } from "@/app/api/_utils/response";
 import { logger } from "@/lib/logger";
 import { getPrismaClient } from "@/lib/prisma";
+import { startApiMetric } from "@/lib/observability/metrics";
 
 const querySchema = z.object({
   unread: z.enum(["true", "false"]).optional(),
@@ -14,15 +15,18 @@ const querySchema = z.object({
 });
 
 export async function GET(request: Request) {
+  const metric = startApiMetric("notifications_fetch");
   const sessionUser = await getSessionUser();
 
   if (!sessionUser) {
+    metric.end({ status: "error", extra: { code: 401 } });
     return errorResponse("No autorizado.", 401);
   }
 
   const rawQuery = Object.fromEntries(new URL(request.url).searchParams.entries());
   const parsed = querySchema.safeParse(rawQuery);
   if (!parsed.success) {
+    metric.end({ status: "error", extra: { code: 400 } });
     return errorResponse("Parámetros inválidos de notificaciones.", 400);
   }
 
@@ -62,6 +66,8 @@ export async function GET(request: Request) {
     count: sliced.length,
     result: "ok",
   });
+
+  metric.end({ status: "ok", itemCount: sliced.length, extra: { actor: sessionUser.role } });
 
   return NextResponse.json({ notifications: sliced, unreadCount, nextCursor });
 }

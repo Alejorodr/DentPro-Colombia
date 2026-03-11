@@ -120,7 +120,7 @@ export function NotificationsBell() {
         <div ref={panelRef} tabIndex={-1} className="absolute right-0 z-40 mt-3 w-80 rounded-2xl border border-slate-200 bg-white p-4 text-sm shadow-lg shadow-slate-200/40 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-teal/60 dark:border-surface-muted dark:bg-surface-elevated">
           <div className="flex items-center justify-between gap-2">
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
-              Centro de actividad
+              Centro de notificaciones
             </p>
             <div className="flex items-center gap-2">
               <span className="text-xs text-slate-500 dark:text-slate-400">{unreadCount} sin leer</span>

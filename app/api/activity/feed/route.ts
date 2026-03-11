@@ -5,6 +5,7 @@ import { errorResponse } from "@/app/api/_utils/response";
 import { requireSession } from "@/lib/authz";
 import { getActivityFeed } from "@/lib/activity/feed";
 import { logger } from "@/lib/logger";
+import { startApiMetric } from "@/lib/observability/metrics";
 
 const querySchema = z.object({
   limit: z.coerce.number().int().min(1).max(50).default(20),
@@ -16,14 +17,17 @@ const querySchema = z.object({
 });
 
 export async function GET(request: Request) {
+  const metric = startApiMetric("activity_feed_read");
   const sessionResult = await requireSession();
   if ("error" in sessionResult) {
+    metric.end({ status: "error", extra: { code: sessionResult.error.status } });
     return errorResponse(sessionResult.error.message, sessionResult.error.status);
   }
 
   const rawQuery = Object.fromEntries(new URL(request.url).searchParams.entries());
   const parsed = querySchema.safeParse(rawQuery);
   if (!parsed.success) {
+    metric.end({ status: "error", extra: { code: 400 } });
     return errorResponse("Parámetros inválidos para activity feed.", 400);
   }
 
@@ -49,6 +53,8 @@ export async function GET(request: Request) {
     itemCount: items.events.length,
     result: "ok",
   });
+
+  metric.end({ status: "ok", itemCount: items.events.length, extra: { actor: sessionResult.user.role } });
 
   return NextResponse.json(items);
 }
