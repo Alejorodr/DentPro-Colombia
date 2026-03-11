@@ -44,12 +44,12 @@ interface AppointmentTableProps {
 }
 
 const statusStyles: Record<string, string> = {
-  SCHEDULED: "bg-amber-100 text-amber-700",
-  CONFIRMED: "bg-emerald-100 text-emerald-700",
-  CHECKED_IN: "bg-blue-100 text-blue-700",
-  COMPLETED: "bg-indigo-100 text-indigo-700",
-  CANCELLED: "bg-rose-100 text-rose-700",
-  NO_SHOW: "bg-fuchsia-100 text-fuchsia-700",
+  SCHEDULED: "border border-amber-200 bg-amber-100 text-amber-800",
+  CONFIRMED: "border border-emerald-200 bg-emerald-100 text-emerald-800",
+  CHECKED_IN: "border border-cyan-200 bg-cyan-100 text-cyan-800",
+  COMPLETED: "border border-indigo-200 bg-indigo-100 text-indigo-800",
+  CANCELLED: "border border-rose-200 bg-rose-100 text-rose-800",
+  NO_SHOW: "border border-fuchsia-200 bg-fuchsia-100 text-fuchsia-800",
 };
 
 export function AppointmentTable({ appointments, page, totalPages, onPageChange, onRefresh, initialEventsAppointmentId = null, groupByProfessional = false }: AppointmentTableProps) {
@@ -165,7 +165,7 @@ export function AppointmentTable({ appointments, page, totalPages, onPageChange,
                 {timeline.map((appointment) => {
                   const slot = toOperationalStatus(appointment);
                   return (
-                    <div key={`timeline-${appointment.id}`} className="flex items-center justify-between rounded-xl border-l-4 border-l-brand-teal border-t border-r border-b border-slate-100 px-3 py-2 text-xs">
+                    <div key={`timeline-${appointment.id}`} className="flex items-center justify-between rounded-xl border-l-4 border-l-brand-teal border border-slate-200 bg-white px-3 py-2 text-xs shadow-xs">
                       <span>
                         {new Date(appointment.startAt).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })} · {appointment.patient?.name ?? "Paciente"}
                       </span>
@@ -223,7 +223,7 @@ export function AppointmentTable({ appointments, page, totalPages, onPageChange,
                         <button type="button" className="inline-flex items-center gap-1 rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold uppercase text-slate-600" onClick={() => setEventsAppointmentId(appointment.id)}>
                           <Eye size={14} />Eventos
                         </button>
-                        <button type="button" className="inline-flex items-center gap-1 rounded-full border border-brand-teal px-3 py-1 text-xs font-semibold uppercase text-brand-teal" onClick={() => setRescheduleId(appointment.id)} disabled={busyId === appointment.id}>
+                        <button type="button" className="inline-flex items-center gap-1 rounded-full border border-brand-teal bg-brand-teal/10 px-3 py-1 text-xs font-semibold uppercase text-brand-teal ring-1 ring-brand-teal/20" onClick={() => setRescheduleId(appointment.id)} disabled={busyId === appointment.id}>
                           <PencilSimple size={14} />Reprogramar
                         </button>
                         <button type="button" className="inline-flex items-center gap-1 rounded-full border border-emerald-200 px-3 py-1 text-xs font-semibold uppercase text-emerald-700 disabled:opacity-50" onClick={() => updateStatus(appointment.id, AppointmentStatus.CONFIRMED)} disabled={busyId === appointment.id || appointment.status !== AppointmentStatus.SCHEDULED}>

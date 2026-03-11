@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { getSessionUser, isAuthorized } from "@/app/api/_utils/auth";
 import { errorResponse } from "@/app/api/_utils/response";
+import { logger } from "@/lib/logger";
 import { getPrismaClient } from "@/lib/prisma";
 
 export async function PATCH(_request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -23,6 +24,14 @@ export async function PATCH(_request: Request, { params }: { params: Promise<{ i
   const updated = await prisma.notification.update({
     where: { id },
     data: { readAt: new Date() },
+  });
+
+  logger.info({
+    event: "notification_read",
+    action: "notification_read",
+    actor: sessionUser.role,
+    appointmentId: notification.entityType === "appointment" ? notification.entityId : null,
+    timestamp: new Date().toISOString(),
   });
 
   return NextResponse.json(updated);

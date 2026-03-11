@@ -4,7 +4,9 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { Bell } from "@/components/ui/Icon";
+import { Skeleton } from "@/app/portal/components/ui/Skeleton";
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
+import { groupNotificationsByDate } from "@/lib/notifications/groupNotifications";
 
 type NotificationItem = {
   id: string;
@@ -23,46 +25,41 @@ function notificationHref(notification: NotificationItem) {
   return null;
 }
 
-function dateGroupLabel(date: string) {
-  const today = new Date();
-  const target = new Date(date);
-  const isToday = today.toDateString() === target.toDateString();
-  if (isToday) return "Hoy";
-
-  const yesterday = new Date(today);
-  yesterday.setDate(today.getDate() - 1);
-  if (yesterday.toDateString() === target.toDateString()) return "Ayer";
-
-  return target.toLocaleDateString("es-CO", { day: "2-digit", month: "short" });
-}
-
 export function NotificationsBell() {
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [limit, setLimit] = useState(8);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
 
-  const loadNotifications = async (limitOverride?: number) => {
-    const currentLimit = limitOverride ?? limit;
-    setIsLoading(true);
+  const loadNotifications = async (cursor?: string | null) => {
     setError(null);
-    const response = await fetchWithRetry(`/api/notifications?limit=${currentLimit}`);
+    const params = new URLSearchParams({ limit: "8" });
+    if (cursor) params.set("cursor", cursor);
+
+    const response = await fetchWithRetry(`/api/notifications?${params.toString()}`);
     if (response.ok) {
-      const data = (await response.json()) as { notifications: NotificationItem[]; unreadCount: number };
-      setNotifications(data.notifications);
+      const data = (await response.json()) as { notifications: NotificationItem[]; unreadCount: number; nextCursor: string | null };
+      setNotifications((prev) => (cursor ? [...prev, ...data.notifications] : data.notifications));
       setUnreadCount(data.unreadCount);
+      setNextCursor(data.nextCursor ?? null);
     } else {
       setError("No se pudo cargar la actividad.");
     }
-    setIsLoading(false);
   };
 
   useEffect(() => {
-    void loadNotifications();
-  }, [limit]);
+    setIsLoading(true);
+    void loadNotifications().finally(() => setIsLoading(false));
+  }, []);
+
+  useEffect(() => {
+    if (open) panelRef.current?.focus();
+  }, [open]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -90,14 +87,7 @@ export function NotificationsBell() {
     setUnreadCount(0);
   };
 
-  const groupedNotifications = useMemo(() => {
-    return notifications.reduce((acc, notification) => {
-      const key = dateGroupLabel(notification.createdAt);
-      acc[key] = acc[key] ?? [];
-      acc[key].push(notification);
-      return acc;
-    }, {} as Record<string, NotificationItem[]>);
-  }, [notifications]);
+  const groupedNotifications = useMemo(() => groupNotificationsByDate(notifications), [notifications]);
 
   return (
     <div ref={containerRef} className="relative">
@@ -107,7 +97,8 @@ export function NotificationsBell() {
         aria-label="Ver notificaciones"
         onClick={() => {
           setOpen((prev) => !prev);
-          void loadNotifications();
+          setIsLoading(true);
+          void loadNotifications().finally(() => setIsLoading(false));
         }}
       >
         <Bell aria-hidden="true" className="h-5 w-5" weight="bold" />
@@ -118,7 +109,7 @@ export function NotificationsBell() {
         ) : null}
       </button>
       {open ? (
-        <div className="absolute right-0 z-40 mt-3 w-80 rounded-2xl border border-slate-200 bg-white p-4 text-sm shadow-lg shadow-slate-200/40 dark:border-surface-muted dark:bg-surface-elevated">
+        <div ref={panelRef} tabIndex={-1} className="absolute right-0 z-40 mt-3 w-80 rounded-2xl border border-slate-200 bg-white p-4 text-sm shadow-lg shadow-slate-200/40 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-teal/60 dark:border-surface-muted dark:bg-surface-elevated">
           <div className="flex items-center justify-between gap-2">
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
               Centro de actividad
@@ -126,12 +117,17 @@ export function NotificationsBell() {
             <div className="flex items-center gap-2">
               <span className="text-xs text-slate-500 dark:text-slate-400">{unreadCount} sin leer</span>
               <button type="button" className="text-[11px] font-semibold text-brand-teal" onClick={() => void markAllAsRead()}>
-                Marcar todas
+                Marcar todas como leídas
               </button>
             </div>
           </div>
           <div className="mt-3 space-y-3" role="status" aria-live="polite">
-            {isLoading ? <p className="text-xs text-slate-500 dark:text-slate-400">Cargando actividad...</p> : null}
+            {isLoading ? (
+              <div className="space-y-2">
+                <Skeleton className="h-12 w-full" />
+                <Skeleton className="h-12 w-full" />
+              </div>
+            ) : null}
             {error ? <p className="text-xs text-rose-600">{error}</p> : null}
             {!isLoading && !error && notifications.length === 0 ? (
               <p className="text-xs text-slate-500 dark:text-slate-400">Sin novedades.</p>
@@ -180,13 +176,17 @@ export function NotificationsBell() {
                 </div>
               ))
               : null}
-            {!isLoading && !error && notifications.length >= limit ? (
+            {!isLoading && !error && nextCursor ? (
               <button
                 type="button"
-                onClick={() => setLimit((prev) => prev + 8)}
+                onClick={async () => {
+                  setIsLoadingMore(true);
+                  await loadNotifications(nextCursor);
+                  setIsLoadingMore(false);
+                }}
                 className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold uppercase text-slate-600"
               >
-                Cargar más
+                {isLoadingMore ? "Cargando..." : "Cargar más"}
               </button>
             ) : null}
           </div>

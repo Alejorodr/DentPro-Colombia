@@ -49,15 +49,16 @@ describe("activity feed", () => {
     ]);
 
     const { getActivityFeed } = await import("@/lib/activity/feed");
-    const items = await getActivityFeed({ userId: "u-1", role: Role.PACIENTE, limit: 10 });
+    const feed = await getActivityFeed({ userId: "u-1", role: Role.PACIENTE, limit: 10 });
 
-    expect(items).toHaveLength(2);
-    expect(items[0]).toMatchObject({
+    expect(feed.events).toHaveLength(2);
+    expect(feed.nextCursor).toBeNull();
+    expect(feed.events[0]).toMatchObject({
       type: "appointment_status_changed",
       appointmentId: "appt-1",
       patientName: "Ana Pérez",
     });
-    expect(items[1]).toMatchObject({
+    expect(feed.events[1]).toMatchObject({
       type: "notification_appointment_rescheduled",
       appointmentId: "appt-1",
     });
