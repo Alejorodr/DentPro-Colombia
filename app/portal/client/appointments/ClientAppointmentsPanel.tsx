@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 
 import { RescheduleModal } from "@/app/portal/components/RescheduleModal";
 import { CalendarBlank, CheckCircle, Clock, WarningCircle, XCircle } from "@/components/ui/Icon";
+import { operationalStatusLabel } from "@/lib/appointments/status";
 
 type AppointmentItem = {
   id: string;
@@ -23,14 +24,6 @@ const statusStyles: Record<AppointmentItem["status"], string> = {
   NO_SHOW: "bg-fuchsia-50 text-fuchsia-700 dark:bg-fuchsia-500/15 dark:text-fuchsia-200",
 };
 
-const statusLabels: Record<AppointmentItem["status"], string> = {
-  SCHEDULED: "Pendiente",
-  CONFIRMED: "Confirmada",
-  CHECKED_IN: "En sala",
-  CANCELLED: "Cancelada",
-  COMPLETED: "Completada",
-  NO_SHOW: "No asistió",
-};
 
 function formatDateTime(date: string) {
   return new Date(date).toLocaleString("es-CO", {
@@ -44,6 +37,12 @@ export function ClientAppointmentsPanel({ upcoming, past }: { upcoming: Appointm
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<{ kind: "success" | "error"; message: string } | null>(null);
   const [rescheduleId, setRescheduleId] = useState<string | null>(null);
+
+  const activityMessage: Partial<Record<AppointmentItem["status"], string>> = {
+    CONFIRMED: "Tu cita fue confirmada.",
+    CANCELLED: "Tu cita fue cancelada.",
+    NO_SHOW: "Tu cita fue marcada como no asistida.",
+  };
 
   const nextActionable = useMemo(
     () => appointments.filter((appointment) => appointment.status === "CONFIRMED" || appointment.status === "SCHEDULED"),
@@ -111,11 +110,14 @@ export function ClientAppointmentsPanel({ upcoming, past }: { upcoming: Appointm
               <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
                   <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${statusStyles[appointment.status]}`}>
-                    {statusLabels[appointment.status]}
+                    {operationalStatusLabel(appointment.status)}
                   </span>
                   <p className="mt-2 text-lg font-semibold text-slate-900 dark:text-white">{appointment.serviceLabel}</p>
                   <p className="mt-1 text-sm text-slate-500 dark:text-slate-300">{formatDateTime(appointment.startsAt)}</p>
                   <p className="text-sm text-slate-500 dark:text-slate-300">{appointment.professionalName}</p>
+                  {activityMessage[appointment.status] ? (
+                    <p className="mt-1 text-xs font-medium text-brand-teal">{activityMessage[appointment.status]}</p>
+                  ) : null}
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <button
@@ -161,7 +163,7 @@ export function ClientAppointmentsPanel({ upcoming, past }: { upcoming: Appointm
                   <p className="text-sm text-slate-500 dark:text-slate-300">{formatDateTime(appointment.startsAt)}</p>
                 </div>
                 <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${statusStyles[appointment.status]}`}>
-                  {statusLabels[appointment.status]}
+                  {operationalStatusLabel(appointment.status)}
                 </span>
               </div>
             </article>

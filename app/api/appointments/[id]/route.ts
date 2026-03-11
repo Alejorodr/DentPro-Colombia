@@ -11,6 +11,7 @@ import { requireOwnershipOrRole, requireRole, requireSession } from "@/lib/authz
 import { sendAppointmentEmail } from "@/lib/notifications/email";
 import { logger } from "@/lib/logger";
 import { recordAppointmentEvent } from "@/lib/appointments/events";
+import { buildAppointmentStatusNotification } from "@/lib/appointments/activity";
 
 const updateAppointmentSchema = z.object({
   status: z.nativeEnum(AppointmentStatus),
@@ -131,23 +132,12 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       const professionalName = updated.professional
         ? `${updated.professional.user.name} ${updated.professional.user.lastName}`
         : "Profesional";
-      const statusLabel =
-        updated.status === AppointmentStatus.CANCELLED
-          ? "cancelado"
-          : updated.status === AppointmentStatus.CONFIRMED
-            ? "confirmado"
-            : updated.status === AppointmentStatus.CHECKED_IN
-              ? "en sala"
-              : updated.status === AppointmentStatus.NO_SHOW
-                ? "no asistió"
-                : updated.status === AppointmentStatus.COMPLETED
-                  ? "atendido"
-                  : "programado";
+      const notification = buildAppointmentStatusNotification(updated.status);
 
       await createReceptionNotifications({
-        type: "appointment_status",
-        title: "Estado de turno actualizado",
-        body: `Turno de ${patientName} con ${professionalName} fue ${statusLabel}.`,
+        type: notification.type,
+        title: notification.title,
+        body: `${notification.activity} Turno de ${patientName} con ${professionalName}.`,
         entityType: "appointment",
         entityId: updated.id,
       });
@@ -277,10 +267,13 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
       },
     });
 
+    const patientName = `${updated.patient?.user.name ?? "Paciente"} ${updated.patient?.user.lastName ?? ""}`.trim();
+    const professionalName = `${updated.professional?.user.name ?? "Profesional"} ${updated.professional?.user.lastName ?? ""}`.trim();
+
     await createReceptionNotifications({
-      type: "appointment_status",
-      title: "Turno cancelado",
-      body: `Se canceló el turno ${updated.id}.`,
+      type: "appointment_cancelled",
+      title: "Cita cancelada",
+      body: `Se canceló la cita de ${patientName} con ${professionalName}.`,
       entityType: "appointment",
       entityId: updated.id,
     });
