@@ -26,6 +26,8 @@ type AnalyticsResponse = {
     pending: number;
     confirmed: number;
     checkedIn: number;
+    completed: number;
+    noShow: number;
     cancellations: number;
   };
   appointments: Array<{
@@ -169,27 +171,27 @@ export function ReceptionistDashboard() {
   const stats = data
     ? [
         {
-          label: "Total Appointments",
+          label: "Citas hoy",
           value: `${data.metrics.totalAppointments}`,
           change: view === "day" ? "Hoy" : view === "week" ? "Semana" : "Mes",
           icon: CalendarCheck,
         },
         {
-          label: "Checked In",
-          value: `${data.metrics.checkedIn}`,
-          change: "Atendidos",
+          label: "Confirmadas",
+          value: `${data.metrics.confirmed}`,
+          change: "Listas",
           icon: UsersFour,
         },
         {
-          label: "Pending",
-          value: `${data.metrics.pending}`,
-          change: "En espera",
+          label: "Atendidas",
+          value: `${data.metrics.completed}`,
+          change: "Completadas",
           icon: Clock,
         },
         {
-          label: "Cancellations",
-          value: `${data.metrics.cancellations}`,
-          change: "Canceladas",
+          label: "No-show",
+          value: `${data.metrics.noShow}`,
+          change: "Inasistencias",
           icon: ClipboardText,
         },
       ]

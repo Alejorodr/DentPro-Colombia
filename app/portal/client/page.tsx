@@ -40,6 +40,8 @@ export default async function ClientPortalPage() {
   const insuranceStatus =
     (dashboard?.insurance.status && insuranceLabels[dashboard.insurance.status]) ?? "No definido";
   const insuranceProvider = dashboard?.insurance.provider ?? "Sin proveedor";
+  const upcomingCount = nextAppointment ? 1 : 0;
+  const recentHistoryCount = dashboard?.recentHistory?.length ?? 0;
 
   return (
     <div className="space-y-8" data-testid="client-dashboard-page">
@@ -61,7 +63,7 @@ export default async function ClientPortalPage() {
         </Link>
       </section>
 
-      <section className="grid gap-4 md:grid-cols-3">
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs dark:border-surface-muted/70 dark:bg-surface-elevated">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Próximo turno</p>
           <p className="mt-4 text-2xl font-semibold text-slate-900 dark:text-white">
@@ -79,6 +81,14 @@ export default async function ClientPortalPage() {
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Cobertura</p>
           <p className="mt-4 text-2xl font-semibold text-slate-900 dark:text-white">{insuranceStatus}</p>
           <p className="text-xs text-slate-500 dark:text-slate-300">{insuranceProvider}</p>
+        </div>
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs dark:border-surface-muted/70 dark:bg-surface-elevated">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Próximas citas</p>
+          <p className="mt-4 text-3xl font-semibold text-slate-900 dark:text-white">{upcomingCount}</p>
+        </div>
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs dark:border-surface-muted/70 dark:bg-surface-elevated">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Historial reciente</p>
+          <p className="mt-4 text-3xl font-semibold text-slate-900 dark:text-white">{recentHistoryCount}</p>
         </div>
       </section>
 

@@ -164,6 +164,12 @@ export function ProfessionalDashboard() {
 
   const criticalAllergy = appointmentDetail?.allergies.find((allergy) => allergy.severity === "CRITICAL");
 
+  const dayMetrics = useMemo(() => {
+    const total = schedule.length;
+    const attended = schedule.filter((appointment) => appointment.status === AppointmentStatus.COMPLETED).length;
+    return { total, attended };
+  }, [schedule]);
+
   const handleSpeech = () => {
     if (!hasSpeechSupport) return;
     const SpeechRecognitionConstructor =
@@ -320,6 +326,17 @@ export function ProfessionalDashboard() {
           />
         </label>
       </div>
+
+      <section className="grid gap-4 sm:grid-cols-2">
+        <div className="rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900/60">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Citas del día</p>
+          <p className="mt-2 text-2xl font-semibold text-slate-900 dark:text-white">{dayMetrics.total}</p>
+        </div>
+        <div className="rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900/60">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Citas atendidas</p>
+          <p className="mt-2 text-2xl font-semibold text-slate-900 dark:text-white">{dayMetrics.attended}</p>
+        </div>
+      </section>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1.6fr)_minmax(0,1.1fr)]">
         <section className="rounded-3xl border border-slate-200 bg-white/80 p-5 shadow-xs dark:border-slate-800 dark:bg-slate-900/60">

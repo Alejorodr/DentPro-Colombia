@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { errorResponse } from "@/app/api/_utils/response";
 import { getPrismaClient } from "@/lib/prisma";
 import { requireSession } from "@/lib/authz";
+import { logger } from "@/lib/logger";
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const sessionResult = await requireSession();
@@ -33,6 +34,15 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     where: { appointmentId: id },
     orderBy: { createdAt: "desc" },
     include: { actorUser: { select: { id: true, name: true, lastName: true, email: true } } },
+  });
+
+  logger.info({
+    event: "appointment_events_read",
+    action: "appointment_events_read",
+    actor: sessionResult.user.role,
+    appointmentId: id,
+    timestamp: new Date().toISOString(),
+    count: events.length,
   });
 
   return NextResponse.json({ events });
