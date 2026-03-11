@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 import { Bell } from "@/components/ui/Icon";
@@ -11,21 +12,37 @@ type NotificationItem = {
   body?: string | null;
   createdAt: string;
   readAt?: string | null;
+  entityType?: string | null;
+  entityId?: string | null;
 };
+
+function notificationHref(notification: NotificationItem) {
+  if (notification.entityType === "appointment" && notification.entityId) {
+    return `/portal/receptionist/schedule?appointment=${notification.entityId}`;
+  }
+  return null;
+}
 
 export function NotificationsBell() {
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const loadNotifications = async () => {
-    const response = await fetchWithRetry("/api/notifications?limit=5");
+    setIsLoading(true);
+    setError(null);
+    const response = await fetchWithRetry("/api/notifications?limit=8");
     if (response.ok) {
       const data = (await response.json()) as { notifications: NotificationItem[]; unreadCount: number };
       setNotifications(data.notifications);
       setUnreadCount(data.unreadCount);
+    } else {
+      setError("No se pudo cargar la actividad.");
     }
+    setIsLoading(false);
   };
 
   useEffect(() => {
@@ -73,43 +90,55 @@ export function NotificationsBell() {
         <div className="absolute right-0 z-40 mt-3 w-80 rounded-2xl border border-slate-200 bg-white p-4 text-sm shadow-lg shadow-slate-200/40 dark:border-surface-muted dark:bg-surface-elevated">
           <div className="flex items-center justify-between">
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
-              Notificaciones
+              Centro de actividad
             </p>
             <span className="text-xs text-slate-500 dark:text-slate-400">{unreadCount} sin leer</span>
           </div>
-          <div className="mt-3 space-y-3">
-            {notifications.length === 0 ? (
+          <div className="mt-3 space-y-3" role="status" aria-live="polite">
+            {isLoading ? <p className="text-xs text-slate-500 dark:text-slate-400">Cargando actividad...</p> : null}
+            {error ? <p className="text-xs text-rose-600">{error}</p> : null}
+            {!isLoading && !error && notifications.length === 0 ? (
               <p className="text-xs text-slate-500 dark:text-slate-400">Sin novedades.</p>
-            ) : (
-              notifications.map((notification) => (
-                <div
-                  key={notification.id}
-                  className={`rounded-xl border px-3 py-2 ${
-                    notification.readAt
-                      ? "border-slate-100 bg-white"
-                      : "border-brand-teal/30 bg-brand-teal/5"
-                  } dark:border-surface-muted dark:bg-surface-base/70`}
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <p className="font-semibold text-slate-800 dark:text-white">{notification.title}</p>
-                      {notification.body ? (
-                        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{notification.body}</p>
+            ) : null}
+            {!isLoading && !error
+              ? notifications.map((notification) => {
+                const href = notificationHref(notification);
+                return (
+                  <div
+                    key={notification.id}
+                    className={`rounded-xl border px-3 py-2 ${
+                      notification.readAt
+                        ? "border-slate-100 bg-white"
+                        : "border-brand-teal/30 bg-brand-teal/5"
+                    } dark:border-surface-muted dark:bg-surface-base/70`}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <p className="font-semibold text-slate-800 dark:text-white">{notification.title}</p>
+                        {notification.body ? (
+                          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{notification.body}</p>
+                        ) : null}
+                        <p className="mt-1 text-[11px] text-slate-400">{new Date(notification.createdAt).toLocaleString("es-CO")}</p>
+                        {href ? (
+                          <Link className="mt-1 inline-flex text-xs font-semibold text-brand-teal" href={href}>
+                            Ver en agenda
+                          </Link>
+                        ) : null}
+                      </div>
+                      {!notification.readAt ? (
+                        <button
+                          type="button"
+                          className="text-xs font-semibold text-brand-teal dark:text-accent-cyan"
+                          onClick={() => markAsRead(notification.id)}
+                        >
+                          Marcar
+                        </button>
                       ) : null}
                     </div>
-                    {!notification.readAt ? (
-                      <button
-                        type="button"
-                        className="text-xs font-semibold text-brand-teal dark:text-accent-cyan"
-                        onClick={() => markAsRead(notification.id)}
-                      >
-                        Marcar
-                      </button>
-                    ) : null}
                   </div>
-                </div>
-              ))
-            )}
+                );
+              })
+              : null}
           </div>
         </div>
       ) : null}

@@ -244,10 +244,12 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     });
 
     try {
+      const patientName = `${updated.patient?.user.name ?? "Paciente"} ${updated.patient?.user.lastName ?? ""}`.trim();
+      const professionalName = `${updated.professional?.user.name ?? "Profesional"} ${updated.professional?.user.lastName ?? ""}`.trim();
       await createReceptionNotifications({
         type: "appointment_rescheduled",
-        title: "Turno reprogramado",
-        body: `Se reprogramó el turno ${updated.id}.`,
+        title: "Cita reprogramada",
+        body: `La cita de ${patientName} con ${professionalName} fue reprogramada.`,
         entityType: "appointment",
         entityId: updated.id,
       });

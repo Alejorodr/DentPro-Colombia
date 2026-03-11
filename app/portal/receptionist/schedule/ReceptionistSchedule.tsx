@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
 import { CalendarMonth } from "@/app/portal/receptionist/components/CalendarMonth";
 import { AppointmentTable } from "@/app/portal/receptionist/components/AppointmentTable";
@@ -97,6 +98,7 @@ function buildRangeDays(start: Date, end: Date) {
 }
 
 export function ReceptionistSchedule() {
+  const searchParams = useSearchParams();
   const [view, setView] = useState<ViewMode>("day");
   const [selectedDate, setSelectedDate] = useState(() => new Date());
   const [month, setMonth] = useState(() => new Date());
@@ -289,6 +291,7 @@ export function ReceptionistSchedule() {
               totalPages={data.pagination.totalPages}
               onPageChange={setPage}
               onRefresh={() => refresh(page)}
+              initialEventsAppointmentId={searchParams.get("appointment")}
             />
           ) : (
             <Skeleton className="h-48 w-full" />

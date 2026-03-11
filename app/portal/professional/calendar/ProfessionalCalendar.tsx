@@ -7,6 +7,7 @@ import { CalendarBlank } from "@/components/ui/Icon";
 import { Skeleton } from "@/app/portal/components/ui/Skeleton";
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
 import { operationalStatusLabel, toOperationalStatus } from "@/lib/appointments/status";
+import { AppointmentEventTimeline } from "@/app/portal/components/appointments/AppointmentEventTimeline";
 
 interface AvailabilityRule {
   id: string;
@@ -61,6 +62,7 @@ export function ProfessionalCalendar() {
   const [blocks, setBlocks] = useState<AvailabilityBlock[]>([]);
   const [holidays, setHolidays] = useState<ClinicHoliday[]>([]);
   const [appointments, setAppointments] = useState<AppointmentSummary[]>([]);
+  const [eventsAppointmentId, setEventsAppointmentId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [ruleForm, setRuleForm] = useState({
@@ -371,11 +373,16 @@ export function ProfessionalCalendar() {
                       : "Paciente"}
                   </p>
                   <p className="text-slate-500">Estado: {operationalStatusLabel(toOperationalStatus(appointment))}</p>
-                  {appointment.patientId ? (
-                    <Link href={`/portal/professional/patients/${appointment.patientId}`} className="font-semibold text-brand-teal">
-                      Abrir paciente
-                    </Link>
-                  ) : null}
+                  <div className="mt-1 flex items-center gap-3">
+                    {appointment.patientId ? (
+                      <Link href={`/portal/professional/patients/${appointment.patientId}`} className="font-semibold text-brand-teal">
+                        Abrir paciente
+                      </Link>
+                    ) : null}
+                    <button type="button" className="font-semibold text-slate-600" onClick={() => setEventsAppointmentId(appointment.id)}>
+                      Ver actividad
+                    </button>
+                  </div>
                 </div>
               ))
             )}
@@ -402,6 +409,16 @@ export function ProfessionalCalendar() {
           </div>
         </div>
       </div>
+
+      {eventsAppointmentId ? (
+        <div className="rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-xs dark:border-slate-800 dark:bg-slate-900/60">
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-lg font-semibold">Actividad reciente de la cita</h2>
+            <button type="button" className="text-xs font-semibold uppercase text-slate-500" onClick={() => setEventsAppointmentId(null)}>Cerrar</button>
+          </div>
+          <AppointmentEventTimeline appointmentId={eventsAppointmentId} />
+        </div>
+      ) : null}
 
       <div className="rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-xs dark:border-slate-800 dark:bg-slate-900/60">
         <div className="flex items-center gap-2">

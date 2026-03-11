@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 
 import {
@@ -18,6 +18,7 @@ import { AppointmentStatus } from "@prisma/client";
 
 import { Table } from "@/app/portal/components/ui/Table";
 import { RescheduleModal } from "@/app/portal/components/RescheduleModal";
+import { AppointmentEventTimeline } from "@/app/portal/components/appointments/AppointmentEventTimeline";
 import { fetchWithTimeout } from "@/lib/http";
 import { operationalStatusLabel, toOperationalStatus } from "@/lib/appointments/status";
 
@@ -38,6 +39,7 @@ interface AppointmentTableProps {
   totalPages: number;
   onPageChange: (page: number) => void;
   onRefresh: () => void;
+  initialEventsAppointmentId?: string | null;
 }
 
 const statusStyles: Record<string, string> = {
@@ -49,10 +51,17 @@ const statusStyles: Record<string, string> = {
   NO_SHOW: "bg-fuchsia-100 text-fuchsia-700",
 };
 
-export function AppointmentTable({ appointments, page, totalPages, onPageChange, onRefresh }: AppointmentTableProps) {
+export function AppointmentTable({ appointments, page, totalPages, onPageChange, onRefresh, initialEventsAppointmentId = null }: AppointmentTableProps) {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [rescheduleId, setRescheduleId] = useState<string | null>(null);
+  const [eventsAppointmentId, setEventsAppointmentId] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (initialEventsAppointmentId) {
+      setEventsAppointmentId(initialEventsAppointmentId);
+    }
+  }, [initialEventsAppointmentId]);
 
   const updateStatus = async (id: string, status: AppointmentStatus, action?: "check_in" | "mark_no_show") => {
     if ((status === AppointmentStatus.CANCELLED || action === "mark_no_show") && !window.confirm("¿Confirmas este cambio de estado?")) {
@@ -88,7 +97,23 @@ export function AppointmentTable({ appointments, page, totalPages, onPageChange,
           <Funnel size={16} />
           Operación diaria
         </div>
+        {eventsAppointmentId ? (
+          <button
+            type="button"
+            className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold uppercase text-slate-600"
+            onClick={() => setEventsAppointmentId(null)}
+          >
+            Cerrar timeline
+          </button>
+        ) : null}
       </div>
+
+      {eventsAppointmentId ? (
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-surface-muted dark:bg-surface-base/70">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Historial de la cita</p>
+          <AppointmentEventTimeline appointmentId={eventsAppointmentId} />
+        </div>
+      ) : null}
 
       {feedback ? <p className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs">{feedback}</p> : null}
 
@@ -158,6 +183,9 @@ export function AppointmentTable({ appointments, page, totalPages, onPageChange,
                           <Eye size={14} />
                           Paciente
                         </Link>
+                        <button type="button" className="inline-flex items-center gap-1 rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold uppercase text-slate-600" onClick={() => setEventsAppointmentId(appointment.id)}>
+                          <Eye size={14} />Eventos
+                        </button>
                         <button type="button" className="inline-flex items-center gap-1 rounded-full border border-brand-teal px-3 py-1 text-xs font-semibold uppercase text-brand-teal" onClick={() => setRescheduleId(appointment.id)} disabled={busyId === appointment.id}>
                           <PencilSimple size={14} />Reprogramar
                         </button>
