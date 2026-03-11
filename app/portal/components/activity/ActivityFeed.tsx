@@ -43,15 +43,19 @@ export function ActivityFeed({ title = "Actividad reciente", limit = 8 }: { titl
     if (cursor) params.set("cursor", cursor);
     if (typeFilter !== "all") params.set("type", typeFilter);
 
-    const response = await fetchWithRetry(`/api/activity/feed?${params.toString()}`);
-    if (!response.ok) {
+    try {
+      const response = await fetchWithRetry(`/api/activity/feed?${params.toString()}`);
+      if (!response.ok) {
+        setError("No pudimos cargar la actividad clínica.");
+        return;
+      }
+      const data = (await response.json()) as ActivityFeedResponse;
+      const loadedItems = data.events ?? [];
+      setNextCursor(data.nextCursor ?? null);
+      setItems((prev) => (cursor ? [...prev, ...loadedItems] : loadedItems));
+    } catch {
       setError("No pudimos cargar la actividad clínica.");
-      return;
     }
-    const data = (await response.json()) as ActivityFeedResponse;
-    const loadedItems = data.events ?? [];
-    setNextCursor(data.nextCursor ?? null);
-    setItems((prev) => (cursor ? [...prev, ...loadedItems] : loadedItems));
   };
 
   useEffect(() => {
@@ -79,7 +83,23 @@ export function ActivityFeed({ title = "Actividad reciente", limit = 8 }: { titl
       );
     }
     if (error) {
-      return <p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">{error}</p>;
+      return (
+        <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700" role="alert">
+          <p>{error}</p>
+          <button
+            type="button"
+            className="mt-2 inline-flex rounded-md border border-rose-300 px-2 py-1 font-semibold"
+            onClick={async () => {
+              setLoading(true);
+              setError(null);
+              await load(null);
+              setLoading(false);
+            }}
+          >
+            Reintentar
+          </button>
+        </div>
+      );
     }
     if (items.length === 0) {
       return <p className="text-xs text-slate-500">Sin actividad reciente para mostrar.</p>;
@@ -120,13 +140,14 @@ export function ActivityFeed({ title = "Actividad reciente", limit = 8 }: { titl
   }, [error, items, loading, loadingMore, nextCursor]);
 
   return (
-    <section className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-surface-muted dark:bg-surface-base/60" aria-live="polite">
+    <section className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-surface-muted dark:bg-surface-base/60" aria-live="polite" aria-busy={loading || loadingMore}>
       <div className="flex items-center justify-between gap-3">
         <h3 className="text-sm font-semibold text-slate-900 dark:text-white">{title}</h3>
         <label className="text-xs font-semibold text-slate-500">
           Tipo
           <select
-            className="ml-2 rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs"
+            aria-label="Filtrar actividad por tipo"
+            className="ml-2 rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-teal/60"
             value={typeFilter}
             onChange={(event) => setTypeFilter(event.target.value)}
           >

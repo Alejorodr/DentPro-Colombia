@@ -1,6 +1,7 @@
-import { type AppointmentStatus, type Prisma, type PrismaClient, type Role } from "@prisma/client";
+import { type AppointmentStatus, type PrismaClient, type Role } from "@prisma/client";
 
 import { getAppointmentEventLabel, appointmentStatusPastLabel } from "@/lib/appointments/activity";
+import { queryFeedSources } from "@/lib/activity/queryFeed";
 import { getPrismaClient } from "@/lib/prisma";
 
 export type ActivityFeedItem = {
@@ -27,18 +28,12 @@ export type ActivityFeedResult = {
   nextCursor: string | null;
 };
 
-type FeedCursor = {
+export type FeedCursor = {
   timestamp: Date;
   source: "event" | "notification";
   sourceId: string;
 };
 
-type FeedSource = FeedCursor["source"];
-
-const SOURCE_RANK: Record<FeedSource, number> = {
-  event: 1,
-  notification: 2,
-};
 
 function roleAppointmentLink(role: Role, appointmentId: string) {
   if (role === "PACIENTE") return "/portal/client/appointments";
@@ -81,41 +76,6 @@ function decodeCursor(cursor?: Date | string): FeedCursor | null {
   };
 }
 
-function buildCursorWhere<T extends Prisma.AppointmentEventWhereInput | Prisma.NotificationWhereInput>(
-  cursor: FeedCursor | null,
-  source: FeedSource,
-  idField: "id",
-  createdAtField: "createdAt",
-): T | undefined {
-  if (!cursor) return undefined;
-
-  if (!cursor.sourceId) {
-    return { [createdAtField]: { lt: cursor.timestamp } } as T;
-  }
-
-  const sourceRank = SOURCE_RANK[source];
-  const cursorRank = SOURCE_RANK[cursor.source];
-  if (sourceRank < cursorRank) {
-    return {
-      OR: [
-        { [createdAtField]: { lt: cursor.timestamp } },
-        { [createdAtField]: cursor.timestamp },
-      ],
-    } as T;
-  }
-
-  if (sourceRank > cursorRank) {
-    return { [createdAtField]: { lt: cursor.timestamp } } as T;
-  }
-
-  return {
-    OR: [
-      { [createdAtField]: { lt: cursor.timestamp } },
-      { [createdAtField]: cursor.timestamp, [idField]: { lt: cursor.sourceId } },
-    ],
-  } as T;
-}
-
 function compareItemsDesc(a: ActivityFeedItem, b: ActivityFeedItem) {
   const dateDiff = new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
   if (dateDiff !== 0) return dateDiff;
@@ -143,70 +103,15 @@ export async function getActivityFeed(params: {
   const eventWindowSize = sourceHint === "notification" ? 0 : Math.min(Math.ceil(limit * 0.75) + 5, 100);
   const notificationWindowSize = sourceHint === "event" ? 0 : Math.min(Math.ceil(limit * 0.75) + 5, 100);
 
-  const [patientProfile, professionalProfile] = await Promise.all([
-    params.role === "PACIENTE"
-      ? prisma.patientProfile.findUnique({ where: { userId: params.userId }, select: { id: true } })
-      : Promise.resolve(null),
-    params.role === "PROFESIONAL"
-      ? prisma.professionalProfile.findUnique({ where: { userId: params.userId }, select: { id: true } })
-      : Promise.resolve(null),
-  ]);
-
-  const appointmentScopedWhere =
-    params.role === "PACIENTE"
-      ? { appointment: { patientId: patientProfile?.id ?? "__none__" } }
-      : params.role === "PROFESIONAL"
-        ? { appointment: { professionalId: professionalProfile?.id ?? "__none__" } }
-        : {};
-
-  const dateFilter: Prisma.DateTimeFilter = {
-    ...(filters.since ? { gte: filters.since } : {}),
-    ...(filters.until ? { lte: filters.until } : {}),
-  };
-
-  const appointmentEventWhere: Prisma.AppointmentEventWhereInput = {
-    ...appointmentScopedWhere,
-    ...(Object.keys(dateFilter).length > 0 ? { createdAt: dateFilter } : {}),
-    ...(buildCursorWhere<Prisma.AppointmentEventWhereInput>(decodedCursor, "event", "id", "createdAt") ?? {}),
-    ...(filters.appointmentId ? { appointmentId: filters.appointmentId } : {}),
-    ...(filters.type?.startsWith("appointment_")
-      ? { action: filters.type === "appointment_status_changed" ? "status_updated" : filters.type.replace("appointment_", "") }
-      : {}),
-  };
-
-  const notificationWhere: Prisma.NotificationWhereInput = {
+  const [events, notifications] = await queryFeedSources({
+    prisma,
     userId: params.userId,
-    ...(Object.keys(dateFilter).length > 0 ? { createdAt: dateFilter } : {}),
-    ...(buildCursorWhere<Prisma.NotificationWhereInput>(decodedCursor, "notification", "id", "createdAt") ?? {}),
-    ...(filters.appointmentId ? { entityType: "appointment", entityId: filters.appointmentId } : {}),
-    ...(filters.type?.startsWith("notification_") ? { type: filters.type.replace("notification_", "") } : {}),
-  };
-
-  const [events, notifications] = await Promise.all([
-    eventWindowSize > 0
-      ? prisma.appointmentEvent.findMany({
-        where: appointmentEventWhere,
-        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-        take: eventWindowSize,
-        include: {
-          actorUser: { select: { name: true, lastName: true, email: true } },
-          appointment: {
-            select: {
-              id: true,
-              patient: { select: { user: { select: { name: true, lastName: true } } } },
-            },
-          },
-        },
-      })
-      : Promise.resolve([]),
-    notificationWindowSize > 0
-      ? prisma.notification.findMany({
-        where: notificationWhere,
-        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-        take: notificationWindowSize,
-      })
-      : Promise.resolve([]),
-  ]);
+    role: params.role,
+    filters,
+    decodedCursor,
+    eventWindowSize,
+    notificationWindowSize,
+  });
 
   const eventItems: ActivityFeedItem[] = events.map((event) => {
     const actor = event.actorUser
@@ -258,9 +163,9 @@ export async function getActivityFeed(params: {
   const lastItem = eventsSlice.at(-1);
   const nextCursor = filteredMerged.length > limit && lastItem ? encodeCursor(lastItem) : null;
 
-  // Nota técnica P10: este feed sigue con merge in-memory por compatibilidad.
-  // Próximo paso recomendado (P11+): migrar a stream materializado / SQL UNION feed
-  // para paginación nativa en DB con una sola fuente ordenada.
+  // Nota técnica P11: este feed continúa con merge in-memory por compatibilidad
+  // y ahora centraliza sus queries en queryFeedSources para simplificar evolución.
+  // Siguiente paso recomendado: materialized activity stream / SQL UNION feed.
 
   return {
     events: eventsSlice,
