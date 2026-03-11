@@ -34,6 +34,7 @@ type AppointmentSummary = {
 };
 
 interface AppointmentTableProps {
+  groupByProfessional?: boolean;
   appointments: AppointmentSummary[];
   page: number;
   totalPages: number;
@@ -51,7 +52,7 @@ const statusStyles: Record<string, string> = {
   NO_SHOW: "bg-fuchsia-100 text-fuchsia-700",
 };
 
-export function AppointmentTable({ appointments, page, totalPages, onPageChange, onRefresh, initialEventsAppointmentId = null }: AppointmentTableProps) {
+export function AppointmentTable({ appointments, page, totalPages, onPageChange, onRefresh, initialEventsAppointmentId = null, groupByProfessional = false }: AppointmentTableProps) {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [rescheduleId, setRescheduleId] = useState<string | null>(null);
   const [eventsAppointmentId, setEventsAppointmentId] = useState<string | null>(null);
@@ -90,6 +91,19 @@ export function AppointmentTable({ appointments, page, totalPages, onPageChange,
     return [...appointments].sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime());
   }, [appointments]);
 
+
+  const groupedTimeline = useMemo(() => {
+    if (!groupByProfessional) return [];
+    const groups = new Map<string, { name: string; items: AppointmentSummary[] }>();
+    for (const appointment of timeline) {
+      const key = appointment.professional?.id ?? "unknown";
+      const current = groups.get(key) ?? { name: appointment.professional?.name ?? "Sin profesional", items: [] };
+      current.items.push(appointment);
+      groups.set(key, current);
+    }
+    return Array.from(groups.values());
+  }, [groupByProfessional, timeline]);
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -125,19 +139,42 @@ export function AppointmentTable({ appointments, page, totalPages, onPageChange,
         <>
           <div className="rounded-2xl border border-slate-200 p-4">
             <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Timeline del día</p>
-            <div className="space-y-2">
-              {timeline.map((appointment) => {
-                const slot = toOperationalStatus(appointment);
-                return (
-                  <div key={`timeline-${appointment.id}`} className="flex items-center justify-between rounded-xl border border-slate-100 px-3 py-2 text-xs">
-                    <span>
-                      {new Date(appointment.startAt).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })} · {appointment.patient?.name ?? "Paciente"}
-                    </span>
-                    <span className={`rounded-full px-2 py-1 font-semibold ${statusStyles[slot]}`}>{operationalStatusLabel(slot)}</span>
+            {groupByProfessional ? (
+              <div className="space-y-4">
+                {groupedTimeline.map((group) => (
+                  <div key={group.name} className="rounded-xl border border-slate-200/80 p-3">
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-600">{group.name}</p>
+                    <div className="space-y-2">
+                      {group.items.map((appointment) => {
+                        const slot = toOperationalStatus(appointment);
+                        return (
+                          <div key={`timeline-${appointment.id}`} className="flex items-center justify-between rounded-xl border border-slate-100 px-3 py-2 text-xs">
+                            <span>
+                              {new Date(appointment.startAt).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })} · {appointment.patient?.name ?? "Paciente"}
+                            </span>
+                            <span className={`rounded-full px-2 py-1 font-semibold ${statusStyles[slot]}`}>{operationalStatusLabel(slot)}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
-                );
-              })}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {timeline.map((appointment) => {
+                  const slot = toOperationalStatus(appointment);
+                  return (
+                    <div key={`timeline-${appointment.id}`} className="flex items-center justify-between rounded-xl border-l-4 border-l-brand-teal border-t border-r border-b border-slate-100 px-3 py-2 text-xs">
+                      <span>
+                        {new Date(appointment.startAt).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })} · {appointment.patient?.name ?? "Paciente"}
+                      </span>
+                      <span className={`rounded-full px-2 py-1 font-semibold ${statusStyles[slot]}`}>{operationalStatusLabel(slot)}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           <Table>

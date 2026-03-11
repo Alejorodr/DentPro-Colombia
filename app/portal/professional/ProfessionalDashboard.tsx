@@ -16,6 +16,8 @@ import {
 import { AppointmentStatus, AttachmentKind, PrescriptionItemType } from "@prisma/client";
 
 import { cn } from "@/lib/utils";
+import { operationalStatusLabel } from "@/lib/appointments/status";
+import { ActivityFeed } from "@/app/portal/components/activity/ActivityFeed";
 import { calculateAge, maskId, maskName } from "@/lib/professional";
 import { useProfessionalPreferences } from "@/app/portal/professional/components/ProfessionalContext";
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
@@ -34,12 +36,12 @@ const statusStyles: Record<AppointmentStatus, string> = {
 };
 
 const statusLabels: Record<AppointmentStatus, string> = {
-  SCHEDULED: "SCHEDULED",
-  CONFIRMED: "CONFIRMED",
-  CHECKED_IN: "CHECKED_IN",
-  CANCELLED: "CANCELLED",
-  COMPLETED: "COMPLETED",
-  NO_SHOW: "NO_SHOW",
+  SCHEDULED: operationalStatusLabel("SCHEDULED"),
+  CONFIRMED: operationalStatusLabel("CONFIRMED"),
+  CHECKED_IN: operationalStatusLabel("CHECKED_IN"),
+  CANCELLED: operationalStatusLabel("CANCELLED"),
+  COMPLETED: operationalStatusLabel("COMPLETED"),
+  NO_SHOW: operationalStatusLabel("NO_SHOW"),
 };
 
 const tabOptions = ["Clinical Overview", "X-Rays & Imaging", "History"] as const;
@@ -699,6 +701,7 @@ export function ProfessionalDashboard() {
           </div>
         </section>
       </div>
+      <ActivityFeed title="Actividad clínica del día" limit={8} />
     </div>
   );
 }

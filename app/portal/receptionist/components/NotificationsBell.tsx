@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { Bell } from "@/components/ui/Icon";
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
@@ -23,18 +23,33 @@ function notificationHref(notification: NotificationItem) {
   return null;
 }
 
+function dateGroupLabel(date: string) {
+  const today = new Date();
+  const target = new Date(date);
+  const isToday = today.toDateString() === target.toDateString();
+  if (isToday) return "Hoy";
+
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+  if (yesterday.toDateString() === target.toDateString()) return "Ayer";
+
+  return target.toLocaleDateString("es-CO", { day: "2-digit", month: "short" });
+}
+
 export function NotificationsBell() {
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [limit, setLimit] = useState(8);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const loadNotifications = async () => {
+  const loadNotifications = async (limitOverride?: number) => {
+    const currentLimit = limitOverride ?? limit;
     setIsLoading(true);
     setError(null);
-    const response = await fetchWithRetry("/api/notifications?limit=8");
+    const response = await fetchWithRetry(`/api/notifications?limit=${currentLimit}`);
     if (response.ok) {
       const data = (await response.json()) as { notifications: NotificationItem[]; unreadCount: number };
       setNotifications(data.notifications);
@@ -47,7 +62,7 @@ export function NotificationsBell() {
 
   useEffect(() => {
     void loadNotifications();
-  }, []);
+  }, [limit]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -67,6 +82,22 @@ export function NotificationsBell() {
       setUnreadCount((prev) => Math.max(prev - 1, 0));
     }
   };
+
+  const markAllAsRead = async () => {
+    const response = await fetchWithTimeout("/api/notifications/read-all", { method: "PATCH" });
+    if (!response.ok) return;
+    setNotifications((prev) => prev.map((item) => (item.readAt ? item : { ...item, readAt: new Date().toISOString() })));
+    setUnreadCount(0);
+  };
+
+  const groupedNotifications = useMemo(() => {
+    return notifications.reduce((acc, notification) => {
+      const key = dateGroupLabel(notification.createdAt);
+      acc[key] = acc[key] ?? [];
+      acc[key].push(notification);
+      return acc;
+    }, {} as Record<string, NotificationItem[]>);
+  }, [notifications]);
 
   return (
     <div ref={containerRef} className="relative">
@@ -88,11 +119,16 @@ export function NotificationsBell() {
       </button>
       {open ? (
         <div className="absolute right-0 z-40 mt-3 w-80 rounded-2xl border border-slate-200 bg-white p-4 text-sm shadow-lg shadow-slate-200/40 dark:border-surface-muted dark:bg-surface-elevated">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2">
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
               Centro de actividad
             </p>
-            <span className="text-xs text-slate-500 dark:text-slate-400">{unreadCount} sin leer</span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-500 dark:text-slate-400">{unreadCount} sin leer</span>
+              <button type="button" className="text-[11px] font-semibold text-brand-teal" onClick={() => void markAllAsRead()}>
+                Marcar todas
+              </button>
+            </div>
           </div>
           <div className="mt-3 space-y-3" role="status" aria-live="polite">
             {isLoading ? <p className="text-xs text-slate-500 dark:text-slate-400">Cargando actividad...</p> : null}
@@ -101,44 +137,58 @@ export function NotificationsBell() {
               <p className="text-xs text-slate-500 dark:text-slate-400">Sin novedades.</p>
             ) : null}
             {!isLoading && !error
-              ? notifications.map((notification) => {
-                const href = notificationHref(notification);
-                return (
-                  <div
-                    key={notification.id}
-                    className={`rounded-xl border px-3 py-2 ${
-                      notification.readAt
-                        ? "border-slate-100 bg-white"
-                        : "border-brand-teal/30 bg-brand-teal/5"
-                    } dark:border-surface-muted dark:bg-surface-base/70`}
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <p className="font-semibold text-slate-800 dark:text-white">{notification.title}</p>
-                        {notification.body ? (
-                          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{notification.body}</p>
-                        ) : null}
-                        <p className="mt-1 text-[11px] text-slate-400">{new Date(notification.createdAt).toLocaleString("es-CO")}</p>
-                        {href ? (
-                          <Link className="mt-1 inline-flex text-xs font-semibold text-brand-teal" href={href}>
-                            Ver en agenda
-                          </Link>
-                        ) : null}
+              ? Object.entries(groupedNotifications).map(([group, groupItems]) => (
+                <div key={group} className="space-y-2">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{group}</p>
+                  {groupItems.map((notification) => {
+                    const href = notificationHref(notification);
+                    return (
+                      <div
+                        key={notification.id}
+                        className={`rounded-xl border px-3 py-2 ${
+                          notification.readAt
+                            ? "border-slate-100 bg-white"
+                            : "border-brand-teal/30 bg-brand-teal/5"
+                        } dark:border-surface-muted dark:bg-surface-base/70`}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <p className="font-semibold text-slate-800 dark:text-white">{notification.title}</p>
+                            {notification.body ? (
+                              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{notification.body}</p>
+                            ) : null}
+                            <p className="mt-1 text-[11px] text-slate-400">{new Date(notification.createdAt).toLocaleString("es-CO")}</p>
+                            {href ? (
+                              <Link className="mt-1 inline-flex text-xs font-semibold text-brand-teal" href={href}>
+                                Ver en agenda
+                              </Link>
+                            ) : null}
+                          </div>
+                          {!notification.readAt ? (
+                            <button
+                              type="button"
+                              className="text-xs font-semibold text-brand-teal dark:text-accent-cyan"
+                              onClick={() => void markAsRead(notification.id)}
+                            >
+                              Marcar
+                            </button>
+                          ) : null}
+                        </div>
                       </div>
-                      {!notification.readAt ? (
-                        <button
-                          type="button"
-                          className="text-xs font-semibold text-brand-teal dark:text-accent-cyan"
-                          onClick={() => markAsRead(notification.id)}
-                        >
-                          Marcar
-                        </button>
-                      ) : null}
-                    </div>
-                  </div>
-                );
-              })
+                    );
+                  })}
+                </div>
+              ))
               : null}
+            {!isLoading && !error && notifications.length >= limit ? (
+              <button
+                type="button"
+                onClick={() => setLimit((prev) => prev + 8)}
+                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold uppercase text-slate-600"
+              >
+                Cargar más
+              </button>
+            ) : null}
           </div>
         </div>
       ) : null}

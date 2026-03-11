@@ -6,6 +6,7 @@ import { CalendarCheck, ClipboardText, Clock, UsersFour } from "@/components/ui/
 
 import { Card } from "@/app/portal/components/ui/Card";
 import { StatCard } from "@/app/portal/components/ui/StatCard";
+import { ActivityFeed } from "@/app/portal/components/activity/ActivityFeed";
 import { AppointmentTable } from "@/app/portal/receptionist/components/AppointmentTable";
 import { CalendarMonth } from "@/app/portal/receptionist/components/CalendarMonth";
 import { NewAppointmentModal } from "@/app/portal/receptionist/components/NewAppointmentModal";
@@ -330,6 +331,8 @@ export function ReceptionistDashboard() {
           )}
         </Card>
       </section>
+
+      <ActivityFeed title="Actividad operativa" limit={10} />
 
       <NewAppointmentModal
         open={isNewOpen}

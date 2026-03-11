@@ -1,6 +1,7 @@
 import { type AppointmentStatus, type Prisma, type PrismaClient, type Role } from "@prisma/client";
 
 import { getPrismaClient } from "@/lib/prisma";
+import { logger } from "@/lib/logger";
 
 type RecordAppointmentEventInput = {
   appointmentId: string;
@@ -17,7 +18,7 @@ export async function recordAppointmentEvent(
   prismaClient?: PrismaClient | Prisma.TransactionClient,
 ) {
   const prisma = prismaClient ?? getPrismaClient();
-  return prisma.appointmentEvent.create({
+  const event = await prisma.appointmentEvent.create({
     data: {
       appointmentId: input.appointmentId,
       action: input.action,
@@ -28,4 +29,14 @@ export async function recordAppointmentEvent(
       metadata: input.metadata ?? undefined,
     },
   });
+
+  logger.info({
+    event: "appointment.event.recorded",
+    appointmentId: input.appointmentId,
+    actor: input.actorRole ?? "SYSTEM",
+    action: input.action,
+    timestamp: new Date().toISOString(),
+  });
+
+  return event;
 }
