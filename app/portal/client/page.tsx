@@ -6,6 +6,7 @@ import { getClientDashboardData } from "@/lib/portal/client-dashboard";
 import { formatInTimeZone, getAnalyticsTimeZone } from "@/lib/dates/tz";
 import { NextVisitActions } from "@/app/portal/client/components/NextVisitActions";
 import { operationalStatusLabel, toOperationalStatus } from "@/lib/appointments/status";
+import { ActivityFeed } from "@/app/portal/components/activity/ActivityFeed";
 
 function formatDate(date: Date) {
   const timeZone = getAnalyticsTimeZone();
@@ -128,7 +129,7 @@ export default async function ClientPortalPage() {
                   className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs dark:border-surface-muted/70 dark:bg-surface-elevated"
                 >
                   <div className="flex items-center justify-between text-xs text-slate-400">
-                    <span>{appointment.status}</span>
+                    <span>{operationalStatusLabel(toOperationalStatus(appointment))}</span>
                     <span>{formatDate(appointment.timeSlot.startAt)}</span>
                   </div>
                   <p className="mt-2 text-sm font-semibold text-slate-900 dark:text-white">
@@ -144,6 +145,8 @@ export default async function ClientPortalPage() {
           </div>
         </div>
       </section>
+
+      <ActivityFeed title="Actividad de tus citas" limit={8} />
     </div>
   );
 }

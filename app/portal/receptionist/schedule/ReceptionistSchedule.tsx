@@ -9,6 +9,7 @@ import { AppointmentTable } from "@/app/portal/receptionist/components/Appointme
 import { Card } from "@/app/portal/components/ui/Card";
 import { NewAppointmentModal } from "@/app/portal/receptionist/components/NewAppointmentModal";
 import { Skeleton } from "@/app/portal/components/ui/Skeleton";
+import { ActivityFeed } from "@/app/portal/components/activity/ActivityFeed";
 import { fetchWithRetry } from "@/lib/http";
 
 const viewOptions = [
@@ -110,6 +111,7 @@ export function ReceptionistSchedule() {
   const [professionalFilter, setProfessionalFilter] = useState("all");
   const [specialtyFilter, setSpecialtyFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [groupByProfessional, setGroupByProfessional] = useState(false);
 
   const range = useMemo(() => {
     if (view === "week") return { from: startOfWeek(selectedDate), to: endOfWeek(selectedDate) };
@@ -220,12 +222,21 @@ export function ReceptionistSchedule() {
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Agenda</p>
               <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Turnos ordenados por hora</h2>
             </div>
-            <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-2 py-1 text-xs font-semibold uppercase text-slate-500 dark:border-surface-muted dark:bg-surface-base dark:text-slate-300">
+            <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setGroupByProfessional((prev) => !prev)}
+              className={`rounded-full border px-3 py-1 text-xs font-semibold uppercase ${groupByProfessional ? "border-brand-teal bg-brand-teal text-white" : "border-slate-200 text-slate-600"}`}
+            >
+              {groupByProfessional ? "Agrupado por profesional" : "Vista global"}
+            </button>
+              <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-2 py-1 text-xs font-semibold uppercase text-slate-500 dark:border-surface-muted dark:bg-surface-base dark:text-slate-300">
               {viewOptions.map((option) => (
                 <button key={option.value} type="button" onClick={() => setView(option.value)} className={`rounded-full px-3 py-1 ${view === option.value ? "bg-brand-teal text-white" : "text-slate-500 hover:text-slate-900 dark:text-slate-300"}`}>
                   {option.label}
                 </button>
               ))}
+              </div>
             </div>
           </div>
 
@@ -292,12 +303,14 @@ export function ReceptionistSchedule() {
               onPageChange={setPage}
               onRefresh={() => refresh(page)}
               initialEventsAppointmentId={searchParams.get("appointment")}
+              groupByProfessional={groupByProfessional}
             />
           ) : (
             <Skeleton className="h-48 w-full" />
           )}
         </Card>
       </section>
+      <ActivityFeed title="Actividad operativa reciente" limit={10} />
       <NewAppointmentModal open={isNewOpen} onClose={() => setIsNewOpen(false)} onCreated={() => refresh(1)} />
     </div>
   );

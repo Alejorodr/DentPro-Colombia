@@ -35,3 +35,12 @@ export async function createReceptionNotifications(
     })),
   });
 }
+
+
+export async function markAllNotificationsRead(params: { userId: string; prismaClient?: PrismaClient }) {
+  const prisma = params.prismaClient ?? getPrismaClient();
+  return prisma.notification.updateMany({
+    where: { userId: params.userId, readAt: null },
+    data: { readAt: new Date() },
+  });
+}
