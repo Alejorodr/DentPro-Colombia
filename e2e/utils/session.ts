@@ -1,7 +1,7 @@
 import type { BrowserContext } from "@playwright/test";
 import { encode } from "next-auth/jwt";
 
-type SessionRole = "ADMINISTRADOR" | "RECEPCIONISTA" | "PACIENTE";
+type SessionRole = "ADMINISTRADOR" | "RECEPCIONISTA" | "PACIENTE" | "PROFESIONAL";
 
 export async function seedRoleSession(context: BrowserContext, role: SessionRole) {
   const secret = process.env.NEXTAUTH_SECRET ?? "test-secret";

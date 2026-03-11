@@ -43,6 +43,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     appointmentId: id,
     timestamp: new Date().toISOString(),
     count: events.length,
+    result: "ok",
   });
 
   return NextResponse.json({ events });

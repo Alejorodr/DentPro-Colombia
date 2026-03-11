@@ -32,6 +32,7 @@ export async function PATCH(_request: Request, { params }: { params: Promise<{ i
     actor: sessionUser.role,
     appointmentId: notification.entityType === "appointment" ? notification.entityId : null,
     timestamp: new Date().toISOString(),
+    result: "ok",
   });
 
   return NextResponse.json(updated);

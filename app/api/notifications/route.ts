@@ -60,6 +60,7 @@ export async function GET(request: Request) {
     appointmentId: null,
     timestamp: new Date().toISOString(),
     count: sliced.length,
+    result: "ok",
   });
 
   return NextResponse.json({ notifications: sliced, unreadCount, nextCursor });

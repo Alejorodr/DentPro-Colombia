@@ -19,7 +19,9 @@
     "postinstall": "node scripts/prisma-generate-safe.mjs",
     "typecheck": "tsc --noEmit",
     "test:e2e": "node scripts/run-e2e.mjs",
-    "e2e:prod": "E2E_ENV=production RUN_E2E=1 pnpm run test:e2e"
+    "e2e:prod": "E2E_ENV=production RUN_E2E=1 pnpm run test:e2e",
+    "e2e:smoke": "RUN_E2E=1 E2E_SUITE=smoke pnpm run test:e2e",
+    "e2e:full": "RUN_E2E=1 E2E_SUITE=full pnpm run test:e2e"
   },
   "dependencies": {
     "@auth/core": "0.34.3",
