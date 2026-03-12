@@ -59,7 +59,7 @@ export async function seedTestData(request: APIRequestContext) {
   const combinedBody = `${adminSeed.body}\n${fallbackSeed.body}`;
   if (combinedBody.includes("P2021")) {
     diagnostics.push(
-      "Database schema not initialized for E2E job. Run prisma migrate deploy or prisma db push before seeding.",
+      "Database schema not initialized for E2E runtime. Required tables not found.",
     );
   }
 

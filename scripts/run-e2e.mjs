@@ -41,7 +41,7 @@ console.log(
 const grep = suite === "smoke" ? "--grep @smoke" : "";
 
 const PRISMA_P2021_HINT =
-  "Database schema not initialized for E2E job. Run prisma migrate deploy or prisma db push before seeding.";
+  "Database schema not initialized for E2E runtime. Required tables not found.";
 
 const run = (command) =>
   new Promise((resolve, reject) => {

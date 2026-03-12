@@ -57,11 +57,27 @@ jobs:
       - name: Prisma generate
         run: pnpm exec prisma generate --schema prisma/schema.prisma
 
-      - name: Prisma migrate deploy
-        run: pnpm exec prisma migrate deploy
+      - name: Prisma schema deploy (migrate + db push)
+        run: |
+          pnpm exec prisma migrate deploy --schema prisma/schema.prisma
+          pnpm exec prisma db push --schema prisma/schema.prisma --skip-generate
+
+      - name: Verify required E2E tables
+        run: |
+          TABLE_STATE=$(pnpm exec prisma db execute --schema prisma/schema.prisma --stdin <<'SQL'
+          SELECT
+            to_regclass('"User"') AS user_table,
+            to_regclass('"Specialty"') AS specialty_table;
+          SQL
+          )
+          echo "$TABLE_STATE"
+          echo "$TABLE_STATE" | grep '"User"' >/dev/null
+          echo "$TABLE_STATE" | grep '"Specialty"' >/dev/null
 
       - name: Playwright browser install
         run: pnpm exec playwright install --with-deps chromium
 
       - name: E2E full
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
         run: pnpm run e2e:full
