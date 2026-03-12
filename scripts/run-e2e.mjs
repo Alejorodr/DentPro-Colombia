@@ -40,14 +40,36 @@ console.log(
 
 const grep = suite === "smoke" ? "--grep @smoke" : "";
 
+const PRISMA_P2021_HINT =
+  "Database schema not initialized for E2E job. Run prisma migrate deploy or prisma db push before seeding.";
+
 const run = (command) =>
   new Promise((resolve, reject) => {
-    const child = spawn(command, { stdio: "inherit", shell: true, env: process.env });
+    let output = "";
+    const child = spawn(command, { stdio: ["inherit", "pipe", "pipe"], shell: true, env: process.env });
+
+    child.stdout.on("data", (chunk) => {
+      const text = chunk.toString();
+      output += text;
+      process.stdout.write(text);
+    });
+
+    child.stderr.on("data", (chunk) => {
+      const text = chunk.toString();
+      output += text;
+      process.stderr.write(text);
+    });
+
     child.on("exit", (code) => {
       if (code === 0) {
         resolve();
         return;
       }
+
+      if (output.includes("P2021")) {
+        console.error(`[run-e2e] ${PRISMA_P2021_HINT}`);
+      }
+
       reject(new Error(`Command failed: ${command}`));
     });
   });

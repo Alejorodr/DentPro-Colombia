@@ -51,11 +51,19 @@ export async function seedTestData(request: APIRequestContext) {
     return;
   }
 
-  throw new Error(
-    [
-      `Seed admin failed: route ${adminSeed.path}, status ${adminSeed.status}, content-type ${adminSeed.contentType}, body ${adminSeed.body}`,
-      `Fallback seed failed: route ${fallbackSeed.path}, status ${fallbackSeed.status}, content-type ${fallbackSeed.contentType}, body ${fallbackSeed.body}`,
-      "Hint: if status is 404 on both routes, verify middleware matchers and runtime env guards.",
-    ].join("\n"),
-  );
+  const diagnostics = [
+    `Seed admin failed: route ${adminSeed.path}, status ${adminSeed.status}, content-type ${adminSeed.contentType}, body ${adminSeed.body}`,
+    `Fallback seed failed: route ${fallbackSeed.path}, status ${fallbackSeed.status}, content-type ${fallbackSeed.contentType}, body ${fallbackSeed.body}`,
+  ];
+
+  const combinedBody = `${adminSeed.body}\n${fallbackSeed.body}`;
+  if (combinedBody.includes("P2021")) {
+    diagnostics.push(
+      "Database schema not initialized for E2E job. Run prisma migrate deploy or prisma db push before seeding.",
+    );
+  }
+
+  diagnostics.push("Hint: if status is 404 on both routes, verify middleware matchers and runtime env guards.");
+
+  throw new Error(diagnostics.join("\n"));
 }
