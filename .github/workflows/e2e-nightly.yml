@@ -54,6 +54,12 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Prisma generate
+        run: pnpm exec prisma generate --schema prisma/schema.prisma
+
+      - name: Prisma migrate deploy
+        run: pnpm exec prisma migrate deploy
+
       - name: Playwright browser install
         run: pnpm exec playwright install --with-deps chromium
 
