@@ -4,6 +4,7 @@ type SeedAttemptResult = {
   path: string;
   status: number;
   body: string;
+  contentType: string;
 };
 
 async function readResponseBody(response: Awaited<ReturnType<APIRequestContext["post"]>>): Promise<string> {
@@ -26,12 +27,15 @@ async function trySeed(request: APIRequestContext, path: string): Promise<SeedAt
       ? await request.post(path, {
           headers: { "x-ops-key": process.env.OPS_KEY ?? "ops-test-key" },
         })
-      : await request.post(path);
+      : await request.post(path, {
+          headers: { "x-ops-key": process.env.OPS_KEY ?? "ops-test-key" },
+        });
 
   return {
     path,
     status: response.status(),
     body: await readResponseBody(response),
+    contentType: response.headers()["content-type"] ?? "<missing>",
   };
 }
 
@@ -49,8 +53,9 @@ export async function seedTestData(request: APIRequestContext) {
 
   throw new Error(
     [
-      `Seed admin failed: route ${adminSeed.path}, status ${adminSeed.status}, body ${adminSeed.body}`,
-      `Fallback seed failed: route ${fallbackSeed.path}, status ${fallbackSeed.status}, body ${fallbackSeed.body}`,
+      `Seed admin failed: route ${adminSeed.path}, status ${adminSeed.status}, content-type ${adminSeed.contentType}, body ${adminSeed.body}`,
+      `Fallback seed failed: route ${fallbackSeed.path}, status ${fallbackSeed.status}, content-type ${fallbackSeed.contentType}, body ${fallbackSeed.body}`,
+      "Hint: if status is 404 on both routes, verify middleware matchers and runtime env guards.",
     ].join("\n"),
   );
 }

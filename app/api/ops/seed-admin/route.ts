@@ -3,12 +3,13 @@ import { NextResponse } from "next/server";
 import { AppointmentStatus, InsuranceStatus, Role, TimeSlotStatus } from "@prisma/client";
 
 import { getPrismaClient } from "@/lib/prisma";
+import { logger } from "@/lib/logger";
 import {
   enforceOpsRateLimit,
   getOpsKey,
   isOpsIpAllowed,
   respondGenericError,
-  respondNotFound,
+  respondDisabled,
   respondUnauthorized,
 } from "../_utils";
 
@@ -24,14 +25,32 @@ function requireSeedEnv(name: string): string {
 
 // Endpoint de emergencia para crear/actualizar el admin en entornos locales.
 export async function POST(request: Request) {
-  const isProductionEnv = process.env.NODE_ENV === "production" || process.env.VERCEL_ENV === "production";
-  const isVercelRuntime = process.env.VERCEL === "1" || Boolean(process.env.VERCEL_ENV);
-
+  const nodeEnv = process.env.NODE_ENV ?? "unknown";
+  const vercelEnv = process.env.VERCEL_ENV ?? null;
+  const runE2EEnabled = process.env.RUN_E2E === "1";
+  const isProductionEnv = nodeEnv === "production";
+  const isVercelRuntime = process.env.VERCEL === "1";
   const opsEnabled = process.env.OPS_ENABLED === "1";
-  const isAllowedNodeEnv = process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test";
+  const isAllowedNodeEnv = nodeEnv === "development" || nodeEnv === "test";
 
-  if (isProductionEnv || isVercelRuntime || !opsEnabled || !isAllowedNodeEnv) {
-    return respondNotFound();
+  if (isProductionEnv && !runE2EEnabled) {
+    logger.warn({ event: "ops.seed_admin.disabled", route: "/api/ops/seed-admin", nodeEnv, vercelEnv, reason: "production_env" });
+    return respondDisabled("seed-admin is disabled in production environments unless RUN_E2E=1.");
+  }
+
+  if (isVercelRuntime) {
+    logger.warn({ event: "ops.seed_admin.disabled", route: "/api/ops/seed-admin", nodeEnv, vercelEnv, reason: "vercel_runtime" });
+    return respondDisabled("seed-admin is disabled on Vercel runtime.");
+  }
+
+  if (!opsEnabled) {
+    logger.warn({ event: "ops.seed_admin.disabled", route: "/api/ops/seed-admin", nodeEnv, vercelEnv, reason: "ops_disabled" });
+    return respondDisabled("Set OPS_ENABLED=1 to enable seed-admin.");
+  }
+
+  if (!isAllowedNodeEnv && !runE2EEnabled) {
+    logger.warn({ event: "ops.seed_admin.disabled", route: "/api/ops/seed-admin", nodeEnv, vercelEnv, reason: "node_env_not_allowed" });
+    return respondDisabled(`NODE_ENV=${nodeEnv} is not allowed. Use development/test or set RUN_E2E=1.`);
   }
 
   if (!isOpsIpAllowed(request)) {
@@ -48,6 +67,8 @@ export async function POST(request: Request) {
   if (!opsKey || !headerKey || headerKey !== opsKey) {
     return respondUnauthorized();
   }
+
+  logger.info({ event: "ops.seed_admin.start", route: "/api/ops/seed-admin", nodeEnv, vercelEnv });
 
   try {
     const adminEmail = requireSeedEnv("SEED_ADMIN_EMAIL").toLowerCase();
@@ -382,9 +403,10 @@ export async function POST(request: Request) {
     }
 
     const message = existingAdmin ? "Operación completada. Admin ya existe." : GENERIC_SUCCESS_MESSAGE;
+    logger.info({ event: "ops.seed_admin.success", route: "/api/ops/seed-admin", status: 200, existingAdmin: Boolean(existingAdmin) });
     return NextResponse.json({ message }, { status: 200 });
   } catch (error) {
-    console.error("OPS seed admin failed", error);
+    logger.error({ event: "ops.seed_admin.failed", route: "/api/ops/seed-admin", status: 500, error });
     return respondGenericError();
   }
 }
