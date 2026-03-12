@@ -25,6 +25,19 @@ if (!existsSync(defaultBrowserPath)) {
 }
 
 const suite = process.env.E2E_SUITE ?? "full";
+
+console.log(
+  "[run-e2e] runtime",
+  JSON.stringify({
+    suite,
+    runE2E: process.env.RUN_E2E ?? "0",
+    nodeEnv: process.env.NODE_ENV ?? "<unset>",
+    opsEnabled: process.env.OPS_ENABLED ?? "<unset>",
+    hasOpsKey: Boolean(process.env.OPS_KEY),
+    nextAuthUrl: process.env.NEXTAUTH_URL ?? "<unset>",
+  }),
+);
+
 const grep = suite === "smoke" ? "--grep @smoke" : "";
 
 const run = (command) =>

@@ -52,6 +52,16 @@ export function respondNotFound(): NextResponse {
   return NextResponse.json({ error: "Not Found" }, { status: 404 });
 }
 
+export function respondDisabled(reason: string, status = 403): NextResponse {
+  return NextResponse.json(
+    {
+      error: "Endpoint disabled by runtime configuration.",
+      reason,
+    },
+    { status },
+  );
+}
+
 export function respondUnauthorized(): NextResponse {
   return NextResponse.json({ error: "Operación no autorizada." }, { status: 403 });
 }

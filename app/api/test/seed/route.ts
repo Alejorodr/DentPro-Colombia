@@ -3,12 +3,42 @@ import { NextResponse } from "next/server";
 import { AppointmentStatus, Role, TimeSlotStatus } from "@prisma/client";
 
 import { getPrismaClient } from "@/lib/prisma";
+import { logger } from "@/lib/logger";
 
-export async function POST() {
-  const isProductionEnv = process.env.NODE_ENV === "production" || process.env.VERCEL_ENV === "production";
-  if (isProductionEnv || process.env.NODE_ENV !== "test") {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+export async function POST(request: Request) {
+  const nodeEnv = process.env.NODE_ENV ?? "unknown";
+  const vercelEnv = process.env.VERCEL_ENV ?? null;
+  const runE2EEnabled = process.env.RUN_E2E === "1";
+  const isVercelRuntime = process.env.VERCEL === "1";
+
+  if (isVercelRuntime) {
+    logger.warn({ event: "test.seed.disabled", route: "/api/test/seed", nodeEnv, vercelEnv, reason: "vercel_runtime" });
+    return NextResponse.json(
+      { error: "Endpoint disabled by runtime configuration.", reason: "test seed is disabled on Vercel runtime." },
+      { status: 403 },
+    );
   }
+
+  if (!runE2EEnabled) {
+    logger.warn({ event: "test.seed.disabled", route: "/api/test/seed", nodeEnv, vercelEnv, reason: "run_e2e_disabled" });
+    return NextResponse.json(
+      { error: "Endpoint disabled by runtime configuration.", reason: "Set RUN_E2E=1 to enable /api/test/seed." },
+      { status: 403 },
+    );
+  }
+
+
+  const opsKey = process.env.OPS_KEY?.trim();
+  const headerKey = request.headers.get("x-ops-key")?.trim();
+  if (!opsKey || !headerKey || headerKey !== opsKey) {
+    logger.warn({ event: "test.seed.disabled", route: "/api/test/seed", nodeEnv, vercelEnv, reason: "ops_key_mismatch" });
+    return NextResponse.json(
+      { error: "Operación no autorizada.", reason: "Missing or invalid x-ops-key." },
+      { status: 403 },
+    );
+  }
+
+  logger.info({ event: "test.seed.start", route: "/api/test/seed", nodeEnv, vercelEnv });
 
   const prisma = getPrismaClient();
 
@@ -125,5 +155,6 @@ export async function POST() {
     },
   });
 
+  logger.info({ event: "test.seed.success", route: "/api/test/seed", status: 200 });
   return NextResponse.json({ ok: true, adminId: admin.id, receptionistId: receptionist.id });
 }
