@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
-import { AppointmentStatus, InsuranceStatus, Role, TimeSlotStatus } from "@prisma/client";
+import { AppointmentStatus, InsuranceStatus, Prisma, Role, TimeSlotStatus } from "@prisma/client";
 
 import { getPrismaClient } from "@/lib/prisma";
 import { logger } from "@/lib/logger";
@@ -14,6 +14,7 @@ import {
 } from "../_utils";
 
 const GENERIC_SUCCESS_MESSAGE = "Operación completada.";
+const E2E_SCHEMA_HINT = "Database schema not initialized for E2E runtime. Required tables not found.";
 
 function requireSeedEnv(name: string): string {
   const value = process.env[name]?.trim();
@@ -406,6 +407,21 @@ export async function POST(request: Request) {
     logger.info({ event: "ops.seed_admin.success", route: "/api/ops/seed-admin", status: 200, existingAdmin: Boolean(existingAdmin) });
     return NextResponse.json({ message }, { status: 200 });
   } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2021") {
+      logger.error({ event: "ops.seed_admin.failed", route: "/api/ops/seed-admin", status: 500, errorCode: error.code, error });
+      return NextResponse.json(
+        {
+          error: "No se pudo completar la operación.",
+          hint: E2E_SCHEMA_HINT,
+          route: "/api/ops/seed-admin",
+          prismaCode: error.code,
+          prismaMessage: error.message,
+          prismaMeta: error.meta ?? null,
+        },
+        { status: 500 },
+      );
+    }
+
     logger.error({ event: "ops.seed_admin.failed", route: "/api/ops/seed-admin", status: 500, error });
     return respondGenericError();
   }
