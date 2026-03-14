@@ -131,22 +131,27 @@ export function ReceptionistSchedule() {
   const refresh = useCallback(async (pageOverride?: number) => {
     setError(null);
     setIsLoadingSchedule(true);
-    const params = new URLSearchParams({
-      from: formatDateInput(range.from),
-      to: formatDateInput(range.to),
-      date: formatDateInput(selectedDate),
-      page: String(pageOverride ?? page),
-      pageSize: "10",
-    });
-    const response = await fetchWithRetry(`/api/analytics/receptionist?${params.toString()}`);
-    if (!response.ok) {
+
+    try {
+      const params = new URLSearchParams({
+        from: formatDateInput(range.from),
+        to: formatDateInput(range.to),
+        date: formatDateInput(selectedDate),
+        page: String(pageOverride ?? page),
+        pageSize: "10",
+      });
+      const response = await fetchWithRetry(`/api/analytics/receptionist?${params.toString()}`);
+      if (!response.ok) {
+        setError("No se pudo cargar la agenda. Intenta actualizar.");
+        return;
+      }
+      const payload = (await response.json()) as AnalyticsResponse;
+      setData(payload);
+    } catch {
       setError("No se pudo cargar la agenda. Intenta actualizar.");
+    } finally {
       setIsLoadingSchedule(false);
-      return;
     }
-    const payload = (await response.json()) as AnalyticsResponse;
-    setData(payload);
-    setIsLoadingSchedule(false);
   }, [page, range.from, range.to, selectedDate]);
 
   useEffect(() => {
@@ -158,14 +163,18 @@ export function ReceptionistSchedule() {
 
   useEffect(() => {
     const loadCalendar = async () => {
-      const response = await fetchWithRetry(`/api/analytics/receptionist/calendar?month=${formatMonthInput(month)}`);
-      if (!response.ok) return;
-      const payload = (await response.json()) as CalendarSummaryResponse;
-      const nextSummary = payload.days.reduce((acc, day) => {
-        acc[day.date] = day;
-        return acc;
-      }, {} as Record<string, CalendarDaySummary>);
-      setCalendarSummary(nextSummary);
+      try {
+        const response = await fetchWithRetry(`/api/analytics/receptionist/calendar?month=${formatMonthInput(month)}`);
+        if (!response.ok) return;
+        const payload = (await response.json()) as CalendarSummaryResponse;
+        const nextSummary = payload.days.reduce((acc, day) => {
+          acc[day.date] = day;
+          return acc;
+        }, {} as Record<string, CalendarDaySummary>);
+        setCalendarSummary(nextSummary);
+      } catch {
+        setCalendarSummary({});
+      }
     };
 
     void loadCalendar();

@@ -27,6 +27,6 @@ export async function openRolePortal(params: {
           ? "/portal/admin"
           : "/portal/receptionist/schedule";
 
-  await params.page.goto(rolePath);
+  await params.page.goto(rolePath, { waitUntil: "domcontentloaded" });
   await expect(params.page).toHaveURL(new RegExp("/portal/"));
 }
