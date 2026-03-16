@@ -1,6 +1,7 @@
 import { test, expect } from "@playwright/test";
 
 import { seedTestData } from "./utils/seed";
+import { E2E_ROUTES, E2E_SELECTORS, E2E_TEST_IDS } from "./utils/constants";
 
 test("patient can book an appointment from the portal", async ({ page, request }) => {
   const hasDatabase = Boolean(process.env.DATABASE_URL);
@@ -11,15 +12,15 @@ test("patient can book an appointment from the portal", async ({ page, request }
   const email = process.env.DEMO_PATIENT_EMAIL ?? "demo-paciente@dentpro.co";
   const password = process.env.DEMO_PATIENT_PASSWORD ?? "DentProDemo!1";
 
-  await page.goto("/auth/login");
-  await page.locator("#login-email").fill(email);
-  await page.locator("#login-password").fill(password);
+  await page.goto(E2E_ROUTES.login, { waitUntil: "domcontentloaded" });
+  await page.locator(E2E_SELECTORS.loginEmail).fill(email);
+  await page.locator(E2E_SELECTORS.loginPassword).fill(password);
   await page.getByRole("button", { name: "Ingresar" }).click();
 
   await expect(page).toHaveURL(/\/portal\/client/);
-  await expect(page.getByTestId("client-total-visits")).toHaveText("2");
+  await expect(page.getByTestId(E2E_TEST_IDS.clientTotalVisits)).toHaveText("2");
 
-  await page.getByRole("link", { name: "Book Appointment" }).click();
+  await page.getByTestId(E2E_TEST_IDS.clientBookAppointmentLink).click();
   await expect(page).toHaveURL(/\/portal\/client\/book/);
 
   const servicesResponse = await request.get("/api/services?active=true");
@@ -42,7 +43,7 @@ test("patient can book an appointment from the portal", async ({ page, request }
   const responsePromise = page.waitForResponse(
     (response) => response.url().includes("/api/client/appointments") && response.request().method() === "POST",
   );
-  await page.getByTestId("confirm-appointment").click();
+  await page.getByTestId(E2E_TEST_IDS.confirmAppointment).click();
   const response = await responsePromise;
   expect(response.status()).toBe(201);
 

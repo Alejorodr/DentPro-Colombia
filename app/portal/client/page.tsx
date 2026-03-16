@@ -52,7 +52,11 @@ export default async function ClientPortalPage() {
       </header>
 
       <section className="grid gap-3 sm:grid-cols-3">
-        <Link href="/portal/client/book" className="rounded-2xl border border-slate-200 bg-white p-4 text-sm font-semibold text-slate-700 shadow-xs hover:border-blue-200 dark:border-surface-muted/70 dark:bg-surface-elevated dark:text-slate-100">
+        <Link
+          href="/portal/client/book"
+          data-testid="client-book-appointment-link"
+          className="rounded-2xl border border-slate-200 bg-white p-4 text-sm font-semibold text-slate-700 shadow-xs hover:border-blue-200 dark:border-surface-muted/70 dark:bg-surface-elevated dark:text-slate-100"
+        >
           Reservar turno
         </Link>
         <Link href="/portal/client/treatment-history" className="rounded-2xl border border-slate-200 bg-white p-4 text-sm font-semibold text-slate-700 shadow-xs hover:border-blue-200 dark:border-surface-muted/70 dark:bg-surface-elevated dark:text-slate-100">

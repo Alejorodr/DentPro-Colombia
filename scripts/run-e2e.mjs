@@ -40,6 +40,10 @@ console.log(
 
 const grep = suite === "smoke" ? "--grep @smoke" : "";
 
+if (suite === "smoke") {
+  console.log("[run-e2e] smoke suite = home + auth + receptionist critical path + minimal clinical flow");
+}
+
 const PRISMA_P2021_HINT =
   "Database schema not initialized for E2E runtime. Required tables not found.";
 
