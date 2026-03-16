@@ -32,11 +32,12 @@ export async function openRolePortal(params: {
 }
 
 export async function openReceptionistSchedule(page: Page) {
-  await page.goto("/portal/receptionist/schedule", { waitUntil: "domcontentloaded" });
+  await page.goto("/portal/receptionist", { waitUntil: "domcontentloaded" });
+
+  await expect(page).toHaveURL(/\/portal\/receptionist\/(dashboard|schedule)/);
 
   if (!page.url().includes("/portal/receptionist/schedule")) {
-    await page.goto("/portal/receptionist", { waitUntil: "domcontentloaded" });
-    await page.getByRole("link", { name: "Schedule" }).click();
+    await page.goto("/portal/receptionist/schedule", { waitUntil: "domcontentloaded" });
   }
 
   await expect(page).toHaveURL(/\/portal\/receptionist\/schedule/);
