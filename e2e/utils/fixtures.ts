@@ -25,8 +25,20 @@ export async function openRolePortal(params: {
         ? "/portal/professional"
         : params.role === "ADMINISTRADOR"
           ? "/portal/admin"
-          : "/portal/receptionist/schedule";
+          : "/portal/receptionist";
 
   await params.page.goto(rolePath, { waitUntil: "domcontentloaded" });
   await expect(params.page).toHaveURL(new RegExp("/portal/"));
+}
+
+export async function openReceptionistSchedule(page: Page) {
+  await page.goto("/portal/receptionist/schedule", { waitUntil: "domcontentloaded" });
+
+  if (!page.url().includes("/portal/receptionist/schedule")) {
+    await page.goto("/portal/receptionist", { waitUntil: "domcontentloaded" });
+    await page.getByRole("link", { name: "Schedule" }).click();
+  }
+
+  await expect(page).toHaveURL(/\/portal\/receptionist\/schedule/);
+  await expect(page.getByTestId("receptionist-schedule-page")).toBeVisible();
 }
