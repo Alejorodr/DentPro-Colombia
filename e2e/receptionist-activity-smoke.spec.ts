@@ -9,5 +9,5 @@ test("@smoke recepcionista abre centro de actividad desde agenda", async ({ page
   await openReceptionistSchedule(page);
 
   await page.getByRole("button", { name: "Ver notificaciones" }).click();
-  await expect(page.getByText("Centro de actividad")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Centro de actividad" })).toBeVisible();
 });

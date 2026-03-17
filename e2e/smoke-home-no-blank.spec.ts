@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test("home smoke: no blank screen and no runtime errors", async ({ page }) => {
+test("@smoke home smoke: no blank screen and no runtime errors", async ({ page }) => {
   const consoleErrors: string[] = [];
   const pageErrors: string[] = [];
 
@@ -14,7 +14,7 @@ test("home smoke: no blank screen and no runtime errors", async ({ page }) => {
     pageErrors.push(error.message ?? String(error));
   });
 
-  await page.goto("/");
+  await page.goto("/", { waitUntil: "domcontentloaded" });
   await expect(page.locator("[data-hero-text-panel]")).toBeVisible();
 
   const bodyText = (await page.locator("body").innerText()).trim();

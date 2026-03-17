@@ -2,8 +2,9 @@ import { expect, type APIRequestContext, type BrowserContext, type Page } from "
 
 import { seedTestData } from "./seed";
 import { seedRoleSession } from "./session";
+import { E2E_ROUTES, E2E_TEST_IDS, type E2EPortalRole } from "./constants";
 
-export type PortalRole = "RECEPCIONISTA" | "PACIENTE" | "PROFESIONAL" | "ADMINISTRADOR";
+export type PortalRole = E2EPortalRole;
 
 export async function prepareRoleContext(params: {
   request: APIRequestContext;
@@ -18,28 +19,19 @@ export async function openRolePortal(params: {
   role: PortalRole;
   page: Page;
 }) {
-  const rolePath =
-    params.role === "PACIENTE"
-      ? "/portal/client"
-      : params.role === "PROFESIONAL"
-        ? "/portal/professional"
-        : params.role === "ADMINISTRADOR"
-          ? "/portal/admin"
-          : "/portal/receptionist";
+  const rolePath = E2E_ROUTES.portal[params.role];
 
   await params.page.goto(rolePath, { waitUntil: "domcontentloaded" });
   await expect(params.page).toHaveURL(new RegExp("/portal/"));
 }
 
 export async function openReceptionistSchedule(page: Page) {
-  await page.goto("/portal/receptionist", { waitUntil: "domcontentloaded" });
+  await page.goto(E2E_ROUTES.portal.RECEPCIONISTA, { waitUntil: "domcontentloaded" });
 
-  await expect(page).toHaveURL(/\/portal\/receptionist\/(dashboard|schedule)/);
+  await expect(page).toHaveURL(/\/portal\/receptionist\/dashboard/);
 
-  if (!page.url().includes("/portal/receptionist/schedule")) {
-    await page.goto("/portal/receptionist/schedule", { waitUntil: "domcontentloaded" });
-  }
+  await page.goto(E2E_ROUTES.receptionist.schedule, { waitUntil: "domcontentloaded" });
 
   await expect(page).toHaveURL(/\/portal\/receptionist\/schedule/);
-  await expect(page.getByTestId("receptionist-schedule-page")).toBeVisible();
+  await expect(page.getByTestId(E2E_TEST_IDS.receptionistSchedulePage)).toBeVisible();
 }
