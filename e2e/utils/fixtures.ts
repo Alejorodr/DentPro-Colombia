@@ -22,18 +22,28 @@ export async function openRolePortal(params: {
   const rolePath = E2E_ROUTES.portal[params.role];
 
   await params.page.goto(rolePath, { waitUntil: "domcontentloaded" });
-  await expect(params.page).toHaveURL(new RegExp("/portal/"));
+
+  if (params.role === "RECEPCIONISTA") {
+    await expect(params.page).toHaveURL(/\/portal\/receptionist(\/dashboard)?$/);
+    return;
+  }
+
+  await expect(params.page).toHaveURL(new RegExp(`^.*${rolePath}`));
+}
+
+export async function openReceptionistDashboard(page: Page) {
+  await page.goto(E2E_ROUTES.portal.RECEPCIONISTA, { waitUntil: "domcontentloaded" });
+
+  await expect(page).toHaveURL(/\/portal\/receptionist(\/dashboard)?$/);
+
+  if (new URL(page.url()).pathname !== E2E_ROUTES.receptionist.dashboard) {
+    await page.goto(E2E_ROUTES.receptionist.dashboard, { waitUntil: "domcontentloaded" });
+    await expect(page).toHaveURL(/\/portal\/receptionist\/dashboard$/);
+  }
 }
 
 export async function openReceptionistSchedule(page: Page) {
-  await page.goto(E2E_ROUTES.portal.RECEPCIONISTA, { waitUntil: "domcontentloaded" });
-
-  const landingPath = new URL(page.url()).pathname;
-  expect([
-    E2E_ROUTES.portal.RECEPCIONISTA,
-    E2E_ROUTES.receptionist.dashboard,
-  ]).toContain(landingPath);
-
+  await openReceptionistDashboard(page);
   await page.goto(E2E_ROUTES.receptionist.schedule, { waitUntil: "domcontentloaded" });
 
   await expect(page).toHaveURL(/\/portal\/receptionist\/schedule/);

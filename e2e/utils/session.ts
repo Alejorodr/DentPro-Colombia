@@ -1,6 +1,8 @@
 import type { BrowserContext } from "@playwright/test";
 import { encode } from "next-auth/jwt";
 
+import { getSessionCookieName } from "../../lib/auth/runtime";
+
 type SessionRole = "ADMINISTRADOR" | "RECEPCIONISTA" | "PACIENTE" | "PROFESIONAL";
 
 export async function seedRoleSession(context: BrowserContext, role: SessionRole) {
@@ -15,13 +17,17 @@ export async function seedRoleSession(context: BrowserContext, role: SessionRole
     },
   });
 
-  const urls = ["http://127.0.0.1:3000"];
+  const baseUrl = process.env.NEXTAUTH_URL ?? "http://127.0.0.1:3000";
+  const sessionCookieName = getSessionCookieName(baseUrl);
+
+  const urls = [baseUrl];
   const cookies = urls.flatMap((url) => [
     {
-      name: "next-auth.session-token",
+      name: sessionCookieName,
       value: token,
       httpOnly: true,
       sameSite: "Lax" as const,
+      secure: sessionCookieName.startsWith("__Secure-"),
       url,
     },
     {
