@@ -28,7 +28,12 @@ test("home exposes critical CTAs and availability block", async ({ page }) => {
 
 test("@smoke booking route redirects unauthenticated users to login", async ({ page }) => {
   await page.goto("/appointments/new", { waitUntil: "domcontentloaded" });
-  await expect(page).toHaveURL(/\/auth\/login\?callbackUrl=%2Fappointments%2Fnew/);
   await expect(page).toHaveURL(new RegExp(E2E_ROUTES.login.replace("/", "\\/")));
+
+  const currentUrl = new URL(page.url());
+  const callbackUrl = currentUrl.searchParams.get("callbackUrl");
+  expect(callbackUrl).toBeTruthy();
+  expect(decodeURIComponent(callbackUrl ?? "")).toBe("/appointments/new");
+
   await expect(page.getByRole("heading", { name: "Inicia sesión en DentPro" })).toBeVisible();
 });

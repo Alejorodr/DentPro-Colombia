@@ -21,7 +21,10 @@ test("@smoke seed admin then login redirects to admin dashboard", async ({ page,
   await page.goto(E2E_ROUTES.login, { waitUntil: "domcontentloaded" });
   await page.locator(E2E_SELECTORS.loginEmail).fill(seedEmail);
   await page.locator(E2E_SELECTORS.loginPassword).fill(seedPassword);
-  await page.getByRole("button", { name: "Ingresar" }).click();
+
+  const submitButton = page.locator(E2E_SELECTORS.loginSubmit);
+  await expect(submitButton).toBeEnabled();
+  await submitButton.click();
 
   await expect(page).toHaveURL(/\/portal\/admin/);
   await expect(page.getByTestId(E2E_TEST_IDS.adminDashboardTitle)).toBeVisible();
@@ -45,7 +48,10 @@ test("login with bypass credentials returns session", async ({ page }) => {
   await page.goto(E2E_ROUTES.login, { waitUntil: "domcontentloaded" });
   await page.locator(E2E_SELECTORS.loginEmail).fill(authUser.email);
   await page.locator(E2E_SELECTORS.loginPassword).fill(authUser.password);
-  await page.getByRole("button", { name: "Ingresar" }).click();
+
+  const submitButton = page.locator(E2E_SELECTORS.loginSubmit);
+  await expect(submitButton).toBeEnabled();
+  await submitButton.click();
 
   await expect(page).toHaveURL(/\/portal\/admin/);
 
@@ -62,8 +68,9 @@ test("rejects invalid credentials and protects portal routes", async ({ page }) 
   await page.locator(E2E_SELECTORS.loginPassword).fill("wrong-password");
   await expect(page.locator(E2E_SELECTORS.loginEmail)).toHaveValue(authUser.email);
   await expect(page.locator(E2E_SELECTORS.loginPassword)).toHaveValue("wrong-password");
-  await expect(page.getByRole("button", { name: "Ingresar" })).toBeEnabled();
-  await page.getByRole("button", { name: "Ingresar" }).click();
+  const submitButton = page.locator(E2E_SELECTORS.loginSubmit);
+  await expect(submitButton).toBeEnabled();
+  await submitButton.click();
 
   await expect(page).toHaveURL(/\/auth\/login/);
   await expect(page.getByText("No se pudo iniciar sesión")).toBeVisible();

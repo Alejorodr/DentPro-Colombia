@@ -10,7 +10,10 @@ test("login page renders and shows credential error", async ({ page }) => {
 
   await page.locator(E2E_SELECTORS.loginEmail).fill("admin@dentpro.test");
   await page.locator(E2E_SELECTORS.loginPassword).fill("incorrecta");
-  await page.getByRole("button", { name: "Ingresar" }).click();
+
+  const submitButton = page.locator(E2E_SELECTORS.loginSubmit);
+  await expect(submitButton).toBeEnabled();
+  await submitButton.click();
 
   await expect(page.getByText("No se pudo iniciar sesión")).toBeVisible();
 });

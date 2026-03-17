@@ -6,7 +6,6 @@ import { getRouteFromRequest, getRequestId } from "@/app/api/clinical/_utils";
 import { logClinicalAccess } from "@/lib/clinical/access-log";
 import { getProfessionalProfile } from "@/lib/clinical/access";
 import {
-  CLINICAL_ATTACHMENT_ALLOWED_TYPES,
   CLINICAL_ATTACHMENT_MAX_BYTES,
   buildClinicalAttachmentChecksum,
   buildClinicalAttachmentStorageKey,
@@ -194,4 +193,3 @@ export async function POST(request: Request, { params }: { params: Promise<{ epi
   );
 }
 
-export const allowedAttachmentTypes = CLINICAL_ATTACHMENT_ALLOWED_TYPES;

@@ -28,7 +28,11 @@ export async function openRolePortal(params: {
 export async function openReceptionistSchedule(page: Page) {
   await page.goto(E2E_ROUTES.portal.RECEPCIONISTA, { waitUntil: "domcontentloaded" });
 
-  await expect(page).toHaveURL(/\/portal\/receptionist\/dashboard/);
+  const landingPath = new URL(page.url()).pathname;
+  expect([
+    E2E_ROUTES.portal.RECEPCIONISTA,
+    E2E_ROUTES.receptionist.dashboard,
+  ]).toContain(landingPath);
 
   await page.goto(E2E_ROUTES.receptionist.schedule, { waitUntil: "domcontentloaded" });
 

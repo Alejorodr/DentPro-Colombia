@@ -7,8 +7,8 @@
   },
   "scripts": {
     "dev": "next dev --turbo",
-    "build": "node scripts/run-ci-command.mjs \"prisma generate && next build\"",
-    "vercel-build": "pnpm exec prisma generate --schema prisma/schema.prisma && node scripts/vercel-prisma.mjs && next build",
+    "build": "node scripts/run-ci-command.mjs \"prisma generate && next build --webpack\"",
+    "vercel-build": "pnpm exec prisma generate --schema prisma/schema.prisma && node scripts/vercel-prisma.mjs && next build --webpack",
     "start": "next start",
     "lint": "eslint .",
     "test": "node scripts/run-ci-command.mjs \"vitest run\"",
