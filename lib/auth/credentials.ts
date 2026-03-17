@@ -1,6 +1,7 @@
 import { getDefaultDashboardPath, isUserRole } from "@/lib/auth/roles";
 import { authenticateUser } from "@/lib/auth/users";
 import { logger } from "@/lib/logger";
+import { TEST_BYPASS_USER_ID } from "@/lib/auth/test-bypass";
 
 type CredentialsInput = {
   email?: string;
@@ -32,7 +33,7 @@ export async function authorizeCredentials(credentials?: CredentialsInput) {
     if (email.toLowerCase() === bypassEmail.toLowerCase() && password === bypassPassword) {
       logger.info({ event: "auth.credentials.bypass_success", role: resolvedRole });
       return {
-        id: "test-user",
+        id: TEST_BYPASS_USER_ID,
         name: "QA Admin",
         email: bypassEmail,
         role: resolvedRole,
