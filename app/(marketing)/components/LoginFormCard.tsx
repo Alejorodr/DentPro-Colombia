@@ -199,6 +199,7 @@ export function LoginFormCard({
               disabled={isSubmitting}
               className="input h-12 pl-10 text-sm"
               placeholder="tu-correo@dentpro.co"
+              data-testid="login-email"
             />
           </div>
         </label>
@@ -220,6 +221,7 @@ export function LoginFormCard({
               disabled={isSubmitting}
               className="input h-12 pl-10 text-sm"
               placeholder="Ingresa tu contraseña"
+              data-testid="login-password"
             />
           </div>
         </label>
@@ -246,6 +248,7 @@ export function LoginFormCard({
           className="h-12 w-full"
           disabled={!canSubmit}
           isLoading={isSubmitting}
+          data-testid="login-submit"
         >
           {!isSubmitting && <ArrowRight className="h-4 w-4" weight="bold" aria-hidden="true" />}
           {isSubmitting ? "Validando credenciales..." : "Ingresar"}

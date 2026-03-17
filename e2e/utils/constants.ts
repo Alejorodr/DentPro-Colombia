@@ -27,4 +27,5 @@ export const E2E_TEST_IDS = {
 export const E2E_SELECTORS = {
   loginEmail: "#login-email",
   loginPassword: "#login-password",
+  loginSubmit: '[data-testid="login-submit"]',
 } as const;

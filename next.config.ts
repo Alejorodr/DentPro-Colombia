@@ -9,7 +9,7 @@ const csp = [
   "img-src 'self' data: https:",
   `script-src 'self'${isProd ? " 'unsafe-inline'" : " 'unsafe-eval'"}`,
   "style-src 'self' 'unsafe-inline'",
-  "font-src 'self' data: https:",
+  "font-src 'self' data:",
   `connect-src 'self' https:${isProd ? "" : " http: ws: wss:"}`,
   "frame-src 'self' https://www.google.com",
 ].join("; ");
