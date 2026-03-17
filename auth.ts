@@ -10,6 +10,7 @@ import {
   getTrustHostSetting,
   isProductionRuntime,
   shouldUseSecureCookies,
+  getSessionCookieName,
 } from "@/lib/auth/runtime";
 import { isUserRole } from "@/lib/auth/roles";
 import { authorizeCredentials } from "@/lib/auth/credentials";
@@ -84,7 +85,7 @@ export const authOptions = {
   ...(trustHost ? { trustHost } : {}),
   cookies: {
     sessionToken: {
-      name: usesSecureCookies ? "__Secure-next-auth.session-token" : "next-auth.session-token",
+      name: getSessionCookieName(inferredBaseUrl),
       options: { sameSite: "strict" },
     },
   },

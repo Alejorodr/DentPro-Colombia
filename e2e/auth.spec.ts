@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 
 import { seedAdminSession } from "./utils/session";
 import { seedTestData } from "./utils/seed";
@@ -9,6 +9,19 @@ const authUser = {
   password: process.env.TEST_AUTH_PASSWORD ?? "Test1234!",
 };
 
+async function submitLogin(page: Page, params: { email: string; password: string }) {
+  await page.goto(E2E_ROUTES.login, { waitUntil: "domcontentloaded" });
+  await page.locator(E2E_SELECTORS.loginEmail).fill(params.email);
+  await page.locator(E2E_SELECTORS.loginPassword).fill(params.password);
+
+  const submitButton = page.locator(E2E_SELECTORS.loginSubmit);
+  await expect(submitButton).toBeEnabled();
+  await Promise.all([
+    page.waitForResponse((response) => response.url().includes("/api/auth/callback/credentials") && response.ok()),
+    submitButton.click(),
+  ]);
+}
+
 test("@smoke seed admin then login redirects to admin dashboard", async ({ page, request }) => {
   const seedEmail = process.env.SEED_ADMIN_EMAIL ?? "admin@dentpro.test";
   const seedPassword = process.env.SEED_ADMIN_PASSWORD ?? "Test1234!";
@@ -17,14 +30,7 @@ test("@smoke seed admin then login redirects to admin dashboard", async ({ page,
   test.skip(!hasDatabase, "DATABASE_URL is required for seed admin test.");
 
   await seedTestData(request);
-
-  await page.goto(E2E_ROUTES.login, { waitUntil: "domcontentloaded" });
-  await page.locator(E2E_SELECTORS.loginEmail).fill(seedEmail);
-  await page.locator(E2E_SELECTORS.loginPassword).fill(seedPassword);
-
-  const submitButton = page.locator(E2E_SELECTORS.loginSubmit);
-  await expect(submitButton).toBeEnabled();
-  await submitButton.click();
+  await submitLogin(page, { email: seedEmail, password: seedPassword });
 
   await expect(page).toHaveURL(/\/portal\/admin/);
   await expect(page.getByTestId(E2E_TEST_IDS.adminDashboardTitle)).toBeVisible();
@@ -45,13 +51,7 @@ test("login with bypass credentials returns session", async ({ page }) => {
   const bypassEnabled = process.env.TEST_AUTH_BYPASS === "1";
   test.skip(!bypassEnabled, "TEST_AUTH_BYPASS is required for bypass login test.");
 
-  await page.goto(E2E_ROUTES.login, { waitUntil: "domcontentloaded" });
-  await page.locator(E2E_SELECTORS.loginEmail).fill(authUser.email);
-  await page.locator(E2E_SELECTORS.loginPassword).fill(authUser.password);
-
-  const submitButton = page.locator(E2E_SELECTORS.loginSubmit);
-  await expect(submitButton).toBeEnabled();
-  await submitButton.click();
+  await submitLogin(page, { email: authUser.email, password: authUser.password });
 
   await expect(page).toHaveURL(/\/portal\/admin/);
 
