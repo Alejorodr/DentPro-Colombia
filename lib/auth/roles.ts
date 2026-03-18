@@ -39,5 +39,43 @@ export function roleFromSlug(slug: string): UserRole | null {
 }
 
 export function getDefaultDashboardPath(role: UserRole): string {
+  if (role === "RECEPCIONISTA") {
+    return "/portal/receptionist/dashboard";
+  }
+
   return `/portal/${roleSlugMap[role]}`;
+}
+
+export function resolveRoleAwarePortalPath(role: UserRole, candidate?: string | null): string {
+  const fallback = getDefaultDashboardPath(role);
+
+  if (!candidate) {
+    return fallback;
+  }
+
+  const trimmed = candidate.trim();
+  if (!trimmed) {
+    return fallback;
+  }
+
+  let path = trimmed;
+  if (trimmed.startsWith("http")) {
+    try {
+      const parsed = new URL(trimmed);
+      path = `${parsed.pathname}${parsed.search}`;
+    } catch {
+      return fallback;
+    }
+  }
+
+  if (!path.startsWith("/") || path === "/" || path.startsWith("/auth/login") || path.startsWith("/login")) {
+    return fallback;
+  }
+
+  const roleRoot = `/portal/${roleSlugMap[role]}`;
+  if (path === roleRoot || path.startsWith(`${roleRoot}/`)) {
+    return path;
+  }
+
+  return fallback;
 }

@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
 import { Alert } from "@/components/ui/Alert";
-import { getDefaultDashboardPath } from "@/lib/auth/roles";
+import { resolveRoleAwarePortalPath } from "@/lib/auth/roles";
 import { LoginForm } from "@/app/(marketing)/login/LoginForm";
 
 type LoginPageProps = {
@@ -22,17 +22,10 @@ export default async function AuthLoginPage(props: any) {
   const loginErrorMessage = errorParam ? errorMessages[errorParam] ?? "No pudimos iniciar sesión." : null;
   const callbackUrlRaw = searchParams?.callbackUrl;
   const callbackUrl = typeof callbackUrlRaw === "string" && callbackUrlRaw.trim().length > 0 ? callbackUrlRaw : undefined;
-  const hasValidCallback =
-    callbackUrl !== undefined &&
-    callbackUrl !== "/" &&
-    !callbackUrl.startsWith("/auth/login") &&
-    !callbackUrl.startsWith("/login");
-
   const session = await auth();
 
   if (session?.user?.role) {
-    const resolvedCallback = hasValidCallback ? callbackUrl : getDefaultDashboardPath(session.user.role);
-    redirect(resolvedCallback);
+    redirect(resolveRoleAwarePortalPath(session.user.role, callbackUrl));
   }
 
   return (
