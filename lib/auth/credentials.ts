@@ -1,7 +1,6 @@
 import { getDefaultDashboardPath, isUserRole } from "@/lib/auth/roles";
-import { authenticateUser } from "@/lib/auth/users";
+import { authenticateUser, findUserByEmail } from "@/lib/auth/users";
 import { logger } from "@/lib/logger";
-import { TEST_BYPASS_USER_ID } from "@/lib/auth/test-bypass";
 
 type CredentialsInput = {
   email?: string;
@@ -31,9 +30,29 @@ export async function authorizeCredentials(credentials?: CredentialsInput) {
     const resolvedRole = isUserRole(bypassRoleCandidate) ? bypassRoleCandidate : "ADMINISTRADOR";
 
     if (email.toLowerCase() === bypassEmail.toLowerCase() && password === bypassPassword) {
-      logger.info({ event: "auth.credentials.bypass_success", role: resolvedRole });
+      const persistedUser = await findUserByEmail(bypassEmail);
+      if (persistedUser) {
+        logger.info({ event: "auth.credentials.bypass_success", role: persistedUser.role, userId: persistedUser.id });
+        return {
+          id: persistedUser.id,
+          name: persistedUser.name,
+          email: persistedUser.email,
+          role: persistedUser.role,
+          professionalId: persistedUser.professionalId ?? null,
+          patientId: persistedUser.patientId ?? null,
+          passwordChangedAt: persistedUser.passwordChangedAt ?? null,
+          defaultDashboardPath: getDefaultDashboardPath(persistedUser.role),
+        } as const;
+      }
+
+      logger.warn({ event: "auth.credentials.bypass_user_missing", email: bypassEmail });
+      if (databaseUrl) {
+        return null;
+      }
+
+      logger.info({ event: "auth.credentials.bypass_success", role: resolvedRole, fallback: "no_database" });
       return {
-        id: TEST_BYPASS_USER_ID,
+        id: "00000000-0000-4000-8000-000000000001",
         name: "QA Admin",
         email: bypassEmail,
         role: resolvedRole,

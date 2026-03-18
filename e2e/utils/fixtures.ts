@@ -11,8 +11,8 @@ export async function prepareRoleContext(params: {
   context: BrowserContext;
   role: PortalRole;
 }) {
-  await seedTestData(params.request);
-  await seedRoleSession(params.context, params.role);
+  const seededUsers = await seedTestData(params.request);
+  await seedRoleSession(params.context, params.role, seededUsers);
 }
 
 export async function openRolePortal(params: {

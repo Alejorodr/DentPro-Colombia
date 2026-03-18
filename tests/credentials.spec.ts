@@ -2,17 +2,20 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { authorizeCredentials } from "@/lib/auth/credentials";
 import { getDefaultDashboardPath } from "@/lib/auth/roles";
-import { authenticateUser } from "@/lib/auth/users";
+import { authenticateUser, findUserByEmail } from "@/lib/auth/users";
 
 vi.mock("@/lib/auth/users", () => ({
   authenticateUser: vi.fn(),
+  findUserByEmail: vi.fn(),
 }));
 
 const mockedAuthenticateUser = vi.mocked(authenticateUser);
+const mockedFindUserByEmail = vi.mocked(findUserByEmail);
 
 describe("authorizeCredentials", () => {
   beforeEach(() => {
     mockedAuthenticateUser.mockReset();
+    mockedFindUserByEmail.mockReset();
     process.env.TEST_AUTH_BYPASS = "0";
   });
 
@@ -65,6 +68,28 @@ describe("authorizeCredentials", () => {
 
     expect(mockedAuthenticateUser).not.toHaveBeenCalled();
     expect(result).toBeNull();
+  });
+
+  it("uses persisted bypass user when bypass credentials are valid", async () => {
+    process.env.TEST_AUTH_BYPASS = "1";
+    process.env.DATABASE_URL = "postgresql://example";
+    mockedFindUserByEmail.mockResolvedValue({
+      id: "admin-id",
+      name: "Admin",
+      email: "admin@dentpro.test",
+      role: "ADMINISTRADOR",
+      professionalId: null,
+      patientId: null,
+    });
+
+    const result = await authorizeCredentials({ email: "admin@dentpro.test", password: "Test1234!" });
+
+    expect(mockedFindUserByEmail).toHaveBeenCalledWith("admin@dentpro.test");
+    expect(result).toMatchObject({
+      id: "admin-id",
+      email: "admin@dentpro.test",
+      role: "ADMINISTRADOR",
+    });
   });
 
   it("returns null for invalid credentials", async () => {

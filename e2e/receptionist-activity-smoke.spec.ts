@@ -2,9 +2,11 @@ import { expect, test } from "@playwright/test";
 
 import { openReceptionistSchedule } from "./utils/fixtures";
 import { seedRoleSession } from "./utils/session";
+import { seedTestData } from "./utils/seed";
 
-test("@smoke recepcionista abre centro de actividad desde agenda", async ({ page, context }) => {
-  await seedRoleSession(context, "RECEPCIONISTA");
+test("@smoke recepcionista abre centro de actividad desde agenda", async ({ page, context, request }) => {
+  const seededUsers = await seedTestData(request);
+  await seedRoleSession(context, "RECEPCIONISTA", seededUsers);
 
   await openReceptionistSchedule(page);
 

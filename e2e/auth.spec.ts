@@ -40,8 +40,9 @@ test("@smoke seed admin then login redirects to admin dashboard", async ({ page,
   await expect(page.getByTestId(E2E_TEST_IDS.adminDashboardTitle)).toBeVisible();
 });
 
-test("login succeeds and persists across refresh", async ({ page, context }) => {
-  await seedAdminSession(context);
+test("login succeeds and persists across refresh", async ({ page, context, request }) => {
+  const seededUsers = await seedTestData(request);
+  await seedAdminSession(context, seededUsers);
   await page.goto(E2E_ROUTES.portal.ADMINISTRADOR, { waitUntil: "domcontentloaded" });
   await expect(page).toHaveURL(/\/portal\/admin/);
   await expect(page.getByTestId(E2E_TEST_IDS.adminDashboardTitle)).toBeVisible();

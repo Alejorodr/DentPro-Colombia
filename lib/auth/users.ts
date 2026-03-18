@@ -96,3 +96,23 @@ export async function findUserById(id: string): Promise<DatabaseUser | null> {
 
   return mapUser(user as UserRecord | null);
 }
+
+export async function findUserByEmail(email: string): Promise<DatabaseUser | null> {
+  const normalizedEmail = email.toLowerCase();
+  const prisma = getPrismaClient();
+  const user = await prisma.user.findUnique({
+    where: { email: normalizedEmail },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      passwordChangedAt: true,
+      mfaEnabled: true,
+      professional: { select: { id: true } },
+      patient: { select: { id: true } },
+    },
+  });
+
+  return mapUser(user as UserRecord | null);
+}

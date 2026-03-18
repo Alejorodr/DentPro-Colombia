@@ -2,19 +2,30 @@ import type { BrowserContext } from "@playwright/test";
 import { encode } from "next-auth/jwt";
 
 import { getSessionCookieName } from "../../lib/auth/runtime";
-import { TEST_BYPASS_USER_ID } from "../../lib/auth/test-bypass";
+import type { SeededUsersByRole } from "./seed";
 
 type SessionRole = "ADMINISTRADOR" | "RECEPCIONISTA" | "PACIENTE" | "PROFESIONAL";
 
-export async function seedRoleSession(context: BrowserContext, role: SessionRole) {
+function resolveSeededUser(role: SessionRole, seededUsers?: SeededUsersByRole) {
+  const seededUser = seededUsers?.[role];
+  if (!seededUser?.id || !seededUser.email) {
+    throw new Error(`Missing seeded user for role ${role}. Run seedTestData and pass its return value to seedRoleSession.`);
+  }
+
+  return seededUser;
+}
+
+export async function seedRoleSession(context: BrowserContext, role: SessionRole, seededUsers?: SeededUsersByRole) {
+  const seededUser = resolveSeededUser(role, seededUsers);
   const secret = process.env.NEXTAUTH_SECRET ?? "test-secret";
   const token = await encode({
     secret,
     maxAge: 60 * 60 * 2,
     token: {
       role,
-      userId: TEST_BYPASS_USER_ID,
-      sub: TEST_BYPASS_USER_ID,
+      email: seededUser.email,
+      userId: seededUser.id,
+      sub: seededUser.id,
     },
   });
 
@@ -37,11 +48,17 @@ export async function seedRoleSession(context: BrowserContext, role: SessionRole
       sameSite: "Lax" as const,
       url,
     },
+    {
+      name: "dentpro-test-user-email",
+      value: seededUser.email,
+      sameSite: "Lax" as const,
+      url,
+    },
   ]);
 
   await context.addCookies(cookies);
 }
 
-export async function seedAdminSession(context: BrowserContext) {
-  await seedRoleSession(context, "ADMINISTRADOR");
+export async function seedAdminSession(context: BrowserContext, seededUsers?: SeededUsersByRole) {
+  await seedRoleSession(context, "ADMINISTRADOR", seededUsers);
 }

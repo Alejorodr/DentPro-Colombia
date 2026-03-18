@@ -158,7 +158,15 @@ export async function POST(request: Request) {
     });
 
     logger.info({ event: "test.seed.success", route: "/api/test/seed", status: 200 });
-    return NextResponse.json({ ok: true, adminId: admin.id, receptionistId: receptionist.id });
+    return NextResponse.json({
+      ok: true,
+      users: {
+        ADMINISTRADOR: { id: admin.id, email: admin.email, role: admin.role },
+        RECEPCIONISTA: { id: receptionist.id, email: receptionist.email, role: receptionist.role },
+        PROFESIONAL: { id: professionalUser.id, email: professionalUser.email, role: professionalUser.role },
+        PACIENTE: { id: patientUser.id, email: patientUser.email, role: patientUser.role },
+      },
+    });
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2021") {
       logger.error({ event: "test.seed.failed", route: "/api/test/seed", status: 500, errorCode: error.code, error });
