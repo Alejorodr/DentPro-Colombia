@@ -7,7 +7,7 @@ import { getSession, signIn, useSession } from "next-auth/react";
 import { ArrowRight, EnvelopeSimple, Lock, ShieldCheck, WarningCircle } from "@/components/ui/Icon";
 import { Button } from "@/components/ui/Button";
 
-import { getDefaultDashboardPath, isUserRole, type UserRole } from "@/lib/auth/roles";
+import { isUserRole, resolveRoleAwarePortalPath, type UserRole } from "@/lib/auth/roles";
 
 const errorMessages: Record<string, string> = {
   CredentialsSignin: "Correo o contraseña incorrectos.",
@@ -41,45 +41,9 @@ export function LoginFormCard({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
-  const resolveRedirectPath = useCallback((candidate?: string | null) => {
-    if (!candidate) {
-      return null;
-    }
-
-    const trimmed = candidate.trim();
-    if (!trimmed) {
-      return null;
-    }
-
-    let path = trimmed;
-
-    if (trimmed.startsWith("http")) {
-      try {
-        const parsed = new URL(trimmed);
-        path = `${parsed.pathname}${parsed.search}`;
-      } catch {
-        return null;
-      }
-    }
-
-    if (!path.startsWith("/")) {
-      return null;
-    }
-
-    if (path === "/" || path.startsWith("/auth/login") || path.startsWith("/login")) {
-      return null;
-    }
-
-    return path;
-  }, []);
-
   const resolveDestination = useCallback(
-    (role: UserRole) => {
-      const roleDestination = getDefaultDashboardPath(role);
-      const callbackDestination = resolveRedirectPath(callbackUrl);
-      return callbackDestination ?? roleDestination;
-    },
-    [callbackUrl, resolveRedirectPath],
+    (role: UserRole) => resolveRoleAwarePortalPath(role, callbackUrl),
+    [callbackUrl],
   );
 
   const canSubmit = useMemo(
