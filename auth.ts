@@ -14,8 +14,7 @@ import {
 } from "@/lib/auth/runtime";
 import { isUserRole } from "@/lib/auth/roles";
 import { authorizeCredentials } from "@/lib/auth/credentials";
-import { findUserById } from "@/lib/auth/users";
-import { TEST_BYPASS_USER_ID } from "@/lib/auth/test-bypass";
+import { findUserByEmail, findUserById } from "@/lib/auth/users";
 type AuthenticatedUser = {
   id?: string;
   name?: string | null;
@@ -135,7 +134,7 @@ export const authOptions = {
             : undefined;
 
         token.defaultDashboardPath = defaultPathCandidate ?? token.defaultDashboardPath;
-      } else if (token.sub && !token.role && token.sub !== TEST_BYPASS_USER_ID) {
+      } else if (token.sub && !token.role) {
         dbUser = await findUserById(token.sub);
         if (dbUser) {
           token.role = dbUser.role;
@@ -154,17 +153,13 @@ export const authOptions = {
 
       const tokenIssuedAt = typeof token.iat === "number" ? token.iat * 1000 : null;
       if (token.sub) {
-        if (token.sub === TEST_BYPASS_USER_ID) {
-          token.invalidated = false;
+        if (!dbUser) {
+          dbUser = await findUserById(token.sub);
+        }
+        if (dbUser?.passwordChangedAt && tokenIssuedAt) {
+          token.invalidated = tokenIssuedAt < dbUser.passwordChangedAt.getTime();
         } else {
-          if (!dbUser) {
-            dbUser = await findUserById(token.sub);
-          }
-          if (dbUser?.passwordChangedAt && tokenIssuedAt) {
-            token.invalidated = tokenIssuedAt < dbUser.passwordChangedAt.getTime();
-          } else {
-            token.invalidated = false;
-          }
+          token.invalidated = false;
         }
       }
 
@@ -232,19 +227,25 @@ export async function auth(): Promise<AuthSession> {
 
   const cookieStore = await cookies();
   const testRole = cookieStore.get("dentpro-test-role")?.value ?? "";
-  if (!isUserRole(testRole)) {
+  const testUserEmail = cookieStore.get("dentpro-test-user-email")?.value ?? "";
+  if (!isUserRole(testRole) || !testUserEmail) {
+    return session;
+  }
+
+  const persistedUser = await findUserByEmail(testUserEmail);
+  if (!persistedUser) {
     return session;
   }
 
   return {
     user: {
-      id: TEST_BYPASS_USER_ID,
-      name: "QA Admin",
-      email: "admin@dentpro.test",
+      id: persistedUser.id,
+      name: persistedUser.name,
+      email: persistedUser.email,
       image: null,
-      role: testRole,
-      professionalId: null,
-      patientId: null,
+      role: persistedUser.role,
+      professionalId: persistedUser.professionalId ?? null,
+      patientId: persistedUser.patientId ?? null,
     },
   } satisfies AuthSession;
 }

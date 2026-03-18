@@ -8,8 +8,9 @@ test.describe("Admin analytics dashboard", () => {
     await seedTestData(request);
   });
 
-  test("renders real KPIs and updates by range", async ({ page, context }) => {
-    await seedAdminSession(context);
+  test("renders real KPIs and updates by range", async ({ page, context, request }) => {
+    const seededUsers = await seedTestData(request);
+    await seedAdminSession(context, seededUsers);
 
     await page.goto("/portal/admin");
 

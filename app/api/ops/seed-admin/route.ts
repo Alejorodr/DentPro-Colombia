@@ -404,8 +404,27 @@ export async function POST(request: Request) {
     }
 
     const message = existingAdmin ? "Operación completada. Admin ya existe." : GENERIC_SUCCESS_MESSAGE;
+    const adminUser = createdUsers.find((user) => user.role === Role.ADMINISTRADOR) ?? null;
+    const receptionistUser = createdUsers.find((user) => user.role === Role.RECEPCIONISTA) ?? null;
+    const professionalUser = createdUsers.find((user) => user.role === Role.PROFESIONAL) ?? null;
+    const patientUser = createdUsers.find((user) => user.role === Role.PACIENTE) ?? null;
     logger.info({ event: "ops.seed_admin.success", route: "/api/ops/seed-admin", status: 200, existingAdmin: Boolean(existingAdmin) });
-    return NextResponse.json({ message }, { status: 200 });
+    return NextResponse.json(
+      {
+        message,
+        users: {
+          ...(adminUser ? { ADMINISTRADOR: { id: adminUser.id, email: adminUser.email, role: adminUser.role } } : {}),
+          ...(receptionistUser
+            ? { RECEPCIONISTA: { id: receptionistUser.id, email: receptionistUser.email, role: receptionistUser.role } }
+            : {}),
+          ...(professionalUser
+            ? { PROFESIONAL: { id: professionalUser.id, email: professionalUser.email, role: professionalUser.role } }
+            : {}),
+          ...(patientUser ? { PACIENTE: { id: patientUser.id, email: patientUser.email, role: patientUser.role } } : {}),
+        },
+      },
+      { status: 200 },
+    );
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2021") {
       logger.error({ event: "ops.seed_admin.failed", route: "/api/ops/seed-admin", status: 500, errorCode: error.code, error });

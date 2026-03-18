@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 import { seedAdminSession } from "./utils/session";
+import { seedTestData } from "./utils/seed";
 
 test("forgot password responds generically", async ({ page }) => {
   await page.route("**/api/auth/forgot-password", (route) => {
@@ -37,8 +38,9 @@ test("reset password accepts new password", async ({ page }) => {
   await expect(page.getByText(/Contraseña actualizada/i)).toBeVisible();
 });
 
-test("login accepts new password", async ({ page, context }) => {
-  await seedAdminSession(context);
+test("login accepts new password", async ({ page, context, request }) => {
+  const seededUsers = await seedTestData(request);
+  await seedAdminSession(context, seededUsers);
   await page.goto("/portal/admin");
   await expect(page).toHaveURL(/\/portal\/admin/);
 });
