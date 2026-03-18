@@ -16,10 +16,14 @@ async function submitLogin(page: Page, params: { email: string; password: string
 
   const submitButton = page.locator(E2E_SELECTORS.loginSubmit);
   await expect(submitButton).toBeEnabled();
-  await Promise.all([
-    page.waitForResponse((response) => response.url().includes("/api/auth/callback/credentials") && response.ok()),
-    submitButton.click(),
-  ]);
+  const callbackResponsePromise = page.waitForResponse((response) =>
+    response.url().includes("/api/auth/callback/credentials"),
+  );
+
+  await Promise.all([callbackResponsePromise, submitButton.click()]);
+
+  const callbackResponse = await callbackResponsePromise;
+  expect(callbackResponse.ok()).toBeTruthy();
 }
 
 test("@smoke seed admin then login redirects to admin dashboard", async ({ page, request }) => {

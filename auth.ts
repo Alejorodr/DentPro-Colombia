@@ -15,6 +15,7 @@ import {
 import { isUserRole } from "@/lib/auth/roles";
 import { authorizeCredentials } from "@/lib/auth/credentials";
 import { findUserById } from "@/lib/auth/users";
+import { TEST_BYPASS_USER_ID } from "@/lib/auth/test-bypass";
 type AuthenticatedUser = {
   id?: string;
   name?: string | null;
@@ -134,7 +135,7 @@ export const authOptions = {
             : undefined;
 
         token.defaultDashboardPath = defaultPathCandidate ?? token.defaultDashboardPath;
-      } else if (token.sub && !token.role) {
+      } else if (token.sub && !token.role && token.sub !== TEST_BYPASS_USER_ID) {
         dbUser = await findUserById(token.sub);
         if (dbUser) {
           token.role = dbUser.role;
@@ -153,13 +154,17 @@ export const authOptions = {
 
       const tokenIssuedAt = typeof token.iat === "number" ? token.iat * 1000 : null;
       if (token.sub) {
-        if (!dbUser) {
-          dbUser = await findUserById(token.sub);
-        }
-        if (dbUser?.passwordChangedAt && tokenIssuedAt) {
-          token.invalidated = tokenIssuedAt < dbUser.passwordChangedAt.getTime();
-        } else {
+        if (token.sub === TEST_BYPASS_USER_ID) {
           token.invalidated = false;
+        } else {
+          if (!dbUser) {
+            dbUser = await findUserById(token.sub);
+          }
+          if (dbUser?.passwordChangedAt && tokenIssuedAt) {
+            token.invalidated = tokenIssuedAt < dbUser.passwordChangedAt.getTime();
+          } else {
+            token.invalidated = false;
+          }
         }
       }
 
@@ -233,7 +238,7 @@ export async function auth(): Promise<AuthSession> {
 
   return {
     user: {
-      id: "test-user",
+      id: TEST_BYPASS_USER_ID,
       name: "QA Admin",
       email: "admin@dentpro.test",
       image: null,

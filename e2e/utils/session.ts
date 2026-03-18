@@ -2,6 +2,7 @@ import type { BrowserContext } from "@playwright/test";
 import { encode } from "next-auth/jwt";
 
 import { getSessionCookieName } from "../../lib/auth/runtime";
+import { TEST_BYPASS_USER_ID } from "../../lib/auth/test-bypass";
 
 type SessionRole = "ADMINISTRADOR" | "RECEPCIONISTA" | "PACIENTE" | "PROFESIONAL";
 
@@ -12,8 +13,8 @@ export async function seedRoleSession(context: BrowserContext, role: SessionRole
     maxAge: 60 * 60 * 2,
     token: {
       role,
-      userId: "test-user",
-      sub: "test-user",
+      userId: TEST_BYPASS_USER_ID,
+      sub: TEST_BYPASS_USER_ID,
     },
   });
 
