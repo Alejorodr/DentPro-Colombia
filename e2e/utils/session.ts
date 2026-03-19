@@ -17,7 +17,7 @@ function resolveSeededUser(role: SessionRole, seededUsers?: SeededUsersByRole) {
 
 export async function seedRoleSession(context: BrowserContext, role: SessionRole, seededUsers?: SeededUsersByRole) {
   const seededUser = resolveSeededUser(role, seededUsers);
-  const secret = process.env.NEXTAUTH_SECRET ?? "test-secret";
+  const secret = process.env.AUTH_JWT_SECRET ?? process.env.NEXTAUTH_SECRET ?? process.env.AUTH_SECRET ?? "test-secret";
   const token = await encode({
     secret,
     maxAge: 60 * 60 * 2,

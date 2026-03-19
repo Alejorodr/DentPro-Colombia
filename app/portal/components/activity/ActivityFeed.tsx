@@ -30,7 +30,11 @@ function iconForType(type: string) {
   return <Clock className="h-4 w-4 text-slate-400" weight="fill" />;
 }
 
-export function ActivityFeed({ title = "Actividad reciente", limit = 8 }: { title?: string; limit?: number }) {
+export function ActivityFeed({
+  title = "Actividad reciente",
+  limit = 8,
+  testId,
+}: { title?: string; limit?: number; testId?: string }) {
   const [items, setItems] = useState<ActivityFeedItem[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [typeFilter, setTypeFilter] = useState("all");
@@ -140,7 +144,7 @@ export function ActivityFeed({ title = "Actividad reciente", limit = 8 }: { titl
   }, [error, items, loading, loadingMore, nextCursor]);
 
   return (
-    <section className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-surface-muted dark:bg-surface-base/60" aria-live="polite" aria-busy={loading || loadingMore}>
+    <section className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-surface-muted dark:bg-surface-base/60" aria-live="polite" aria-busy={loading || loadingMore} data-testid={testId}>
       <div className="flex items-center justify-between gap-3">
         <h3 className="text-sm font-semibold text-slate-900 dark:text-white">{title}</h3>
         <label className="text-xs font-semibold text-slate-500">

@@ -9,6 +9,7 @@ import {
   getInferredAuthBaseUrl,
   getTrustHostSetting,
   isProductionRuntime,
+  isLocalE2EAuthRuntime,
   shouldUseSecureCookies,
   getSessionCookieName,
 } from "@/lib/auth/runtime";
@@ -218,9 +219,7 @@ export async function auth(): Promise<AuthSession> {
   }
 
   const baseUrl = inferredBaseUrl;
-  const isLocalhost = baseUrl.includes("localhost") || baseUrl.includes("127.0.0.1");
-  const allowTestSession =
-    process.env.NODE_ENV !== "production" && isLocalhost && process.env.TEST_AUTH_BYPASS === "1";
+  const allowTestSession = isLocalE2EAuthRuntime(baseUrl);
   if (!allowTestSession) {
     return session;
   }

@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 
+import { isLocalE2EAuthRuntime } from "@/lib/auth/runtime";
 import { getDefaultDashboardPath, isUserRole, roleFromSlug, type UserRole } from "@/lib/auth/roles";
 
 function resolveRequestId(request: NextRequest) {
@@ -44,8 +45,9 @@ export default async function proxy(request: NextRequest) {
   let role = resolveRole(token);
   const testRoleCookie = request.cookies.get("dentpro-test-role")?.value ?? "";
   const isProductionEnv = process.env.NODE_ENV === "production" || process.env.VERCEL_ENV === "production";
+  const allowE2EBypass = isLocalE2EAuthRuntime(host);
   const bypassEnabled =
-    !isProductionEnv &&
+    (allowE2EBypass || !isProductionEnv) &&
     process.env.TEST_AUTH_BYPASS === "1" &&
     isLocalhost &&
     testRoleCookie.length > 0;
@@ -75,7 +77,7 @@ export default async function proxy(request: NextRequest) {
 
   if (!role) {
     const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = "/login";
+    redirectUrl.pathname = "/auth/login";
     const callbackPath = `${pathname}${request.nextUrl.search}`;
     redirectUrl.searchParams.set("callbackUrl", callbackPath);
     return withRequestId(NextResponse.redirect(redirectUrl), requestId);

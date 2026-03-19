@@ -19,16 +19,15 @@ test.describe("Clinical cross-role flows", () => {
       await expect(page.getByText(/Estado actualizado correctamente/i)).toBeVisible();
     }
 
-    await expect(page.getByRole("heading", { name: /Actividad operativa reciente/i })).toBeVisible();
-    await expect(page.getByLabel("Feed de actividad clínica")).toBeVisible();
+    await expect(page.getByTestId(E2E_TEST_IDS.receptionistActivityFeed)).toBeVisible();
   });
 
   test("recepción consulta centro de actividad y paginación", async ({ page, context, request }) => {
     await prepareRoleContext({ request, context, role: "RECEPCIONISTA" });
     await openReceptionistSchedule(page);
 
-    await page.getByRole("button", { name: "Ver notificaciones" }).click();
-    await expect(page.getByRole("heading", { name: "Centro de actividad" })).toBeVisible();
+    await page.getByTestId(E2E_TEST_IDS.receptionistNotificationsButton).click();
+    await expect(page.getByTestId(E2E_TEST_IDS.receptionistNotificationsPanel)).toBeVisible();
     await expect(page.getByRole("button", { name: /Marcar todas como leídas/i })).toBeVisible();
 
     const loadMore = page.getByRole("button", { name: /Cargar más/i });

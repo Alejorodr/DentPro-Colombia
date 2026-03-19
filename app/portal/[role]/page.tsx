@@ -16,7 +16,7 @@ export default async function PortalRolePage({ params }: { params: Promise<{ rol
   const session = await auth();
 
   if (!session?.user?.role) {
-    redirect(`/login?callbackUrl=/portal/${role}`);
+    redirect(`/auth/login?callbackUrl=/portal/${role}`);
   }
 
   if (session.user.role !== requestedRole) {

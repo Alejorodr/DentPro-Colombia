@@ -49,3 +49,11 @@ export function getSessionCookieName(baseUrl: string): string {
 export function getTrustHostSetting(): boolean {
   return process.env.AUTH_TRUST_HOST === "true" || isVercelRuntime();
 }
+
+export function isLocalE2EAuthRuntime(hostOrBaseUrl: string): boolean {
+  if (process.env.RUN_E2E !== "1" || process.env.TEST_AUTH_BYPASS !== "1") {
+    return false;
+  }
+
+  return hostOrBaseUrl.includes("localhost") || hostOrBaseUrl.includes("127.0.0.1");
+}
