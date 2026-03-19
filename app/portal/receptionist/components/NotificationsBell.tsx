@@ -106,6 +106,7 @@ export function NotificationsBell() {
     <div ref={containerRef} className="relative">
       <button
         type="button"
+        data-testid="receptionist-notifications-button"
         className="relative inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition hover:text-slate-900 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-teal/60 dark:border-surface-muted dark:text-slate-200"
         aria-label="Ver notificaciones"
         aria-expanded={open}
@@ -124,7 +125,7 @@ export function NotificationsBell() {
         ) : null}
       </button>
       {open ? (
-        <div id={panelId} ref={panelRef} tabIndex={-1} className="absolute right-0 z-40 mt-3 w-80 rounded-2xl border border-slate-200 bg-white p-4 text-sm shadow-lg shadow-slate-200/40 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-teal/60 dark:border-surface-muted dark:bg-surface-elevated">
+        <div id={panelId} ref={panelRef} tabIndex={-1} data-testid="receptionist-notifications-panel" className="absolute right-0 z-40 mt-3 w-80 rounded-2xl border border-slate-200 bg-white p-4 text-sm shadow-lg shadow-slate-200/40 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-teal/60 dark:border-surface-muted dark:bg-surface-elevated">
           <div className="flex items-center justify-between gap-2">
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
               Centro de notificaciones

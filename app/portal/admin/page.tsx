@@ -66,11 +66,13 @@ export default async function AdminPortalPage({
 
   return (
     <div className="space-y-8">
-      <SectionHeader
-        eyebrow="Portal Administrador"
-        title="Gestión general"
-        description="Monitorea las métricas clave por período y actúa rápido sobre operaciones."
-      />
+      <div data-testid="admin-dashboard-title">
+        <SectionHeader
+          eyebrow="Portal Administrador"
+          title="Gestión general"
+          description="Monitorea las métricas clave por período y actúa rápido sobre operaciones."
+        />
+      </div>
 
       <PeriodSelector rangeKey={range.rangeKey} fromInput={range.fromInput} toInput={range.toInput} />
 

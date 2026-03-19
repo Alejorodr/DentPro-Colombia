@@ -16,6 +16,9 @@ export const E2E_ROUTES = {
 
 export const E2E_TEST_IDS = {
   receptionistSchedulePage: "receptionist-schedule-page",
+  receptionistActivityFeed: "receptionist-activity-feed",
+  receptionistNotificationsButton: "receptionist-notifications-button",
+  receptionistNotificationsPanel: "receptionist-notifications-panel",
   clientDashboardPage: "client-dashboard-page",
   clientTotalVisits: "client-total-visits",
   clientBookAppointmentLink: "client-book-appointment-link",
