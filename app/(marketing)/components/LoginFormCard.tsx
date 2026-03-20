@@ -57,8 +57,11 @@ export function LoginFormCard({
     }
 
     const roleCandidate = session?.user?.role ?? "";
-    const resolvedRole = isUserRole(roleCandidate) ? roleCandidate : "PACIENTE";
-    const destination = resolveDestination(resolvedRole);
+    if (!isUserRole(roleCandidate)) {
+      return;
+    }
+
+    const destination = resolveDestination(roleCandidate);
     router.replace(destination);
     router.refresh();
   }, [resolveDestination, router, session?.user?.role, status]);
@@ -113,11 +116,14 @@ export function LoginFormCard({
 
     const resolvedSession = await getSession();
     const roleCandidate = resolvedSession?.user?.role ?? "";
-    const resolvedRole = isUserRole(roleCandidate) ? roleCandidate : "PACIENTE";
-    const destination = resolveDestination(resolvedRole);
-    onSuccess?.();
-    router.replace(destination);
-    router.refresh();
+
+    if (isUserRole(roleCandidate)) {
+      const destination = resolveDestination(roleCandidate);
+      onSuccess?.();
+      router.replace(destination);
+      router.refresh();
+    }
+
     setIsSubmitting(false);
   };
 
