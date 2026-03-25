@@ -114,7 +114,11 @@ export function LoginFormCard({
       }
     }
 
-    const resolvedSession = await getSession();
+    let resolvedSession = await getSession();
+    if (!resolvedSession?.user?.role) {
+      await new Promise((resolve) => setTimeout(resolve, 150));
+      resolvedSession = await getSession();
+    }
     const roleCandidate = resolvedSession?.user?.role ?? "";
 
     if (isUserRole(roleCandidate)) {
@@ -122,6 +126,11 @@ export function LoginFormCard({
       onSuccess?.();
       router.replace(destination);
       router.refresh();
+    } else {
+      setFormError(errorMessages.Default);
+      if (process.env.NODE_ENV !== "production") {
+        console.warn("[login] session missing role after successful signIn", { resolvedSession });
+      }
     }
 
     setIsSubmitting(false);

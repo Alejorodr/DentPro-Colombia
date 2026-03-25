@@ -87,7 +87,12 @@ export const authOptions = {
   cookies: {
     sessionToken: {
       name: getSessionCookieName(inferredBaseUrl),
-      options: { sameSite: "strict" },
+      options: {
+        httpOnly: true,
+        sameSite: "strict",
+        path: "/",
+        secure: usesSecureCookies,
+      },
     },
   },
   session: { strategy: "jwt" },
