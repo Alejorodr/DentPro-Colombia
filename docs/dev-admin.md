@@ -13,7 +13,7 @@ Este proyecto incluye un usuario **solo para entornos de desarrollo y pruebas**.
    ```bash
    npm run prisma:seed
    ```
-2. Inicia sesión en `/login` con las credenciales anteriores. El rol `admin` permite acceder a rutas `/admin/**`.
+2. Inicia sesión en `/auth/login` (ruta canónica; `/login` redirige). El rol `admin` permite acceder a rutas `/admin/**`.
 
 > Nota: si `NODE_ENV` es `production`, el seed omite la creación del usuario admin.
 

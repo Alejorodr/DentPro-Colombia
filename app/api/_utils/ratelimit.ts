@@ -3,6 +3,7 @@ import { Ratelimit, type Duration } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 
 import { checkMemoryRateLimit } from "@/lib/rateLimit";
+import { getRuntimeStage, isProductionRuntime } from "@/lib/auth/runtime";
 
 export type RateLimitConfig = {
   limit: number;
@@ -52,7 +53,8 @@ function getRatelimiter(config: RateLimitConfig) {
 export async function enforceRateLimit(request: Request, key: string, config: RateLimitConfig) {
   const ip = getClientIp(request);
   const identifier = `${key}:${ip}`;
-  const isProd = process.env.NODE_ENV === "production";
+  const runtimeStage = getRuntimeStage();
+  const isProd = isProductionRuntime();
 
   const limiter = getRatelimiter(config);
   if (limiter) {
@@ -74,13 +76,17 @@ export async function enforceRateLimit(request: Request, key: string, config: Ra
   }
 
   if (isProd && !warnedMissingUpstashConfig) {
-    console.warn(
-      "[ratelimit] Upstash not configured; rate limit disabled in production.",
-    );
+    const warning =
+      runtimeStage === "vercel-production"
+        ? "[ratelimit] Upstash not configured in Vercel production; distributed rate limiting is disabled."
+        : runtimeStage === "ci-e2e"
+          ? "[ratelimit] Upstash not configured in CI/E2E; using in-memory fallback for deterministic tests."
+          : `[ratelimit] Upstash not configured in ${runtimeStage}; distributed rate limiting is disabled.`;
+    console.warn(warning);
     warnedMissingUpstashConfig = true;
   }
 
-  if (isProd) {
+  if (isProd && runtimeStage !== "ci-e2e") {
     return null;
   }
 

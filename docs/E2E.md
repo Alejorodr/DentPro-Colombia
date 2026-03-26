@@ -8,6 +8,7 @@
 ## Requisitos de ejecución real
 - Variables mínimas:
   - `RUN_E2E=1`
+  - `TEST_AUTH_BYPASS=1` (solo CI/local; nunca producción real)
   - `OPS_KEY`
   - `SEED_ADMIN_EMAIL`
   - `SEED_ADMIN_PASSWORD`
@@ -30,3 +31,8 @@
 2. `pnpm exec playwright install --with-deps chromium` (opcional, el script también lo cubre)
 3. `RUN_E2E=1 E2E_SUITE=smoke pnpm run test:e2e`
 4. `RUN_E2E=1 E2E_SUITE=full pnpm run test:e2e` (pipeline nocturno / previo a release)
+
+
+## Auth y ruta canónica
+- Ruta canónica de login: `/auth/login` (`/login` queda como alias).
+- El bypass E2E solo aplica en localhost/127.0.0.1 con `RUN_E2E=1` + `TEST_AUTH_BYPASS=1`.
