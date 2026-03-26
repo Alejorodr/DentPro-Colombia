@@ -1,5 +1,7 @@
 const PRODUCTION_ENVS = new Set(["production"]);
 
+type RuntimeStage = "vercel-production" | "vercel-preview" | "ci-e2e" | "ci" | "local";
+
 function isLocalHttpUrl(baseUrl: string): boolean {
   return /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(baseUrl);
 }
@@ -10,6 +12,34 @@ export function isProductionRuntime(): boolean {
 
 export function isVercelRuntime(): boolean {
   return process.env.VERCEL === "1" || Boolean(process.env.VERCEL_ENV);
+}
+
+export function isCiRuntime(): boolean {
+  return process.env.CI === "true" || process.env.CI === "1";
+}
+
+export function isE2ERuntime(): boolean {
+  return process.env.RUN_E2E === "1";
+}
+
+export function getRuntimeStage(): RuntimeStage {
+  if (process.env.VERCEL_ENV === "production") {
+    return "vercel-production";
+  }
+
+  if (process.env.VERCEL_ENV === "preview") {
+    return "vercel-preview";
+  }
+
+  if (isCiRuntime() && isE2ERuntime()) {
+    return "ci-e2e";
+  }
+
+  if (isCiRuntime()) {
+    return "ci";
+  }
+
+  return "local";
 }
 
 export function getInferredAuthBaseUrl(): string {
@@ -27,7 +57,7 @@ export function shouldUseSecureCookies(baseUrl: string): boolean {
     return true;
   }
 
-  if (process.env.RUN_E2E === "1" && isLocalHttpUrl(baseUrl)) {
+  if (isE2ERuntime() && isLocalHttpUrl(baseUrl)) {
     return false;
   }
 
@@ -51,7 +81,7 @@ export function getTrustHostSetting(): boolean {
 }
 
 export function isLocalE2EAuthRuntime(hostOrBaseUrl: string): boolean {
-  if (process.env.RUN_E2E !== "1" || process.env.TEST_AUTH_BYPASS !== "1") {
+  if (!isE2ERuntime() || process.env.TEST_AUTH_BYPASS !== "1") {
     return false;
   }
 

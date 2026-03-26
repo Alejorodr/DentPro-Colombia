@@ -14,6 +14,9 @@ const csp = [
   "frame-src 'self' https://www.google.com",
 ].join("; ");
 
+
+const sentryOtelWarningPattern = /Critical dependency: the request of a dependency is an expression/;
+
 const securityHeaders = [
   ...(isProd
     ? [
@@ -41,6 +44,24 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "plus.unsplash.com" },
     ],
   },
+
+  webpack(config) {
+    config.ignoreWarnings = [
+      ...(config.ignoreWarnings ?? []),
+      (warning: { message?: string; module?: { resource?: string } } | string) => {
+        const warningObject = typeof warning === "string" ? undefined : warning;
+        const warningMessage = typeof warningObject?.message === "string" ? warningObject.message : "";
+        const warningModule = typeof warningObject?.module?.resource === "string" ? warningObject.module.resource : "";
+        const isKnownSentryOrOtelWarning =
+          sentryOtelWarningPattern.test(warningMessage) &&
+          (warningModule.includes("@sentry") || warningModule.includes("@opentelemetry"));
+        return isKnownSentryOrOtelWarning;
+      },
+    ];
+
+    return config;
+  },
+
   async headers() {
     return [
       {

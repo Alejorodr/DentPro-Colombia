@@ -8,6 +8,7 @@ import { getJwtSecretString } from "@/lib/auth/jwt";
 import {
   getInferredAuthBaseUrl,
   getTrustHostSetting,
+  getRuntimeStage,
   isProductionRuntime,
   isLocalE2EAuthRuntime,
   shouldUseSecureCookies,
@@ -41,6 +42,10 @@ type SessionToken = JWT & {
 const inferredBaseUrl = getInferredAuthBaseUrl();
 const usesSecureCookies = shouldUseSecureCookies(inferredBaseUrl);
 const trustHost = getTrustHostSetting();
+const runtimeStage = getRuntimeStage();
+const isStrictProductionStage = runtimeStage === "vercel-production";
+const shouldEmitAuthRuntimeWarnings = runtimeStage === "vercel-production" || runtimeStage === "vercel-preview";
+
 
 type AuthWarnKey = "missing-base-url" | "missing-secret" | "insecure-cookies";
 const authWarningState = globalThis as typeof globalThis & {
@@ -48,7 +53,7 @@ const authWarningState = globalThis as typeof globalThis & {
 };
 
 function warnAuthOnce(key: AuthWarnKey, message: string): void {
-  if (!isProductionRuntime()) {
+  if (!isProductionRuntime() || !shouldEmitAuthRuntimeWarnings) {
     return;
   }
 
@@ -77,7 +82,12 @@ if (!hasAuthSecretConfigured()) {
 }
 
 if (!usesSecureCookies) {
-  warnAuthOnce("insecure-cookies", "[auth] Secure cookies are disabled in production; review NEXTAUTH_URL/VERCEL_URL.");
+  warnAuthOnce(
+    "insecure-cookies",
+    isStrictProductionStage
+      ? "[auth] Secure cookies are disabled in Vercel production; review NEXTAUTH_URL/VERCEL_URL."
+      : `[auth] Secure cookies are disabled in ${runtimeStage}; verify NEXTAUTH_URL/VERCEL_URL for this environment.`,
+  );
 }
 
 export const authOptions = {

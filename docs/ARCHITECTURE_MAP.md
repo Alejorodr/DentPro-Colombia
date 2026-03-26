@@ -4,7 +4,7 @@
 
 ### Marketing / público
 - `/` landing de marketing y CTA a autenticación/reserva.
-- `/login` alias de login.
+- `/auth/login` ruta canónica de login (`/login` se mantiene solo como alias con redirect).
 - `/appointments/new` inicio de flujo de creación de turno (requiere sesión).
 
 ### Auth

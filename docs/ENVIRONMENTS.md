@@ -36,3 +36,15 @@ Add environment-specific workflow:
 - `npm run prisma generate` (already included in build)
 - `npx prisma migrate deploy` (staging/production)
 - `npx prisma db push` (development only)
+
+
+## Runtime stages (operación)
+- `VERCEL_ENV=production`: producción real, seguridad estricta.
+- `VERCEL_ENV=preview`: preview/staging en Vercel.
+- `CI=true` + `RUN_E2E=1`: ejecución controlada de CI/E2E.
+- local sin `CI`: desarrollo local.
+
+Notas:
+- Cookies `secure` deben quedar activas en producción/preview HTTPS.
+- `TEST_AUTH_BYPASS` y seeds de prueba son exclusivos de CI/local E2E.
+- Si falta Upstash en producción real, rate limiting distribuido queda deshabilitado y debe corregirse en secretos del entorno.
