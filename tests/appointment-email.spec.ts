@@ -19,6 +19,9 @@ const mockPrisma = {
   service: {
     findUnique: vi.fn(),
   },
+  professionalService: {
+    findFirst: vi.fn(),
+  },
   appointment: {
     create: vi.fn(),
   },
@@ -63,6 +66,13 @@ beforeEach(() => {
   process.env.SMTP_PASS = "pass";
   process.env.EMAIL_FROM = "DentPro <no-reply@dentpro.test>";
   mockPrisma.timeSlot.findMany.mockResolvedValue([]);
+  mockPrisma.professionalService.findFirst.mockResolvedValue({
+    id: "ps-default",
+    professionalId: "default-professional",
+    serviceId: "default-service",
+    active: true,
+    onlineBookable: true,
+  });
 });
 
 describe("appointment email notifications", () => {
@@ -94,6 +104,13 @@ describe("appointment email notifications", () => {
 
     mockPrisma.timeSlot.findUnique.mockResolvedValue(timeSlot);
     mockPrisma.service.findUnique.mockResolvedValue({ id: "55555555-5555-4555-8555-555555555555", active: true, name: "Limpieza", priceCents: 10000 });
+    mockPrisma.professionalService.findFirst.mockResolvedValue({
+      id: "ps-1",
+      professionalId: timeSlot.professionalId,
+      serviceId: "55555555-5555-4555-8555-555555555555",
+      active: true,
+      onlineBookable: true,
+    });
     mockPrisma.notificationPreference.findUnique.mockResolvedValue(null);
     mockPrisma.$transaction.mockImplementation(async (callback: (tx: typeof mockPrisma) => Promise<typeof appointment>) => {
       mockPrisma.timeSlot.updateMany.mockResolvedValue({ count: 1 });
@@ -145,6 +162,13 @@ describe("appointment email notifications", () => {
 
     mockPrisma.timeSlot.findUnique.mockResolvedValue(timeSlot);
     mockPrisma.service.findUnique.mockResolvedValue({ id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", active: true, name: "Control", priceCents: 10000 });
+    mockPrisma.professionalService.findFirst.mockResolvedValue({
+      id: "ps-2",
+      professionalId: timeSlot.professionalId,
+      serviceId: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+      active: true,
+      onlineBookable: true,
+    });
     mockPrisma.notificationPreference.findUnique.mockResolvedValue({ emailEnabled: false });
     mockPrisma.$transaction.mockImplementation(async (callback: (tx: typeof mockPrisma) => Promise<typeof appointment>) => {
       mockPrisma.timeSlot.updateMany.mockResolvedValue({ count: 1 });
@@ -165,6 +189,49 @@ describe("appointment email notifications", () => {
 
     const response = await createAppointment(request);
     expect(response.status).toBe(201);
+    expect(mockTransportSend).not.toHaveBeenCalled();
+  });
+
+  it("fails cleanly when the professional is not assigned to the service", async () => {
+    mockRequireSession.mockResolvedValue({ user: { id: "admin-1", role: "ADMINISTRADOR" } });
+    mockEnforceRateLimit.mockResolvedValue(null);
+
+    const timeSlot = {
+      id: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+      professionalId: "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+      startAt: new Date("2030-03-01T14:00:00Z"),
+      endAt: new Date("2030-03-01T15:00:00Z"),
+      status: "AVAILABLE",
+    };
+
+    mockPrisma.timeSlot.findUnique.mockResolvedValue(timeSlot);
+    mockPrisma.service.findUnique.mockResolvedValue({
+      id: "dddddddd-dddd-4ddd-8ddd-dddddddddddd",
+      active: true,
+      name: "Control",
+      priceCents: 10000,
+    });
+    mockPrisma.professionalService.findFirst.mockResolvedValue(null);
+
+    const request = new Request("http://localhost/api/appointments", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        patientId: "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee",
+        timeSlotId: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+        serviceId: "dddddddd-dddd-4ddd-8ddd-dddddddddddd",
+        reason: "Control",
+      }),
+    });
+
+    const response = await createAppointment(request);
+    const body = await response.json();
+
+    expect(response.status).toBe(409);
+    expect(body).toMatchObject({
+      error: "El profesional no tiene este servicio habilitado para agendamiento.",
+    });
+    expect(mockPrisma.$transaction).not.toHaveBeenCalled();
     expect(mockTransportSend).not.toHaveBeenCalled();
   });
 
