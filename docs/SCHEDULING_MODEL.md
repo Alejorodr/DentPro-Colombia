@@ -1,80 +1,107 @@
-# Scheduling model (operational)
+# Scheduling model (phase 1 foundation)
 
-## Source of truth
+## Scope of this phase
 
-As of this update, effective bookable availability is calculated in **one place**:
+Phase 1 establishes the **foundational domain** for clinic scheduling:
 
-- `lib/scheduling/effective-availability.ts`
-- consumed by `GET /api/slots`
+1. Explicit professional ↔ service eligibility.
+2. Admin-owned baseline weekly working schedule.
+3. Operational admin workflow to manage both.
 
-Both receptionist and patient booking flows call `/api/slots`, so they now share the same availability truth.
+This phase does **not** implement full effective-availability orchestration, slot regeneration, or end-to-end receptionist/patient booking redesign.
 
-## New domain models
+## Core domain models
 
-- `ProfessionalService`
-  - explicit professional ↔ service assignment
-  - `active`, `onlineBookable`, optional per-assignment duration and buffers
-- `ProfessionalWorkingSchedule`
-  - admin-defined baseline weekly schedule by weekday + time range
-  - supports status (`PENDING_CONFIRMATION`, `CONFIRMED`, `CHANGES_REQUESTED`)
-- `ProfessionalScheduleAdjustment`
-  - professional change requests with date window and review metadata
-- `ProfessionalUnavailability`
-  - typed absences/blocks:
-    - `VACATION`
-    - `SICK_LEAVE`
-    - `TRAINING`
-    - `ADMIN_TIME`
-    - `PERSONAL_LEAVE`
-    - `INTERNAL_BLOCK`
-    - `OTHER`
-  - status lifecycle (`PENDING`, `APPROVED`, `REJECTED`, `CANCELLED`)
+### `ProfessionalService`
 
-## Slot consistency
+Formal relationship between a professional and a service.
 
-`TimeSlot` now has a uniqueness constraint on `(professionalId, startAt, endAt)` to prevent duplicate materialized slots.
+- one professional can have many services
+- one service can have many professionals
+- unique constraint on `(professionalId, serviceId)` prevents duplicate assignments
+- operational fields:
+  - `active`
+  - `onlineBookable`
+  - `appointmentDurationMinutes`
+  - `bufferBeforeMinutes`
+  - `bufferAfterMinutes`
+  - `notes`
 
-## Operational APIs
+This model is now the formal source for service eligibility checks.
 
-### Admin
+### `ProfessionalWorkingSchedule`
 
-- `GET /api/admin/scheduling`
-  - returns assignments + baseline schedules
-- `POST /api/admin/scheduling`
-  - `assignService`
-  - `upsertWorkingSchedule`
+Admin-defined baseline weekly schedule per professional.
 
-### Professional
+- `professionalId`, `dayOfWeek`, `startTime`, `endTime`
+- `timezone` (default `America/Bogota`)
+- optional `effectiveFrom`/`effectiveTo`
+- `active` flag for safe deactivation
+- `status` maintained as `CONFIRMED` for admin baseline rows
 
-- `GET /api/professional/schedule`
-  - returns baseline schedules, adjustments, and unavailability entries
-- `POST /api/professional/schedule`
-  - `confirmSchedule`
-  - `requestAdjustment`
-  - `createUnavailability`
+Schema-level protections include:
 
-## Booking rules now enforced
+- day-of-week check (`0..6`)
+- end time must be greater than start time
+- unique index on `(professionalId, dayOfWeek, startTime, endTime, timezone)`
 
-When creating appointments, backend now verifies:
+API-level protections additionally reject overlapping active time ranges for the same professional/day and overlapping date windows.
 
-1. service is active
-2. slot is available
-3. **professional has active + onlineBookable assignment to selected service**
+## Admin workflow
 
-This validation is applied for both:
+Admin scheduling page: `/portal/admin/scheduling`
+
+From one professional context, admin can:
+
+- list assigned services
+- assign a new service
+- deactivate an assignment
+- toggle online-bookable state
+- list baseline weekly schedule blocks
+- create schedule blocks
+- edit schedule blocks
+- deactivate schedule blocks
+
+No RRULE/technical recurrence syntax is exposed in this workflow.
+
+## Admin scheduling API
+
+Route: `/api/admin/scheduling`
+
+- `GET ?professionalId=<uuid>`
+  - lists assignments + baseline schedules for one professional
+- `POST` actions:
+  - `createAssignment`
+  - `updateAssignment`
+  - `deactivateAssignment`
+  - `createSchedule`
+  - `updateSchedule`
+  - `deleteSchedule` (safe deactivation)
+
+Legacy action names (`assignService`, `upsertWorkingSchedule`) are still accepted for backward compatibility.
+
+## Booking alignment
+
+Appointment creation endpoints keep enforcing explicit assignment checks:
 
 - `POST /api/appointments`
 - `POST /api/client/appointments`
 
-## UI updates
+Both require an active + online-bookable `ProfessionalService` row for the selected professional/service combination.
 
-- Admin: new scheduling operations page at `/portal/admin/scheduling`
-- Professional calendar: simplified operational UI for baseline confirmation, adjustment requests, and typed unavailability
+## Seed and QA support
 
-## Migration
+Seed now creates:
 
-Apply Prisma migration:
+- default `ProfessionalService` rows based on specialty matching (bootstrapping data only)
+- confirmed baseline weekly schedule rows for each active professional
 
-- `prisma/migrations/20260328120000_scheduling_operational_foundation/migration.sql`
+This gives QA and manual testing immediate operational data for admin scheduling flows.
 
-Then run Prisma client generation before build.
+## Phase 2 direction
+
+Phase 2 should build on this foundation by introducing:
+
+- effective availability generation that prioritizes baseline schedule + approved adjustments + unavailability
+- clear precedence rules and conflict resolution
+- receptionist/patient booking UX refinements based on the formal domain introduced here

@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -6,10 +7,22 @@ import { parseJson } from "@/app/api/_utils/validation";
 import { requireRole, requireSession } from "@/lib/authz";
 import { getPrismaClient } from "@/lib/prisma";
 
-const assignServiceSchema = z.object({
-  type: z.literal("assignService"),
+const timeRegex = /^\d{2}:\d{2}$/;
+
+const createAssignmentSchema = z.object({
+  type: z.literal("createAssignment"),
   professionalId: z.string().uuid(),
   serviceId: z.string().uuid(),
+  onlineBookable: z.boolean().optional(),
+  appointmentDurationMinutes: z.number().int().min(5).max(300).optional().nullable(),
+  bufferBeforeMinutes: z.number().int().min(0).max(180).optional().nullable(),
+  bufferAfterMinutes: z.number().int().min(0).max(180).optional().nullable(),
+  notes: z.string().trim().max(500).optional().nullable(),
+});
+
+const updateAssignmentSchema = z.object({
+  type: z.literal("updateAssignment"),
+  assignmentId: z.string().uuid(),
   active: z.boolean().optional(),
   onlineBookable: z.boolean().optional(),
   appointmentDurationMinutes: z.number().int().min(5).max(300).optional().nullable(),
@@ -18,12 +31,17 @@ const assignServiceSchema = z.object({
   notes: z.string().trim().max(500).optional().nullable(),
 });
 
-const scheduleSchema = z.object({
-  type: z.literal("upsertWorkingSchedule"),
+const deactivateAssignmentSchema = z.object({
+  type: z.literal("deactivateAssignment"),
+  assignmentId: z.string().uuid(),
+});
+
+const createScheduleSchema = z.object({
+  type: z.literal("createSchedule"),
   professionalId: z.string().uuid(),
   dayOfWeek: z.number().int().min(0).max(6),
-  startTime: z.string().regex(/^\d{2}:\d{2}$/),
-  endTime: z.string().regex(/^\d{2}:\d{2}$/),
+  startTime: z.string().regex(timeRegex),
+  endTime: z.string().regex(timeRegex),
   timezone: z.string().trim().min(3).max(120).optional(),
   effectiveFrom: z.string().datetime().optional().nullable(),
   effectiveTo: z.string().datetime().optional().nullable(),
@@ -31,9 +49,136 @@ const scheduleSchema = z.object({
   notes: z.string().trim().max(500).optional().nullable(),
 });
 
-const bodySchema = z.union([assignServiceSchema, scheduleSchema]);
+const updateScheduleSchema = z.object({
+  type: z.literal("updateSchedule"),
+  scheduleId: z.string().uuid(),
+  dayOfWeek: z.number().int().min(0).max(6).optional(),
+  startTime: z.string().regex(timeRegex).optional(),
+  endTime: z.string().regex(timeRegex).optional(),
+  timezone: z.string().trim().min(3).max(120).optional(),
+  effectiveFrom: z.string().datetime().optional().nullable(),
+  effectiveTo: z.string().datetime().optional().nullable(),
+  active: z.boolean().optional(),
+  notes: z.string().trim().max(500).optional().nullable(),
+});
 
-export async function GET() {
+const deleteScheduleSchema = z.object({
+  type: z.literal("deleteSchedule"),
+  scheduleId: z.string().uuid(),
+});
+
+const legacyAssignServiceSchema = createAssignmentSchema.extend({
+  type: z.literal("assignService"),
+  active: z.boolean().optional(),
+});
+
+const legacyUpsertScheduleSchema = createScheduleSchema.extend({
+  type: z.literal("upsertWorkingSchedule"),
+});
+
+const bodySchema = z.union([
+  createAssignmentSchema,
+  updateAssignmentSchema,
+  deactivateAssignmentSchema,
+  createScheduleSchema,
+  updateScheduleSchema,
+  deleteScheduleSchema,
+  legacyAssignServiceSchema,
+  legacyUpsertScheduleSchema,
+]);
+
+function toMinutes(value: string): number {
+  const [hours, minutes] = value.split(":").map(Number);
+  return (hours || 0) * 60 + (minutes || 0);
+}
+
+function hasTimeRangeOverlap(
+  startA: string,
+  endA: string,
+  startB: string,
+  endB: string,
+): boolean {
+  return toMinutes(startA) < toMinutes(endB) && toMinutes(endA) > toMinutes(startB);
+}
+
+function dateRangesOverlap(
+  first: { effectiveFrom: Date | null; effectiveTo: Date | null },
+  second: { effectiveFrom: Date | null; effectiveTo: Date | null },
+): boolean {
+  const firstFrom = first.effectiveFrom?.getTime() ?? Number.NEGATIVE_INFINITY;
+  const firstTo = first.effectiveTo?.getTime() ?? Number.POSITIVE_INFINITY;
+  const secondFrom = second.effectiveFrom?.getTime() ?? Number.NEGATIVE_INFINITY;
+  const secondTo = second.effectiveTo?.getTime() ?? Number.POSITIVE_INFINITY;
+  return firstFrom <= secondTo && secondFrom <= firstTo;
+}
+
+async function ensureActiveProfessional(professionalId: string) {
+  const prisma = getPrismaClient();
+  const professional = await prisma.professionalProfile.findUnique({
+    where: { id: professionalId },
+    select: { id: true, active: true, user: { select: { role: true } } },
+  });
+
+  if (!professional || !professional.active || professional.user.role !== "PROFESIONAL") {
+    return null;
+  }
+
+  return professional;
+}
+
+async function ensureServiceExists(serviceId: string) {
+  const prisma = getPrismaClient();
+  return prisma.service.findUnique({
+    where: { id: serviceId },
+    select: { id: true },
+  });
+}
+
+async function ensureNoScheduleOverlap(params: {
+  professionalId: string;
+  dayOfWeek: number;
+  startTime: string;
+  endTime: string;
+  effectiveFrom: Date | null;
+  effectiveTo: Date | null;
+  excludeScheduleId?: string;
+}) {
+  const prisma = getPrismaClient();
+  const existing = await prisma.professionalWorkingSchedule.findMany({
+    where: {
+      professionalId: params.professionalId,
+      dayOfWeek: params.dayOfWeek,
+      active: true,
+      ...(params.excludeScheduleId ? { id: { not: params.excludeScheduleId } } : {}),
+    },
+    select: {
+      id: true,
+      startTime: true,
+      endTime: true,
+      effectiveFrom: true,
+      effectiveTo: true,
+    },
+  });
+
+  return existing.some((item) => {
+    if (!hasTimeRangeOverlap(params.startTime, params.endTime, item.startTime, item.endTime)) {
+      return false;
+    }
+
+    return dateRangesOverlap(
+      {
+        effectiveFrom: params.effectiveFrom,
+        effectiveTo: params.effectiveTo,
+      },
+      {
+        effectiveFrom: item.effectiveFrom,
+        effectiveTo: item.effectiveTo,
+      },
+    );
+  });
+}
+
+export async function GET(request: Request) {
   const sessionResult = await requireSession();
   if ("error" in sessionResult) {
     return errorResponse(sessionResult.error.message, sessionResult.error.status);
@@ -44,9 +189,14 @@ export async function GET() {
     return errorResponse("No autorizado.", roleError.status);
   }
 
+  const { searchParams } = new URL(request.url);
+  const professionalId = searchParams.get("professionalId")?.trim();
+
   const prisma = getPrismaClient();
+  const where = professionalId ? { professionalId } : undefined;
   const [assignments, schedules] = await Promise.all([
     prisma.professionalService.findMany({
+      where,
       include: {
         service: { select: { id: true, name: true, active: true } },
         professional: { include: { user: true } },
@@ -54,10 +204,11 @@ export async function GET() {
       orderBy: [{ professional: { user: { name: "asc" } } }, { service: { name: "asc" } }],
     }),
     prisma.professionalWorkingSchedule.findMany({
+      where,
       include: {
         professional: { include: { user: true } },
       },
-      orderBy: [{ professional: { user: { name: "asc" } } }, { dayOfWeek: "asc" }, { startTime: "asc" }],
+      orderBy: [{ dayOfWeek: "asc" }, { startTime: "asc" }],
     }),
   ]);
 
@@ -82,47 +233,185 @@ export async function POST(request: Request) {
 
   const prisma = getPrismaClient();
 
-  if (payload.type === "assignService") {
-    const assignment = await prisma.professionalService.upsert({
-      where: { professionalId_serviceId: { professionalId: payload.professionalId, serviceId: payload.serviceId } },
-      update: {
-        active: payload.active ?? true,
-        onlineBookable: payload.onlineBookable ?? true,
-        appointmentDurationMinutes: payload.appointmentDurationMinutes ?? null,
-        bufferBeforeMinutes: payload.bufferBeforeMinutes ?? null,
-        bufferAfterMinutes: payload.bufferAfterMinutes ?? null,
-        notes: payload.notes ?? null,
-      },
-      create: {
-        professionalId: payload.professionalId,
-        serviceId: payload.serviceId,
-        active: payload.active ?? true,
-        onlineBookable: payload.onlineBookable ?? true,
-        appointmentDurationMinutes: payload.appointmentDurationMinutes ?? null,
-        bufferBeforeMinutes: payload.bufferBeforeMinutes ?? null,
-        bufferAfterMinutes: payload.bufferAfterMinutes ?? null,
-        notes: payload.notes ?? null,
+  if (payload.type === "createAssignment" || payload.type === "assignService") {
+    const professional = await ensureActiveProfessional(payload.professionalId);
+    if (!professional) {
+      return errorResponse("El profesional no existe o no está activo.", 400);
+    }
+
+    const service = await ensureServiceExists(payload.serviceId);
+    if (!service) {
+      return errorResponse("El servicio no existe.", 400);
+    }
+
+    try {
+      const assignment = await prisma.professionalService.create({
+        data: {
+          professionalId: payload.professionalId,
+          serviceId: payload.serviceId,
+          active: "active" in payload ? payload.active ?? true : true,
+          onlineBookable: payload.onlineBookable ?? true,
+          appointmentDurationMinutes: payload.appointmentDurationMinutes ?? null,
+          bufferBeforeMinutes: payload.bufferBeforeMinutes ?? null,
+          bufferAfterMinutes: payload.bufferAfterMinutes ?? null,
+          notes: payload.notes ?? null,
+        },
+      });
+
+      return NextResponse.json({ assignment }, { status: 201 });
+    } catch (createError) {
+      if ((createError instanceof Prisma.PrismaClientKnownRequestError && createError.code === "P2002") || (typeof createError === "object" && createError !== null && "code" in createError && (createError as { code?: string }).code === "P2002")) {
+        return errorResponse("La asignación profesional-servicio ya existe.", 409);
+      }
+      throw createError;
+    }
+  }
+
+  if (payload.type === "updateAssignment") {
+    const assignment = await prisma.professionalService.findUnique({ where: { id: payload.assignmentId } });
+    if (!assignment) {
+      return errorResponse("Asignación no encontrada.", 404);
+    }
+
+    const updated = await prisma.professionalService.update({
+      where: { id: payload.assignmentId },
+      data: {
+        active: payload.active,
+        onlineBookable: payload.onlineBookable,
+        appointmentDurationMinutes: payload.appointmentDurationMinutes,
+        bufferBeforeMinutes: payload.bufferBeforeMinutes,
+        bufferAfterMinutes: payload.bufferAfterMinutes,
+        notes: payload.notes,
       },
     });
 
-    return NextResponse.json({ assignment }, { status: 201 });
+    return NextResponse.json({ assignment: updated });
   }
 
-  const schedule = await prisma.professionalWorkingSchedule.create({
-    data: {
+  if (payload.type === "deactivateAssignment") {
+    const assignment = await prisma.professionalService.findUnique({ where: { id: payload.assignmentId } });
+    if (!assignment) {
+      return errorResponse("Asignación no encontrada.", 404);
+    }
+
+    const updated = await prisma.professionalService.update({
+      where: { id: payload.assignmentId },
+      data: { active: false, onlineBookable: false },
+    });
+
+    return NextResponse.json({ assignment: updated });
+  }
+
+  if (payload.type === "createSchedule" || payload.type === "upsertWorkingSchedule") {
+    if (toMinutes(payload.endTime) <= toMinutes(payload.startTime)) {
+      return errorResponse("El horario base es inválido: la hora de fin debe ser posterior a la hora de inicio.", 400);
+    }
+
+    const effectiveFrom = payload.effectiveFrom ? new Date(payload.effectiveFrom) : null;
+    const effectiveTo = payload.effectiveTo ? new Date(payload.effectiveTo) : null;
+
+    if (effectiveFrom && effectiveTo && effectiveTo <= effectiveFrom) {
+      return errorResponse("La vigencia del horario es inválida.", 400);
+    }
+
+    const professional = await ensureActiveProfessional(payload.professionalId);
+    if (!professional) {
+      return errorResponse("El profesional no existe o no está activo.", 400);
+    }
+
+    const hasOverlap = await ensureNoScheduleOverlap({
       professionalId: payload.professionalId,
       dayOfWeek: payload.dayOfWeek,
       startTime: payload.startTime,
       endTime: payload.endTime,
-      timezone: payload.timezone ?? "America/Bogota",
-      effectiveFrom: payload.effectiveFrom ? new Date(payload.effectiveFrom) : null,
-      effectiveTo: payload.effectiveTo ? new Date(payload.effectiveTo) : null,
-      active: payload.active ?? true,
-      notes: payload.notes ?? null,
-      status: "PENDING_CONFIRMATION",
-      createdByUserId: sessionResult.user.id,
-    },
+      effectiveFrom,
+      effectiveTo,
+    });
+
+    if (hasOverlap) {
+      return errorResponse("El bloque de horario se superpone con otro horario activo del profesional.", 409);
+    }
+
+    const schedule = await prisma.professionalWorkingSchedule.create({
+      data: {
+        professionalId: payload.professionalId,
+        dayOfWeek: payload.dayOfWeek,
+        startTime: payload.startTime,
+        endTime: payload.endTime,
+        timezone: payload.timezone ?? "America/Bogota",
+        effectiveFrom,
+        effectiveTo,
+        active: payload.active ?? true,
+        notes: payload.notes ?? null,
+        status: "CONFIRMED",
+        createdByUserId: sessionResult.user.id,
+      },
+    });
+
+    return NextResponse.json({ schedule }, { status: 201 });
+  }
+
+  if (payload.type === "updateSchedule") {
+    const schedule = await prisma.professionalWorkingSchedule.findUnique({ where: { id: payload.scheduleId } });
+    if (!schedule) {
+      return errorResponse("Horario no encontrado.", 404);
+    }
+
+    const nextDay = payload.dayOfWeek ?? schedule.dayOfWeek;
+    const nextStart = payload.startTime ?? schedule.startTime;
+    const nextEnd = payload.endTime ?? schedule.endTime;
+    const nextEffectiveFrom = payload.effectiveFrom ? new Date(payload.effectiveFrom) : payload.effectiveFrom === null ? null : schedule.effectiveFrom;
+    const nextEffectiveTo = payload.effectiveTo ? new Date(payload.effectiveTo) : payload.effectiveTo === null ? null : schedule.effectiveTo;
+
+    if (toMinutes(nextEnd) <= toMinutes(nextStart)) {
+      return errorResponse("El horario base es inválido: la hora de fin debe ser posterior a la hora de inicio.", 400);
+    }
+
+    if (nextEffectiveFrom && nextEffectiveTo && nextEffectiveTo <= nextEffectiveFrom) {
+      return errorResponse("La vigencia del horario es inválida.", 400);
+    }
+
+    const hasOverlap = await ensureNoScheduleOverlap({
+      professionalId: schedule.professionalId,
+      dayOfWeek: nextDay,
+      startTime: nextStart,
+      endTime: nextEnd,
+      effectiveFrom: nextEffectiveFrom,
+      effectiveTo: nextEffectiveTo,
+      excludeScheduleId: schedule.id,
+    });
+
+    if (hasOverlap) {
+      return errorResponse("El bloque de horario se superpone con otro horario activo del profesional.", 409);
+    }
+
+    const updated = await prisma.professionalWorkingSchedule.update({
+      where: { id: payload.scheduleId },
+      data: {
+        dayOfWeek: payload.dayOfWeek,
+        startTime: payload.startTime,
+        endTime: payload.endTime,
+        timezone: payload.timezone,
+        effectiveFrom: payload.effectiveFrom ? new Date(payload.effectiveFrom) : payload.effectiveFrom === null ? null : undefined,
+        effectiveTo: payload.effectiveTo ? new Date(payload.effectiveTo) : payload.effectiveTo === null ? null : undefined,
+        active: payload.active,
+        notes: payload.notes,
+        status: "CONFIRMED",
+      },
+    });
+
+    return NextResponse.json({ schedule: updated });
+  }
+
+  const schedule = await prisma.professionalWorkingSchedule.findUnique({ where: { id: payload.scheduleId } });
+  if (!schedule) {
+    return errorResponse("Horario no encontrado.", 404);
+  }
+
+  const updated = await prisma.professionalWorkingSchedule.update({
+    where: { id: payload.scheduleId },
+    data: { active: false },
   });
 
-  return NextResponse.json({ schedule }, { status: 201 });
+  return NextResponse.json({ schedule: updated });
 }

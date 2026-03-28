@@ -448,6 +448,89 @@ async function ensureServices() {
   }
 }
 
+
+async function ensureOperationalSchedulingFoundation() {
+  const professionals = await prisma.professionalProfile.findMany({
+    where: { active: true },
+    include: { specialty: true },
+  });
+
+  const services = await prisma.service.findMany({
+    where: { active: true },
+  });
+
+  const admin = await prisma.user.findFirst({
+    where: { role: Role.ADMINISTRADOR },
+    select: { id: true },
+  });
+
+  for (const professional of professionals) {
+    const matchingServices = services.filter((service) => service.specialtyId === professional.specialtyId);
+
+    for (const service of matchingServices) {
+      await prisma.professionalService.upsert({
+        where: {
+          professionalId_serviceId: {
+            professionalId: professional.id,
+            serviceId: service.id,
+          },
+        },
+        update: {
+          active: true,
+          onlineBookable: true,
+          appointmentDurationMinutes: service.durationMinutes,
+          notes: "Asignación base seed",
+        },
+        create: {
+          professionalId: professional.id,
+          serviceId: service.id,
+          active: true,
+          onlineBookable: true,
+          appointmentDurationMinutes: service.durationMinutes,
+          notes: "Asignación base seed",
+        },
+      });
+    }
+
+    for (const [dayOfWeek, startTime, endTime] of [
+      [1, "08:00", "12:00"],
+      [1, "13:00", "17:00"],
+      [2, "08:00", "12:00"],
+      [3, "09:00", "13:00"],
+      [4, "09:00", "13:00"],
+      [5, "08:00", "12:00"],
+    ] as const) {
+      await prisma.professionalWorkingSchedule.upsert({
+        where: {
+          professionalId_dayOfWeek_startTime_endTime_timezone: {
+            professionalId: professional.id,
+            dayOfWeek,
+            startTime,
+            endTime,
+            timezone: "America/Bogota",
+          },
+        },
+        update: {
+          active: true,
+          status: "CONFIRMED",
+          createdByUserId: admin?.id ?? null,
+          notes: "Horario base seed",
+        },
+        create: {
+          professionalId: professional.id,
+          dayOfWeek,
+          startTime,
+          endTime,
+          timezone: "America/Bogota",
+          active: true,
+          status: "CONFIRMED",
+          createdByUserId: admin?.id ?? null,
+          notes: "Horario base seed",
+        },
+      });
+    }
+  }
+}
 async function ensureAdminUser() {
   const adminEmail = requireEnv("ADMIN_SEED_EMAIL");
 
@@ -672,6 +755,8 @@ async function runSeed() {
     for (const professional of PROFESSIONAL_SEED) {
       await ensureProfessional(professional);
     }
+
+    await ensureOperationalSchedulingFoundation();
 
     for (const patient of PATIENT_SEED) {
       await ensurePatient(patient);
