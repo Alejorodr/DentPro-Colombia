@@ -18,7 +18,11 @@ test("patient can book an appointment from the portal", async ({ page, request }
   await page.getByRole("button", { name: "Ingresar" }).click();
 
   await expect(page).toHaveURL(/\/portal\/client/);
-  await expect(page.getByTestId(E2E_TEST_IDS.clientTotalVisits)).toHaveText("2");
+  const totalVisitsText = await page.getByTestId(E2E_TEST_IDS.clientTotalVisits).innerText();
+  const totalVisits = Number.parseInt(totalVisitsText.trim(), 10);
+  expect(Number.isFinite(totalVisits)).toBeTruthy();
+  // Contracto del seed admin: demo-paciente siempre tiene al menos dos citas históricas completadas.
+  expect(totalVisits).toBeGreaterThanOrEqual(2);
 
   await page.getByTestId(E2E_TEST_IDS.clientBookAppointmentLink).click();
   await expect(page).toHaveURL(/\/portal\/client\/book/);

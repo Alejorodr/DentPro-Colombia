@@ -14,18 +14,21 @@ test.describe("Admin analytics dashboard", () => {
 
     await page.goto("/portal/admin");
 
-    await expect(page.getByText("Citas en período")).toBeVisible();
-    await expect(page.getByText("Pacientes nuevos")).toBeVisible();
-    await expect(page.getByText("Profesionales activos")).toBeVisible();
-    await expect(page.getByText("Ocupación agenda")).toBeVisible();
+    await expect(page.getByTestId("admin-dashboard-title")).toBeVisible();
 
-    const statValues = page.locator("section").nth(1).getByText(/\d+%?/, { exact: false });
-    await expect(statValues.first()).toBeVisible();
+    await expect(page.getByTestId("admin-kpi-appointments")).toContainText("Appointments Today");
+    await expect(page.getByTestId("admin-kpi-appointments")).toContainText(/^\D*\d+/m);
+    await expect(page.getByTestId("admin-kpi-revenue")).toContainText("Revenue MTD");
+    await expect(page.getByTestId("admin-kpi-revenue")).toContainText(/COP|\$/);
+    await expect(page.getByTestId("admin-kpi-active-staff")).toContainText("Active Staff");
+    await expect(page.getByTestId("admin-kpi-active-staff")).toContainText(/^\D*\d+/m);
+    await expect(page.getByTestId("admin-kpi-pending-approvals")).toContainText("Pending Approvals");
+    await expect(page.getByTestId("admin-kpi-pending-approvals")).toContainText(/^\D*\d+/m);
 
     const rangeSelector = page.getByRole("combobox").first();
     await rangeSelector.selectOption("last7");
 
-    await expect(page.getByText("Últimos 7 días")).toBeVisible();
+    await expect(page).toHaveURL(/range=last7/);
 
     await expect(page.getByRole("table")).toBeVisible();
   });

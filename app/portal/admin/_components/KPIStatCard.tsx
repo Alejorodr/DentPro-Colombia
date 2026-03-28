@@ -7,11 +7,15 @@ type KPIStatCardProps = {
   value: string;
   change?: string;
   accent?: string;
+  testId?: string;
 };
 
-export function KPIStatCard({ label, value, change, accent }: KPIStatCardProps) {
+export function KPIStatCard({ label, value, change, accent, testId }: KPIStatCardProps) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs shadow-slate-100/60 dark:border-surface-muted/70 dark:bg-surface-elevated/80">
+    <div
+      data-testid={testId}
+      className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs shadow-slate-100/60 dark:border-surface-muted/70 dark:bg-surface-elevated/80"
+    >
       <div className="flex items-center justify-between">
         <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{label}</p>
         <span className="rounded-full bg-brand-teal/10 px-2 py-1 text-[10px] font-semibold text-brand-teal dark:bg-accent-cyan/10 dark:text-accent-cyan">
