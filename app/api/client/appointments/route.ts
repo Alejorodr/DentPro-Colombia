@@ -105,6 +105,20 @@ export async function POST(request: Request) {
       return errorResponse("Slot no encontrado.", 404);
     }
 
+
+    const assignment = await prisma.professionalService.findFirst({
+      where: {
+        professionalId: timeSlot.professionalId,
+        serviceId: service.id,
+        active: true,
+        onlineBookable: true,
+      },
+    });
+
+    if (!assignment) {
+      return errorResponse("El profesional no tiene este servicio habilitado para agendamiento.", 409);
+    }
+
     if (timeSlot.status !== TimeSlotStatus.AVAILABLE) {
       return errorResponse("El slot no está disponible.", 409);
     }

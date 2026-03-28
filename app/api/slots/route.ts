@@ -1,14 +1,16 @@
 import { NextResponse } from "next/server";
 
-import { getPrismaClient } from "@/lib/prisma";
 import { addDaysZoned, formatDateInput, fromZonedDateParts, getAnalyticsTimeZone } from "@/lib/dates/tz";
-import { TimeSlotStatus } from "@prisma/client";
 import { getAppointmentBufferMinutes, hasBufferConflict } from "@/lib/appointments/scheduling";
+import { getPrismaClient } from "@/lib/prisma";
+import { TimeSlotStatus } from "@prisma/client";
+import { getEffectiveAvailability } from "@/lib/scheduling/effective-availability";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const serviceId = searchParams.get("serviceId");
+  const serviceId = searchParams.get("serviceId") ?? undefined;
   const dateParam = searchParams.get("date");
+  const includeReasons = searchParams.get("includeReasons") === "true";
 
   if (!dateParam) {
     return NextResponse.json({ error: "Fecha requerida." }, { status: 400 });
@@ -25,29 +27,21 @@ export async function GET(request: Request) {
   const endAt = addDaysZoned(startAt, 1, timeZone);
 
   const prisma = getPrismaClient();
-  const service = serviceId
-    ? await prisma.service.findUnique({ where: { id: serviceId }, select: { specialtyId: true, active: true } })
-    : null;
-
-  if (serviceId && (!service || !service.active)) {
-    return NextResponse.json({ error: "Servicio no disponible." }, { status: 404 });
+  if (serviceId) {
+    const service = await prisma.service.findUnique({ where: { id: serviceId }, select: { active: true } });
+    if (!service || !service.active) {
+      return NextResponse.json({ error: "Servicio no disponible." }, { status: 404 });
+    }
   }
 
-  let slots = await prisma.timeSlot.findMany({
-    where: {
-      status: TimeSlotStatus.AVAILABLE,
-      startAt: { gte: startAt, lt: endAt },
-      professional: {
-        active: true,
-        ...(service?.specialtyId ? { specialtyId: service.specialtyId } : {}),
-      },
-    },
-    include: {
-      professional: { include: { user: true, specialty: true } },
-    },
-    orderBy: { startAt: "asc" },
+  const effective = await getEffectiveAvailability({
+    dateStart: startAt,
+    dateEnd: endAt,
+    serviceId,
+    includeReasons,
   });
 
+  let slots = [...effective.slots];
   const bufferMinutes = getAppointmentBufferMinutes();
   if (bufferMinutes > 0 && slots.length > 0) {
     const bufferMs = bufferMinutes * 60_000;
@@ -59,7 +53,7 @@ export async function GET(request: Request) {
         startAt: { lt: new Date(endAt.getTime() + bufferMs) },
         endAt: { gt: new Date(startAt.getTime() - bufferMs) },
       },
-      select: { professionalId: true, startAt: true, endAt: true },
+      select: { id: true, professionalId: true, startAt: true, endAt: true },
     });
 
     const bookedByProfessional = bookedSlots.reduce((acc, slot) => {
@@ -67,16 +61,22 @@ export async function GET(request: Request) {
       list.push(slot);
       acc.set(slot.professionalId, list);
       return acc;
-    }, new Map<string, Array<{ startAt: Date; endAt: Date }>>());
+    }, new Map<string, Array<{ id: string; startAt: Date; endAt: Date }>>());
 
     slots = slots.filter((slot) => {
       const booked = bookedByProfessional.get(slot.professionalId) ?? [];
-      return !hasBufferConflict({ startAt: slot.startAt, endAt: slot.endAt }, booked, bufferMinutes);
+      const conflict = hasBufferConflict({ startAt: slot.startAt, endAt: slot.endAt }, booked, bufferMinutes);
+      if (conflict && effective.reasons) {
+        const existing = effective.reasons.get(slot.id) ?? [];
+        effective.reasons.set(slot.id, [...existing, "PROFESSIONAL_UNAVAILABLE"]);
+      }
+      return !conflict;
     });
   }
 
   return NextResponse.json({
     date: formatDateInput(startAt, timeZone),
     slots,
+    reasons: includeReasons ? Object.fromEntries(effective.reasons?.entries() ?? []) : undefined,
   });
 }
