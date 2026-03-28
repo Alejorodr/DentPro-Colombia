@@ -523,6 +523,7 @@ model ProfessionalWorkingSchedule {
 
   @@index([professionalId, active])
   @@index([dayOfWeek, active])
+  @@unique([professionalId, dayOfWeek, startTime, endTime, timezone])
 }
 
 model ProfessionalScheduleAdjustment {
