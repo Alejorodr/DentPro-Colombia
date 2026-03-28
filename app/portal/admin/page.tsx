@@ -46,21 +46,25 @@ export default async function AdminPortalPage({
       label: "Appointments Today",
       value: `${kpis.totalAppointments}`,
       change: `En ${range.label.toLowerCase()}`,
+      testId: "admin-kpi-appointments",
     },
     {
       label: "Revenue MTD",
       value: formatCurrency(kpis.revenueCents / 100),
       change: "Ingresos del período",
+      testId: "admin-kpi-revenue",
     },
     {
       label: "Active Staff",
       value: `${kpis.activeProfessionals}`,
       change: "Profesionales activos",
+      testId: "admin-kpi-active-staff",
     },
     {
       label: "Pending Approvals",
       value: `${kpis.pendingApprovals}`,
       change: "Citas pendientes",
+      testId: "admin-kpi-pending-approvals",
     },
   ];
 
