@@ -1,457 +1,257 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 
-import { CalendarBlank } from "@/components/ui/Icon";
-import { Skeleton } from "@/app/portal/components/ui/Skeleton";
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
-import { operationalStatusLabel, toOperationalStatus } from "@/lib/appointments/status";
-import { AppointmentEventTimeline } from "@/app/portal/components/appointments/AppointmentEventTimeline";
 
-interface AvailabilityRule {
+type BaselineSchedule = {
   id: string;
-  rrule: string;
+  dayOfWeek: number;
   startTime: string;
   endTime: string;
   timezone: string;
-  active: boolean;
-}
+  status: "PENDING_CONFIRMATION" | "CONFIRMED" | "CHANGES_REQUESTED";
+};
 
-interface AvailabilityException {
+type Adjustment = {
   id: string;
-  date: string;
-  isAvailable: boolean;
+  dayOfWeek?: number | null;
   startTime?: string | null;
   endTime?: string | null;
+  effectiveFrom: string;
+  effectiveTo?: string | null;
+  status: "PENDING_CONFIRMATION" | "CONFIRMED" | "CHANGES_REQUESTED";
+  note?: string | null;
+};
+
+type Unavailability = {
+  id: string;
+  type: "VACATION" | "SICK_LEAVE" | "TRAINING" | "ADMIN_TIME" | "PERSONAL_LEAVE" | "INTERNAL_BLOCK" | "OTHER";
+  status: "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED";
+  startsAt: string;
+  endsAt: string;
   reason?: string | null;
-}
+  fullDay: boolean;
+};
 
-interface AvailabilitySlot {
-  startAt: string;
-  endAt: string;
-}
-
-interface AvailabilityBlock {
-  id: string;
-  startAt: string;
-  endAt: string;
-  reason?: string | null;
-}
-
-interface ClinicHoliday {
-  id: string;
-  date: string;
-  name: string;
-}
-
-interface AppointmentSummary {
-  id: string;
-  status: "SCHEDULED" | "CONFIRMED" | "CHECKED_IN" | "CANCELLED" | "COMPLETED" | "NO_SHOW";
-  notes?: string | null;
-  patientId?: string;
-  timeSlot: { startAt: string; endAt: string };
-  patient: { user: { name: string; lastName: string } } | null;
-  service: { name: string } | null;
-}
+const weekDays = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
 
 export function ProfessionalCalendar() {
-  const [rules, setRules] = useState<AvailabilityRule[]>([]);
-  const [exceptions, setExceptions] = useState<AvailabilityException[]>([]);
-  const [slots, setSlots] = useState<AvailabilitySlot[]>([]);
-  const [blocks, setBlocks] = useState<AvailabilityBlock[]>([]);
-  const [holidays, setHolidays] = useState<ClinicHoliday[]>([]);
-  const [appointments, setAppointments] = useState<AppointmentSummary[]>([]);
-  const [eventsAppointmentId, setEventsAppointmentId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [ruleForm, setRuleForm] = useState({
-    rrule: "FREQ=WEEKLY;BYDAY=MO,WE,FR",
+  const [baselineSchedules, setBaselineSchedules] = useState<BaselineSchedule[]>([]);
+  const [adjustments, setAdjustments] = useState<Adjustment[]>([]);
+  const [unavailability, setUnavailability] = useState<Unavailability[]>([]);
+
+  const [adjustmentForm, setAdjustmentForm] = useState({
+    dayOfWeek: "1",
     startTime: "09:00",
     endTime: "18:00",
-    timezone: "America/Bogota",
+    effectiveFrom: "",
+    effectiveTo: "",
+    note: "",
   });
-  const [exceptionForm, setExceptionForm] = useState({
-    date: "",
-    isAvailable: false,
-    startTime: "",
-    endTime: "",
-    reason: "",
-  });
+
   const [blockForm, setBlockForm] = useState({
-    startAt: "",
-    endAt: "",
+    entryType: "INTERNAL_BLOCK",
+    startsAt: "",
+    endsAt: "",
+    fullDay: false,
     reason: "",
   });
 
-  const agendaRange = useMemo(() => {
-    const now = new Date();
-    const end = new Date(now);
-    end.setDate(now.getDate() + 7);
-    const toDateInput = (date: Date) => date.toISOString().slice(0, 10);
-    return { from: toDateInput(now), to: toDateInput(end) };
-  }, []);
+  const pendingScheduleIds = useMemo(
+    () => baselineSchedules.filter((schedule) => schedule.status === "PENDING_CONFIRMATION").map((schedule) => schedule.id),
+    [baselineSchedules],
+  );
 
-  const loadAvailability = async () => {
+  const loadData = async () => {
     setLoading(true);
     setError(null);
-    const [availabilityResponse, appointmentsResponse] = await Promise.all([
-      fetchWithRetry("/api/professional/availability?range=30"),
-      fetchWithRetry(`/api/appointments?from=${agendaRange.from}&to=${agendaRange.to}`),
-    ]);
 
-    if (!availabilityResponse.ok) {
-      setError("No se pudo cargar la disponibilidad.");
+    const response = await fetchWithRetry("/api/professional/schedule");
+    if (!response.ok) {
+      setError("No se pudo cargar el calendario operativo.");
       setLoading(false);
       return;
     }
 
-    const availabilityData = (await availabilityResponse.json()) as {
-      rules: AvailabilityRule[];
-      exceptions: AvailabilityException[];
-      blocks?: AvailabilityBlock[];
-      holidays?: ClinicHoliday[];
-      slots: AvailabilitySlot[];
+    const data = (await response.json()) as {
+      baselineSchedules: BaselineSchedule[];
+      adjustments: Adjustment[];
+      unavailability: Unavailability[];
     };
 
-    setRules(availabilityData.rules ?? []);
-    setExceptions(availabilityData.exceptions ?? []);
-    setBlocks(availabilityData.blocks ?? []);
-    setHolidays(availabilityData.holidays ?? []);
-    setSlots(availabilityData.slots ?? []);
-
-    if (appointmentsResponse.ok) {
-      const appointmentsData = (await appointmentsResponse.json()) as { data?: AppointmentSummary[] };
-      setAppointments(appointmentsData.data ?? []);
-    }
+    setBaselineSchedules(data.baselineSchedules ?? []);
+    setAdjustments(data.adjustments ?? []);
+    setUnavailability(data.unavailability ?? []);
     setLoading(false);
   };
 
   useEffect(() => {
-    void loadAvailability();
+    void loadData();
   }, []);
 
-  const createRule = async () => {
-    const response = await fetchWithTimeout("/api/professional/availability", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ type: "rule", ...ruleForm }),
-    });
-    if (response.ok) {
-      setRuleForm({
-        rrule: "FREQ=WEEKLY;BYDAY=MO,WE,FR",
-        startTime: "09:00",
-        endTime: "18:00",
-        timezone: "America/Bogota",
-      });
-      void loadAvailability();
+  const confirmBaseline = async () => {
+    if (!pendingScheduleIds.length) {
+      return;
     }
-  };
 
-  const createException = async () => {
-    const response = await fetchWithTimeout("/api/professional/availability", {
+    const response = await fetchWithTimeout("/api/professional/schedule", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ type: "exception", ...exceptionForm }),
-    });
-    if (response.ok) {
-      setExceptionForm({ date: "", isAvailable: false, startTime: "", endTime: "", reason: "" });
-      void loadAvailability();
-    }
-  };
-
-  const createBlock = async () => {
-    const response = await fetchWithTimeout("/api/professional/availability", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ type: "block", ...blockForm }),
+      body: JSON.stringify({ type: "confirmSchedule", scheduleIds: pendingScheduleIds }),
     });
 
     if (response.ok) {
-      setBlockForm({ startAt: "", endAt: "", reason: "" });
-      void loadAvailability();
+      await loadData();
     } else {
-      setError("No se pudo crear el bloqueo.");
+      setError("No se pudo confirmar el horario base.");
+    }
+  };
+
+  const requestAdjustment = async () => {
+    const response = await fetchWithTimeout("/api/professional/schedule", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        type: "requestAdjustment",
+        dayOfWeek: Number(adjustmentForm.dayOfWeek),
+        startTime: adjustmentForm.startTime,
+        endTime: adjustmentForm.endTime,
+        effectiveFrom: new Date(`${adjustmentForm.effectiveFrom}T00:00:00.000Z`).toISOString(),
+        effectiveTo: adjustmentForm.effectiveTo ? new Date(`${adjustmentForm.effectiveTo}T23:59:59.000Z`).toISOString() : null,
+        note: adjustmentForm.note || null,
+      }),
+    });
+
+    if (response.ok) {
+      setAdjustmentForm({ dayOfWeek: "1", startTime: "09:00", endTime: "18:00", effectiveFrom: "", effectiveTo: "", note: "" });
+      await loadData();
+    } else {
+      setError("No se pudo registrar la solicitud de ajuste.");
+    }
+  };
+
+  const createUnavailability = async () => {
+    const response = await fetchWithTimeout("/api/professional/schedule", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        type: "createUnavailability",
+        entryType: blockForm.entryType,
+        startsAt: new Date(blockForm.startsAt).toISOString(),
+        endsAt: new Date(blockForm.endsAt).toISOString(),
+        fullDay: blockForm.fullDay,
+        reason: blockForm.reason || null,
+      }),
+    });
+
+    if (response.ok) {
+      setBlockForm({ entryType: "INTERNAL_BLOCK", startsAt: "", endsAt: "", fullDay: false, reason: "" });
+      await loadData();
+    } else {
+      setError("No se pudo registrar la novedad operativa.");
     }
   };
 
   return (
     <div className="space-y-6">
       <header>
-        <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Calendar</p>
-        <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">Availability rules</h1>
+        <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Agenda clínica</p>
+        <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">Horario operativo</h1>
+        <p className="text-sm text-slate-500">Confirma tu horario base y registra ausencias o bloques internos.</p>
       </header>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-xs dark:border-slate-800 dark:bg-slate-900/60">
-          <h2 className="text-lg font-semibold">Recurring rules</h2>
-          <div className="mt-4 space-y-3 text-sm">
-            <input
-              value={ruleForm.rrule}
-              onChange={(event) => setRuleForm((prev) => ({ ...prev, rrule: event.target.value }))}
-              className="input"
-              placeholder="RRULE"
-            />
-            <div className="grid gap-2 md:grid-cols-2">
-              <input
-                type="time"
-                value={ruleForm.startTime}
-                onChange={(event) => setRuleForm((prev) => ({ ...prev, startTime: event.target.value }))}
-                className="input"
-              />
-              <input
-                type="time"
-                value={ruleForm.endTime}
-                onChange={(event) => setRuleForm((prev) => ({ ...prev, endTime: event.target.value }))}
-                className="input"
-              />
-            </div>
-            <input
-              value={ruleForm.timezone}
-              onChange={(event) => setRuleForm((prev) => ({ ...prev, timezone: event.target.value }))}
-              className="input"
-              placeholder="Timezone"
-            />
-            <button
-              type="button"
-              onClick={createRule}
-              className="btn btn-secondary w-full"
-            >
-              Save rule
-            </button>
+      {error ? <p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-600">{error}</p> : null}
+
+      <section className="rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-xs dark:border-slate-800 dark:bg-slate-900/60">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-semibold">Horario base asignado por administración</h2>
+            <p className="text-sm text-slate-500">Este horario define tu disponibilidad estándar para agendamiento.</p>
           </div>
-          <div className="mt-6 space-y-2">
-            {loading ? (
-              <Skeleton className="h-16" />
-            ) : rules.length === 0 ? (
-              <p className="text-sm text-slate-500">No rules defined yet.</p>
-            ) : (
-              rules.map((rule) => (
-                <div key={rule.id} className="rounded-2xl border border-slate-200 px-3 py-2 text-xs dark:border-slate-800">
-                  <p className="font-semibold text-slate-900 dark:text-white">{rule.rrule}</p>
-                  <p className="text-slate-500">
-                    {rule.startTime} - {rule.endTime} ({rule.timezone})
-                  </p>
-                </div>
-              ))
-            )}
-          </div>
+          <button type="button" className="btn btn-secondary" onClick={confirmBaseline} disabled={!pendingScheduleIds.length || loading}>
+            Confirmar horario pendiente
+          </button>
         </div>
 
-        <div className="rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-xs dark:border-slate-800 dark:bg-slate-900/60">
-          <h2 className="text-lg font-semibold">Exceptions</h2>
-          <div className="mt-4 space-y-3 text-sm">
-            <input
-              type="date"
-              value={exceptionForm.date}
-              onChange={(event) => setExceptionForm((prev) => ({ ...prev, date: event.target.value }))}
-              className="input"
-            />
-            <label className="flex items-center gap-2 text-xs text-slate-500">
-              <input
-                type="checkbox"
-                checked={exceptionForm.isAvailable}
-                onChange={(event) => setExceptionForm((prev) => ({ ...prev, isAvailable: event.target.checked }))}
-                className="h-4 w-4 rounded-sm border-slate-300 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-indigo/60"
-              />
-              Available exception
-            </label>
-            <div className="grid gap-2 md:grid-cols-2">
-              <input
-                type="time"
-                value={exceptionForm.startTime}
-                onChange={(event) => setExceptionForm((prev) => ({ ...prev, startTime: event.target.value }))}
-                className="input"
-              />
-              <input
-                type="time"
-                value={exceptionForm.endTime}
-                onChange={(event) => setExceptionForm((prev) => ({ ...prev, endTime: event.target.value }))}
-                className="input"
-              />
-            </div>
-            <input
-              value={exceptionForm.reason}
-              onChange={(event) => setExceptionForm((prev) => ({ ...prev, reason: event.target.value }))}
-              className="input"
-              placeholder="Reason"
-            />
-            <button
-              type="button"
-              onClick={createException}
-              className="btn btn-secondary w-full"
-            >
-              Save exception
-            </button>
-          </div>
-          <div className="mt-6 space-y-2">
-            {loading ? (
-              <Skeleton className="h-16" />
-            ) : exceptions.length === 0 ? (
-              <p className="text-sm text-slate-500">No exceptions added yet.</p>
-            ) : (
-              exceptions.map((exception) => (
-                <div key={exception.id} className="rounded-2xl border border-slate-200 px-3 py-2 text-xs dark:border-slate-800">
-                  <p className="font-semibold text-slate-900 dark:text-white">
-                    {new Date(exception.date).toLocaleDateString("es-CO")} {exception.isAvailable ? "Available" : "Off"}
-                  </p>
-                  <p className="text-slate-500">{exception.reason ?? ""}</p>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      </div>
-
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-xs dark:border-slate-800 dark:bg-slate-900/60">
-          <h2 className="text-lg font-semibold">Bloqueos manuales</h2>
-          <div className="mt-4 space-y-3 text-sm">
-            <input
-              type="datetime-local"
-              value={blockForm.startAt}
-              onChange={(event) => setBlockForm((prev) => ({ ...prev, startAt: event.target.value }))}
-              className="input"
-            />
-            <input
-              type="datetime-local"
-              value={blockForm.endAt}
-              onChange={(event) => setBlockForm((prev) => ({ ...prev, endAt: event.target.value }))}
-              className="input"
-            />
-            <input
-              value={blockForm.reason}
-              onChange={(event) => setBlockForm((prev) => ({ ...prev, reason: event.target.value }))}
-              className="input"
-              placeholder="Motivo"
-            />
-            <button type="button" onClick={createBlock} className="btn btn-secondary w-full">
-              Guardar bloqueo
-            </button>
-          </div>
-          <div className="mt-6 space-y-2">
-            {loading ? (
-              <Skeleton className="h-16" />
-            ) : blocks.length === 0 ? (
-              <p className="text-sm text-slate-500">No hay bloqueos registrados.</p>
-            ) : (
-              blocks.map((block) => (
-                <div key={block.id} className="rounded-2xl border border-slate-200 px-3 py-2 text-xs dark:border-slate-800">
-                  <p className="font-semibold text-slate-900 dark:text-white">
-                    {new Date(block.startAt).toLocaleString("es-CO")}
-                  </p>
-                  <p className="text-slate-500">
-                    Hasta {new Date(block.endAt).toLocaleString("es-CO")}
-                  </p>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-
-        <div className="rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-xs dark:border-slate-800 dark:bg-slate-900/60">
-          <div className="flex items-center gap-2">
-            <CalendarBlank size={20} className="text-slate-400" />
-            <h2 className="text-lg font-semibold">Agenda personal (7 días)</h2>
-          </div>
-          <div className="mt-4 space-y-3 text-sm">
-            {loading ? (
-              <Skeleton className="h-24" />
-            ) : appointments.length === 0 ? (
-              <p className="text-sm text-slate-500">No hay turnos próximos.</p>
-            ) : (
-              appointments.map((appointment) => (
-                <div key={appointment.id} className="rounded-2xl border border-slate-200 px-3 py-2 text-xs dark:border-slate-800">
-                  <p className="font-semibold text-slate-900 dark:text-white">
-                    {new Date(appointment.timeSlot.startAt).toLocaleDateString("es-CO")}
-                  </p>
-                  <p className="text-slate-500">
-                    {new Date(appointment.timeSlot.startAt).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })} ·
-                    {" "}
-                    {appointment.patient
-                      ? `${appointment.patient.user.name} ${appointment.patient.user.lastName}`
-                      : "Paciente"}
-                  </p>
-                  <p className="text-slate-500">Estado: {operationalStatusLabel(toOperationalStatus(appointment))}</p>
-                  <div className="mt-1 flex items-center gap-3">
-                    {appointment.patientId ? (
-                      <Link href={`/portal/professional/patients/${appointment.patientId}`} className="font-semibold text-brand-teal">
-                        Abrir paciente
-                      </Link>
-                    ) : null}
-                    <button type="button" className="font-semibold text-slate-600" onClick={() => setEventsAppointmentId(appointment.id)}>
-                      Ver actividad
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-
-        <div className="rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-xs dark:border-slate-800 dark:bg-slate-900/60">
-          <h2 className="text-lg font-semibold">Feriados próximos</h2>
-          <div className="mt-4 space-y-3 text-sm">
-            {loading ? (
-              <Skeleton className="h-16" />
-            ) : holidays.length === 0 ? (
-              <p className="text-sm text-slate-500">No hay feriados cargados.</p>
-            ) : (
-              holidays.map((holiday) => (
-                <div key={holiday.id} className="rounded-2xl border border-slate-200 px-3 py-2 text-xs dark:border-slate-800">
-                  <p className="font-semibold text-slate-900 dark:text-white">
-                    {new Date(holiday.date).toLocaleDateString("es-CO")}
-                  </p>
-                  <p className="text-slate-500">{holiday.name}</p>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      </div>
-
-      {eventsAppointmentId ? (
-        <div className="rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-xs dark:border-slate-800 dark:bg-slate-900/60">
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-lg font-semibold">Actividad reciente de la cita</h2>
-            <button type="button" className="text-xs font-semibold uppercase text-slate-500" onClick={() => setEventsAppointmentId(null)}>Cerrar</button>
-          </div>
-          <AppointmentEventTimeline appointmentId={eventsAppointmentId} />
-        </div>
-      ) : null}
-
-      <div className="rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-xs dark:border-slate-800 dark:bg-slate-900/60">
-        <div className="flex items-center gap-2">
-          <CalendarBlank size={20} className="text-slate-400" />
-          <h2 className="text-lg font-semibold">Next 30 days preview</h2>
-        </div>
         <div className="mt-4 grid gap-3 md:grid-cols-2">
-          {loading ? (
-            Array.from({ length: 4 }).map((_, index) => <Skeleton key={index} className="h-16" />)
-          ) : slots.length === 0 ? (
-            <p className="text-sm text-slate-500">No availability generated yet.</p>
-          ) : (
-            slots.map((slot) => (
-              <div key={`${slot.startAt}-${slot.endAt}`} className="rounded-2xl border border-slate-200 px-3 py-2 text-xs dark:border-slate-800">
-                <p className="font-semibold text-slate-900 dark:text-white">
-                  {new Date(slot.startAt).toLocaleDateString("es-CO")}
-                </p>
-                <p className="text-slate-500">
-                  {new Date(slot.startAt).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })} -
-                  {" "}
-                  {new Date(slot.endAt).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })}
-                </p>
-              </div>
-            ))
-          )}
+          {(baselineSchedules ?? []).map((schedule) => (
+            <div key={schedule.id} className="rounded-2xl border border-slate-200 px-3 py-3 text-sm dark:border-slate-800">
+              <p className="font-semibold text-slate-900 dark:text-white">{weekDays[schedule.dayOfWeek]} · {schedule.startTime} - {schedule.endTime}</p>
+              <p className="text-xs text-slate-500">{schedule.timezone}</p>
+              <p className="mt-1 text-xs font-semibold text-slate-500">Estado: {schedule.status}</p>
+            </div>
+          ))}
+          {!loading && baselineSchedules.length === 0 ? <p className="text-sm text-slate-500">No tienes horario base asignado aún.</p> : null}
         </div>
-      </div>
+      </section>
 
-      {error ? (
-        <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700 dark:border-rose-300/40 dark:bg-rose-900/30 dark:text-rose-200">
-          {error}
+      <section className="grid gap-6 lg:grid-cols-2">
+        <div className="rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-xs dark:border-slate-800 dark:bg-slate-900/60">
+          <h2 className="text-lg font-semibold">Solicitar ajuste temporal</h2>
+          <p className="text-sm text-slate-500">Solicita cambios de horario sin editar reglas técnicas.</p>
+          <div className="mt-4 grid gap-3">
+            <select className="input" value={adjustmentForm.dayOfWeek} onChange={(event) => setAdjustmentForm((prev) => ({ ...prev, dayOfWeek: event.target.value }))}>
+              {weekDays.map((day, index) => <option key={day} value={index}>{day}</option>)}
+            </select>
+            <div className="grid grid-cols-2 gap-2">
+              <input className="input" type="time" value={adjustmentForm.startTime} onChange={(event) => setAdjustmentForm((prev) => ({ ...prev, startTime: event.target.value }))} />
+              <input className="input" type="time" value={adjustmentForm.endTime} onChange={(event) => setAdjustmentForm((prev) => ({ ...prev, endTime: event.target.value }))} />
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <input className="input" type="date" value={adjustmentForm.effectiveFrom} onChange={(event) => setAdjustmentForm((prev) => ({ ...prev, effectiveFrom: event.target.value }))} />
+              <input className="input" type="date" value={adjustmentForm.effectiveTo} onChange={(event) => setAdjustmentForm((prev) => ({ ...prev, effectiveTo: event.target.value }))} />
+            </div>
+            <textarea className="input min-h-24" placeholder="Notas" value={adjustmentForm.note} onChange={(event) => setAdjustmentForm((prev) => ({ ...prev, note: event.target.value }))} />
+            <button type="button" className="btn btn-secondary" onClick={requestAdjustment}>Enviar solicitud</button>
+          </div>
+
+          <div className="mt-4 space-y-2 text-sm">
+            {adjustments.map((item) => (
+              <div key={item.id} className="rounded-xl border border-slate-200 px-3 py-2 dark:border-slate-800">
+                <p className="font-semibold">{item.dayOfWeek !== null && item.dayOfWeek !== undefined ? weekDays[item.dayOfWeek] : "Sin día"} · {item.startTime ?? "--:--"} - {item.endTime ?? "--:--"}</p>
+                <p className="text-xs text-slate-500">{new Date(item.effectiveFrom).toLocaleDateString("es-CO")} · {item.status}</p>
+              </div>
+            ))}
+          </div>
         </div>
-      ) : null}
+
+        <div className="rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-xs dark:border-slate-800 dark:bg-slate-900/60">
+          <h2 className="text-lg font-semibold">Ausencias y bloqueos</h2>
+          <p className="text-sm text-slate-500">Vacaciones, incapacidad, capacitación o bloques internos.</p>
+          <div className="mt-4 grid gap-3">
+            <select className="input" value={blockForm.entryType} onChange={(event) => setBlockForm((prev) => ({ ...prev, entryType: event.target.value }))}>
+              <option value="VACATION">Vacaciones</option>
+              <option value="SICK_LEAVE">Incapacidad médica</option>
+              <option value="TRAINING">Capacitación</option>
+              <option value="ADMIN_TIME">Tiempo administrativo</option>
+              <option value="PERSONAL_LEAVE">Permiso personal</option>
+              <option value="INTERNAL_BLOCK">Bloqueo interno</option>
+              <option value="OTHER">Otro</option>
+            </select>
+            <input className="input" type="datetime-local" value={blockForm.startsAt} onChange={(event) => setBlockForm((prev) => ({ ...prev, startsAt: event.target.value }))} />
+            <input className="input" type="datetime-local" value={blockForm.endsAt} onChange={(event) => setBlockForm((prev) => ({ ...prev, endsAt: event.target.value }))} />
+            <label className="flex items-center gap-2 text-sm text-slate-600">
+              <input type="checkbox" checked={blockForm.fullDay} onChange={(event) => setBlockForm((prev) => ({ ...prev, fullDay: event.target.checked }))} />
+              Día completo
+            </label>
+            <textarea className="input min-h-24" placeholder="Nota operativa" value={blockForm.reason} onChange={(event) => setBlockForm((prev) => ({ ...prev, reason: event.target.value }))} />
+            <button type="button" className="btn btn-secondary" onClick={createUnavailability}>Registrar novedad</button>
+          </div>
+
+          <div className="mt-4 space-y-2 text-sm">
+            {unavailability.map((item) => (
+              <div key={item.id} className="rounded-xl border border-slate-200 px-3 py-2 dark:border-slate-800">
+                <p className="font-semibold">{item.type} · {item.fullDay ? "Día completo" : "Parcial"}</p>
+                <p className="text-xs text-slate-500">{new Date(item.startsAt).toLocaleString("es-CO")} → {new Date(item.endsAt).toLocaleString("es-CO")}</p>
+                <p className="text-xs text-slate-500">Estado: {item.status}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

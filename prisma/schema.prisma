@@ -28,6 +28,29 @@ enum TimeSlotStatus {
   BREAK
 }
 
+enum ProfessionalScheduleStatus {
+  PENDING_CONFIRMATION
+  CONFIRMED
+  CHANGES_REQUESTED
+}
+
+enum UnavailabilityType {
+  VACATION
+  SICK_LEAVE
+  TRAINING
+  ADMIN_TIME
+  PERSONAL_LEAVE
+  INTERNAL_BLOCK
+  OTHER
+}
+
+enum UnavailabilityStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
 enum InsuranceStatus {
   ACTIVE
   INACTIVE
@@ -117,6 +140,11 @@ model User {
   clinicalEpisodesDeleted ClinicalEpisode[] @relation("ClinicalEpisodesDeleted")
   accessLogs AccessLog[]
   appointmentEvents AppointmentEvent[]
+  schedulesCreated ProfessionalWorkingSchedule[]
+  scheduleAdjustmentsRequested ProfessionalScheduleAdjustment[] @relation("ScheduleAdjustmentRequestedBy")
+  scheduleAdjustmentsReviewed ProfessionalScheduleAdjustment[] @relation("ScheduleAdjustmentReviewedBy")
+  unavailabilityCreated ProfessionalUnavailability[] @relation("UnavailabilityCreatedBy")
+  unavailabilityApproved ProfessionalUnavailability[] @relation("UnavailabilityApprovedBy")
 
   @@index([role])
 }
@@ -134,6 +162,10 @@ model ProfessionalProfile {
   availabilityRules   AvailabilityRule[]
   availabilityExceptions AvailabilityException[]
   availabilityBlocks AvailabilityBlock[]
+  professionalServices ProfessionalService[]
+  workingSchedules   ProfessionalWorkingSchedule[]
+  scheduleAdjustments ProfessionalScheduleAdjustment[]
+  unavailabilityEntries ProfessionalUnavailability[]
   clinicalEpisodes    ClinicalEpisode[]
   prescriptions       Prescription[]
 }
@@ -173,6 +205,7 @@ model Service {
   specialtyId     String?
   specialty       Specialty?     @relation(fields: [specialtyId], references: [id], onDelete: SetNull)
   appointments    Appointment[]
+  professionalServices ProfessionalService[]
 
   @@index([active])
   @@index([specialtyId])
@@ -189,6 +222,7 @@ model TimeSlot {
 
   @@index([professionalId])
   @@index([startAt])
+  @@unique([professionalId, startAt, endAt])
 }
 
 model Appointment {
@@ -448,6 +482,95 @@ model LabOrder {
   @@index([episodeId])
 }
 
+model ProfessionalService {
+  id                         String               @id @default(uuid())
+  professionalId             String
+  serviceId                  String
+  active                     Boolean              @default(true)
+  onlineBookable             Boolean              @default(true)
+  appointmentDurationMinutes Int?
+  bufferBeforeMinutes        Int?
+  bufferAfterMinutes         Int?
+  notes                      String?
+  createdAt                  DateTime             @default(now())
+  updatedAt                  DateTime             @updatedAt
+  professional               ProfessionalProfile  @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+  service                    Service              @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@unique([professionalId, serviceId])
+  @@index([serviceId, active])
+  @@index([professionalId, active])
+}
+
+model ProfessionalWorkingSchedule {
+  id             String                    @id @default(uuid())
+  professionalId String
+  dayOfWeek      Int
+  startTime      String
+  endTime        String
+  timezone       String                    @default("America/Bogota")
+  effectiveFrom  DateTime?
+  effectiveTo    DateTime?
+  active         Boolean                   @default(true)
+  status         ProfessionalScheduleStatus @default(PENDING_CONFIRMATION)
+  createdByUserId String?                  @db.Uuid
+  notes          String?
+  createdAt      DateTime                  @default(now())
+  updatedAt      DateTime                  @updatedAt
+  professional   ProfessionalProfile       @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+  createdByUser  User?                     @relation(fields: [createdByUserId], references: [id], onDelete: SetNull)
+  adjustments    ProfessionalScheduleAdjustment[]
+
+  @@index([professionalId, active])
+  @@index([dayOfWeek, active])
+}
+
+model ProfessionalScheduleAdjustment {
+  id               String                    @id @default(uuid())
+  professionalId   String
+  scheduleId       String?
+  dayOfWeek        Int?
+  startTime        String?
+  endTime          String?
+  effectiveFrom    DateTime
+  effectiveTo      DateTime?
+  timezone         String                    @default("America/Bogota")
+  status           ProfessionalScheduleStatus @default(CHANGES_REQUESTED)
+  requestedByUserId String                   @db.Uuid
+  reviewedByUserId String?                   @db.Uuid
+  note             String?
+  createdAt        DateTime                  @default(now())
+  updatedAt        DateTime                  @updatedAt
+  professional     ProfessionalProfile       @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+  schedule         ProfessionalWorkingSchedule? @relation(fields: [scheduleId], references: [id], onDelete: SetNull)
+  requestedByUser  User                      @relation("ScheduleAdjustmentRequestedBy", fields: [requestedByUserId], references: [id], onDelete: Cascade)
+  reviewedByUser   User?                     @relation("ScheduleAdjustmentReviewedBy", fields: [reviewedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([professionalId, status])
+  @@index([effectiveFrom])
+}
+
+model ProfessionalUnavailability {
+  id               String               @id @default(uuid())
+  professionalId   String
+  type             UnavailabilityType
+  status           UnavailabilityStatus @default(PENDING)
+  startsAt         DateTime
+  endsAt           DateTime
+  fullDay          Boolean              @default(false)
+  reason           String?
+  createdByUserId  String?              @db.Uuid
+  approvedByUserId String?              @db.Uuid
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+  professional     ProfessionalProfile  @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+  createdByUser    User?                @relation("UnavailabilityCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  approvedByUser   User?                @relation("UnavailabilityApprovedBy", fields: [approvedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([professionalId, startsAt])
+  @@index([type, status])
+}
+
 model AvailabilityRule {
   id             String               @id @default(uuid())
   professionalId String
@@ -488,6 +611,7 @@ model AvailabilityBlock {
 
   @@index([professionalId])
   @@index([startAt])
+  @@unique([professionalId, startAt, endAt])
 }
 
 model ClinicHoliday {
