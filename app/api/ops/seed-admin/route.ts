@@ -1,9 +1,10 @@
 import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
-import { AppointmentStatus, InsuranceStatus, Prisma, Role, TimeSlotStatus } from "@prisma/client";
+import { AppointmentStatus, InsuranceStatus, Prisma, ProfessionalScheduleStatus, Role, TimeSlotStatus } from "@prisma/client";
 
 import { getPrismaClient } from "@/lib/prisma";
 import { logger } from "@/lib/logger";
+import { refreshFutureInventoryForAllProfessionals } from "@/lib/scheduling/slot-inventory";
 import {
   enforceOpsRateLimit,
   getOpsKey,
@@ -22,6 +23,14 @@ function requireSeedEnv(name: string): string {
     throw new Error(`Missing ${name} for OPS seed.`);
   }
   return value;
+}
+
+function getSeedInventoryRange() {
+  const rangeStart = new Date();
+  rangeStart.setMinutes(0, 0, 0);
+  const rangeEnd = new Date(rangeStart);
+  rangeEnd.setDate(rangeEnd.getDate() + 14);
+  return { rangeStart, rangeEnd };
 }
 
 // Endpoint de emergencia para crear/actualizar el admin en entornos locales.
@@ -236,6 +245,99 @@ export async function POST(request: Request) {
       ),
     );
 
+    const professionalProfiles = await prisma.professionalProfile.findMany({
+      where: { userId: { in: professionalUsers.map((user) => user.id) }, active: true },
+      orderBy: { userId: "asc" },
+      select: { id: true, userId: true, slotDurationMinutes: true },
+    });
+
+    await Promise.all(
+      professionalProfiles.flatMap((professional, index) => {
+        const service = services[index % services.length];
+        if (!service) {
+          return [];
+        }
+
+        return [
+          prisma.professionalService.upsert({
+            where: { professionalId_serviceId: { professionalId: professional.id, serviceId: service.id } },
+            update: {
+              active: true,
+              onlineBookable: true,
+              appointmentDurationMinutes: service.durationMinutes,
+              bufferBeforeMinutes: 0,
+              bufferAfterMinutes: 0,
+            },
+            create: {
+              professionalId: professional.id,
+              serviceId: service.id,
+              active: true,
+              onlineBookable: true,
+              appointmentDurationMinutes: service.durationMinutes,
+              bufferBeforeMinutes: 0,
+              bufferAfterMinutes: 0,
+              notes: "Seed baseline assignment",
+            },
+          }),
+          prisma.professionalService.upsert({
+            where: { professionalId_serviceId: { professionalId: professional.id, serviceId: services[0].id } },
+            update: {
+              active: true,
+              onlineBookable: true,
+              appointmentDurationMinutes: services[0].durationMinutes,
+              bufferBeforeMinutes: 0,
+              bufferAfterMinutes: 0,
+            },
+            create: {
+              professionalId: professional.id,
+              serviceId: services[0].id,
+              active: true,
+              onlineBookable: true,
+              appointmentDurationMinutes: services[0].durationMinutes,
+              bufferBeforeMinutes: 0,
+              bufferAfterMinutes: 0,
+              notes: "Seed baseline assignment",
+            },
+          }),
+        ];
+      }),
+    );
+
+    await Promise.all(
+      professionalProfiles.flatMap((professional) =>
+        [1, 2, 3, 4, 5].map((dayOfWeek) =>
+          prisma.professionalWorkingSchedule.upsert({
+            where: {
+              professionalId_dayOfWeek_startTime_endTime_timezone: {
+                professionalId: professional.id,
+                dayOfWeek,
+                startTime: "09:00",
+                endTime: "17:00",
+                timezone: "America/Bogota",
+              },
+            },
+            update: {
+              active: true,
+              status: ProfessionalScheduleStatus.CONFIRMED,
+              createdByUserId: createdUsers.find((user) => user.role === Role.ADMINISTRADOR)?.id ?? null,
+              notes: "Seed baseline schedule",
+            },
+            create: {
+              professionalId: professional.id,
+              dayOfWeek,
+              startTime: "09:00",
+              endTime: "17:00",
+              timezone: "America/Bogota",
+              active: true,
+              status: ProfessionalScheduleStatus.CONFIRMED,
+              createdByUserId: createdUsers.find((user) => user.role === Role.ADMINISTRADOR)?.id ?? null,
+              notes: "Seed baseline schedule",
+            },
+          }),
+        ),
+      ),
+    );
+
     const patientUsers = createdUsers.filter((user) => user.role === Role.PACIENTE);
     await Promise.all(
       patientUsers.map((user, index) =>
@@ -442,6 +544,9 @@ export async function POST(request: Request) {
         });
       }
     }
+
+    const { rangeStart, rangeEnd } = getSeedInventoryRange();
+    await refreshFutureInventoryForAllProfessionals({ rangeStart, rangeEnd, prisma });
 
     const message = existingAdmin ? "Operación completada. Admin ya existe." : GENERIC_SUCCESS_MESSAGE;
     const adminUser = createdUsers.find((user) => user.role === Role.ADMINISTRADOR) ?? null;

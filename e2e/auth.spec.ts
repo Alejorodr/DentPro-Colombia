@@ -11,6 +11,7 @@ const authUser = {
 
 async function submitLogin(page: Page, params: { email: string; password: string }) {
   await page.goto(E2E_ROUTES.login, { waitUntil: "domcontentloaded" });
+  await expect(page.getByTestId("login-form-ready")).toBeVisible({ timeout: 10_000 });
   const emailInput = page.locator(E2E_SELECTORS.loginEmail);
   const passwordInput = page.locator(E2E_SELECTORS.loginPassword);
   await expect(emailInput).toBeVisible();
