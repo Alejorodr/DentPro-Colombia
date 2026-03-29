@@ -31,6 +31,9 @@ const mockPrisma = {
   professionalWorkingSchedule: {
     findMany: vi.fn(),
   },
+  professionalScheduleAdjustment: {
+    findMany: vi.fn(),
+  },
   professionalUnavailability: {
     findMany: vi.fn(),
   },
@@ -84,6 +87,7 @@ describe("appointment rescheduling", () => {
     mockPrisma.professionalWorkingSchedule.findMany.mockResolvedValue([
       { professionalId: "prof-1", dayOfWeek: 3, startTime: "00:00", endTime: "23:59" },
     ]);
+    mockPrisma.professionalScheduleAdjustment.findMany.mockResolvedValue([]);
     mockPrisma.professionalUnavailability.findMany.mockResolvedValue([]);
     mockPrisma.appointment.findMany.mockResolvedValue([]);
   });

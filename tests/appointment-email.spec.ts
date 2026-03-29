@@ -29,6 +29,9 @@ const mockPrisma = {
   professionalWorkingSchedule: {
     findMany: vi.fn(),
   },
+  professionalScheduleAdjustment: {
+    findMany: vi.fn(),
+  },
   professionalUnavailability: {
     findMany: vi.fn(),
   },
@@ -87,6 +90,7 @@ beforeEach(() => {
   mockPrisma.professionalService.findMany.mockResolvedValue([]);
   mockPrisma.clinicHoliday.findMany.mockResolvedValue([]);
   mockPrisma.professionalWorkingSchedule.findMany.mockResolvedValue([]);
+  mockPrisma.professionalScheduleAdjustment.findMany.mockResolvedValue([]);
   mockPrisma.professionalUnavailability.findMany.mockResolvedValue([]);
   mockPrisma.appointment.findMany.mockResolvedValue([]);
 });
