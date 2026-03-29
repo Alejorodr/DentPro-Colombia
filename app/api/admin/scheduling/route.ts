@@ -6,6 +6,7 @@ import { errorResponse } from "@/app/api/_utils/response";
 import { parseJson } from "@/app/api/_utils/validation";
 import { requireRole, requireSession } from "@/lib/authz";
 import { getPrismaClient } from "@/lib/prisma";
+import { refreshFutureInventoryForProfessional } from "@/lib/scheduling/slot-inventory";
 
 const timeRegex = /^\d{2}:\d{2}$/;
 
@@ -99,6 +100,16 @@ function hasTimeRangeOverlap(
   endB: string,
 ): boolean {
   return toMinutes(startA) < toMinutes(endB) && toMinutes(endA) > toMinutes(startB);
+}
+
+
+
+function getDefaultRefreshRange() {
+  const rangeStart = new Date();
+  rangeStart.setMinutes(0, 0, 0);
+  const rangeEnd = new Date(rangeStart);
+  rangeEnd.setDate(rangeEnd.getDate() + 45);
+  return { rangeStart, rangeEnd };
 }
 
 function dateRangesOverlap(
@@ -258,6 +269,14 @@ export async function POST(request: Request) {
         },
       });
 
+      const { rangeStart, rangeEnd } = getDefaultRefreshRange();
+      await refreshFutureInventoryForProfessional({
+        professionalId: payload.professionalId,
+        rangeStart,
+        rangeEnd,
+        prisma,
+      });
+
       return NextResponse.json({ assignment }, { status: 201 });
     } catch (createError) {
       if ((createError instanceof Prisma.PrismaClientKnownRequestError && createError.code === "P2002") || (typeof createError === "object" && createError !== null && "code" in createError && (createError as { code?: string }).code === "P2002")) {
@@ -285,6 +304,14 @@ export async function POST(request: Request) {
       },
     });
 
+    const { rangeStart, rangeEnd } = getDefaultRefreshRange();
+    await refreshFutureInventoryForProfessional({
+      professionalId: assignment.professionalId,
+      rangeStart,
+      rangeEnd,
+      prisma,
+    });
+
     return NextResponse.json({ assignment: updated });
   }
 
@@ -297,6 +324,14 @@ export async function POST(request: Request) {
     const updated = await prisma.professionalService.update({
       where: { id: payload.assignmentId },
       data: { active: false, onlineBookable: false },
+    });
+
+    const { rangeStart, rangeEnd } = getDefaultRefreshRange();
+    await refreshFutureInventoryForProfessional({
+      professionalId: assignment.professionalId,
+      rangeStart,
+      rangeEnd,
+      prisma,
     });
 
     return NextResponse.json({ assignment: updated });
@@ -346,6 +381,14 @@ export async function POST(request: Request) {
         status: "CONFIRMED",
         createdByUserId: sessionResult.user.id,
       },
+    });
+
+    const { rangeStart, rangeEnd } = getDefaultRefreshRange();
+    await refreshFutureInventoryForProfessional({
+      professionalId: payload.professionalId,
+      rangeStart,
+      rangeEnd,
+      prisma,
     });
 
     return NextResponse.json({ schedule }, { status: 201 });
@@ -400,6 +443,14 @@ export async function POST(request: Request) {
       },
     });
 
+    const { rangeStart, rangeEnd } = getDefaultRefreshRange();
+    await refreshFutureInventoryForProfessional({
+      professionalId: schedule.professionalId,
+      rangeStart,
+      rangeEnd,
+      prisma,
+    });
+
     return NextResponse.json({ schedule: updated });
   }
 
@@ -411,6 +462,14 @@ export async function POST(request: Request) {
   const updated = await prisma.professionalWorkingSchedule.update({
     where: { id: payload.scheduleId },
     data: { active: false },
+  });
+
+  const { rangeStart, rangeEnd } = getDefaultRefreshRange();
+  await refreshFutureInventoryForProfessional({
+    professionalId: schedule.professionalId,
+    rangeStart,
+    rangeEnd,
+    prisma,
   });
 
   return NextResponse.json({ schedule: updated });

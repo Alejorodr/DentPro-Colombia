@@ -135,17 +135,36 @@ export async function POST(request: Request) {
 
     const now = new Date();
     now.setHours(9, 0, 0, 0);
-    const timeSlot = await prisma.timeSlot.create({
-      data: {
+    const endAt = new Date(now.getTime() + 30 * 60_000);
+    const timeSlot = await prisma.timeSlot.upsert({
+      where: {
+        professionalId_startAt_endAt: {
+          professionalId: professional.id,
+          startAt: now,
+          endAt,
+        },
+      },
+      update: { status: TimeSlotStatus.BOOKED },
+      create: {
         professionalId: professional.id,
         startAt: now,
-        endAt: new Date(now.getTime() + 30 * 60_000),
+        endAt,
         status: TimeSlotStatus.BOOKED,
       },
     });
 
-    await prisma.appointment.create({
-      data: {
+    await prisma.appointment.upsert({
+      where: { timeSlotId: timeSlot.id },
+      update: {
+        patientId: patient.id,
+        professionalId: professional.id,
+        serviceId: service.id,
+        serviceName: service.name,
+        servicePriceCents: service.priceCents,
+        reason: service.name,
+        status: AppointmentStatus.CONFIRMED,
+      },
+      create: {
         patientId: patient.id,
         professionalId: professional.id,
         timeSlotId: timeSlot.id,

@@ -5,6 +5,7 @@ import { errorResponse } from "@/app/api/_utils/response";
 import { parseJson } from "@/app/api/_utils/validation";
 import { requireRole, requireSession } from "@/lib/authz";
 import { getPrismaClient } from "@/lib/prisma";
+import { refreshFutureInventoryForProfessional } from "@/lib/scheduling/slot-inventory";
 
 const bodySchema = z.union([
   z.object({
@@ -114,6 +115,17 @@ export async function POST(request: Request) {
         status: "CONFIRMED",
       },
     });
+    const rangeStart = new Date();
+    rangeStart.setMinutes(0, 0, 0);
+    const rangeEnd = new Date(rangeStart);
+    rangeEnd.setDate(rangeEnd.getDate() + 45);
+    await refreshFutureInventoryForProfessional({
+      professionalId: professional.id,
+      rangeStart,
+      rangeEnd,
+      prisma,
+    });
+
     return NextResponse.json({ updated: result.count });
   }
 
@@ -169,6 +181,17 @@ export async function POST(request: Request) {
       createdByUserId: sessionResult.user.id,
       updatedByUserId: sessionResult.user.id,
     },
+  });
+
+  const rangeStart = startsAt > new Date() ? startsAt : new Date();
+  rangeStart.setMinutes(0, 0, 0);
+  const rangeEnd = new Date(rangeStart);
+  rangeEnd.setDate(rangeEnd.getDate() + 45);
+  await refreshFutureInventoryForProfessional({
+    professionalId: professional.id,
+    rangeStart,
+    rangeEnd,
+    prisma,
   });
 
   return NextResponse.json({ entry }, { status: 201 });
