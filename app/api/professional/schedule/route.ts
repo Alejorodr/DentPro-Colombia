@@ -36,6 +36,8 @@ const bodySchema = z.union([
     endsAt: z.string().datetime(),
     fullDay: z.boolean().optional(),
     reason: z.string().trim().max(500).optional().nullable(),
+    notes: z.string().trim().max(500).optional().nullable(),
+    internalNotes: z.string().trim().max(500).optional().nullable(),
   }),
 ]);
 
@@ -140,6 +142,19 @@ export async function POST(request: Request) {
     return errorResponse("Rango de tiempo inválido.", 400);
   }
 
+  const overlapping = await prisma.professionalUnavailability.findFirst({
+    where: {
+      professionalId: professional.id,
+      status: { in: ["PENDING", "APPROVED"] },
+      startsAt: { lt: endsAt },
+      endsAt: { gt: startsAt },
+    },
+    select: { id: true },
+  });
+  if (overlapping) {
+    return errorResponse("Ya existe una novedad que se superpone con este rango.", 409);
+  }
+
   const entry = await prisma.professionalUnavailability.create({
     data: {
       professionalId: professional.id,
@@ -147,9 +162,12 @@ export async function POST(request: Request) {
       startsAt,
       endsAt,
       fullDay: payload.fullDay ?? false,
-      reason: payload.reason ?? null,
+      reason: payload.reason ?? payload.notes ?? null,
+      notes: payload.notes ?? payload.reason ?? null,
+      internalNotes: payload.internalNotes ?? null,
       status: "PENDING",
       createdByUserId: sessionResult.user.id,
+      updatedByUserId: sessionResult.user.id,
     },
   });
 

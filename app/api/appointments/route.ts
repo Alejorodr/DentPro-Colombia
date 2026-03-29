@@ -14,6 +14,7 @@ import { requireRole, requireSession } from "@/lib/authz";
 import { getAppointmentBufferMinutes, hasBufferConflict } from "@/lib/appointments/scheduling";
 import { sendAppointmentEmail } from "@/lib/notifications/email";
 import { recordAppointmentEvent } from "@/lib/appointments/events";
+import { assertSlotBookable } from "@/lib/scheduling/effective-availability";
 import * as Sentry from "@sentry/nextjs";
 
 const createAppointmentSchema = z.object({
@@ -237,21 +238,13 @@ export async function POST(request: Request) {
     return errorResponse("Servicio no disponible.", 404);
   }
 
-  const assignment = await prisma.professionalService.findFirst({
-    where: {
-      professionalId: timeSlot.professionalId,
-      serviceId: service.id,
-      active: true,
-      onlineBookable: true,
-    },
+  const availabilityCheck = await assertSlotBookable({
+    slotId: timeSlot.id,
+    serviceId: service.id,
+    professionalId: payload.professionalId ?? timeSlot.professionalId,
   });
-
-  if (!assignment) {
-    return errorResponse("El profesional no tiene este servicio habilitado para agendamiento.", 409);
-  }
-
-  if (timeSlot.status !== TimeSlotStatus.AVAILABLE) {
-    return errorResponse("El slot no está disponible.", 409);
+  if (!availabilityCheck.ok) {
+    return errorResponse(availabilityCheck.message, availabilityCheck.status);
   }
 
   let patientId: string | null = null;
