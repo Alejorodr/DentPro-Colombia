@@ -33,20 +33,39 @@ function subtractIntervals(base: TimeInterval[], blockers: TimeInterval[]): Time
 }
 
 function buildWorkingIntervals(params: {
-  schedules: Array<{ dayOfWeek: number; startTime: string; endTime: string }>;
+  schedules: Array<{ id?: string; dayOfWeek: number; startTime: string; endTime: string; effectiveFrom?: Date | null; effectiveTo?: Date | null }>;
+  adjustments?: Array<{ scheduleId?: string | null; dayOfWeek: number | null; startTime: string | null; endTime: string | null; effectiveFrom: Date; effectiveTo: Date | null }>;
   dateStart: Date;
   dateEnd: Date;
   timeZone: string;
 }): TimeInterval[] {
-  const { schedules, dateStart, dateEnd, timeZone } = params;
+  const { schedules, dateStart, dateEnd, timeZone, adjustments = [] } = params;
   const intervals: TimeInterval[] = [];
+
+  const appliesToDay = (effectiveFrom: Date | null | undefined, effectiveTo: Date | null | undefined, dayStart: Date, dayEnd: Date) => {
+    if (effectiveFrom && effectiveFrom >= dayEnd) return false;
+    if (effectiveTo && effectiveTo <= dayStart) return false;
+    return true;
+  };
 
   for (let cursor = dateStart; cursor < dateEnd; cursor = addDaysZoned(cursor, 1, timeZone)) {
     const parts = getZonedDateParts(cursor, timeZone);
+    const dayStart = fromZonedDateParts({ ...parts, hour: 0, minute: 0, second: 0 }, timeZone);
+    const dayEnd = addDaysZoned(dayStart, 1, timeZone);
     const dayOfWeek = new Date(Date.UTC(parts.year, parts.month - 1, parts.day)).getUTCDay();
+
+    const dayAdjustments = adjustments.filter((item) =>
+      item.dayOfWeek === dayOfWeek
+      && item.startTime
+      && item.endTime
+      && appliesToDay(item.effectiveFrom, item.effectiveTo, dayStart, dayEnd),
+    );
+    const overriddenScheduleIds = new Set(dayAdjustments.map((item) => item.scheduleId).filter(Boolean));
 
     for (const schedule of schedules) {
       if (schedule.dayOfWeek !== dayOfWeek) continue;
+      if (!appliesToDay(schedule.effectiveFrom, schedule.effectiveTo, dayStart, dayEnd)) continue;
+      if (schedule.id && overriddenScheduleIds.has(schedule.id)) continue;
       const [startHour, startMinute] = schedule.startTime.split(":").map(Number);
       const [endHour, endMinute] = schedule.endTime.split(":").map(Number);
 
@@ -61,6 +80,26 @@ function buildWorkingIntervals(params: {
 
       if (endAt <= dateStart || startAt >= dateEnd || endAt <= startAt) continue;
 
+      intervals.push({
+        startAt: startAt < dateStart ? dateStart : startAt,
+        endAt: endAt > dateEnd ? dateEnd : endAt,
+      });
+    }
+
+    for (const adjustment of dayAdjustments) {
+      const [startHour, startMinute] = (adjustment.startTime ?? "00:00").split(":").map(Number);
+      const [endHour, endMinute] = (adjustment.endTime ?? "00:00").split(":").map(Number);
+
+      const startAt = fromZonedDateParts(
+        { year: parts.year, month: parts.month, day: parts.day, hour: startHour ?? 0, minute: startMinute ?? 0, second: 0 },
+        timeZone,
+      );
+      const endAt = fromZonedDateParts(
+        { year: parts.year, month: parts.month, day: parts.day, hour: endHour ?? 0, minute: endMinute ?? 0, second: 0 },
+        timeZone,
+      );
+
+      if (endAt <= dateStart || startAt >= dateEnd || endAt <= startAt) continue;
       intervals.push({
         startAt: startAt < dateStart ? dateStart : startAt,
         endAt: endAt > dateEnd ? dateEnd : endAt,
@@ -115,7 +154,34 @@ export async function refreshFutureInventoryForProfessional(params: {
     return { removed: 0, created: 0, skipped: true as const };
   }
 
-  const [schedules, unavailability, appointments, holidays] = await Promise.all([
+  const assignmentRows = await prisma.professionalService.findMany({
+    where: {
+      professionalId: professional.id,
+      active: true,
+      onlineBookable: true,
+      service: { active: true },
+    },
+    select: {
+      appointmentDurationMinutes: true,
+      bufferBeforeMinutes: true,
+      bufferAfterMinutes: true,
+      service: { select: { durationMinutes: true } },
+    },
+  });
+
+  if (assignmentRows.length === 0) {
+    const removed = await prisma.timeSlot.deleteMany({
+      where: {
+        professionalId: professional.id,
+        status: TimeSlotStatus.AVAILABLE,
+        appointment: null,
+        startAt: { gte: rangeStart, lt: rangeEnd },
+      },
+    });
+    return { removed: removed.count, created: 0, skipped: false as const };
+  }
+
+  const [schedules, adjustments, unavailability, appointments, holidays] = await Promise.all([
     prisma.professionalWorkingSchedule.findMany({
       where: {
         professionalId: professional.id,
@@ -124,7 +190,16 @@ export async function refreshFutureInventoryForProfessional(params: {
         OR: [{ effectiveFrom: null }, { effectiveFrom: { lte: rangeEnd } }],
         AND: [{ OR: [{ effectiveTo: null }, { effectiveTo: { gte: rangeStart } }] }],
       },
-      select: { dayOfWeek: true, startTime: true, endTime: true },
+      select: { id: true, dayOfWeek: true, startTime: true, endTime: true, effectiveFrom: true, effectiveTo: true },
+    }),
+    prisma.professionalScheduleAdjustment.findMany({
+      where: {
+        professionalId: professional.id,
+        status: ProfessionalScheduleStatus.CONFIRMED,
+        effectiveFrom: { lt: rangeEnd },
+        OR: [{ effectiveTo: null }, { effectiveTo: { gt: rangeStart } }],
+      },
+      select: { scheduleId: true, dayOfWeek: true, startTime: true, endTime: true, effectiveFrom: true, effectiveTo: true },
     }),
     prisma.professionalUnavailability.findMany({
       where: {
@@ -154,7 +229,7 @@ export async function refreshFutureInventoryForProfessional(params: {
     }),
   ]);
 
-  const base = buildWorkingIntervals({ schedules, dateStart: rangeStart, dateEnd: rangeEnd, timeZone });
+  const base = buildWorkingIntervals({ schedules, adjustments, dateStart: rangeStart, dateEnd: rangeEnd, timeZone });
   const blockers: TimeInterval[] = [
     ...unavailability.map((item) => ({ startAt: item.startsAt, endAt: item.endsAt })),
     ...appointments.map((item) => ({ startAt: item.timeSlot.startAt, endAt: item.timeSlot.endAt })),
@@ -171,8 +246,14 @@ export async function refreshFutureInventoryForProfessional(params: {
   }
 
   const effective = subtractIntervals(base, blockers);
-  const duration = professional.slotDurationMinutes ?? professional.specialty.defaultSlotDurationMinutes;
-  const slots = buildSlotsFromIntervals(effective, duration);
+  const fallbackDuration = professional.slotDurationMinutes ?? professional.specialty.defaultSlotDurationMinutes;
+  const duration = assignmentRows.reduce((minValue, assignment) => {
+    const baseDuration = assignment.appointmentDurationMinutes ?? assignment.service.durationMinutes ?? fallbackDuration;
+    const total = baseDuration + (assignment.bufferBeforeMinutes ?? 0) + (assignment.bufferAfterMinutes ?? 0);
+    return Math.min(minValue, total);
+  }, Number.POSITIVE_INFINITY);
+  const slotDuration = Number.isFinite(duration) && duration > 0 ? duration : fallbackDuration;
+  const slots = buildSlotsFromIntervals(effective, slotDuration);
 
   return prisma.$transaction(async (tx) => {
     const removed = await tx.timeSlot.deleteMany({

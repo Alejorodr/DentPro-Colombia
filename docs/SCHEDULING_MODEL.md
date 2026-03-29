@@ -208,3 +208,69 @@ Both use slot `upsert` keyed by `(professionalId,startAt,endAt)` and appointment
 - optional background/cron orchestration for periodic rolling-horizon inventory refresh
 - explicit admin controls for regeneration horizon tuning by clinic
 - phased retirement strategy for legacy `AvailabilityRule` / `AvailabilityException` / `AvailabilityBlock` models
+
+## Phase 4: operational consolidation and canonical workflows
+
+Phase 4 closes the remaining gap between scheduling domain entities and real booking behavior.
+
+### Canonical model after phase 4
+
+The canonical operational scheduling model is now:
+
+1. `ProfessionalService` (eligibility + operational duration/buffer settings)
+2. `ProfessionalWorkingSchedule` (baseline weekly operating windows)
+3. `ProfessionalScheduleAdjustment` (temporary schedule override requests with admin review)
+4. `ProfessionalUnavailability` (absences/internal blocks with approval lifecycle)
+5. Effective availability engine + materialized `TimeSlot` inventory
+
+Legacy availability entities (`AvailabilityRule`, `AvailabilityException`, `AvailabilityBlock`) are now explicitly legacy and no longer the write path for professional scheduling operations.
+
+### Baseline + adjustment + unavailability interaction
+
+- Baseline schedule (`ProfessionalWorkingSchedule`) is the default working frame.
+- Approved adjustments (`ProfessionalScheduleAdjustment.status = CONFIRMED`) are applied by the engine and inventory materializer as temporary overrides.
+  - If an adjustment references a `scheduleId`, it overrides that baseline block for the adjustment window/day.
+  - `CHANGES_REQUESTED` remains pending (not applied).
+  - `PENDING_CONFIRMATION` is used as a rejected/admin-closed state for adjustments.
+- Unavailability rows block operational bookability according to their status lifecycle.
+
+### Admin review workflow
+
+`/api/admin/scheduling` and `/portal/admin/scheduling` now include closed-loop review actions:
+
+- schedule adjustments: approve/reject
+- unavailability entries: approve/reject/cancel
+
+Reviewer decisions are persisted via audit fields already present in schema (`reviewedByUserId`, `approvedByUserId`, `updatedByUserId`).
+
+### Booking flow alignment
+
+- `/appointments/new` now loads bookable times through `/api/slots` (effective availability), not raw professional slot inventory.
+- Selection order is operationally aligned: service → date → professional → real slots.
+- Appointment creation/reschedule still performs final `assertSlotBookable` validation.
+
+### Slot inventory + service awareness
+
+`refreshFutureInventoryForProfessional` now:
+
+- suppresses online inventory for professionals without active + online-bookable assignments
+- computes slot step using assignment/service duration plus buffer metadata (safe intermediate service-aware materialization)
+- incorporates approved schedule adjustments in the same override logic used by effective availability
+
+This is an incremental production-safe approach (not a full bespoke per-service slot-table rewrite).
+
+### Public slot contract clarification
+
+`GET /api/public/slots` is now explicitly a **teaser** contract for marketing surfaces:
+
+- no operational slot identifiers are exposed
+- response includes `contract: "teaser"` note
+- feed is constrained to professionals that have active + online-bookable service assignments
+
+Real booking availability remains `/api/slots` + booking APIs.
+
+### Future follow-up after phase 4
+
+- dedicated adjustment status enum (`PENDING/APPROVED/REJECTED`) to replace shared schedule status semantics
+- optional impact preview UX before admin approval decisions
+- deeper per-service inventory materialization strategy if clinic scale requires it

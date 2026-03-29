@@ -68,6 +68,20 @@ const deleteScheduleSchema = z.object({
   scheduleId: z.string().uuid(),
 });
 
+const reviewAdjustmentSchema = z.object({
+  type: z.literal("reviewAdjustment"),
+  adjustmentId: z.string().uuid(),
+  action: z.enum(["approve", "reject"]),
+  note: z.string().trim().max(500).optional().nullable(),
+});
+
+const reviewUnavailabilitySchema = z.object({
+  type: z.literal("reviewUnavailability"),
+  entryId: z.string().uuid(),
+  action: z.enum(["approve", "reject", "cancel"]),
+  note: z.string().trim().max(500).optional().nullable(),
+});
+
 const legacyAssignServiceSchema = createAssignmentSchema.extend({
   type: z.literal("assignService"),
   active: z.boolean().optional(),
@@ -84,6 +98,8 @@ const bodySchema = z.union([
   createScheduleSchema,
   updateScheduleSchema,
   deleteScheduleSchema,
+  reviewAdjustmentSchema,
+  reviewUnavailabilitySchema,
   legacyAssignServiceSchema,
   legacyUpsertScheduleSchema,
 ]);
@@ -205,7 +221,7 @@ export async function GET(request: Request) {
 
   const prisma = getPrismaClient();
   const where = professionalId ? { professionalId } : undefined;
-  const [assignments, schedules] = await Promise.all([
+  const [assignments, schedules, adjustments, unavailability] = await Promise.all([
     prisma.professionalService.findMany({
       where,
       include: {
@@ -221,9 +237,27 @@ export async function GET(request: Request) {
       },
       orderBy: [{ dayOfWeek: "asc" }, { startTime: "asc" }],
     }),
+    prisma.professionalScheduleAdjustment.findMany({
+      where,
+      include: {
+        professional: { include: { user: true } },
+        reviewedByUser: { select: { id: true, name: true, lastName: true } },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 50,
+    }),
+    prisma.professionalUnavailability.findMany({
+      where,
+      include: {
+        professional: { include: { user: true } },
+        approvedByUser: { select: { id: true, name: true, lastName: true } },
+      },
+      orderBy: { startsAt: "asc" },
+      take: 50,
+    }),
   ]);
 
-  return NextResponse.json({ assignments, schedules });
+  return NextResponse.json({ assignments, schedules, adjustments, unavailability });
 }
 
 export async function POST(request: Request) {
@@ -313,6 +347,74 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json({ assignment: updated });
+  }
+
+  if (payload.type === "reviewAdjustment") {
+    const adjustment = await prisma.professionalScheduleAdjustment.findUnique({
+      where: { id: payload.adjustmentId },
+      select: { id: true, professionalId: true },
+    });
+
+    if (!adjustment) {
+      return errorResponse("Solicitud de ajuste no encontrada.", 404);
+    }
+
+    const status = payload.action === "approve" ? "CONFIRMED" : "PENDING_CONFIRMATION";
+    const updated = await prisma.professionalScheduleAdjustment.update({
+      where: { id: payload.adjustmentId },
+      data: {
+        status,
+        reviewedByUserId: sessionResult.user.id,
+        note: payload.note ?? undefined,
+      },
+    });
+
+    const { rangeStart, rangeEnd } = getDefaultRefreshRange();
+    await refreshFutureInventoryForProfessional({
+      professionalId: adjustment.professionalId,
+      rangeStart,
+      rangeEnd,
+      prisma,
+    });
+
+    return NextResponse.json({ adjustment: updated });
+  }
+
+  if (payload.type === "reviewUnavailability") {
+    const entry = await prisma.professionalUnavailability.findUnique({
+      where: { id: payload.entryId },
+      select: { id: true, professionalId: true },
+    });
+
+    if (!entry) {
+      return errorResponse("Novedad no encontrada.", 404);
+    }
+
+    const status = payload.action === "approve"
+      ? "APPROVED"
+      : payload.action === "reject"
+        ? "REJECTED"
+        : "CANCELLED";
+
+    const updated = await prisma.professionalUnavailability.update({
+      where: { id: payload.entryId },
+      data: {
+        status,
+        approvedByUserId: payload.action === "approve" ? sessionResult.user.id : undefined,
+        updatedByUserId: sessionResult.user.id,
+        internalNotes: payload.note ?? undefined,
+      },
+    });
+
+    const { rangeStart, rangeEnd } = getDefaultRefreshRange();
+    await refreshFutureInventoryForProfessional({
+      professionalId: entry.professionalId,
+      rangeStart,
+      rangeEnd,
+      prisma,
+    });
+
+    return NextResponse.json({ entry: updated });
   }
 
   if (payload.type === "deactivateAssignment") {

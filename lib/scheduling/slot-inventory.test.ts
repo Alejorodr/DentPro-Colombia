@@ -36,8 +36,10 @@ describe("refreshFutureInventoryForProfessional", () => {
         }),
       },
       professionalWorkingSchedule: {
-        findMany: vi.fn().mockResolvedValue([{ dayOfWeek: 1, startTime: "09:00", endTime: "11:00" }]),
+        findMany: vi.fn().mockResolvedValue([{ id: "sched-1", dayOfWeek: 1, startTime: "09:00", endTime: "11:00", effectiveFrom: null, effectiveTo: null }]),
       },
+      professionalScheduleAdjustment: { findMany: vi.fn().mockResolvedValue([]) },
+      professionalService: { findMany: vi.fn().mockResolvedValue([{ appointmentDurationMinutes: 30, bufferBeforeMinutes: 0, bufferAfterMinutes: 0, service: { durationMinutes: 30 } }]) },
       professionalUnavailability: { findMany: vi.fn().mockResolvedValue([]) },
       appointment: { findMany: vi.fn().mockResolvedValue([]) },
       clinicHoliday: { findMany: vi.fn().mockResolvedValue([]) },

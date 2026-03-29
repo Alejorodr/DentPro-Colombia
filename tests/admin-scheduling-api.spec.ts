@@ -20,6 +20,14 @@ const mockPrisma = {
     findMany: vi.fn(),
     create: vi.fn(),
   },
+  professionalScheduleAdjustment: {
+    findUnique: vi.fn(),
+    update: vi.fn(),
+  },
+  professionalUnavailability: {
+    findUnique: vi.fn(),
+    update: vi.fn(),
+  },
 };
 
 vi.mock("@/lib/authz", () => ({
@@ -48,6 +56,10 @@ beforeEach(() => {
   mockPrisma.professionalService.create.mockResolvedValue({ id: "assign-1" });
   mockPrisma.professionalWorkingSchedule.findMany.mockResolvedValue([]);
   mockPrisma.professionalWorkingSchedule.create.mockResolvedValue({ id: "schedule-1" });
+  mockPrisma.professionalScheduleAdjustment.findUnique.mockResolvedValue({ id: "adj-1", professionalId: "prof-1" });
+  mockPrisma.professionalScheduleAdjustment.update.mockResolvedValue({ id: "adj-1", status: "CONFIRMED" });
+  mockPrisma.professionalUnavailability.findUnique.mockResolvedValue({ id: "ua-1", professionalId: "prof-1" });
+  mockPrisma.professionalUnavailability.update.mockResolvedValue({ id: "ua-1", status: "APPROVED" });
   mockRefreshFutureInventoryForProfessional.mockResolvedValue({ removed: 0, created: 0, skipped: false });
 });
 
@@ -148,5 +160,43 @@ describe("admin scheduling API", () => {
 
     expect(response.status).toBe(400);
     expect(mockPrisma.professionalWorkingSchedule.create).not.toHaveBeenCalled();
+  });
+
+  it("allows admin to approve pending schedule adjustments", async () => {
+    const response = await schedulingPost(
+      new Request("http://localhost/api/admin/scheduling", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "reviewAdjustment",
+          adjustmentId: "33333333-3333-4333-8333-333333333333",
+          action: "approve",
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(mockPrisma.professionalScheduleAdjustment.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ status: "CONFIRMED" }) }),
+    );
+  });
+
+  it("allows admin to approve pending unavailability", async () => {
+    const response = await schedulingPost(
+      new Request("http://localhost/api/admin/scheduling", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "reviewUnavailability",
+          entryId: "44444444-4444-4444-8444-444444444444",
+          action: "approve",
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(mockPrisma.professionalUnavailability.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ status: "APPROVED" }) }),
+    );
   });
 });

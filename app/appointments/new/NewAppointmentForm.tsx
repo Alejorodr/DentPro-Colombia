@@ -5,15 +5,8 @@ import { useEffect, useMemo, useState } from "react";
 import type { UserRole } from "@/lib/auth/roles";
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
 
-type Specialty = {
-  id: string;
-  name: string;
-  defaultSlotDurationMinutes: number;
-};
-
 type Professional = {
   id: string;
-  specialtyId: string;
   user: { name: string; lastName: string };
 };
 
@@ -21,7 +14,7 @@ type TimeSlot = {
   id: string;
   startAt: string;
   endAt: string;
-  status: string;
+  professional: Professional;
 };
 
 type Service = {
@@ -35,11 +28,9 @@ interface NewAppointmentFormProps {
 }
 
 export function NewAppointmentForm({ role }: NewAppointmentFormProps) {
-  const [specialties, setSpecialties] = useState<Specialty[]>([]);
-  const [professionals, setProfessionals] = useState<Professional[]>([]);
+  const [allProfessionals, setAllProfessionals] = useState<Professional[]>([]);
   const [slots, setSlots] = useState<TimeSlot[]>([]);
   const [services, setServices] = useState<Service[]>([]);
-  const [specialtyId, setSpecialtyId] = useState("");
   const [professionalId, setProfessionalId] = useState("");
   const [serviceId, setServiceId] = useState("");
   const [selectedDate, setSelectedDate] = useState("");
@@ -50,17 +41,10 @@ export function NewAppointmentForm({ role }: NewAppointmentFormProps) {
   const [status, setStatus] = useState<string | null>(null);
 
   useEffect(() => {
-    void fetchWithRetry("/api/specialties")
+    void fetchWithRetry("/api/professionals?pageSize=100")
       .then((res) => res.json())
-      .then(setSpecialties)
-      .catch(() => setSpecialties([]));
-  }, []);
-
-  useEffect(() => {
-    void fetchWithRetry("/api/professionals?pageSize=50")
-      .then((res) => res.json())
-      .then((payload) => setProfessionals(payload.data ?? []))
-      .catch(() => setProfessionals([]));
+      .then((payload) => setAllProfessionals((payload.data ?? []).map((item: { id: string; user: Professional["user"] }) => ({ id: item.id, user: item.user }))))
+      .catch(() => setAllProfessionals([]));
   }, []);
 
   useEffect(() => {
@@ -70,35 +54,40 @@ export function NewAppointmentForm({ role }: NewAppointmentFormProps) {
       .catch(() => setServices([]));
   }, []);
 
-  const filteredProfessionals = useMemo(
-    () => professionals.filter((prof) => !specialtyId || prof.specialtyId === specialtyId),
-    [professionals, specialtyId],
-  );
+  useEffect(() => {
+    setProfessionalId("");
+    setTimeSlotId("");
+  }, [serviceId]);
 
   useEffect(() => {
-    if (!professionalId) {
+    if (!serviceId || !selectedDate) {
       setSlots([]);
+      setTimeSlotId("");
       return;
     }
 
-    void fetchWithRetry(`/api/professionals/${professionalId}/slots`)
+    const params = new URLSearchParams({ serviceId, date: selectedDate });
+    void fetchWithRetry(`/api/slots?${params.toString()}`)
       .then((res) => res.json())
-      .then(setSlots)
+      .then((payload) => {
+        const nextSlots = payload.slots ?? [];
+        setSlots(nextSlots);
+      })
       .catch(() => setSlots([]));
-  }, [professionalId]);
+  }, [serviceId, selectedDate]);
+
+  const serviceProfessionals = useMemo(() => {
+    const uniqueIds = new Set(slots.map((slot) => slot.professional.id));
+    const fromSlots = Array.from(uniqueIds)
+      .map((id) => slots.find((slot) => slot.professional.id === id)?.professional)
+      .filter((item): item is Professional => Boolean(item));
+    return fromSlots.length > 0 ? fromSlots : allProfessionals;
+  }, [slots, allProfessionals]);
 
   const availableSlots = useMemo(() => {
-    return slots.filter((slot) => {
-      if (slot.status !== "AVAILABLE") {
-        return false;
-      }
-      if (!selectedDate) {
-        return true;
-      }
-      const date = new Date(slot.startAt).toISOString().split("T")[0];
-      return date === selectedDate;
-    });
-  }, [slots, selectedDate]);
+    const byService = slots.filter((slot) => !professionalId || slot.professional.id === professionalId);
+    return byService;
+  }, [slots, professionalId]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -155,48 +144,41 @@ export function NewAppointmentForm({ role }: NewAppointmentFormProps) {
             ))}
           </select>
         </label>
+
         <label className="space-y-2 text-sm font-semibold text-slate-700">
-          Especialidad
-          <select
-            value={specialtyId}
-            onChange={(event) => setSpecialtyId(event.target.value)}
+          Fecha
+          <input
+            type="date"
+            value={selectedDate}
+            onChange={(event) => {
+              setSelectedDate(event.target.value);
+              setTimeSlotId("");
+            }}
             className="input"
             required
-          >
-            <option value="">Selecciona</option>
-            {specialties.map((specialty) => (
-              <option key={specialty.id} value={specialty.id}>
-                {specialty.name}
-              </option>
-            ))}
-          </select>
+          />
         </label>
+
         <label className="space-y-2 text-sm font-semibold text-slate-700">
           Profesional
           <select
             value={professionalId}
-            onChange={(event) => setProfessionalId(event.target.value)}
+            onChange={(event) => {
+              setProfessionalId(event.target.value);
+              setTimeSlotId("");
+            }}
             className="input"
             required
           >
             <option value="">Selecciona</option>
-            {filteredProfessionals.map((professional) => (
+            {serviceProfessionals.map((professional) => (
               <option key={professional.id} value={professional.id}>
                 {professional.user.name} {professional.user.lastName}
               </option>
             ))}
           </select>
         </label>
-        <label className="space-y-2 text-sm font-semibold text-slate-700">
-          Fecha
-          <input
-            type="date"
-            value={selectedDate}
-            onChange={(event) => setSelectedDate(event.target.value)}
-            className="input"
-            required
-          />
-        </label>
+
         <label className="space-y-2 text-sm font-semibold text-slate-700">
           Slot disponible
           <select
