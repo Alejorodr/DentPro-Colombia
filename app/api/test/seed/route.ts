@@ -1,9 +1,10 @@
 import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
-import { AppointmentStatus, Prisma, Role, TimeSlotStatus } from "@prisma/client";
+import { AppointmentStatus, Prisma, ProfessionalScheduleStatus, Role, TimeSlotStatus } from "@prisma/client";
 
 import { getPrismaClient } from "@/lib/prisma";
 import { logger } from "@/lib/logger";
+import { refreshFutureInventoryForProfessional } from "@/lib/scheduling/slot-inventory";
 
 const E2E_SCHEMA_HINT = "Database schema not initialized for E2E runtime. Required tables not found.";
 
@@ -115,6 +116,60 @@ export async function POST(request: Request) {
       create: { userId: professionalUser.id, specialtyId: specialty.id, slotDurationMinutes: 30, active: true },
     });
 
+    await prisma.professionalService.upsert({
+      where: { professionalId_serviceId: { professionalId: professional.id, serviceId: service.id } },
+      update: {
+        active: true,
+        onlineBookable: true,
+        appointmentDurationMinutes: service.durationMinutes,
+        bufferBeforeMinutes: 0,
+        bufferAfterMinutes: 0,
+      },
+      create: {
+        professionalId: professional.id,
+        serviceId: service.id,
+        active: true,
+        onlineBookable: true,
+        appointmentDurationMinutes: service.durationMinutes,
+        bufferBeforeMinutes: 0,
+        bufferAfterMinutes: 0,
+        notes: "E2E baseline assignment",
+      },
+    });
+
+    await Promise.all(
+      [1, 2, 3, 4, 5].map((dayOfWeek) =>
+        prisma.professionalWorkingSchedule.upsert({
+          where: {
+            professionalId_dayOfWeek_startTime_endTime_timezone: {
+              professionalId: professional.id,
+              dayOfWeek,
+              startTime: "09:00",
+              endTime: "17:00",
+              timezone: "America/Bogota",
+            },
+          },
+          update: {
+            active: true,
+            status: ProfessionalScheduleStatus.CONFIRMED,
+            createdByUserId: admin.id,
+            notes: "E2E baseline schedule",
+          },
+          create: {
+            professionalId: professional.id,
+            dayOfWeek,
+            startTime: "09:00",
+            endTime: "17:00",
+            timezone: "America/Bogota",
+            active: true,
+            status: ProfessionalScheduleStatus.CONFIRMED,
+            createdByUserId: admin.id,
+            notes: "E2E baseline schedule",
+          },
+        }),
+      ),
+    );
+
     const patientUser = await prisma.user.upsert({
       where: { email: "paciente1@dentpro.test" },
       update: { name: "Julia", lastName: "Vargas", role: Role.PACIENTE },
@@ -175,6 +230,12 @@ export async function POST(request: Request) {
         status: AppointmentStatus.CONFIRMED,
       },
     });
+
+    const rangeStart = new Date();
+    rangeStart.setMinutes(0, 0, 0);
+    const rangeEnd = new Date(rangeStart);
+    rangeEnd.setDate(rangeEnd.getDate() + 14);
+    await refreshFutureInventoryForProfessional({ professionalId: professional.id, rangeStart, rangeEnd, prisma });
 
     logger.info({ event: "test.seed.success", route: "/api/test/seed", status: 200 });
     return NextResponse.json({

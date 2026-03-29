@@ -38,6 +38,7 @@ export function LoginFormCard({
   const { data: session, status } = useSession();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isHydrated, setIsHydrated] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -46,9 +47,13 @@ export function LoginFormCard({
     [callbackUrl],
   );
 
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+
   const canSubmit = useMemo(
-    () => email.trim().length > 0 && password.trim().length > 0 && !isSubmitting,
-    [email, isSubmitting, password],
+    () => isHydrated && email.trim().length > 0 && password.trim().length > 0 && !isSubmitting,
+    [email, isHydrated, isSubmitting, password],
   );
 
   useEffect(() => {
@@ -160,6 +165,7 @@ export function LoginFormCard({
       ) : null}
 
       <form className="space-y-4" onSubmit={handleSubmit} aria-busy={isSubmitting}>
+        {isHydrated ? <span className="sr-only" data-testid="login-form-ready">ready</span> : null}
         <label className="block space-y-1.5 text-left" htmlFor="login-email">
           <span className="text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300">
             Correo electrónico

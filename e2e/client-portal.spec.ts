@@ -3,6 +3,10 @@ import { test, expect } from "@playwright/test";
 import { seedTestData } from "./utils/seed";
 import { E2E_ROUTES, E2E_SELECTORS, E2E_TEST_IDS } from "./utils/constants";
 
+function formatDateInput(date: Date) {
+  return date.toISOString().split("T")[0];
+}
+
 test("patient can book an appointment from the portal", async ({ page, request }) => {
   const hasDatabase = Boolean(process.env.DATABASE_URL);
   test.skip(!hasDatabase, "DATABASE_URL is required for client portal test.");
@@ -35,9 +39,26 @@ test("patient can book an appointment from the portal", async ({ page, request }
   expect(selectedService).toBeTruthy();
   await page.getByRole("button", { name: selectedService.name }).click();
 
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  const dateValue = tomorrow.toISOString().split("T")[0];
+  const now = new Date();
+  const dateCandidates = Array.from({ length: 7 }, (_, index) => {
+    const date = new Date(now);
+    date.setDate(now.getDate() + index);
+    return formatDateInput(date);
+  });
+  let dateValue = dateCandidates[0];
+  let seededSlots: Array<{ id: string }> = [];
+  for (const candidate of dateCandidates) {
+    const slotsResponse = await request.get(`/api/slots?serviceId=${selectedService.id}&date=${candidate}`);
+    expect(slotsResponse.status()).toBe(200);
+    const payload = (await slotsResponse.json()) as { slots?: Array<{ id: string }> };
+    const slots = payload.slots ?? [];
+    if (slots.length > 0) {
+      dateValue = candidate;
+      seededSlots = slots;
+      break;
+    }
+  }
+  expect(seededSlots.length).toBeGreaterThan(0);
   await page.getByTestId(`date-${dateValue}`).click();
 
   const slotButton = page.locator("[data-testid^='slot-']").first();
