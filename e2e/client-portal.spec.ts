@@ -29,8 +29,10 @@ test("patient can book an appointment from the portal", async ({ page, request }
 
   const servicesResponse = await request.get("/api/services?active=true");
   expect(servicesResponse.status()).toBe(200);
-  const services = (await servicesResponse.json()) as Array<{ id: string; name: string }>;
+  const servicesPayload = (await servicesResponse.json()) as { data?: Array<{ id: string; name: string }> };
+  const services = servicesPayload.data ?? [];
   const selectedService = services.find((service) => service.name === "Limpieza Dental") ?? services[0];
+  expect(selectedService).toBeTruthy();
   await page.getByRole("button", { name: selectedService.name }).click();
 
   const tomorrow = new Date();

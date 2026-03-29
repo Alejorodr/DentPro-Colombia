@@ -5,6 +5,7 @@ import { errorResponse } from "@/app/api/_utils/response";
 import { parseJson } from "@/app/api/_utils/validation";
 import { requireRole, requireSession } from "@/lib/authz";
 import { getPrismaClient } from "@/lib/prisma";
+import { refreshFutureInventoryForAllProfessionals } from "@/lib/scheduling/slot-inventory";
 
 const holidaySchema = z.object({
   date: z.string().trim().min(1),
@@ -63,6 +64,12 @@ export async function POST(request: Request) {
       name: payload.name.trim(),
     },
   });
+
+  const rangeStart = new Date();
+  rangeStart.setMinutes(0, 0, 0);
+  const rangeEnd = new Date(rangeStart);
+  rangeEnd.setDate(rangeEnd.getDate() + 45);
+  await refreshFutureInventoryForAllProfessionals({ rangeStart, rangeEnd, prisma });
 
   return NextResponse.json({ holiday }, { status: 201 });
 }

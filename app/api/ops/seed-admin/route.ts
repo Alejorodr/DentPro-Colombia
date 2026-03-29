@@ -299,8 +299,18 @@ export async function POST(request: Request) {
           const startAt = buildSlot(slot.date, slot.hour, slot.minute);
           const endAt = new Date(startAt.getTime() + duration * 60_000);
 
-          const timeSlot = await prisma.timeSlot.create({
-            data: {
+          const timeSlot = await prisma.timeSlot.upsert({
+            where: {
+              professionalId_startAt_endAt: {
+                professionalId: professional.id,
+                startAt,
+                endAt,
+              },
+            },
+            update: {
+              status: slot.status === AppointmentStatus.CANCELLED ? TimeSlotStatus.AVAILABLE : TimeSlotStatus.BOOKED,
+            },
+            create: {
               professionalId: professional.id,
               startAt,
               endAt,
@@ -308,8 +318,18 @@ export async function POST(request: Request) {
             },
           });
 
-          await prisma.appointment.create({
-            data: {
+          await prisma.appointment.upsert({
+            where: { timeSlotId: timeSlot.id },
+            update: {
+              patientId: patient.id,
+              professionalId: professional.id,
+              serviceId: service.id,
+              serviceName: service.name,
+              servicePriceCents: service.priceCents,
+              reason: service.name,
+              status: slot.status,
+            },
+            create: {
               patientId: patient.id,
               professionalId: professional.id,
               timeSlotId: timeSlot.id,
@@ -348,19 +368,39 @@ export async function POST(request: Request) {
 
         for (const slot of demoSlots) {
           const endAt = new Date(slot.startAt.getTime() + (primaryProfessional.slotDurationMinutes ?? 30) * 60_000);
-          const timeSlot = await prisma.timeSlot.create({
-            data: {
+          const timeSlot = await prisma.timeSlot.upsert({
+            where: {
+              professionalId_startAt_endAt: {
+                professionalId: primaryProfessional.id,
+                startAt: slot.startAt,
+                endAt,
+              },
+            },
+            update: {
+              status: TimeSlotStatus.BOOKED,
+            },
+            create: {
               professionalId: primaryProfessional.id,
               startAt: slot.startAt,
               endAt,
-              status: slot.status === AppointmentStatus.CONFIRMED ? TimeSlotStatus.BOOKED : TimeSlotStatus.BOOKED,
+              status: TimeSlotStatus.BOOKED,
             },
           });
 
           const service = services[0];
 
-          await prisma.appointment.create({
-            data: {
+          await prisma.appointment.upsert({
+            where: { timeSlotId: timeSlot.id },
+            update: {
+              patientId: demoPatient.id,
+              professionalId: primaryProfessional.id,
+              serviceId: service.id,
+              serviceName: service.name,
+              servicePriceCents: service.priceCents,
+              reason: service.name,
+              status: slot.status,
+            },
+            create: {
               patientId: demoPatient.id,
               professionalId: primaryProfessional.id,
               timeSlotId: timeSlot.id,

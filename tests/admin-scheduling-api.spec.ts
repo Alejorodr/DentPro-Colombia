@@ -4,6 +4,7 @@ import { POST as schedulingPost } from "@/app/api/admin/scheduling/route";
 
 const mockRequireSession = vi.fn();
 const mockRequireRole = vi.fn();
+const mockRefreshFutureInventoryForProfessional = vi.fn();
 
 const mockPrisma = {
   professionalProfile: {
@@ -30,6 +31,10 @@ vi.mock("@/lib/prisma", () => ({
   getPrismaClient: () => mockPrisma,
 }));
 
+vi.mock("@/lib/scheduling/slot-inventory", () => ({
+  refreshFutureInventoryForProfessional: (...args: unknown[]) => mockRefreshFutureInventoryForProfessional(...args),
+}));
+
 beforeEach(() => {
   vi.clearAllMocks();
   mockRequireSession.mockResolvedValue({ user: { id: "admin-id", role: "ADMINISTRADOR" } });
@@ -43,6 +48,7 @@ beforeEach(() => {
   mockPrisma.professionalService.create.mockResolvedValue({ id: "assign-1" });
   mockPrisma.professionalWorkingSchedule.findMany.mockResolvedValue([]);
   mockPrisma.professionalWorkingSchedule.create.mockResolvedValue({ id: "schedule-1" });
+  mockRefreshFutureInventoryForProfessional.mockResolvedValue({ removed: 0, created: 0, skipped: false });
 });
 
 describe("admin scheduling API", () => {
@@ -62,6 +68,7 @@ describe("admin scheduling API", () => {
 
     expect(response.status).toBe(201);
     expect(mockPrisma.professionalService.create).toHaveBeenCalledTimes(1);
+    expect(mockRefreshFutureInventoryForProfessional).toHaveBeenCalledTimes(1);
   });
 
   it("rejects duplicated professional-service assignment", async () => {
@@ -121,6 +128,7 @@ describe("admin scheduling API", () => {
 
     expect(response.status).toBe(201);
     expect(mockPrisma.professionalWorkingSchedule.create).toHaveBeenCalledTimes(1);
+    expect(mockRefreshFutureInventoryForProfessional).toHaveBeenCalledTimes(1);
   });
 
   it("rejects invalid schedule rows", async () => {

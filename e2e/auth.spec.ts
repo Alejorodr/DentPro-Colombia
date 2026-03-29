@@ -11,11 +11,18 @@ const authUser = {
 
 async function submitLogin(page: Page, params: { email: string; password: string }) {
   await page.goto(E2E_ROUTES.login, { waitUntil: "domcontentloaded" });
-  await page.locator(E2E_SELECTORS.loginEmail).fill(params.email);
-  await page.locator(E2E_SELECTORS.loginPassword).fill(params.password);
+  const emailInput = page.locator(E2E_SELECTORS.loginEmail);
+  const passwordInput = page.locator(E2E_SELECTORS.loginPassword);
+  await expect(emailInput).toBeVisible();
+  await expect(passwordInput).toBeVisible();
+
+  await emailInput.fill(params.email);
+  await passwordInput.fill(params.password);
+  await expect(emailInput).toHaveValue(params.email);
+  await expect(passwordInput).toHaveValue(params.password);
 
   const submitButton = page.locator(E2E_SELECTORS.loginSubmit);
-  await expect(submitButton).toBeEnabled();
+  await expect(submitButton).toBeEnabled({ timeout: 10_000 });
   const callbackResponsePromise = page.waitForResponse((response) =>
     response.url().includes("/api/auth/callback/credentials"),
   );

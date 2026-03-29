@@ -5,8 +5,7 @@ import { getPrismaClient } from "@/lib/prisma";
 import { getSessionUser, isAuthorized } from "@/app/api/_utils/auth";
 import { errorResponse } from "@/app/api/_utils/response";
 import { parseJson } from "@/app/api/_utils/validation";
-import { TimeSlotStatus } from "@prisma/client";
-import { buildSlotsWithBuffer, getAppointmentBufferMinutes } from "@/lib/appointments/scheduling";
+import { refreshFutureInventoryForProfessional } from "@/lib/scheduling/slot-inventory";
 
 const generateSlotsSchema = z.object({
   startAt: z.string().trim().min(1),
@@ -54,18 +53,16 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     return errorResponse("Duración inválida.");
   }
 
-  const bufferMinutes = getAppointmentBufferMinutes();
-  const slots = buildSlotsWithBuffer(startAt, endAt, duration, bufferMinutes);
-
-  const created = await prisma.timeSlot.createMany({
-    data: slots.map((slot) => ({
-      professionalId: professional.id,
-      startAt: slot.startAt,
-      endAt: slot.endAt,
-      status: TimeSlotStatus.AVAILABLE,
-    })),
-    skipDuplicates: true,
+  const refreshed = await refreshFutureInventoryForProfessional({
+    professionalId: professional.id,
+    rangeStart: startAt,
+    rangeEnd: endAt,
+    prisma,
   });
 
-  return NextResponse.json({ created: created.count });
+  return NextResponse.json({
+    created: refreshed.created,
+    removed: refreshed.removed,
+    durationMinutes: duration,
+  });
 }

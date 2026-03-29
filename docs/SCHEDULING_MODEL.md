@@ -161,3 +161,50 @@ Still deferred to Phase 3:
 - full slot materialization/regeneration/invalidation redesign
 - end-to-end receptionist/patient booking UX overhaul
 - retirement/migration strategy for legacy availability artifacts (`AvailabilityRule`, `AvailabilityException`, `AvailabilityBlock`)
+
+## Phase 3: operational slot inventory reliability
+
+Phase 3 defines `TimeSlot` as a **materialized projection** of effective availability (not an independent scheduling truth).
+
+### Canonical booking truth
+
+Booking now relies on both layers together:
+
+1. `TimeSlot` inventory rows provide selectable, transactional booking units.
+2. `getEffectiveAvailability` remains the operational validator for schedule, unavailability, holidays, assignment and overlap checks.
+
+A slot must pass both inventory and effective validation before booking/rescheduling.
+
+### Slot materialization ownership
+
+`lib/scheduling/slot-inventory.ts` owns deterministic future inventory refresh.
+
+- Inputs: confirmed baseline schedule + approved/pending unavailability + clinic holidays + existing non-cancelled appointments.
+- Behavior: recomputes effective future windows and materializes deterministic slots by professional duration.
+- Safety: deletes only **future unbooked AVAILABLE** slots in range, then recreates candidates with `createMany(..., skipDuplicates: true)`.
+- Constraint safety: keeps the unique key `(professionalId, startAt, endAt)` unchanged.
+
+### Regeneration triggers (phase 3 scope)
+
+Future inventory refresh is triggered after operational changes that affect bookability:
+
+- admin assignment create/update/deactivate (`/api/admin/scheduling`)
+- admin baseline schedule create/update/deactivate (`/api/admin/scheduling`)
+- clinic holiday creation (`/api/admin/holidays`)
+- professional schedule confirmation and new unavailability entries (`/api/professional/schedule`)
+- explicit admin manual generation endpoint (`/api/professionals/[id]/slots/generate`), now implemented as range refresh
+
+### Seed idempotency
+
+Seed/setup routes now write slot+appointment fixtures conflict-safely:
+
+- `/api/ops/seed-admin`
+- `/api/test/seed`
+
+Both use slot `upsert` keyed by `(professionalId,startAt,endAt)` and appointment `upsert` keyed by `timeSlotId`, preventing repeated-seed duplicate slot failures (`P2002`).
+
+### What remains after phase 3
+
+- optional background/cron orchestration for periodic rolling-horizon inventory refresh
+- explicit admin controls for regeneration horizon tuning by clinic
+- phased retirement strategy for legacy `AvailabilityRule` / `AvailabilityException` / `AvailabilityBlock` models
