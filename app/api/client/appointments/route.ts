@@ -10,6 +10,7 @@ import { enforceRateLimit } from "@/app/api/_utils/ratelimit";
 import { getRequestId } from "@/app/api/_utils/request";
 import { logger } from "@/lib/logger";
 import { requireRole, requireSession } from "@/lib/authz";
+import { assertSlotBookable } from "@/lib/scheduling/effective-availability";
 import * as Sentry from "@sentry/nextjs";
 
 const patientDetailsSchema = z.object({
@@ -104,23 +105,13 @@ export async function POST(request: Request) {
     if (!timeSlot) {
       return errorResponse("Slot no encontrado.", 404);
     }
-
-
-    const assignment = await prisma.professionalService.findFirst({
-      where: {
-        professionalId: timeSlot.professionalId,
-        serviceId: service.id,
-        active: true,
-        onlineBookable: true,
-      },
+    const availabilityCheck = await assertSlotBookable({
+      slotId: timeSlot.id,
+      serviceId: service.id,
+      professionalId: timeSlot.professionalId,
     });
-
-    if (!assignment) {
-      return errorResponse("El profesional no tiene este servicio habilitado para agendamiento.", 409);
-    }
-
-    if (timeSlot.status !== TimeSlotStatus.AVAILABLE) {
-      return errorResponse("El slot no está disponible.", 409);
+    if (!availabilityCheck.ok) {
+      return errorResponse(availabilityCheck.message, availabilityCheck.status);
     }
 
     const appointment = await prisma.$transaction(async (tx) => {

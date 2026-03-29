@@ -145,6 +145,7 @@ model User {
   scheduleAdjustmentsReviewed ProfessionalScheduleAdjustment[] @relation("ScheduleAdjustmentReviewedBy")
   unavailabilityCreated ProfessionalUnavailability[] @relation("UnavailabilityCreatedBy")
   unavailabilityApproved ProfessionalUnavailability[] @relation("UnavailabilityApprovedBy")
+  unavailabilityUpdated ProfessionalUnavailability[] @relation("UnavailabilityUpdatedBy")
 
   @@index([role])
 }
@@ -560,13 +561,17 @@ model ProfessionalUnavailability {
   endsAt           DateTime
   fullDay          Boolean              @default(false)
   reason           String?
+  notes            String?
+  internalNotes    String?
   createdByUserId  String?              @db.Uuid
   approvedByUserId String?              @db.Uuid
+  updatedByUserId  String?              @db.Uuid
   createdAt        DateTime             @default(now())
   updatedAt        DateTime             @updatedAt
   professional     ProfessionalProfile  @relation(fields: [professionalId], references: [id], onDelete: Cascade)
   createdByUser    User?                @relation("UnavailabilityCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
   approvedByUser   User?                @relation("UnavailabilityApprovedBy", fields: [approvedByUserId], references: [id], onDelete: SetNull)
+  updatedByUser    User?                @relation("UnavailabilityUpdatedBy", fields: [updatedByUserId], references: [id], onDelete: SetNull)
 
   @@index([professionalId, startsAt])
   @@index([type, status])

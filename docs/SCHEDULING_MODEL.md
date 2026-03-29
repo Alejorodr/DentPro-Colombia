@@ -1,4 +1,4 @@
-# Scheduling model (phase 1 foundation)
+# Scheduling model (phase 1 + phase 2 effective availability)
 
 ## Scope of this phase
 
@@ -98,10 +98,66 @@ Seed now creates:
 
 This gives QA and manual testing immediate operational data for admin scheduling flows.
 
-## Phase 2 direction
+## Phase 2: unified effective availability engine
 
-Phase 2 should build on this foundation by introducing:
+Phase 2 introduces one centralized backend engine (`lib/scheduling/effective-availability.ts`) as the operational source of truth for bookability.
 
-- effective availability generation that prioritizes baseline schedule + approved adjustments + unavailability
-- clear precedence rules and conflict resolution
-- receptionist/patient booking UX refinements based on the formal domain introduced here
+### Operational unavailability model
+
+`ProfessionalUnavailability` is the persisted operational exception model used by the engine.
+
+- reason types: `VACATION`, `SICK_LEAVE`, `TRAINING`, `ADMIN_TIME`, `PERSONAL_LEAVE`, `INTERNAL_BLOCK`, `OTHER`
+- status lifecycle: `PENDING`, `APPROVED`, `REJECTED`, `CANCELLED`
+- supports full-day and partial-day ranges
+- auditability fields include:
+  - `createdByUserId`
+  - `approvedByUserId`
+  - `updatedByUserId`
+  - `notes`
+  - `internalNotes`
+- legacy `reason` field is preserved for compatibility and mapped to `notes` in new writes
+
+### Effective availability data sources
+
+The engine computes effective slots using:
+
+1. `ProfessionalService` eligibility (`active` + `onlineBookable`)
+2. `ProfessionalWorkingSchedule` confirmed baseline ranges
+3. `ProfessionalUnavailability` blocks
+4. `ClinicHoliday` full-day exclusions
+5. non-cancelled `Appointment` occupied ranges
+6. existing `TimeSlot` records as booking candidates
+7. service/assignment duration requirements + buffer checks
+
+### Precedence and behavior
+
+For each candidate slot, the engine applies:
+
+1. service eligibility check
+2. clinic holiday exclusion
+3. baseline schedule containment
+4. unavailability and occupied-range overlap checks
+5. slot status check (`AVAILABLE`)
+6. appointment buffer conflict checks
+7. duration sufficiency check based on assignment override or service duration
+
+The same engine is now used by:
+
+- `GET /api/slots` (with optional `professionalId`)
+- `GET /api/availability/effective` (range-based API)
+- appointment booking validation (`POST /api/appointments`, `POST /api/client/appointments`)
+- reschedule validation (`POST /api/appointments/[id]/reschedule`)
+
+### Compatibility and deferred work
+
+Preserved for compatibility in Phase 2:
+
+- existing `TimeSlot` model and slot lifecycle
+- existing Phase 1 admin schedule management flows
+- existing professional schedule workflow for creating unavailability entries
+
+Still deferred to Phase 3:
+
+- full slot materialization/regeneration/invalidation redesign
+- end-to-end receptionist/patient booking UX overhaul
+- retirement/migration strategy for legacy availability artifacts (`AvailabilityRule`, `AvailabilityException`, `AvailabilityBlock`)

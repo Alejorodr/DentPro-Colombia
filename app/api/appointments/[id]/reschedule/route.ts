@@ -13,6 +13,7 @@ import { getAppointmentBufferMinutes, hasBufferConflict } from "@/lib/appointmen
 import { sendAppointmentEmail } from "@/lib/notifications/email";
 import * as Sentry from "@sentry/nextjs";
 import { recordAppointmentEvent } from "@/lib/appointments/events";
+import { assertSlotBookable } from "@/lib/scheduling/effective-availability";
 
 const rescheduleSchema = z
   .object({
@@ -151,14 +152,18 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     return errorResponse("Nuevo slot no encontrado.", 404);
   }
 
-  if (newSlot.status !== TimeSlotStatus.AVAILABLE) {
+  const availabilityCheck = await assertSlotBookable({
+    slotId: newSlot.id,
+    serviceId: appointment.serviceId,
+  });
+  if (!availabilityCheck.ok) {
     const suggestions = await getSuggestedSlots(prisma, newSlot.professionalId, newSlot.startAt, appointment.timeSlotId);
     return NextResponse.json(
       {
-        error: "El nuevo slot no está disponible.",
+        error: availabilityCheck.message,
         suggestions,
       },
-      { status: 409 },
+      { status: availabilityCheck.status },
     );
   }
 
