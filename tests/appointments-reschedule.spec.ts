@@ -12,10 +12,26 @@ const mockPrisma = {
   appointment: {
     findUnique: vi.fn(),
     update: vi.fn(),
+    findMany: vi.fn(),
   },
   timeSlot: {
     findUnique: vi.fn(),
     updateMany: vi.fn(),
+    findMany: vi.fn(),
+  },
+  service: {
+    findUnique: vi.fn(),
+  },
+  professionalService: {
+    findMany: vi.fn(),
+  },
+  clinicHoliday: {
+    findMany: vi.fn(),
+  },
+  professionalWorkingSchedule: {
+    findMany: vi.fn(),
+  },
+  professionalUnavailability: {
     findMany: vi.fn(),
   },
   patientProfile: {
@@ -55,6 +71,21 @@ describe("appointment rescheduling", () => {
     mockRequireRole.mockReturnValue(null);
     mockRequireOwnershipOrRole.mockReturnValue(null);
     mockPrisma.timeSlot.findMany.mockResolvedValue([]);
+    mockPrisma.service.findUnique.mockResolvedValue({ id: "service-1", active: true, durationMinutes: 60 });
+    mockPrisma.professionalService.findMany.mockResolvedValue([
+      {
+        professionalId: "prof-1",
+        appointmentDurationMinutes: null,
+        bufferBeforeMinutes: null,
+        bufferAfterMinutes: null,
+      },
+    ]);
+    mockPrisma.clinicHoliday.findMany.mockResolvedValue([]);
+    mockPrisma.professionalWorkingSchedule.findMany.mockResolvedValue([
+      { professionalId: "prof-1", dayOfWeek: 3, startTime: "00:00", endTime: "23:59" },
+    ]);
+    mockPrisma.professionalUnavailability.findMany.mockResolvedValue([]);
+    mockPrisma.appointment.findMany.mockResolvedValue([]);
   });
 
   it("returns 409 when a slot becomes unavailable between reschedules", async () => {
@@ -79,10 +110,23 @@ describe("appointment rescheduling", () => {
       status: "AVAILABLE",
     };
     const bookedSlot = { ...availableSlot, status: "BOOKED" };
+    const candidateSlotForAvailability = {
+      ...availableSlot,
+      professional: {
+        id: "prof-1",
+        user: { name: "Luis", lastName: "Perez" },
+        specialty: null,
+      },
+    };
 
     mockPrisma.appointment.findUnique.mockResolvedValue(appointment);
+    mockPrisma.timeSlot.findMany
+      .mockResolvedValueOnce([candidateSlotForAvailability])
+      .mockResolvedValue([]);
     mockPrisma.timeSlot.findUnique
       .mockResolvedValueOnce(availableSlot)
+      .mockResolvedValueOnce(availableSlot)
+      .mockResolvedValueOnce(bookedSlot)
       .mockResolvedValueOnce(bookedSlot);
 
     const updatedAppointment = {
@@ -127,6 +171,6 @@ describe("appointment rescheduling", () => {
 
     expect(secondResponse.status).toBe(409);
     const payload = await secondResponse.json();
-    expect(payload).toMatchObject({ error: "El nuevo slot no está disponible.", suggestions: [] });
+    expect(payload).toMatchObject({ error: "El horario seleccionado no está disponible operativamente.", suggestions: [] });
   });
 });

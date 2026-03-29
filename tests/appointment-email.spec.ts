@@ -21,9 +21,20 @@ const mockPrisma = {
   },
   professionalService: {
     findFirst: vi.fn(),
+    findMany: vi.fn(),
+  },
+  clinicHoliday: {
+    findMany: vi.fn(),
+  },
+  professionalWorkingSchedule: {
+    findMany: vi.fn(),
+  },
+  professionalUnavailability: {
+    findMany: vi.fn(),
   },
   appointment: {
     create: vi.fn(),
+    findMany: vi.fn(),
   },
   notificationPreference: {
     findUnique: vi.fn(),
@@ -73,6 +84,11 @@ beforeEach(() => {
     active: true,
     onlineBookable: true,
   });
+  mockPrisma.professionalService.findMany.mockResolvedValue([]);
+  mockPrisma.clinicHoliday.findMany.mockResolvedValue([]);
+  mockPrisma.professionalWorkingSchedule.findMany.mockResolvedValue([]);
+  mockPrisma.professionalUnavailability.findMany.mockResolvedValue([]);
+  mockPrisma.appointment.findMany.mockResolvedValue([]);
 });
 
 describe("appointment email notifications", () => {
@@ -111,6 +127,29 @@ describe("appointment email notifications", () => {
       active: true,
       onlineBookable: true,
     });
+    mockPrisma.professionalService.findMany.mockResolvedValue([
+      {
+        professionalId: timeSlot.professionalId,
+        appointmentDurationMinutes: null,
+        bufferBeforeMinutes: null,
+        bufferAfterMinutes: null,
+      },
+    ]);
+    mockPrisma.professionalWorkingSchedule.findMany.mockResolvedValue([
+      { professionalId: timeSlot.professionalId, dayOfWeek: 2, startTime: "08:00", endTime: "18:00" },
+    ]);
+    mockPrisma.timeSlot.findMany
+      .mockResolvedValueOnce([
+        {
+          ...timeSlot,
+          professional: {
+            id: timeSlot.professionalId,
+            user: { name: "Luis", lastName: "Perez" },
+            specialty: null,
+          },
+        },
+      ])
+      .mockResolvedValue([]);
     mockPrisma.notificationPreference.findUnique.mockResolvedValue(null);
     mockPrisma.$transaction.mockImplementation(async (callback: (tx: typeof mockPrisma) => Promise<typeof appointment>) => {
       mockPrisma.timeSlot.updateMany.mockResolvedValue({ count: 1 });
@@ -169,6 +208,29 @@ describe("appointment email notifications", () => {
       active: true,
       onlineBookable: true,
     });
+    mockPrisma.professionalService.findMany.mockResolvedValue([
+      {
+        professionalId: timeSlot.professionalId,
+        appointmentDurationMinutes: null,
+        bufferBeforeMinutes: null,
+        bufferAfterMinutes: null,
+      },
+    ]);
+    mockPrisma.professionalWorkingSchedule.findMany.mockResolvedValue([
+      { professionalId: timeSlot.professionalId, dayOfWeek: 5, startTime: "08:00", endTime: "18:00" },
+    ]);
+    mockPrisma.timeSlot.findMany
+      .mockResolvedValueOnce([
+        {
+          ...timeSlot,
+          professional: {
+            id: timeSlot.professionalId,
+            user: { name: "Luis", lastName: "Perez" },
+            specialty: null,
+          },
+        },
+      ])
+      .mockResolvedValue([]);
     mockPrisma.notificationPreference.findUnique.mockResolvedValue({ emailEnabled: false });
     mockPrisma.$transaction.mockImplementation(async (callback: (tx: typeof mockPrisma) => Promise<typeof appointment>) => {
       mockPrisma.timeSlot.updateMany.mockResolvedValue({ count: 1 });
@@ -212,6 +274,7 @@ describe("appointment email notifications", () => {
       priceCents: 10000,
     });
     mockPrisma.professionalService.findFirst.mockResolvedValue(null);
+    mockPrisma.professionalService.findMany.mockResolvedValue([]);
 
     const request = new Request("http://localhost/api/appointments", {
       method: "POST",
@@ -229,7 +292,7 @@ describe("appointment email notifications", () => {
 
     expect(response.status).toBe(409);
     expect(body).toMatchObject({
-      error: "El profesional no tiene este servicio habilitado para agendamiento.",
+      error: "El horario seleccionado no está disponible operativamente.",
     });
     expect(mockPrisma.$transaction).not.toHaveBeenCalled();
     expect(mockTransportSend).not.toHaveBeenCalled();
