@@ -27,10 +27,18 @@ export async function GET(request: Request) {
       where: {
         status: TimeSlotStatus.AVAILABLE,
         startAt: { gte: now },
-        professional: { active: true },
+        professional: {
+          active: true,
+          professionalServices: {
+            some: {
+              active: true,
+              onlineBookable: true,
+              service: { active: true },
+            },
+          },
+        },
       },
       select: {
-        id: true,
         startAt: true,
         professional: {
           select: {
@@ -45,7 +53,6 @@ export async function GET(request: Request) {
     });
 
     const payload = slots.map((slot) => ({
-      id: slot.id,
       startsAt: slot.startAt.toISOString(),
       professional: `${slot.professional.user.name} ${slot.professional.user.lastName}`.trim(),
       specialty: slot.professional.specialty.name,
@@ -53,7 +60,12 @@ export async function GET(request: Request) {
 
     logger.info({ event: "public.slots.success", limit: parsedQuery.data.limit, returned: payload.length });
     return NextResponse.json(
-      { slots: payload, generatedAt: now.toISOString() },
+      {
+        contract: "teaser",
+        note: "Disponibilidad orientativa para marketing. La reserva operativa usa /api/slots con servicio y fecha.",
+        slots: payload,
+        generatedAt: now.toISOString(),
+      },
       {
         headers: {
           "Cache-Control": "public, s-maxage=120, stale-while-revalidate=600",

@@ -92,24 +92,70 @@ export function evaluateEffectiveSlot(params: {
 }
 
 function buildWorkingIntervals(params: {
-  schedules: Array<{ dayOfWeek: number; startTime: string; endTime: string }>;
+  schedules: Array<{ id?: string; dayOfWeek: number; startTime: string; endTime: string; effectiveFrom?: Date | null; effectiveTo?: Date | null }>;
+  adjustments?: Array<{ scheduleId?: string | null; dayOfWeek: number | null; startTime: string | null; endTime: string | null; effectiveFrom: Date; effectiveTo: Date | null }>;
   dateStart: Date;
   dateEnd: Date;
   timeZone: string;
 }): TimeInterval[] {
-  const { schedules, dateStart, dateEnd, timeZone } = params;
+  const { schedules, dateStart, dateEnd, timeZone, adjustments = [] } = params;
   const intervals: TimeInterval[] = [];
+
+  const appliesToDay = (effectiveFrom: Date | null | undefined, effectiveTo: Date | null | undefined, dayStart: Date, dayEnd: Date) => {
+    if (effectiveFrom && effectiveFrom >= dayEnd) return false;
+    if (effectiveTo && effectiveTo <= dayStart) return false;
+    return true;
+  };
 
   for (let cursor = dateStart; cursor < dateEnd; cursor = addDaysZoned(cursor, 1, timeZone)) {
     const parts = getZonedDateParts(cursor, timeZone);
+    const dayStart = fromZonedDateParts({ ...parts, hour: 0, minute: 0, second: 0 }, timeZone);
+    const dayEnd = addDaysZoned(dayStart, 1, timeZone);
     const dayOfWeek = new Date(Date.UTC(parts.year, parts.month - 1, parts.day)).getUTCDay();
+    const dayAdjustments = adjustments.filter((item) =>
+      item.dayOfWeek === dayOfWeek
+      && item.startTime
+      && item.endTime
+      && appliesToDay(item.effectiveFrom, item.effectiveTo, dayStart, dayEnd),
+    );
+    const overriddenScheduleIds = new Set(dayAdjustments.map((item) => item.scheduleId).filter(Boolean));
+
     for (const schedule of schedules) {
       if (schedule.dayOfWeek !== dayOfWeek) {
+        continue;
+      }
+      if (!appliesToDay(schedule.effectiveFrom, schedule.effectiveTo, dayStart, dayEnd)) {
+        continue;
+      }
+      if (schedule.id && overriddenScheduleIds.has(schedule.id)) {
         continue;
       }
 
       const [startHour, startMinute] = schedule.startTime.split(":").map(Number);
       const [endHour, endMinute] = schedule.endTime.split(":").map(Number);
+
+      const startAt = fromZonedDateParts(
+        { year: parts.year, month: parts.month, day: parts.day, hour: startHour ?? 0, minute: startMinute ?? 0, second: 0 },
+        timeZone,
+      );
+      const endAt = fromZonedDateParts(
+        { year: parts.year, month: parts.month, day: parts.day, hour: endHour ?? 0, minute: endMinute ?? 0, second: 0 },
+        timeZone,
+      );
+
+      if (endAt <= dateStart || startAt >= dateEnd || endAt <= startAt) {
+        continue;
+      }
+
+      intervals.push({
+        startAt: startAt < dateStart ? dateStart : startAt,
+        endAt: endAt > dateEnd ? dateEnd : endAt,
+      });
+    }
+
+    for (const adjustment of dayAdjustments) {
+      const [startHour, startMinute] = (adjustment.startTime ?? "00:00").split(":").map(Number);
+      const [endHour, endMinute] = (adjustment.endTime ?? "00:00").split(":").map(Number);
 
       const startAt = fromZonedDateParts(
         { year: parts.year, month: parts.month, day: parts.day, hour: startHour ?? 0, minute: startMinute ?? 0, second: 0 },
@@ -188,7 +234,7 @@ export async function getEffectiveAvailability(params: {
       ? [...allowedProfessionalIds]
       : undefined;
 
-  const [holidayRows, schedules, unavailability, appointments, candidateSlots] = await Promise.all([
+  const [holidayRows, schedules, adjustments, unavailability, appointments, candidateSlots] = await Promise.all([
     prisma.clinicHoliday.findMany({
       where: {
         date: {
@@ -206,7 +252,24 @@ export async function getEffectiveAvailability(params: {
         OR: [{ effectiveFrom: null }, { effectiveFrom: { lte: dateEnd } }],
         AND: [{ OR: [{ effectiveTo: null }, { effectiveTo: { gte: dateStart } }] }],
       },
-      select: { professionalId: true, dayOfWeek: true, startTime: true, endTime: true },
+      select: { id: true, professionalId: true, dayOfWeek: true, startTime: true, endTime: true, effectiveFrom: true, effectiveTo: true },
+    }),
+    prisma.professionalScheduleAdjustment.findMany({
+      where: {
+        ...(whereProfessionals ? { professionalId: { in: whereProfessionals } } : {}),
+        status: ProfessionalScheduleStatus.CONFIRMED,
+        effectiveFrom: { lt: dateEnd },
+        OR: [{ effectiveTo: null }, { effectiveTo: { gt: dateStart } }],
+      },
+      select: {
+        professionalId: true,
+        scheduleId: true,
+        dayOfWeek: true,
+        startTime: true,
+        endTime: true,
+        effectiveFrom: true,
+        effectiveTo: true,
+      },
     }),
     prisma.professionalUnavailability.findMany({
       where: {
@@ -241,11 +304,18 @@ export async function getEffectiveAvailability(params: {
   const holidayDates = new Set(holidayRows.map((holiday) => formatDateInput(holiday.date, timeZone)));
   const reasons = includeReasons ? new Map<string, UnavailabilityReason[]>() : null;
 
-  const scheduleByProfessional = new Map<string, Array<{ dayOfWeek: number; startTime: string; endTime: string }>>();
+  const scheduleByProfessional = new Map<string, Array<{ id: string; dayOfWeek: number; startTime: string; endTime: string; effectiveFrom: Date | null; effectiveTo: Date | null }>>();
   for (const schedule of schedules) {
     const current = scheduleByProfessional.get(schedule.professionalId) ?? [];
     current.push(schedule);
     scheduleByProfessional.set(schedule.professionalId, current);
+  }
+
+  const adjustmentsByProfessional = new Map<string, Array<{ scheduleId: string | null; dayOfWeek: number | null; startTime: string | null; endTime: string | null; effectiveFrom: Date; effectiveTo: Date | null }>>();
+  for (const adjustment of adjustments) {
+    const current = adjustmentsByProfessional.get(adjustment.professionalId) ?? [];
+    current.push(adjustment);
+    adjustmentsByProfessional.set(adjustment.professionalId, current);
   }
 
   const blockersByProfessional = new Map<string, TimeInterval[]>();
@@ -265,6 +335,7 @@ export async function getEffectiveAvailability(params: {
   for (const profId of professionals) {
     const base = buildWorkingIntervals({
       schedules: scheduleByProfessional.get(profId) ?? [],
+      adjustments: adjustmentsByProfessional.get(profId) ?? [],
       dateStart,
       dateEnd,
       timeZone,
@@ -347,7 +418,9 @@ export async function getEffectiveAvailability(params: {
     if (serviceId) {
       const assignment = assignments.find((item) => item.professionalId === slot.professionalId);
       const duration = assignment?.appointmentDurationMinutes ?? service?.durationMinutes ?? null;
-      const requiredMinutes = duration && duration > 0 ? duration : toMinutes("00:30");
+      const requiredMinutes = (duration && duration > 0 ? duration : toMinutes("00:30"))
+        + (assignment?.bufferBeforeMinutes ?? 0)
+        + (assignment?.bufferAfterMinutes ?? 0);
       const currentMinutes = (slot.endAt.getTime() - slot.startAt.getTime()) / 60_000;
       if (currentMinutes < requiredMinutes) {
         slotReasons.push("OUTSIDE_WORKING_HOURS");

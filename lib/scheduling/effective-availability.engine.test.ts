@@ -8,6 +8,7 @@ const prismaMock = {
   professionalService: { findMany: vi.fn() },
   clinicHoliday: { findMany: vi.fn() },
   professionalWorkingSchedule: { findMany: vi.fn() },
+  professionalScheduleAdjustment: { findMany: vi.fn() },
   professionalUnavailability: { findMany: vi.fn() },
   appointment: { findMany: vi.fn() },
   timeSlot: { findMany: vi.fn() },
@@ -29,6 +30,7 @@ describe("getEffectiveAvailability", () => {
       { professionalId: "prof-1", dayOfWeek: 1, startTime: "09:00", endTime: "17:00" },
     ]);
     prismaMock.professionalUnavailability.findMany.mockResolvedValue([]);
+    prismaMock.professionalScheduleAdjustment.findMany.mockResolvedValue([]);
     prismaMock.appointment.findMany.mockResolvedValue([]);
     prismaMock.timeSlot.findMany
       .mockResolvedValueOnce([
@@ -110,5 +112,64 @@ describe("getEffectiveAvailability", () => {
 
     expect(result.slots).toHaveLength(0);
     expect(result.reasons?.get("slot-1")).toContain("OVERLAPS_APPOINTMENT");
+  });
+
+  it("applies approved schedule adjustments as operational overrides", async () => {
+    prismaMock.professionalWorkingSchedule.findMany.mockResolvedValue([
+      {
+        id: "base-1",
+        professionalId: "prof-1",
+        dayOfWeek: 1,
+        startTime: "09:00",
+        endTime: "17:00",
+        effectiveFrom: null,
+        effectiveTo: null,
+      },
+    ]);
+    prismaMock.professionalScheduleAdjustment.findMany.mockResolvedValue([
+      {
+        professionalId: "prof-1",
+        scheduleId: "base-1",
+        dayOfWeek: 1,
+        startTime: "10:00",
+        endTime: "16:00",
+        effectiveFrom: new Date("2026-03-30T00:00:00.000Z"),
+        effectiveTo: new Date("2026-03-31T00:00:00.000Z"),
+      },
+    ]);
+
+    const result = await getEffectiveAvailability({
+      dateStart: new Date("2026-03-30T05:00:00.000Z"),
+      dateEnd: new Date("2026-03-31T05:00:00.000Z"),
+      serviceId: "svc-1",
+      includeReasons: true,
+    });
+
+    expect(result.slots).toHaveLength(0);
+    expect(result.reasons?.get("slot-1")).toContain("OUTSIDE_WORKING_HOURS");
+  });
+
+  it("ignores non-approved schedule adjustments", async () => {
+    prismaMock.professionalWorkingSchedule.findMany.mockResolvedValue([
+      {
+        id: "base-1",
+        professionalId: "prof-1",
+        dayOfWeek: 1,
+        startTime: "09:00",
+        endTime: "17:00",
+        effectiveFrom: null,
+        effectiveTo: null,
+      },
+    ]);
+    prismaMock.professionalScheduleAdjustment.findMany.mockResolvedValue([]);
+
+    const result = await getEffectiveAvailability({
+      dateStart: new Date("2026-03-30T05:00:00.000Z"),
+      dateEnd: new Date("2026-03-31T05:00:00.000Z"),
+      serviceId: "svc-1",
+      includeReasons: true,
+    });
+
+    expect(result.slots).toHaveLength(1);
   });
 });

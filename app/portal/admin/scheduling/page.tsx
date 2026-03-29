@@ -24,6 +24,27 @@ type Assignment = {
   service: { id: string; name: string };
 };
 
+type AdjustmentReview = {
+  id: string;
+  professionalId: string;
+  dayOfWeek: number | null;
+  startTime: string | null;
+  endTime: string | null;
+  effectiveFrom: string;
+  status: "PENDING_CONFIRMATION" | "CONFIRMED" | "CHANGES_REQUESTED";
+  note: string | null;
+};
+
+type UnavailabilityReview = {
+  id: string;
+  professionalId: string;
+  type: string;
+  status: "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED";
+  startsAt: string;
+  endsAt: string;
+  reason: string | null;
+};
+
 type Schedule = {
   id: string;
   professionalId: string;
@@ -52,9 +73,25 @@ export default function AdminSchedulingPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [adjustments, setAdjustments] = useState<AdjustmentReview[]>([]);
+  const [unavailability, setUnavailability] = useState<UnavailabilityReview[]>([]);
 
   const [serviceIdToAssign, setServiceIdToAssign] = useState("");
   const [onlineBookable, setOnlineBookable] = useState(true);
+  const [assignmentDraft, setAssignmentDraft] = useState({
+    appointmentDurationMinutes: "30",
+    bufferBeforeMinutes: "0",
+    bufferAfterMinutes: "0",
+    notes: "",
+  });
+  const [assignmentEdits, setAssignmentEdits] = useState<Record<string, {
+    appointmentDurationMinutes: string;
+    bufferBeforeMinutes: string;
+    bufferAfterMinutes: string;
+    notes: string;
+    onlineBookable: boolean;
+    active: boolean;
+  }>>({});
 
   const [scheduleForm, setScheduleForm] = useState({
     dayOfWeek: "1",
@@ -105,9 +142,26 @@ export default function AdminSchedulingPage() {
       return;
     }
 
-    const schedulingData = (await response.json()) as { assignments: Assignment[]; schedules: Schedule[] };
+    const schedulingData = (await response.json()) as {
+      assignments: Assignment[];
+      schedules: Schedule[];
+      adjustments: AdjustmentReview[];
+      unavailability: UnavailabilityReview[];
+    };
     setAssignments(schedulingData.assignments ?? []);
     setSchedules(schedulingData.schedules ?? []);
+    setAdjustments(schedulingData.adjustments ?? []);
+    setUnavailability(schedulingData.unavailability ?? []);
+    setAssignmentEdits(
+      Object.fromEntries((schedulingData.assignments ?? []).map((assignment) => [assignment.id, {
+        appointmentDurationMinutes: String(assignment.appointmentDurationMinutes ?? 30),
+        bufferBeforeMinutes: String(assignment.bufferBeforeMinutes ?? 0),
+        bufferAfterMinutes: String(assignment.bufferAfterMinutes ?? 0),
+        notes: assignment.notes ?? "",
+        onlineBookable: assignment.onlineBookable,
+        active: assignment.active,
+      }])),
+    );
   };
 
   useEffect(() => {
@@ -145,6 +199,10 @@ export default function AdminSchedulingPage() {
         professionalId: selectedProfessionalId,
         serviceId: serviceIdToAssign,
         onlineBookable,
+        appointmentDurationMinutes: Number(assignmentDraft.appointmentDurationMinutes),
+        bufferBeforeMinutes: Number(assignmentDraft.bufferBeforeMinutes),
+        bufferAfterMinutes: Number(assignmentDraft.bufferAfterMinutes),
+        notes: assignmentDraft.notes || null,
       }),
     });
 
@@ -156,6 +214,67 @@ export default function AdminSchedulingPage() {
 
     setSuccess("Servicio asignado correctamente.");
     setServiceIdToAssign("");
+    setAssignmentDraft({ appointmentDurationMinutes: "30", bufferBeforeMinutes: "0", bufferAfterMinutes: "0", notes: "" });
+    await loadProfessionalScheduling(selectedProfessionalId);
+  };
+
+  const handleUpdateAssignment = async (assignmentId: string) => {
+    const draft = assignmentEdits[assignmentId];
+    if (!draft) return;
+
+    const response = await fetchWithTimeout("/api/admin/scheduling", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        type: "updateAssignment",
+        assignmentId,
+        active: draft.active,
+        onlineBookable: draft.onlineBookable,
+        appointmentDurationMinutes: Number(draft.appointmentDurationMinutes),
+        bufferBeforeMinutes: Number(draft.bufferBeforeMinutes),
+        bufferAfterMinutes: Number(draft.bufferAfterMinutes),
+        notes: draft.notes || null,
+      }),
+    });
+
+    if (!response.ok) {
+      setError("No se pudo actualizar la configuración operativa del servicio.");
+      return;
+    }
+
+    setSuccess("Configuración del servicio actualizada.");
+    await loadProfessionalScheduling(selectedProfessionalId);
+  };
+
+  const handleReviewAdjustment = async (adjustmentId: string, action: "approve" | "reject") => {
+    const response = await fetchWithTimeout("/api/admin/scheduling", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type: "reviewAdjustment", adjustmentId, action }),
+    });
+
+    if (!response.ok) {
+      setError("No se pudo registrar la decisión de ajuste.");
+      return;
+    }
+
+    setSuccess("Solicitud de ajuste revisada.");
+    await loadProfessionalScheduling(selectedProfessionalId);
+  };
+
+  const handleReviewUnavailability = async (entryId: string, action: "approve" | "reject" | "cancel") => {
+    const response = await fetchWithTimeout("/api/admin/scheduling", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type: "reviewUnavailability", entryId, action }),
+    });
+
+    if (!response.ok) {
+      setError("No se pudo registrar la decisión de novedad.");
+      return;
+    }
+
+    setSuccess("Novedad operativa actualizada.");
     await loadProfessionalScheduling(selectedProfessionalId);
   };
 
@@ -354,6 +473,12 @@ export default function AdminSchedulingPage() {
                 />
                 Permitir reservas online
               </label>
+              <div className="grid grid-cols-2 gap-2">
+                <input className="input" type="number" min={5} max={300} value={assignmentDraft.appointmentDurationMinutes} onChange={(event) => setAssignmentDraft((prev) => ({ ...prev, appointmentDurationMinutes: event.target.value }))} placeholder="Duración (min)" />
+                <input className="input" type="number" min={0} max={180} value={assignmentDraft.bufferBeforeMinutes} onChange={(event) => setAssignmentDraft((prev) => ({ ...prev, bufferBeforeMinutes: event.target.value }))} placeholder="Buffer antes" />
+              </div>
+              <input className="input" type="number" min={0} max={180} value={assignmentDraft.bufferAfterMinutes} onChange={(event) => setAssignmentDraft((prev) => ({ ...prev, bufferAfterMinutes: event.target.value }))} placeholder="Buffer después" />
+              <textarea className="input min-h-20" value={assignmentDraft.notes} onChange={(event) => setAssignmentDraft((prev) => ({ ...prev, notes: event.target.value }))} placeholder="Notas internas" />
               <button className="btn btn-secondary" type="button" onClick={handleCreateAssignment}>
                 Asignar servicio
               </button>
@@ -364,14 +489,27 @@ export default function AdminSchedulingPage() {
                 <p className="text-slate-500">Este profesional aún no tiene servicios asignados.</p>
               ) : (
                 assignments.map((assignment) => (
-                  <div key={assignment.id} className="flex items-center justify-between rounded-xl border border-slate-200 p-3">
-                    <div>
+                  <div key={assignment.id} className="rounded-xl border border-slate-200 p-3">
+                    <div className="mb-2">
                       <p className="font-medium text-slate-800">{assignment.service.name}</p>
                       <p className="text-xs text-slate-500">
                         {assignment.active ? "Activa" : "Inactiva"} · {assignment.onlineBookable ? "Online" : "Solo interno"}
                       </p>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="grid grid-cols-2 gap-2">
+                      <input className="input" type="number" min={5} max={300} value={assignmentEdits[assignment.id]?.appointmentDurationMinutes ?? "30"} onChange={(event) => setAssignmentEdits((prev) => ({ ...prev, [assignment.id]: { ...prev[assignment.id], appointmentDurationMinutes: event.target.value } }))} placeholder="Duración (min)" />
+                      <input className="input" type="number" min={0} max={180} value={assignmentEdits[assignment.id]?.bufferBeforeMinutes ?? "0"} onChange={(event) => setAssignmentEdits((prev) => ({ ...prev, [assignment.id]: { ...prev[assignment.id], bufferBeforeMinutes: event.target.value } }))} placeholder="Buffer antes" />
+                      <input className="input" type="number" min={0} max={180} value={assignmentEdits[assignment.id]?.bufferAfterMinutes ?? "0"} onChange={(event) => setAssignmentEdits((prev) => ({ ...prev, [assignment.id]: { ...prev[assignment.id], bufferAfterMinutes: event.target.value } }))} placeholder="Buffer después" />
+                      <label className="text-xs text-slate-600">
+                        <input className="mr-2" type="checkbox" checked={assignmentEdits[assignment.id]?.onlineBookable ?? false} onChange={(event) => setAssignmentEdits((prev) => ({ ...prev, [assignment.id]: { ...prev[assignment.id], onlineBookable: event.target.checked } }))} />
+                        Online
+                      </label>
+                    </div>
+                    <textarea className="input mt-2 min-h-16" value={assignmentEdits[assignment.id]?.notes ?? ""} onChange={(event) => setAssignmentEdits((prev) => ({ ...prev, [assignment.id]: { ...prev[assignment.id], notes: event.target.value } }))} placeholder="Notas internas" />
+                    <div className="mt-2 flex gap-2">
+                      <button className="btn btn-secondary" type="button" onClick={() => void handleUpdateAssignment(assignment.id)}>
+                        Guardar cambios
+                      </button>
                       {assignment.active ? (
                         <button className="btn btn-ghost" type="button" onClick={() => handleToggleOnline(assignment)}>
                           {assignment.onlineBookable ? "Quitar online" : "Habilitar online"}
@@ -494,6 +632,48 @@ export default function AdminSchedulingPage() {
           </div>
         </section>
       )}
+
+      {selectedProfessional ? (
+        <section className="grid gap-6 lg:grid-cols-2">
+          <div className="rounded-3xl border border-slate-200 bg-white/80 p-6">
+            <h2 className="text-lg font-semibold">Revisión de ajustes de agenda</h2>
+            <div className="mt-4 space-y-2 text-sm">
+              {adjustments.length === 0 ? <p className="text-slate-500">Sin ajustes registrados.</p> : adjustments.map((item) => (
+                <div key={item.id} className="rounded-xl border border-slate-200 p-3">
+                  <p className="font-medium">{item.dayOfWeek !== null ? weekDays[item.dayOfWeek] : "Sin día"} · {item.startTime ?? "--:--"} - {item.endTime ?? "--:--"}</p>
+                  <p className="text-xs text-slate-500">Desde {new Date(item.effectiveFrom).toLocaleDateString("es-CO")} · Estado: {item.status}</p>
+                  {item.status === "CHANGES_REQUESTED" ? (
+                    <div className="mt-2 flex gap-2">
+                      <button className="btn btn-secondary" type="button" onClick={() => void handleReviewAdjustment(item.id, "approve")}>Aprobar</button>
+                      <button className="btn btn-ghost" type="button" onClick={() => void handleReviewAdjustment(item.id, "reject")}>Rechazar</button>
+                    </div>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-3xl border border-slate-200 bg-white/80 p-6">
+            <h2 className="text-lg font-semibold">Revisión de ausencias y bloqueos</h2>
+            <div className="mt-4 space-y-2 text-sm">
+              {unavailability.length === 0 ? <p className="text-slate-500">Sin novedades registradas.</p> : unavailability.map((item) => (
+                <div key={item.id} className="rounded-xl border border-slate-200 p-3">
+                  <p className="font-medium">{item.type}</p>
+                  <p className="text-xs text-slate-500">{new Date(item.startsAt).toLocaleString("es-CO")} → {new Date(item.endsAt).toLocaleString("es-CO")}</p>
+                  <p className="text-xs text-slate-500">Estado: {item.status}</p>
+                  {item.status === "PENDING" ? (
+                    <div className="mt-2 flex gap-2">
+                      <button className="btn btn-secondary" type="button" onClick={() => void handleReviewUnavailability(item.id, "approve")}>Aprobar</button>
+                      <button className="btn btn-ghost" type="button" onClick={() => void handleReviewUnavailability(item.id, "reject")}>Rechazar</button>
+                      <button className="btn btn-ghost" type="button" onClick={() => void handleReviewUnavailability(item.id, "cancel")}>Cancelar</button>
+                    </div>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      ) : null}
 
       {loading ? <p className="text-sm text-slate-500">Cargando configuración...</p> : null}
     </div>
