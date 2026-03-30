@@ -3,10 +3,11 @@ import { defineConfig } from "@playwright/test";
 const isProdE2E = process.env.E2E_ENV === "production";
 const commonEnv =
   "OPS_ENABLED=1 OPS_KEY=ops-test-key SEED_ADMIN_EMAIL=admin@dentpro.test SEED_ADMIN_PASSWORD=Test1234! TEST_AUTH_BYPASS=1 NEXTAUTH_SECRET=test-secret NEXTAUTH_URL=http://127.0.0.1:3000 NEXT_TELEMETRY_DISABLED=1";
+const nextStartCommand = "pnpm exec next start -H 127.0.0.1 -p 3000";
 
 const webServerCommand = isProdE2E
-  ? `${commonEnv} pnpm run vercel-build && NODE_ENV=production ${commonEnv} pnpm run start -- --hostname 127.0.0.1 --port 3000`
-  : `${commonEnv} pnpm run vercel-build && NODE_ENV=test ${commonEnv} pnpm run start -- --hostname 127.0.0.1 --port 3000`;
+  ? `${commonEnv} pnpm run vercel-build && NODE_ENV=production ${commonEnv} ${nextStartCommand}`
+  : `${commonEnv} pnpm run vercel-build && NODE_ENV=test ${commonEnv} ${nextStartCommand}`;
 
 export default defineConfig({
   testDir: "./e2e",
