@@ -50,6 +50,13 @@ describe("GET /api/appointments/[id]/events contract", () => {
         metadata: expect.objectContaining({ previousSlotId: "slot-a", newSlotId: "slot-b" }),
       }),
     ]);
+    expect(findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        select: expect.objectContaining({
+          actorUser: { select: { id: true, name: true, lastName: true } },
+        }),
+      }),
+    );
   });
 
   it("returns 403 for role without permission", async () => {

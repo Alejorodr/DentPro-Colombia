@@ -21,6 +21,11 @@ Este documento deja explícitas decisiones de hardening para evitar regresiones 
   - Ahora distingue por stage y evita mensaje engañoso.
 - Warning de GitHub Actions por runtime Node 20 en actions.
   - Workflows migrados a `actions/checkout@v5` y `actions/setup-node@v5`.
+- Warning de deprecación de runtime en `pnpm/action-setup@v4`.
+  - Se eliminó la action y se pasó a instalación de pnpm con Corepack (`corepack prepare pnpm@10.13.1 --activate`).
+- Warnings npm `Unknown env config "verify-deps-before-run"` y `"_jsr-registry"` durante E2E.
+  - El comando de web server de Playwright fue migrado de `npm run` a `pnpm run`.
+  - `scripts/run-e2e.mjs` limpia esas variables de entorno antes de lanzar procesos hijos.
 
 ### 2) No corregible sin riesgo en esta ronda
 - Warning de webpack `Critical dependency: the request of a dependency is an expression` asociado a `@sentry/*` / `@opentelemetry/*`.

@@ -10,6 +10,7 @@ import { logger } from "@/lib/logger";
 import { requireRole, requireSession } from "@/lib/authz";
 import { PASSWORD_POLICY_MESSAGE, PASSWORD_POLICY_REGEX } from "@/lib/auth/password-policy";
 import { Prisma } from "@prisma/client";
+import { redactSensitiveAuthFields } from "@/lib/security/redaction";
 
 const updateUserSchema = z.object({
   email: z.string().trim().email().max(120).optional(),
@@ -148,7 +149,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     await prisma.professionalProfile.delete({ where: { userId: id } });
   }
 
-  return NextResponse.json(updated);
+  return NextResponse.json(redactSensitiveAuthFields(updated));
 }
 
 export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {

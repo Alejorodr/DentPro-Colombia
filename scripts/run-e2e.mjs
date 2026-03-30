@@ -25,6 +25,11 @@ if (!existsSync(defaultBrowserPath)) {
 }
 
 const suite = process.env.E2E_SUITE ?? "full";
+const childEnv = { ...process.env };
+delete childEnv.npm_config_verify_deps_before_run;
+delete childEnv.npm_config__jsr_registry;
+delete childEnv.NPM_CONFIG_VERIFY_DEPS_BEFORE_RUN;
+delete childEnv.NPM_CONFIG__JSR_REGISTRY;
 
 console.log(
   "[run-e2e] runtime",
@@ -50,7 +55,7 @@ const PRISMA_P2021_HINT =
 const run = (command) =>
   new Promise((resolve, reject) => {
     let output = "";
-    const child = spawn(command, { stdio: ["inherit", "pipe", "pipe"], shell: true, env: process.env });
+    const child = spawn(command, { stdio: ["inherit", "pipe", "pipe"], shell: true, env: childEnv });
 
     child.stdout.on("data", (chunk) => {
       const text = chunk.toString();
