@@ -76,13 +76,20 @@ test("login with bypass credentials returns session", async ({ page }) => {
 
 test("rejects invalid credentials and protects portal routes", async ({ page }) => {
   await page.goto(E2E_ROUTES.login, { waitUntil: "domcontentloaded" });
+  await expect(page.getByTestId("login-form-ready")).toBeVisible({ timeout: 10_000 });
 
-  await page.locator(E2E_SELECTORS.loginEmail).fill(authUser.email);
-  await page.locator(E2E_SELECTORS.loginPassword).fill("wrong-password");
-  await expect(page.locator(E2E_SELECTORS.loginEmail)).toHaveValue(authUser.email);
-  await expect(page.locator(E2E_SELECTORS.loginPassword)).toHaveValue("wrong-password");
+  const emailInput = page.locator(E2E_SELECTORS.loginEmail);
+  const passwordInput = page.locator(E2E_SELECTORS.loginPassword);
+  await expect(emailInput).toBeVisible();
+  await expect(passwordInput).toBeVisible();
+
+  await emailInput.fill(authUser.email);
+  await passwordInput.fill("wrong-password");
+  await expect(emailInput).toHaveValue(authUser.email);
+  await expect(passwordInput).toHaveValue("wrong-password");
+
   const submitButton = page.locator(E2E_SELECTORS.loginSubmit);
-  await expect(submitButton).toBeEnabled();
+  await expect(submitButton).toBeEnabled({ timeout: 10_000 });
   await submitButton.click();
 
   await expect(page).toHaveURL(/\/auth\/login/);

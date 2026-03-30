@@ -73,9 +73,13 @@ test("patient can book an appointment from the portal", async ({ page, request }
   await page.getByTestId(E2E_TEST_IDS.confirmAppointment).click();
   const response = await responsePromise;
   expect(response.status()).toBe(201);
+  const createdAppointment = (await response.json()) as { id?: string };
+  expect(createdAppointment.id).toBeTruthy();
 
   await expect(page).toHaveURL(/\/portal\/client\/appointments/);
-  await expect(page.getByText(selectedService.name)).toBeVisible();
+  const createdAppointmentCard = page.getByTestId(`client-appointment-${createdAppointment.id}`);
+  await expect(createdAppointmentCard).toBeVisible();
+  await expect(createdAppointmentCard.getByText(selectedService.name)).toBeVisible();
 
   const slotsResponse = await request.get(`/api/slots?serviceId=${selectedService.id}&date=${dateValue}`);
   expect(slotsResponse.status()).toBe(200);
