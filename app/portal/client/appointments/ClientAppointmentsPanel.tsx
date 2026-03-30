@@ -106,6 +106,7 @@ export function ClientAppointmentsPanel({ upcoming, past }: { upcoming: Appointm
             <article
               key={appointment.id}
               className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs dark:border-surface-muted/70 dark:bg-surface-elevated"
+              data-testid={`client-appointment-${appointment.id}`}
             >
               <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
@@ -156,6 +157,7 @@ export function ClientAppointmentsPanel({ upcoming, past }: { upcoming: Appointm
             <article
               key={appointment.id}
               className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs dark:border-surface-muted/70 dark:bg-surface-elevated"
+              data-testid={`client-appointment-${appointment.id}`}
             >
               <div className="flex items-start justify-between gap-4">
                 <div>
