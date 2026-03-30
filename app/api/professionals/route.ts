@@ -9,6 +9,7 @@ import { parseJson } from "@/app/api/_utils/validation";
 import { Prisma, Role } from "@prisma/client";
 import { requireRole, requireSession } from "@/lib/authz";
 import { PASSWORD_POLICY_MESSAGE, PASSWORD_POLICY_REGEX } from "@/lib/auth/password-policy";
+import { redactSensitiveAuthFields } from "@/lib/security/redaction";
 
 const createProfessionalSchema = z.object({
   email: z.string().trim().email().max(120),
@@ -25,6 +26,11 @@ export async function GET(request: Request) {
     return errorResponse(sessionResult.error.message, sessionResult.error.status);
   }
 
+  const roleError = requireRole(sessionResult.user, ["ADMINISTRADOR", "RECEPCIONISTA"]);
+  if (roleError) {
+    return errorResponse("No autorizado.", roleError.status);
+  }
+
   const prisma = getPrismaClient();
   const { searchParams } = new URL(request.url);
   const { page, pageSize, skip, take } = getPaginationParams(searchParams);
@@ -38,7 +44,7 @@ export async function GET(request: Request) {
     }),
     prisma.professionalProfile.count(),
   ]);
-  return NextResponse.json(buildPaginatedResponse(professionals, page, pageSize, total));
+  return NextResponse.json(redactSensitiveAuthFields(buildPaginatedResponse(professionals, page, pageSize, total)));
 }
 
 export async function POST(request: Request) {
@@ -79,7 +85,7 @@ export async function POST(request: Request) {
       include: { user: true, specialty: true },
     });
 
-    return NextResponse.json(professional, { status: 201 });
+    return NextResponse.json(redactSensitiveAuthFields(professional), { status: 201 });
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
       const target = Array.isArray(error.meta?.target) ? error.meta?.target : [];

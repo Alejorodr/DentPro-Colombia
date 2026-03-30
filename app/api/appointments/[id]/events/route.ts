@@ -76,7 +76,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
         newStatus: true,
         metadata: true,
         createdAt: true,
-        actorUser: { select: { id: true, name: true, lastName: true, email: true } },
+        actorUser: { select: { id: true, name: true, lastName: true } },
       },
     });
 

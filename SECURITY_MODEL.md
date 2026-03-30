@@ -14,6 +14,7 @@
 - `PATCH /api/users/[id]` → **ADMINISTRADOR**
 - `DELETE /api/users/[id]` → **ADMINISTRADOR**
 - `GET/PATCH /api/users/me` → cualquier usuario autenticado (solo su propio perfil)
+- Respuestas API de usuarios/profesionales/pacientes **no deben incluir** campos de autenticación sensibles (`passwordHash`, tokens de reset).
 
 ### Pacientes
 - `GET /api/patients` → **ADMINISTRADOR**, **RECEPCIONISTA**
@@ -26,6 +27,7 @@
 - `POST /api/client/appointments` → **PACIENTE** (crea citas propias)
 
 ### Profesional
+- `GET /api/professionals` → **ADMINISTRADOR**, **RECEPCIONISTA**
 - `GET /api/professional/*` → **PROFESIONAL**
 - `POST /api/professional/*` → **PROFESIONAL**
 - `GET/POST /api/professional/appointment/[id]/*` → **PROFESIONAL** y solo si la cita pertenece al profesional
@@ -35,6 +37,7 @@
 - `POST /api/appointments` → **ADMINISTRADOR**, **RECEPCIONISTA**, **PACIENTE**
 - `PATCH /api/appointments/[id]` → dueño (paciente/profesional) o **ADMINISTRADOR/RECEPCIONISTA**
 - `POST /api/appointments/[id]/reschedule` → dueño o **ADMINISTRADOR/RECEPCIONISTA**
+- `GET /api/appointments/[id]/events` → actor autorizado; datos de actor limitados (sin email) para minimizar exposición innecesaria.
 
 ### Search
 - `GET /api/search` → **ADMINISTRADOR**, **RECEPCIONISTA**, **PROFESIONAL** (y solo scope permitido)

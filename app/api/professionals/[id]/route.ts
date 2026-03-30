@@ -8,6 +8,7 @@ import { errorResponse } from "@/app/api/_utils/response";
 import { parseJson } from "@/app/api/_utils/validation";
 import { PASSWORD_POLICY_MESSAGE, PASSWORD_POLICY_REGEX } from "@/lib/auth/password-policy";
 import { Prisma } from "@prisma/client";
+import { redactSensitiveAuthFields } from "@/lib/security/redaction";
 
 const updateProfessionalSchema = z.object({
   name: z.string().trim().min(1).max(120).optional(),
@@ -67,7 +68,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       include: { user: true, specialty: true },
     });
 
-    return NextResponse.json(updated);
+    return NextResponse.json(redactSensitiveAuthFields(updated));
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
       const target = Array.isArray(error.meta?.target) ? error.meta?.target : [];

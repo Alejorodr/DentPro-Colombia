@@ -10,6 +10,7 @@ import { isUserRole, type UserRole } from "@/lib/auth/roles";
 import { requireRole, requireSession } from "@/lib/authz";
 import { PASSWORD_POLICY_MESSAGE, PASSWORD_POLICY_REGEX } from "@/lib/auth/password-policy";
 import { Prisma } from "@prisma/client";
+import { redactSensitiveAuthFields } from "@/lib/security/redaction";
 
 const createUserSchema = z.object({
   email: z.string().trim().email().max(120),
@@ -48,7 +49,7 @@ export async function GET(request: Request) {
     prisma.user.count(),
   ]);
 
-  return NextResponse.json(buildPaginatedResponse(users, page, pageSize, total));
+  return NextResponse.json(redactSensitiveAuthFields(buildPaginatedResponse(users, page, pageSize, total)));
 }
 
 export async function POST(request: Request) {
@@ -110,7 +111,7 @@ export async function POST(request: Request) {
       },
     });
 
-    return NextResponse.json(user, { status: 201 });
+    return NextResponse.json(redactSensitiveAuthFields(user), { status: 201 });
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
       const target = Array.isArray(error.meta?.target) ? error.meta?.target : [];
