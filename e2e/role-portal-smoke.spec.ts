@@ -8,9 +8,14 @@ import { seedTestData } from "./utils/seed";
 test("login page renders and shows credential error", async ({ page }) => {
   await page.goto(E2E_ROUTES.login, { waitUntil: "domcontentloaded" });
   await expect(page.getByRole("heading", { name: "Iniciar sesión" })).toBeVisible();
+  await expect(page.getByTestId("login-form-ready")).toBeVisible({ timeout: 10_000 });
 
-  await page.locator(E2E_SELECTORS.loginEmail).fill("admin@dentpro.test");
-  await page.locator(E2E_SELECTORS.loginPassword).fill("incorrecta");
+  const emailInput = page.locator(E2E_SELECTORS.loginEmail);
+  const passwordInput = page.locator(E2E_SELECTORS.loginPassword);
+  await emailInput.fill("admin@dentpro.test");
+  await passwordInput.fill("incorrecta");
+  await expect(emailInput).toHaveValue("admin@dentpro.test");
+  await expect(passwordInput).toHaveValue("incorrecta");
 
   const submitButton = page.locator(E2E_SELECTORS.loginSubmit);
   await expect(submitButton).toBeEnabled();
