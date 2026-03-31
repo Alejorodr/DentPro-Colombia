@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 
 import { seedTestData } from "./utils/seed";
-import { E2E_ROUTES, E2E_TEST_IDS } from "./utils/constants";
+import { E2E_TEST_IDS } from "./utils/constants";
 import { loginFromPortal } from "./utils/login";
 
 function formatDateInput(date: Date) {
