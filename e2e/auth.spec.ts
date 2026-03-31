@@ -1,7 +1,7 @@
 import { test, expect, type Page } from "@playwright/test";
 
 import { seedAdminSession } from "./utils/session";
-import { fillLoginForm, loginFromPortal } from "./utils/login";
+import { loginFromPortal } from "./utils/login";
 import { seedTestData } from "./utils/seed";
 import { E2E_ROUTES, E2E_TEST_IDS } from "./utils/constants";
 
