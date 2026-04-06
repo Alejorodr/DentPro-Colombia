@@ -43,13 +43,16 @@ jobs:
         uses: actions/setup-node@v5
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: pnpm
-          cache-dependency-path: pnpm-lock.yaml
 
       - name: Enable Corepack (packageManager source of truth)
         run: |
           corepack enable
           corepack prepare --activate "$(node -p \"require('./package.json').packageManager\")"
+
+      - name: Verify toolchain
+        run: |
+          node -v
+          pnpm --version
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
