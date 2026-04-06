@@ -11,6 +11,17 @@ import { requireRole, requireSession } from "@/lib/authz";
 import { PASSWORD_POLICY_MESSAGE, PASSWORD_POLICY_REGEX } from "@/lib/auth/password-policy";
 import { redactSensitiveAuthFields } from "@/lib/security/redaction";
 
+const professionalUserSelect = {
+  id: true,
+  email: true,
+  role: true,
+  name: true,
+  lastName: true,
+  active: true,
+  createdAt: true,
+  updatedAt: true,
+};
+
 const createProfessionalSchema = z.object({
   email: z.string().trim().email().max(120),
   password: z.string().min(8).max(200).regex(PASSWORD_POLICY_REGEX, PASSWORD_POLICY_MESSAGE),
@@ -37,7 +48,7 @@ export async function GET(request: Request) {
 
   const [professionals, total] = await Promise.all([
     prisma.professionalProfile.findMany({
-      include: { user: true, specialty: true },
+      include: { user: { select: professionalUserSelect }, specialty: true },
       orderBy: { user: { name: "asc" } },
       skip,
       take,
@@ -82,7 +93,7 @@ export async function POST(request: Request) {
         slotDurationMinutes: payload.slotDurationMinutes ?? null,
         active: true,
       },
-      include: { user: true, specialty: true },
+      include: { user: { select: professionalUserSelect }, specialty: true },
     });
 
     return NextResponse.json(redactSensitiveAuthFields(professional), { status: 201 });

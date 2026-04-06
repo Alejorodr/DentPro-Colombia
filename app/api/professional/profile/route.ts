@@ -18,7 +18,18 @@ export async function GET() {
   const prisma = getPrismaClient();
   const professional = await prisma.professionalProfile.findUnique({
     where: { userId: sessionResult.user.id },
-    include: { user: true, specialty: true },
+    include: {
+      user: {
+        select: {
+          name: true,
+          lastName: true,
+          email: true,
+        },
+      },
+      specialty: {
+        select: { name: true },
+      },
+    },
   });
 
   if (!professional) {

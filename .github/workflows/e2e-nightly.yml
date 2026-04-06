@@ -24,7 +24,6 @@ jobs:
           --health-retries 5
     env:
       NODE_VERSION: "24.x"
-      PNPM_VERSION: "10.13.1"
       DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/dentpro"
       NEXTAUTH_SECRET: "test-secret"
       NEXTAUTH_URL: "http://127.0.0.1:3000"
@@ -40,17 +39,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
-
       - name: Use Node.js
         uses: actions/setup-node@v5
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
+
+      - name: Enable Corepack (packageManager source of truth)
+        run: |
+          corepack enable
+          corepack prepare --activate "$(node -p \"require('./package.json').packageManager\")"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile

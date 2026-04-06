@@ -42,6 +42,11 @@ Además de los logs de aplicación, las acciones clínicas generan registros en 
 
 Estos registros se consultan desde `/portal/admin/audit` o `GET /api/admin/audit/access-logs`.
 
+Si falla la persistencia del `AccessLog`, ahora se emite log estructurado con:
+- `event=clinical.access_log.write_failed`
+- `route`, `requestId`, `userId`, `action`, `patientId`
+- error sanitizado por `lib/logger.ts` (sin exponer secrets/headers/cookies)
+
 ## Checklist de verificación
 - [ ] En desarrollo, dispara un error controlado: `GET /api/_monitoring?error=1`.
 - [ ] Verifica que el evento aparece en Sentry (si `SENTRY_DSN` está configurado).
