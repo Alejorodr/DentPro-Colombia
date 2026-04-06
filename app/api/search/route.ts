@@ -11,6 +11,13 @@ import { logger } from "@/lib/logger";
 import { requireRole, requireSession } from "@/lib/authz";
 import * as Sentry from "@sentry/nextjs";
 
+const searchUserSelect = {
+  id: true,
+  name: true,
+  lastName: true,
+  email: true,
+};
+
 const searchQuerySchema = z.string().trim().min(1).max(80);
 
 export async function GET(request: Request) {
@@ -113,7 +120,7 @@ export async function GET(request: Request) {
               },
             ],
           },
-          include: { user: true },
+          include: { user: { select: searchUserSelect } },
           take: queryTake,
           orderBy: { user: { name: "asc" } },
         }),
@@ -137,7 +144,7 @@ export async function GET(request: Request) {
             ],
           },
           include: {
-            patient: { include: { user: true } },
+            patient: { include: { user: { select: searchUserSelect } } },
             timeSlot: true,
           },
           orderBy: { timeSlot: { startAt: "desc" } },
@@ -148,7 +155,15 @@ export async function GET(request: Request) {
             appointment: { professionalId: professional.id },
             content: { contains: query, mode: "insensitive" },
           },
-          include: { appointment: { include: { patient: { include: { user: true } } } } },
+          include: {
+            appointment: {
+              include: {
+                patient: {
+                  include: { user: { select: searchUserSelect } },
+                },
+              },
+            },
+          },
           orderBy: { updatedAt: "desc" },
           take: queryTake,
         }),
@@ -238,7 +253,7 @@ export async function GET(request: Request) {
             { documentId: { contains: query, mode: "insensitive" } },
           ],
         },
-        include: { user: true },
+        include: { user: { select: searchUserSelect } },
         take: queryTake,
         orderBy: { user: { name: "asc" } },
       }),
@@ -258,7 +273,7 @@ export async function GET(request: Request) {
             { specialty: { name: { contains: query, mode: "insensitive" } } },
           ],
         },
-        include: { user: true, specialty: true },
+        include: { user: { select: searchUserSelect }, specialty: true },
         take: queryTake,
         orderBy: { user: { name: "asc" } },
       }),
@@ -307,8 +322,8 @@ export async function GET(request: Request) {
             : {}),
         },
         include: {
-          patient: { include: { user: true } },
-          professional: { include: { user: true } },
+          patient: { include: { user: { select: searchUserSelect } } },
+          professional: { include: { user: { select: searchUserSelect } } },
           timeSlot: true,
         },
         orderBy: { timeSlot: { startAt: "desc" } },

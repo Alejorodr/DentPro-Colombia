@@ -22,7 +22,11 @@ Este documento deja explícitas decisiones de hardening para evitar regresiones 
 - Warning de GitHub Actions por runtime Node 20 en actions.
   - Workflows migrados a `actions/checkout@v5` y `actions/setup-node@v5`.
 - Warning de deprecación de runtime en `pnpm/action-setup@v4`.
-  - Se eliminó la action y se pasó a instalación de pnpm con Corepack (`corepack prepare pnpm@10.13.1 --activate`).
+  - Se eliminó la action y se pasó a bootstrap con Corepack basado en `package.json#packageManager`.
+  - Comando aplicado en CI/nightly: `corepack prepare --activate "$(node -p \"require('./package.json').packageManager\")"`.
+- Warning legado de runtime en `actions/cache@v4` (artifact previo).
+  - Se removió el cache manual de `.next/cache` para evitar deuda de runtime de action.
+  - Se mantiene cache de dependencias `pnpm` vía `actions/setup-node@v5`.
 - Warnings npm `Unknown env config "verify-deps-before-run"` y `"_jsr-registry"` durante E2E.
   - El comando de web server de Playwright fue migrado de `npm run` a `pnpm run`.
   - `scripts/run-e2e.mjs` limpia esas variables de entorno antes de lanzar procesos hijos.
@@ -49,3 +53,20 @@ Este documento deja explícitas decisiones de hardening para evitar regresiones 
 Comandos:
 - `pnpm run e2e:smoke`
 - `pnpm run e2e:full`
+
+## API response minimization (Phase 5A)
+
+Endoints endurecidos para evitar sobreexposición por `include: { user: true }`:
+- `GET/POST /api/appointments`
+- `POST /api/client/appointments`
+- `GET/POST /api/professionals`
+- `GET /api/search`
+- `GET /api/professional/profile`
+
+Decisión aplicada:
+- se reemplazaron `include` amplios por `select` explícitos de campos de usuario.
+- se mantuvieron únicamente campos requeridos por UI, búsqueda y notificaciones (`id`, `name`, `lastName`, `email`, `role` según caso).
+
+## Pendiente para Phase 5B (RBAC)
+- Auditoría completa de permisos campo-a-campo por endpoint.
+- Revisión de ámbitos administrativos (admin/reception/professional) fuera de hardening de respuesta.

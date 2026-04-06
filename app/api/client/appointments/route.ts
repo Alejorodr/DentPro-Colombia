@@ -13,6 +13,14 @@ import { requireRole, requireSession } from "@/lib/authz";
 import { assertSlotBookable } from "@/lib/scheduling/effective-availability";
 import * as Sentry from "@sentry/nextjs";
 
+const basicUserSelect = {
+  id: true,
+  name: true,
+  lastName: true,
+  email: true,
+  role: true,
+};
+
 const patientDetailsSchema = z.object({
   name: z.string().trim().max(80).optional(),
   lastName: z.string().trim().max(80).optional(),
@@ -83,7 +91,7 @@ export async function POST(request: Request) {
     const prisma = getPrismaClient();
     const patient = await prisma.patientProfile.findUnique({
       where: { userId: sessionResult.user.id },
-      include: { user: true },
+      include: { user: { select: basicUserSelect } },
     });
 
     if (!patient) {
@@ -156,7 +164,7 @@ export async function POST(request: Request) {
         },
         include: {
           timeSlot: true,
-          professional: { include: { user: true, specialty: true } },
+          professional: { include: { user: { select: basicUserSelect }, specialty: true } },
           service: true,
         },
       });

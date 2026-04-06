@@ -1,5 +1,6 @@
 import { AccessLogAction, Prisma } from "@prisma/client";
 
+import { logger } from "@/lib/logger";
 import { getPrismaClient } from "@/lib/prisma";
 
 export type ClinicalAccessLogInput = {
@@ -33,6 +34,17 @@ export async function logClinicalAccess({
       },
     });
   } catch (error) {
-    console.error("Failed to write clinical access log", error);
+    logger.error(
+      {
+        event: "clinical.access_log.write_failed",
+        route,
+        requestId,
+        userId,
+        action,
+        patientId: patientId ?? undefined,
+        error,
+      },
+      "Failed to write clinical access log",
+    );
   }
 }

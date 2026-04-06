@@ -17,6 +17,21 @@ import { recordAppointmentEvent } from "@/lib/appointments/events";
 import { assertSlotBookable } from "@/lib/scheduling/effective-availability";
 import * as Sentry from "@sentry/nextjs";
 
+const appointmentUserSelect = {
+  id: true,
+  name: true,
+  lastName: true,
+  email: true,
+  role: true,
+};
+
+const appointmentInclude = {
+  patient: { include: { user: { select: appointmentUserSelect } } },
+  professional: { include: { user: { select: appointmentUserSelect }, specialty: true } },
+  timeSlot: true,
+  service: true,
+};
+
 const createAppointmentSchema = z.object({
   patientId: z.string().uuid().optional(),
   professionalId: z.string().uuid().optional(),
@@ -76,12 +91,7 @@ export async function GET(request: Request) {
       const [appointments, total] = await Promise.all([
         prisma.appointment.findMany({
           where: dateFilter,
-          include: {
-            patient: { include: { user: true } },
-            professional: { include: { user: true, specialty: true } },
-            timeSlot: true,
-            service: true,
-          },
+          include: appointmentInclude,
           orderBy: { timeSlot: { startAt: "asc" } },
           skip,
           take,
@@ -104,12 +114,7 @@ export async function GET(request: Request) {
       const [appointments, total] = await Promise.all([
         prisma.appointment.findMany({
           where,
-          include: {
-            patient: { include: { user: true } },
-            professional: { include: { user: true, specialty: true } },
-            timeSlot: true,
-            service: true,
-          },
+          include: appointmentInclude,
           orderBy: { timeSlot: { startAt: "asc" } },
           skip,
           take,
@@ -132,12 +137,7 @@ export async function GET(request: Request) {
     const [appointments, total] = await Promise.all([
       prisma.appointment.findMany({
         where,
-        include: {
-          patient: { include: { user: true } },
-          professional: { include: { user: true, specialty: true } },
-          timeSlot: true,
-          service: true,
-        },
+        include: appointmentInclude,
         orderBy: { timeSlot: { startAt: "asc" } },
         skip,
         take,
@@ -310,7 +310,7 @@ export async function POST(request: Request) {
         throw new Error("Slot reservado");
       }
 
-      const created = await tx.appointment.create({
+        const created = await tx.appointment.create({
         data: {
           patientId,
           professionalId,
@@ -325,12 +325,7 @@ export async function POST(request: Request) {
               ? payload.status
               : AppointmentStatus.SCHEDULED,
         },
-        include: {
-          patient: { include: { user: true } },
-          professional: { include: { user: true, specialty: true } },
-          timeSlot: true,
-          service: true,
-        },
+        include: appointmentInclude,
       });
 
       await recordAppointmentEvent({
