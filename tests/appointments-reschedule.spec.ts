@@ -10,6 +10,7 @@ const mockSendAppointmentEmail = vi.fn();
 
 const mockPrisma = {
   appointment: {
+    findFirst: vi.fn(),
     findUnique: vi.fn(),
     update: vi.fn(),
     findMany: vi.fn(),
@@ -90,6 +91,7 @@ describe("appointment rescheduling", () => {
     mockPrisma.professionalScheduleAdjustment.findMany.mockResolvedValue([]);
     mockPrisma.professionalUnavailability.findMany.mockResolvedValue([]);
     mockPrisma.appointment.findMany.mockResolvedValue([]);
+    mockPrisma.appointment.findFirst.mockResolvedValue(null);
   });
 
   it("returns 409 when a slot becomes unavailable between reschedules", async () => {
@@ -123,7 +125,7 @@ describe("appointment rescheduling", () => {
       },
     };
 
-    mockPrisma.appointment.findUnique.mockResolvedValue(appointment);
+    mockPrisma.appointment.findFirst.mockResolvedValue(appointment);
     mockPrisma.timeSlot.findMany
       .mockResolvedValueOnce([candidateSlotForAvailability])
       .mockResolvedValue([]);
