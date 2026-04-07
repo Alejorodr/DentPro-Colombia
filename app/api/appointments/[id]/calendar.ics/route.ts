@@ -29,8 +29,15 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
 
   const { id } = await params;
   const prisma = getPrismaClient();
-  const appointment = await prisma.appointment.findUnique({
-    where: { id },
+  const appointment = await prisma.appointment.findFirst({
+    where: {
+      id,
+      ...(sessionResult.user.role === "PACIENTE"
+        ? { patient: { userId: sessionResult.user.id } }
+        : sessionResult.user.role === "PROFESIONAL"
+          ? { professional: { userId: sessionResult.user.id } }
+          : {}),
+    },
     include: {
       patient: { include: { user: true } },
       professional: { include: { user: true } },
@@ -41,20 +48,6 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
 
   if (!appointment) {
     return errorResponse("Cita no encontrada.", 404);
-  }
-
-  if (sessionResult.user.role === "PACIENTE") {
-    const patient = await prisma.patientProfile.findUnique({ where: { userId: sessionResult.user.id } });
-    if (!patient || appointment.patientId !== patient.id) {
-      return errorResponse("No autorizado.", 403);
-    }
-  }
-
-  if (sessionResult.user.role === "PROFESIONAL") {
-    const professional = await prisma.professionalProfile.findUnique({ where: { userId: sessionResult.user.id } });
-    if (!professional || appointment.professionalId !== professional.id) {
-      return errorResponse("No autorizado.", 403);
-    }
   }
 
   const summary = `Turno odontológico - ${appointment.service?.name ?? appointment.reason}`;

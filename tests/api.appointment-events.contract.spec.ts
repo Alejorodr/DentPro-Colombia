@@ -11,24 +11,24 @@ vi.mock("@/lib/authz", () => ({ requireSession: vi.fn() }));
 vi.mock("@/lib/prisma", () => ({ getPrismaClient: vi.fn() }));
 
 describe("GET /api/appointments/[id]/events contract", () => {
-  const findUnique = vi.fn();
+  const findFirst = vi.fn();
   const findMany = vi.fn();
 
   beforeEach(() => {
     vi.mocked(requireSession).mockReset();
     vi.mocked(getPrismaClient).mockReset();
-    findUnique.mockReset();
+    findFirst.mockReset();
     findMany.mockReset();
 
     vi.mocked(getPrismaClient).mockReturnValue({
-      appointment: { findUnique },
+      appointment: { findFirst },
       appointmentEvent: { findMany },
     } as any);
   });
 
   it("returns events shape including reschedule metadata", async () => {
     vi.mocked(requireSession).mockResolvedValue({ user: { id: "r-1", role: "RECEPCIONISTA" } } as any);
-    findUnique.mockResolvedValue({ patient: { userId: "p-1" }, professional: { userId: "prof-1" } });
+    findFirst.mockResolvedValue({ id: "appt-1" });
     findMany.mockResolvedValue([
       {
         id: "evt-1",
@@ -59,23 +59,55 @@ describe("GET /api/appointments/[id]/events contract", () => {
     );
   });
 
-  it("returns 403 for role without permission", async () => {
+  it("returns 404 for out-of-scope role access", async () => {
     vi.mocked(requireSession).mockResolvedValue({ user: { id: "other", role: "PACIENTE" } } as any);
-    findUnique.mockResolvedValue({ patient: { userId: "owner" }, professional: { userId: "prof-1" } });
+    findFirst.mockResolvedValue(null);
 
     const response = await GET(new Request("http://localhost"), { params: Promise.resolve({ id: "11111111-1111-4111-8111-111111111111" }) });
     const payload = await response.json();
-    expect(response.status).toBe(403);
+    expect(response.status).toBe(404);
     expect(validateContract(apiErrorSchema, payload).valid).toBe(true);
   });
 
   it("returns 404 when appointment is 00000000-0000-4000-8000-000000000000", async () => {
     vi.mocked(requireSession).mockResolvedValue({ user: { id: "r-1", role: "RECEPCIONISTA" } } as any);
-    findUnique.mockResolvedValue(null);
+    findFirst.mockResolvedValue(null);
 
     const response = await GET(new Request("http://localhost"), { params: Promise.resolve({ id: "00000000-0000-4000-8000-000000000000" }) });
     const payload = await response.json();
     expect(response.status).toBe(404);
     expect(validateContract(apiErrorSchema, payload).valid).toBe(true);
+  });
+
+  it("removes event metadata and actor ids for patient-scoped reads", async () => {
+    vi.mocked(requireSession).mockResolvedValue({ user: { id: "p-1", role: "PACIENTE" } } as any);
+    findFirst.mockResolvedValue({ id: "appt-1" });
+    findMany.mockResolvedValue([
+      {
+        id: "evt-1",
+        appointmentId: "appt-1",
+        actorRole: "ADMINISTRADOR",
+        action: "rescheduled",
+        previousStatus: "SCHEDULED",
+        newStatus: "CONFIRMED",
+        metadata: { previousSlotId: "slot-a", newSlotId: "slot-b" },
+        createdAt: new Date("2026-01-01T09:00:00.000Z"),
+        actorUser: { id: "admin-1", name: "Ada", lastName: "Lovelace" },
+      },
+    ]);
+
+    const response = await GET(new Request("http://localhost"), { params: Promise.resolve({ id: "11111111-1111-4111-8111-111111111111" }) });
+    const payload = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(payload.events[0]).toMatchObject({
+      id: "evt-1",
+      appointmentId: "appt-1",
+      actorRole: "ADMINISTRADOR",
+      action: "rescheduled",
+      actorUser: { name: "Ada", lastName: "Lovelace" },
+    });
+    expect(payload.events[0]).not.toHaveProperty("metadata");
+    expect(payload.events[0].actorUser).not.toHaveProperty("id");
   });
 });

@@ -40,11 +40,17 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 
     const { id } = parsedParams.data;
     const prisma = getPrismaClient();
-    const appointment = await prisma.appointment.findUnique({
-      where: { id },
+    const appointment = await prisma.appointment.findFirst({
+      where: {
+        id,
+        ...(sessionResult.user.role === "PACIENTE"
+          ? { patient: { userId: sessionResult.user.id } }
+          : sessionResult.user.role === "PROFESIONAL"
+            ? { professional: { userId: sessionResult.user.id } }
+            : {}),
+      },
       select: {
-        patient: { select: { userId: true } },
-        professional: { select: { userId: true } },
+        id: true,
       },
     });
 
@@ -54,11 +60,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       return errorResponse("Cita no encontrada.", 404);
     }
 
-    const canRead = ["ADMINISTRADOR", "RECEPCIONISTA"].includes(sessionResult.user.role)
-      || appointment.patient?.userId === sessionResult.user.id
-      || appointment.professional?.userId === sessionResult.user.id;
+    const canReadRole = ["ADMINISTRADOR", "RECEPCIONISTA", "PACIENTE", "PROFESIONAL"].includes(sessionResult.user.role);
 
-    if (!canRead) {
+    if (!canReadRole) {
       metric.end({ status: "error", extra: { code: 403, requestId } });
       trace.end({ status: "error", result: "forbidden", extra: { code: 403, appointmentId: id } });
       return errorResponse("No autorizado.", 403);
@@ -95,7 +99,22 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     metric.end({ status: "ok", itemCount: events.length, extra: { actor: sessionResult.user.role, requestId } });
     trace.end({ status: "ok", result: "ok", itemCount: events.length, extra: { appointmentId: id } });
 
-    return NextResponse.json({ events });
+    const sanitizedEvents = events.map((event) =>
+      sessionResult.user.role === "PACIENTE"
+        ? {
+            id: event.id,
+            appointmentId: event.appointmentId,
+            actorRole: event.actorRole,
+            action: event.action,
+            previousStatus: event.previousStatus,
+            newStatus: event.newStatus,
+            createdAt: event.createdAt,
+            actorUser: event.actorUser ? { name: event.actorUser.name, lastName: event.actorUser.lastName } : null,
+          }
+        : event,
+    );
+
+    return NextResponse.json({ events: sanitizedEvents });
   } catch (error) {
     metric.end({ status: "error", extra: { code: 500, requestId }, error });
     trace.end({ status: "error", result: "internal_error", error, extra: { code: 500 } });

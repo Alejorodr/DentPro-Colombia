@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { errorResponse } from "@/app/api/_utils/response";
 import { getRouteFromRequest, getRequestId } from "@/app/api/clinical/_utils";
 import { logClinicalAccess } from "@/lib/clinical/access-log";
-import { getProfessionalProfile } from "@/lib/clinical/access";
 import { getPrismaClient } from "@/lib/prisma";
 import { requireSession } from "@/lib/authz";
 import { AccessLogAction } from "@prisma/client";
@@ -22,7 +21,11 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ a
   }
 
   const attachment = await prisma.clinicalAttachment.findFirst({
-    where: { id: attachmentId, deletedAt: null },
+    where: {
+      id: attachmentId,
+      deletedAt: null,
+      ...(role === "PROFESIONAL" ? { episode: { professional: { userId: sessionResult.user.id } } } : {}),
+    },
     include: { episode: true },
   });
 
@@ -31,10 +34,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ a
   }
 
   if (role === "PROFESIONAL") {
-    const professional = await getProfessionalProfile(prisma, sessionResult.user.id);
-    if (!professional || professional.id !== attachment.episode.professionalId) {
-      return errorResponse("No autorizado.", 403);
-    }
+    // Acceso del profesional ya acotado en la consulta.
   }
 
   await prisma.clinicalAttachment.update({

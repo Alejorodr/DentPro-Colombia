@@ -33,7 +33,16 @@ export async function GET(request: Request, { params }: { params: Promise<{ epis
   }
 
   const episode = await prisma.clinicalEpisode.findFirst({
-    where: { id: episodeId, deletedAt: null },
+    where: {
+      id: episodeId,
+      deletedAt: null,
+      ...(role === "PACIENTE"
+        ? {
+            patient: { userId: sessionResult.user.id },
+            visibleToPatient: true,
+          }
+        : {}),
+    },
     include: {
       patient: { include: { user: true } },
       professional: { include: { user: true } },
@@ -45,13 +54,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ epis
   }
 
   if (role === "PACIENTE") {
-    const patient = await prisma.patientProfile.findUnique({
-      where: { userId: sessionResult.user.id },
-      select: { id: true },
-    });
-    if (!patient || episode.patientId !== patient.id || !episode.visibleToPatient) {
-      return errorResponse("No autorizado.", 403);
-    }
+    // Acceso del paciente ya acotado en la consulta.
   }
 
   if (role === "PROFESIONAL") {
