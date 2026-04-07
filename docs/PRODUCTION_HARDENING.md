@@ -68,5 +68,25 @@ Decisión aplicada:
 - se mantuvieron únicamente campos requeridos por UI, búsqueda y notificaciones (`id`, `name`, `lastName`, `email`, `role` según caso).
 
 ## Pendiente para Phase 5B (RBAC)
-- Auditoría completa de permisos campo-a-campo por endpoint.
-- Revisión de ámbitos administrativos (admin/reception/professional) fuera de hardening de respuesta.
+- Endurecer ownership en superficies sensibles para evitar enumeración de recursos:
+  - `/api/appointments/[id]/events`
+  - `/api/appointments/[id]/reschedule`
+  - `/api/appointments/[id]/calendar.ics`
+  - `PATCH|DELETE /api/appointments/[id]`
+  - `GET /api/clinical/episodes/[episodeId]`
+  - `GET /api/clinical/attachments/[attachmentId]/download`
+  - `DELETE /api/clinical/attachments/[attachmentId]`
+- Ajustar respuestas para pacientes en superficies sensibles:
+  - `GET /api/appointments/[id]/events` ya no expone `metadata` ni `actorUser.id` para pacientes.
+
+## Fase 5B (RBAC hardening) — aplicado
+- **Patient ownership server-side** reforzado en citas, eventos clínicos y descargas de adjuntos usando filtros de consulta por actor para evitar distinguir entre “existe pero no tienes permiso” y “no existe”.
+- **Boundaries por rol** explicitadas en rutas de mutación/lectura sensibles:
+  - pacientes/profesionales solo acceden a recursos dentro de su propio scope;
+  - admin/recepción conservan alcance operativo amplio donde aplica.
+- **Minimización adicional de respuesta**:
+  - pacientes no reciben metadatos internos de eventos ni IDs de terceros en historial de eventos.
+
+## Trabajo de seguridad diferido (explícito)
+- Revisión endpoint-by-endpoint de minimización de payload para todas las rutas legacy fuera de `appointments` y `clinical`.
+- Consolidación opcional de un helper compartido de “scoped resource query” para reducir divergencia entre handlers (no aplicado para mantener cambios explícitos y de bajo riesgo en esta fase).

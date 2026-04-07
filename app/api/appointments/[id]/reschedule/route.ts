@@ -8,7 +8,7 @@ import { createReceptionNotifications } from "@/lib/notifications";
 import { TimeSlotStatus } from "@prisma/client";
 import { getRequestId } from "@/app/api/_utils/request";
 import { logger } from "@/lib/logger";
-import { requireOwnershipOrRole, requireRole, requireSession } from "@/lib/authz";
+import { requireRole, requireSession } from "@/lib/authz";
 import { getAppointmentBufferMinutes, hasBufferConflict } from "@/lib/appointments/scheduling";
 import { sendAppointmentEmail } from "@/lib/notifications/email";
 import * as Sentry from "@sentry/nextjs";
@@ -109,8 +109,15 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   }
 
   const prisma = getPrismaClient();
-  const appointment = await prisma.appointment.findUnique({
-    where: { id },
+  const appointment = await prisma.appointment.findFirst({
+    where: {
+      id,
+      ...(sessionResult.user.role === "PACIENTE"
+        ? { patient: { userId: sessionResult.user.id } }
+        : sessionResult.user.role === "PROFESIONAL"
+          ? { professional: { userId: sessionResult.user.id } }
+          : {}),
+    },
     include: { timeSlot: true },
   });
 
@@ -119,25 +126,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   }
 
   if (sessionResult.user.role === "PACIENTE") {
-    const patient = await prisma.patientProfile.findUnique({ where: { userId: sessionResult.user.id } });
-    const ownershipError = requireOwnershipOrRole({
-      user: sessionResult.user,
-      ownerId: patient?.userId,
-      rolesAllowed: ["ADMINISTRADOR", "RECEPCIONISTA"],
-    });
-    if (!patient || appointment.patientId !== patient.id || ownershipError) {
-      return errorResponse("No autorizado.", 403);
-    }
-
     if (!canRescheduleWithLimit(appointment.timeSlot.startAt)) {
       return errorResponse("Solo puedes reprogramar con 24h de anticipación.", 409);
-    }
-  }
-
-  if (sessionResult.user.role === "PROFESIONAL") {
-    const professional = await prisma.professionalProfile.findUnique({ where: { userId: sessionResult.user.id } });
-    if (!professional || appointment.professionalId !== professional.id) {
-      return errorResponse("No autorizado.", 403);
     }
   }
 

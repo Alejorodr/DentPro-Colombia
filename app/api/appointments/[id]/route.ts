@@ -7,7 +7,7 @@ import { parseJson } from "@/app/api/_utils/validation";
 import { getRequestId } from "@/app/api/_utils/request";
 import { createReceptionNotifications } from "@/lib/notifications";
 import { AppointmentStatus, TimeSlotStatus } from "@prisma/client";
-import { requireOwnershipOrRole, requireRole, requireSession } from "@/lib/authz";
+import { requireRole, requireSession } from "@/lib/authz";
 import { sendAppointmentEmail } from "@/lib/notifications/email";
 import { logger } from "@/lib/logger";
 import { recordAppointmentEvent } from "@/lib/appointments/events";
@@ -51,8 +51,15 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
   try {
     const prisma = getPrismaClient();
-    const appointment = await prisma.appointment.findUnique({
-      where: { id },
+    const appointment = await prisma.appointment.findFirst({
+      where: {
+        id,
+        ...(sessionResult.user.role === "PACIENTE"
+          ? { patient: { userId: sessionResult.user.id } }
+          : sessionResult.user.role === "PROFESIONAL"
+            ? { professional: { userId: sessionResult.user.id } }
+            : {}),
+      },
       include: { timeSlot: true, professional: true, patient: true },
     });
 
@@ -61,16 +68,6 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     }
 
     if (sessionResult.user.role === "PACIENTE") {
-      const patient = await prisma.patientProfile.findUnique({ where: { userId: sessionResult.user.id } });
-      const ownershipError = requireOwnershipOrRole({
-        user: sessionResult.user,
-        ownerId: patient?.userId,
-        rolesAllowed: ["ADMINISTRADOR", "RECEPCIONISTA"],
-      });
-      if (!patient || appointment.patientId !== patient.id || ownershipError) {
-        return errorResponse("No autorizado.", 403);
-      }
-
       if (payload.status !== AppointmentStatus.CANCELLED) {
         return errorResponse("Solo puedes cancelar tus citas.", 403);
       }
@@ -81,11 +78,6 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     }
 
     if (sessionResult.user.role === "PROFESIONAL") {
-      const professional = await prisma.professionalProfile.findUnique({ where: { userId: sessionResult.user.id } });
-      if (!professional || appointment.professionalId !== professional.id) {
-        return errorResponse("No autorizado.", 403);
-      }
-
       const allowedStatuses = new Set<AppointmentStatus>([AppointmentStatus.CONFIRMED, AppointmentStatus.CHECKED_IN, AppointmentStatus.COMPLETED, AppointmentStatus.NO_SHOW, AppointmentStatus.CANCELLED]);
       if (!allowedStatuses.has(payload.status)) {
         return errorResponse("No autorizado para este estado.", 403);
@@ -214,8 +206,15 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
   logger.info({ event: "appointment.cancel.start", requestId, appointmentId: id, role: sessionResult.user.role });
   try {
     const prisma = getPrismaClient();
-    const appointment = await prisma.appointment.findUnique({
-      where: { id },
+    const appointment = await prisma.appointment.findFirst({
+      where: {
+        id,
+        ...(sessionResult.user.role === "PACIENTE"
+          ? { patient: { userId: sessionResult.user.id } }
+          : sessionResult.user.role === "PROFESIONAL"
+            ? { professional: { userId: sessionResult.user.id } }
+            : {}),
+      },
       include: {
         timeSlot: true,
         patient: { include: { user: true } },
@@ -229,26 +228,13 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     }
 
     if (sessionResult.user.role === "PACIENTE") {
-      const patient = await prisma.patientProfile.findUnique({ where: { userId: sessionResult.user.id } });
-      const ownershipError = requireOwnershipOrRole({
-        user: sessionResult.user,
-        ownerId: patient?.userId,
-        rolesAllowed: ["ADMINISTRADOR", "RECEPCIONISTA"],
-      });
-      if (!patient || appointment.patientId !== patient.id || ownershipError) {
-        return errorResponse("No autorizado.", 403);
-      }
-
       if (!canCancelWithLimit(appointment.timeSlot.startAt)) {
         return errorResponse("Solo puedes cancelar con 24h de anticipación.", 409);
       }
     }
 
     if (sessionResult.user.role === "PROFESIONAL") {
-      const professional = await prisma.professionalProfile.findUnique({ where: { userId: sessionResult.user.id } });
-      if (!professional || appointment.professionalId !== professional.id) {
-        return errorResponse("No autorizado.", 403);
-      }
+      // La propiedad ya está acotada en la consulta.
     }
 
     const updated = await prisma.appointment.update({
