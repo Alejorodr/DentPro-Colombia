@@ -54,29 +54,33 @@ test("patient can book an appointment from the portal", async ({
     return formatDateInput(date);
   });
   let dateValue = dateCandidates[0];
-  let seededSlots: Array<{ id: string }> = [];
+  let chosenSlotId = "";
+  const nowMs = Date.now();
+
   for (const candidate of dateCandidates) {
     const slotsResponse = await request.get(
       `/api/slots?serviceId=${selectedService.id}&date=${candidate}`,
     );
     expect(slotsResponse.status()).toBe(200);
     const payload = (await slotsResponse.json()) as {
-      slots?: Array<{ id: string }>;
+      slots?: Array<{ id: string; startAt: string }>;
     };
     const slots = payload.slots ?? [];
-    if (slots.length > 0) {
+    const futureSlot =
+      slots.find((slot) => new Date(slot.startAt).getTime() > nowMs) ?? null;
+
+    if (futureSlot) {
       dateValue = candidate;
-      seededSlots = slots;
+      chosenSlotId = futureSlot.id;
       break;
     }
   }
-  expect(seededSlots.length).toBeGreaterThan(0);
+
+  expect(chosenSlotId).toBeTruthy();
   await page.getByTestId(`date-${dateValue}`).click();
 
-  const slotButton = page.locator("[data-testid^='slot-']").first();
+  const slotButton = page.getByTestId(`slot-${chosenSlotId}`);
   await expect(slotButton).toBeVisible();
-  const slotTestId = await slotButton.getAttribute("data-testid");
-  const slotId = slotTestId?.replace("slot-", "") ?? "";
   await slotButton.click();
 
   const responsePromise = page.waitForResponse(
@@ -107,5 +111,5 @@ test("patient can book an appointment from the portal", async ({
     slots: Array<{ id: string }>;
   };
   const slotIds = slotsPayload.slots.map((slot) => slot.id);
-  expect(slotIds).not.toContain(slotId);
+  expect(slotIds).not.toContain(chosenSlotId);
 });
