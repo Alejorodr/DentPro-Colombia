@@ -13,7 +13,6 @@ const PRISMA_QUERY_TIMEOUT_MS = Number.parseInt(process.env.PRISMA_QUERY_TIMEOUT
 const PRISMA_READ_RETRY_COUNT = Number.parseInt(process.env.PRISMA_READ_RETRY_COUNT ?? "1", 10);
 const PRISMA_CIRCUIT_FAILURE_THRESHOLD = Number.parseInt(process.env.PRISMA_CIRCUIT_FAILURE_THRESHOLD ?? "3", 10);
 const PRISMA_CIRCUIT_RESET_MS = Number.parseInt(process.env.PRISMA_CIRCUIT_RESET_MS ?? "30000", 10);
-const PRISMA_FIND_MANY_TAKE_DEFAULT = Number.parseInt(process.env.PRISMA_FIND_MANY_TAKE_DEFAULT ?? "50", 10);
 
 const READ_ACTIONS = new Set([
   "findUnique",
@@ -207,23 +206,6 @@ function makeClient(): PrismaClient {
           }
 
           const nextArgs = { ...(args ?? {}) };
-          if (operation === "findMany") {
-            const findManyArgs = nextArgs as {
-              take?: number;
-              skip?: number;
-              orderBy?: unknown;
-            };
-            if (findManyArgs.take === undefined) {
-              findManyArgs.take = PRISMA_FIND_MANY_TAKE_DEFAULT;
-            }
-            if (findManyArgs.skip === undefined) {
-              findManyArgs.skip = 0;
-            }
-            if (findManyArgs.orderBy === undefined) {
-              findManyArgs.orderBy = { id: "desc" };
-            }
-          }
-
           const run = () => withTimeout(query(nextArgs), PRISMA_QUERY_TIMEOUT_MS);
 
           try {

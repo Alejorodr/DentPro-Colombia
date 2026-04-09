@@ -27,8 +27,47 @@ vi.mock("@/lib/logger", () => ({
 }));
 
 describe("cron appointment reminders", () => {
+  const originalNodeEnv = process.env.NODE_ENV;
+  const originalCronSecret = process.env.CRON_SECRET;
+
   beforeEach(() => {
     vi.clearAllMocks();
+    process.env.NODE_ENV = originalNodeEnv;
+    if (originalCronSecret === undefined) {
+      delete process.env.CRON_SECRET;
+    } else {
+      process.env.CRON_SECRET = originalCronSecret;
+    }
+  });
+
+  it("does not execute in protected environments when CRON_SECRET is missing", async () => {
+    process.env.NODE_ENV = "production";
+    delete process.env.CRON_SECRET;
+
+    const response = await runRemindersCron(new Request("http://localhost/api/cron/appointments/reminders"));
+    expect(response.status).toBe(401);
+    expect(mockFindMany).not.toHaveBeenCalled();
+    expect(mockSendAppointmentEmail).not.toHaveBeenCalled();
+  });
+
+  it("executes when CRON_SECRET is configured and header is authorized", async () => {
+    process.env.NODE_ENV = "production";
+    process.env.CRON_SECRET = "secret-123";
+
+    mockFindMany.mockResolvedValue([
+      { id: "a1", status: "CONFIRMED", timeSlot: { startAt: new Date(), endAt: new Date() }, patient: null, professional: null },
+    ]);
+    mockSendAppointmentEmail.mockResolvedValue(true);
+    mockUpdateMany.mockResolvedValueOnce({ count: 1 });
+
+    const response = await runRemindersCron(
+      new Request("http://localhost/api/cron/appointments/reminders", {
+        headers: { authorization: "Bearer secret-123" },
+      }),
+    );
+    expect(response.status).toBe(200);
+    const payload = await response.json();
+    expect(payload).toMatchObject({ processed: 1, sent: 1, skippedAlreadySent: 0, failed: 0 });
   });
 
   it("tracks sent reminders and skips already updated records", async () => {
