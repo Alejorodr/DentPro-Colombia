@@ -286,7 +286,32 @@ export async function refreshFutureInventoryForAllProfessionals(params: {
   prisma?: PrismaClient;
 }) {
   const prisma = params.prisma ?? getPrismaClient();
-  const professionals = await prisma.professionalProfile.findMany({ where: { active: true }, select: { id: true } });
+  const professionals: Array<{ id: string }> = [];
+  const pageSize = 200;
+  let cursorId: string | null = null;
+
+  while (true) {
+    const page = await prisma.professionalProfile.findMany({
+      where: { active: true },
+      select: { id: true },
+      orderBy: { id: "asc" },
+      take: pageSize,
+      ...(cursorId
+        ? {
+            cursor: { id: cursorId },
+            skip: 1,
+          }
+        : {}),
+    });
+
+    if (page.length === 0) {
+      break;
+    }
+
+    professionals.push(...page);
+    cursorId = page[page.length - 1]?.id ?? null;
+  }
+
   let removed = 0;
   let created = 0;
   for (const professional of professionals) {

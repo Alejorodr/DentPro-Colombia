@@ -8,8 +8,9 @@ import { getRequestId } from "@/app/api/_utils/request";
 
 function isAuthorizedCron(request: Request): boolean {
   const secret = process.env.CRON_SECRET?.trim();
+  const isProtectedEnvironment = process.env.NODE_ENV !== "development" && process.env.NODE_ENV !== "test";
   if (!secret) {
-    return true;
+    return !isProtectedEnvironment;
   }
 
   const header = request.headers.get("authorization")?.trim();
