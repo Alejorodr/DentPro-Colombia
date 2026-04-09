@@ -288,28 +288,25 @@ export async function refreshFutureInventoryForAllProfessionals(params: {
   const prisma = params.prisma ?? getPrismaClient();
   const professionals: Array<{ id: string }> = [];
   const pageSize = 200;
-  let cursorId: string | null = null;
+  let lastSeenId: string | null = null;
 
   while (true) {
-    const page = await prisma.professionalProfile.findMany({
-      where: { active: true },
+    const batch: Array<{ id: string }> = await prisma.professionalProfile.findMany({
+      where: {
+        active: true,
+        ...(lastSeenId ? { id: { gt: lastSeenId } } : {}),
+      },
       select: { id: true },
       orderBy: { id: "asc" },
       take: pageSize,
-      ...(cursorId
-        ? {
-            cursor: { id: cursorId },
-            skip: 1,
-          }
-        : {}),
     });
 
-    if (page.length === 0) {
+    if (batch.length === 0) {
       break;
     }
 
-    professionals.push(...page);
-    cursorId = page[page.length - 1]?.id ?? null;
+    professionals.push(...batch);
+    lastSeenId = batch[batch.length - 1]?.id ?? null;
   }
 
   let removed = 0;
