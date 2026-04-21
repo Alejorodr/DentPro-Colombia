@@ -24,11 +24,14 @@ export async function PATCH(request: Request) {
     return errorResponse("La lista de orden no coincide con la cantidad de servicios.", 400);
   }
 
+  if (new Set(body.orderedIds).size !== body.orderedIds.length) {
+    return errorResponse("La lista de orden contiene servicios duplicados.", 400);
+  }
+
   const expected = new Set(services.map((item: { id: string }) => item.id));
-  for (const id of body.orderedIds) {
-    if (!expected.has(id)) {
-      return errorResponse("La lista de orden contiene servicios inválidos.", 400);
-    }
+  const received = new Set(body.orderedIds);
+  if (received.size !== expected.size || [...received].some((id) => !expected.has(id))) {
+    return errorResponse("La lista de orden contiene servicios inválidos.", 400);
   }
 
   await prisma.$transaction(

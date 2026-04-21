@@ -29,11 +29,14 @@ export async function PATCH(request: Request, context: { params: Promise<{ servi
     return errorResponse("La lista de orden no coincide con la cantidad de highlights.", 400);
   }
 
+  if (new Set(body.orderedIds).size !== body.orderedIds.length) {
+    return errorResponse("La lista de orden contiene highlights duplicados.", 400);
+  }
+
   const expected = new Set(highlights.map((item: { id: string }) => item.id));
-  for (const id of body.orderedIds) {
-    if (!expected.has(id)) {
-      return errorResponse("La lista de orden contiene highlights inválidos.", 400);
-    }
+  const received = new Set(body.orderedIds);
+  if (received.size !== expected.size || [...received].some((id) => !expected.has(id))) {
+    return errorResponse("La lista de orden contiene highlights inválidos.", 400);
   }
 
   await prisma.$transaction(
