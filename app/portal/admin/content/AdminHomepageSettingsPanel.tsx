@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Card } from "@/app/portal/components/ui/Card";
+import { AdminImageField } from "@/app/portal/admin/content/components/AdminImageField";
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
 
 type HomepageSettingsForm = {
@@ -195,6 +196,20 @@ const SECTIONS: SectionConfig[] = [
   },
 ];
 
+
+const IMAGE_FIELD_CONFIG: Partial<Record<keyof HomepageSettingsForm, { uploadFolder: "marketing/homepage/hero" | "marketing/homepage/testimonial"; recommendation: string; aspectRatio: string }>> = {
+  heroImageUrl: {
+    uploadFolder: "marketing/homepage/hero",
+    recommendation: "1200x1500 px",
+    aspectRatio: "4:5",
+  },
+  heroTestimonialAvatarUrl: {
+    uploadFolder: "marketing/homepage/testimonial",
+    recommendation: "400x400 px",
+    aspectRatio: "1:1",
+  },
+};
+
 function normalizeForm(input: Partial<Record<keyof HomepageSettingsForm, string | null>>): HomepageSettingsForm {
   const output = { ...EMPTY_FORM };
   for (const key of Object.keys(output) as Array<keyof HomepageSettingsForm>) {
@@ -287,32 +302,52 @@ export function AdminHomepageSettingsPanel() {
                 <p className="text-sm text-slate-600 dark:text-slate-300">{section.description}</p>
               </div>
               <div className="grid gap-4 md:grid-cols-2">
-                {section.fields.map((field) => (
-                  <label key={field.key} className={field.multiline ? "space-y-1 md:col-span-2" : "space-y-1"}>
-                    <span className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                      {field.label}
-                    </span>
-                    {field.multiline ? (
-                      <textarea
-                        className="input min-h-28 text-sm"
+                {section.fields.map((field) => {
+                  const imageField = IMAGE_FIELD_CONFIG[field.key];
+
+                  if (imageField) {
+                    return (
+                      <AdminImageField
+                        key={field.key}
+                        label={field.label}
                         value={form[field.key]}
-                        onChange={(event) => onChange(field.key, event.target.value)}
-                        placeholder={field.placeholder}
+                        onChange={(value) => onChange(field.key, value)}
+                        uploadFolder={imageField.uploadFolder}
+                        recommendation={imageField.recommendation}
+                        aspectRatio={imageField.aspectRatio}
+                        placeholder={field.placeholder ?? "https://..."}
                         disabled={saving}
                       />
-                    ) : (
-                      <input
-                        className="input h-11 text-sm"
-                        value={form[field.key]}
-                        onChange={(event) => onChange(field.key, event.target.value)}
-                        placeholder={field.placeholder}
-                        type={field.type ?? "text"}
-                        disabled={saving}
-                      />
-                    )}
-                    {field.helperText ? <p className="text-xs text-slate-500 dark:text-slate-400">{field.helperText}</p> : null}
-                  </label>
-                ))}
+                    );
+                  }
+
+                  return (
+                    <label key={field.key} className={field.multiline ? "space-y-1 md:col-span-2" : "space-y-1"}>
+                      <span className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                        {field.label}
+                      </span>
+                      {field.multiline ? (
+                        <textarea
+                          className="input min-h-28 text-sm"
+                          value={form[field.key]}
+                          onChange={(event) => onChange(field.key, event.target.value)}
+                          placeholder={field.placeholder}
+                          disabled={saving}
+                        />
+                      ) : (
+                        <input
+                          className="input h-11 text-sm"
+                          value={form[field.key]}
+                          onChange={(event) => onChange(field.key, event.target.value)}
+                          placeholder={field.placeholder}
+                          type={field.type ?? "text"}
+                          disabled={saving}
+                        />
+                      )}
+                      {field.helperText ? <p className="text-xs text-slate-500 dark:text-slate-400">{field.helperText}</p> : null}
+                    </label>
+                  );
+                })}
               </div>
             </Card>
           ))

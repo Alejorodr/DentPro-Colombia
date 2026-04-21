@@ -80,17 +80,7 @@ export function Hero({
         <div className="relative isolate lg:max-h-[640px] lg:scale-[0.98] xl:max-h-[680px] xl:scale-100">
           <div className="relative z-10">
             <div className="card border-white/40 bg-white/80 p-6 shadow-xl shadow-brand-teal/20 backdrop-blur-sm transition-colors duration-500 hover:translate-y-0! hover:shadow-xl! dark:border-accent-cyan/10! dark:bg-surface-elevated/70! dark:shadow-surface-dark lg:p-8">
-              <div className="relative aspect-4/5 overflow-hidden rounded-2xl bg-linear-to-br from-brand-teal via-brand-sky to-brand-indigo dark:from-accent-cyan dark:via-brand-teal dark:to-brand-midnight">
-                <Image
-                  src={image.src}
-                  alt={image.alt}
-                  fill
-                  priority
-                  sizes="(min-width: 1280px) 28rem, (min-width: 1024px) 26rem, 90vw"
-                  className="h-full w-full object-cover"
-                />
-              </div>
-              <div className="card mt-6 grid gap-4 rounded-2xl bg-white/90 p-6 text-sm shadow-lg! transition-colors duration-500 hover:translate-y-0! hover:shadow-lg! dark:bg-surface-muted/90! dark:text-slate-100">
+              <div className="card mb-6 grid gap-4 rounded-2xl bg-white/90 p-6 text-sm shadow-lg! transition-colors duration-500 hover:translate-y-0! hover:shadow-lg! dark:bg-surface-muted/90! dark:text-slate-100">
                 <p className="font-semibold text-brand-teal dark:text-accent-cyan">Testimonio real</p>
                 <p className="text-slate-600 dark:text-slate-200">“{testimonial.quote}”</p>
                 <div className="flex items-center gap-4">
@@ -108,6 +98,16 @@ export function Hero({
                     <p className="text-xs text-slate-500 dark:text-slate-300">{testimonial.role}</p>
                   </div>
                 </div>
+              </div>
+              <div className="relative aspect-4/5 overflow-hidden rounded-2xl bg-linear-to-br from-brand-teal via-brand-sky to-brand-indigo dark:from-accent-cyan dark:via-brand-teal dark:to-brand-midnight">
+                <Image
+                  src={image.src}
+                  alt={image.alt}
+                  fill
+                  priority
+                  sizes="(min-width: 1280px) 28rem, (min-width: 1024px) 26rem, 90vw"
+                  className="h-full w-full object-cover"
+                />
               </div>
             </div>
             <div className="card mx-auto mt-6 w-full max-w-xs space-y-2 border-white/60 p-5 text-center text-sm text-slate-700 shadow-glow! backdrop-blur-sm transition-colors duration-500 hover:translate-y-0! hover:shadow-glow! dark:border-accent-cyan/15! dark:bg-surface-elevated/90! dark:text-slate-100 dark:shadow-glow-dark sm:absolute sm:-bottom-12 sm:right-6 sm:mx-0 sm:mt-0 sm:text-left sm:shadow-lg sm:p-6">

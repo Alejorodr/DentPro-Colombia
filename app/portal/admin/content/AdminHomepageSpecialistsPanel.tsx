@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Card } from "@/app/portal/components/ui/Card";
+import { AdminImageField } from "@/app/portal/admin/content/components/AdminImageField";
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
 
 type SpecialistItem = {
@@ -174,7 +175,16 @@ export function AdminHomepageSpecialistsPanel() {
           <input className="input h-11 text-sm" placeholder="Nombre completo" value={newSpecialist.fullName} onChange={(e) => setNewSpecialist((p) => ({ ...p, fullName: e.target.value }))} disabled={saving} />
           <input className="input h-11 text-sm" placeholder="Especialidad" value={newSpecialist.specialty} onChange={(e) => setNewSpecialist((p) => ({ ...p, specialty: e.target.value }))} disabled={saving} />
           <textarea className="input min-h-24 text-sm md:col-span-2" placeholder="Bio corta" value={newSpecialist.bioShort} onChange={(e) => setNewSpecialist((p) => ({ ...p, bioShort: e.target.value }))} disabled={saving} />
-          <input className="input h-11 text-sm" placeholder="Image URL (http/https)" value={newSpecialist.imageUrl} onChange={(e) => setNewSpecialist((p) => ({ ...p, imageUrl: e.target.value }))} disabled={saving} />
+          <AdminImageField
+            label="Imagen especialista"
+            value={newSpecialist.imageUrl}
+            onChange={(value) => setNewSpecialist((p) => ({ ...p, imageUrl: value }))}
+            uploadFolder="marketing/specialists"
+            recommendation="1200x1500 px"
+            aspectRatio="4:5"
+            placeholder="https://..."
+            disabled={saving}
+          />
           <input className="input h-11 text-sm" placeholder="Alt text" value={newSpecialist.altText} onChange={(e) => setNewSpecialist((p) => ({ ...p, altText: e.target.value }))} disabled={saving} />
           <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
             <input type="checkbox" checked={newSpecialist.isActive} onChange={(e) => setNewSpecialist((p) => ({ ...p, isActive: e.target.checked }))} disabled={saving} /> Activo
@@ -205,7 +215,18 @@ export function AdminHomepageSpecialistsPanel() {
               <input className="input h-11 text-sm" value={specialist.fullName} onChange={(e) => setSpecialists((prev) => prev.map((item) => (item.id === specialist.id ? { ...item, fullName: e.target.value } : item)))} disabled={saving} />
               <input className="input h-11 text-sm" value={specialist.specialty} onChange={(e) => setSpecialists((prev) => prev.map((item) => (item.id === specialist.id ? { ...item, specialty: e.target.value } : item)))} disabled={saving} />
               <textarea className="input min-h-24 text-sm md:col-span-2" value={specialist.bioShort} onChange={(e) => setSpecialists((prev) => prev.map((item) => (item.id === specialist.id ? { ...item, bioShort: e.target.value } : item)))} disabled={saving} />
-              <input className="input h-11 text-sm" value={specialist.imageUrl ?? ""} onChange={(e) => setSpecialists((prev) => prev.map((item) => (item.id === specialist.id ? { ...item, imageUrl: e.target.value } : item)))} disabled={saving} />
+              <AdminImageField
+                label="Imagen especialista"
+                value={specialist.imageUrl ?? ""}
+                onChange={(value) =>
+                  setSpecialists((prev) => prev.map((item) => (item.id === specialist.id ? { ...item, imageUrl: value } : item)))
+                }
+                uploadFolder="marketing/specialists"
+                recommendation="1200x1500 px"
+                aspectRatio="4:5"
+                placeholder="https://..."
+                disabled={saving}
+              />
               <input className="input h-11 text-sm" value={specialist.altText ?? ""} onChange={(e) => setSpecialists((prev) => prev.map((item) => (item.id === specialist.id ? { ...item, altText: e.target.value } : item)))} disabled={saving} />
               <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                 <input type="checkbox" checked={specialist.isActive} onChange={(e) => setSpecialists((prev) => prev.map((item) => (item.id === specialist.id ? { ...item, isActive: e.target.checked } : item)))} disabled={saving} /> Activo

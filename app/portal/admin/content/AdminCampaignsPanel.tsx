@@ -6,6 +6,7 @@ import { MagnifyingGlass, PencilSimple, Trash } from "@/components/ui/Icon";
 
 import { Card } from "@/app/portal/components/ui/Card";
 import { Table } from "@/app/portal/components/ui/Table";
+import { AdminImageField } from "@/app/portal/admin/content/components/AdminImageField";
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
 
 type CampaignRecord = {
@@ -175,11 +176,14 @@ export function AdminCampaignsPanel() {
             onChange={(event) => setForm((prev) => ({ ...prev, description: event.target.value }))}
             disabled={saving}
           />
-          <input
-            className="input h-11 text-sm md:col-span-2"
-            placeholder="Image URL"
+          <AdminImageField
+            label="Imagen campaña"
             value={form.imageUrl}
-            onChange={(event) => setForm((prev) => ({ ...prev, imageUrl: event.target.value }))}
+            onChange={(value) => setForm((prev) => ({ ...prev, imageUrl: value }))}
+            uploadFolder="marketing/campaigns"
+            recommendation="1600x800 px"
+            aspectRatio="2:1"
+            placeholder="https://..."
             disabled={saving}
           />
           <input
@@ -310,11 +314,15 @@ export function AdminCampaignsPanel() {
                   setEditing((prev) => (prev ? { ...prev, description: event.target.value } : null))
                 }
               />
-              <input
-                className="input h-11 text-sm md:col-span-2"
-                placeholder="Image URL"
+              <AdminImageField
+                label="Imagen campaña"
                 value={editing.imageUrl}
-                onChange={(event) => setEditing((prev) => (prev ? { ...prev, imageUrl: event.target.value } : null))}
+                onChange={(value) => setEditing((prev) => (prev ? { ...prev, imageUrl: value } : null))}
+                uploadFolder="marketing/campaigns"
+                recommendation="1600x800 px"
+                aspectRatio="2:1"
+                placeholder="https://..."
+                disabled={saving}
               />
               <input
                 className="input h-11 text-sm"
