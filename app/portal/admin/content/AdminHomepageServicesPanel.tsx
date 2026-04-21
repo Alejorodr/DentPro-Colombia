@@ -117,7 +117,13 @@ export function AdminHomepageServicesPanel() {
 
     setSaving(true);
     setError(null);
-    await fetchWithTimeout(`/api/admin/homepage/services/${service.id}`, { method: "DELETE" });
+    const response = await fetchWithTimeout(`/api/admin/homepage/services/${service.id}`, { method: "DELETE" });
+    if (!response.ok) {
+      const body = (await response.json().catch(() => null)) as ServicesApiResponse | null;
+      setError(body?.error ?? "No se pudo eliminar el servicio.");
+      setSaving(false);
+      return;
+    }
     await loadServices();
     setSaving(false);
     setSuccess("Servicio eliminado.");
@@ -200,7 +206,14 @@ export function AdminHomepageServicesPanel() {
 
   const deleteHighlight = async (serviceId: string, highlightId: string) => {
     setSaving(true);
-    await fetchWithTimeout(`/api/admin/homepage/services/${serviceId}/highlights/${highlightId}`, { method: "DELETE" });
+    setError(null);
+    const response = await fetchWithTimeout(`/api/admin/homepage/services/${serviceId}/highlights/${highlightId}`, { method: "DELETE" });
+    if (!response.ok) {
+      const body = (await response.json().catch(() => null)) as ServicesApiResponse | null;
+      setError(body?.error ?? "No se pudo eliminar el highlight.");
+      setSaving(false);
+      return;
+    }
     await loadServices();
     setSaving(false);
   };

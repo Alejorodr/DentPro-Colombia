@@ -121,7 +121,14 @@ export function AdminHomepageSpecialistsPanel() {
   const removeSpecialist = async (specialist: SpecialistItem) => {
     if (!window.confirm(`¿Eliminar a ${specialist.fullName}?`)) return;
     setSaving(true);
-    await fetchWithTimeout(`/api/admin/homepage/specialists/${specialist.id}`, { method: "DELETE" });
+    setError(null);
+    const response = await fetchWithTimeout(`/api/admin/homepage/specialists/${specialist.id}`, { method: "DELETE" });
+    if (!response.ok) {
+      const body = (await response.json().catch(() => null)) as SpecialistsApiResponse | null;
+      setError(body?.error ?? "No se pudo eliminar el especialista.");
+      setSaving(false);
+      return;
+    }
     await loadSpecialists();
     setSaving(false);
   };

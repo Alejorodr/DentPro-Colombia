@@ -13,7 +13,7 @@ export default async function AdminContentPage() {
       <SectionHeader
         eyebrow="CMS"
         title="Contenido del sitio"
-        description="Configura campañas y promociones para el portal de marketing."
+        description="Administra campañas, configuración del homepage, servicios y especialistas del portal de marketing."
       />
       <AdminHomepageSettingsPanel />
       <AdminHomepageServicesPanel />

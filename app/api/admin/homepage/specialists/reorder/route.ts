@@ -24,11 +24,14 @@ export async function PATCH(request: Request) {
     return errorResponse("La lista de orden no coincide con la cantidad de especialistas.", 400);
   }
 
+  if (new Set(body.orderedIds).size !== body.orderedIds.length) {
+    return errorResponse("La lista de orden contiene especialistas duplicados.", 400);
+  }
+
   const expected = new Set(specialists.map((item: { id: string }) => item.id));
-  for (const id of body.orderedIds) {
-    if (!expected.has(id)) {
-      return errorResponse("La lista de orden contiene especialistas inválidos.", 400);
-    }
+  const received = new Set(body.orderedIds);
+  if (received.size !== expected.size || [...received].some((id) => !expected.has(id))) {
+    return errorResponse("La lista de orden contiene especialistas inválidos.", 400);
   }
 
   await prisma.$transaction(
