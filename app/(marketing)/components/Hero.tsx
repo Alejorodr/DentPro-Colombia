@@ -110,7 +110,7 @@ export function Hero({
                 </div>
               </div>
             </div>
-            <div className="card mx-auto mt-6 w-full max-w-xs space-y-2 border-white/60 p-5 text-center text-sm text-slate-700 shadow-glow! backdrop-blur-sm transition-colors duration-500 hover:translate-y-0! hover:shadow-glow! dark:border-accent-cyan/15! dark:bg-surface-elevated/90! dark:text-slate-100 dark:shadow-glow-dark sm:absolute sm:-bottom-12 sm:right-6 sm:mx-0 sm:mt-0 sm:text-left sm:shadow-lg sm:p-6">
+            <div className="card mx-auto mt-6 w-full max-w-xs space-y-2 border-white/60 p-5 text-center text-sm text-slate-700 shadow-glow! backdrop-blur-sm transition-colors duration-500 hover:translate-y-0! hover:shadow-glow! dark:border-accent-cyan/15! dark:bg-surface-elevated/90! dark:text-slate-100 dark:shadow-glow-dark sm:absolute sm:-right-1 sm:-bottom-16 sm:translate-y-1 sm:mx-0 sm:mt-0 sm:text-left sm:shadow-lg sm:p-6">
               <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-accent-cyan/80">Indicadores clínicos</p>
               <p className="text-2xl font-bold text-brand-indigo dark:text-accent-cyan">{highlight.title}</p>
               {highlight.description ? <p>{highlight.description}</p> : null}
