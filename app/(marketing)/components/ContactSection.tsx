@@ -44,7 +44,7 @@ interface ContactSectionProps {
   locations: LocationItem[];
   legalLinks: LegalLink[];
   brand: string;
-  mapEmbed?: string;
+  mapEmbedUrl?: string;
 }
 
 export function ContactSection({
@@ -58,7 +58,7 @@ export function ContactSection({
   locations,
   legalLinks,
   brand,
-  mapEmbed,
+  mapEmbedUrl,
 }: ContactSectionProps) {
   const currentYear = new Date().getFullYear();
 
@@ -137,11 +137,15 @@ export function ContactSection({
               </li>
             ))}
           </ul>
-          {mapEmbed ? (
+          {mapEmbedUrl ? (
             <div className="contact-map mt-8">
-              <div
-                className="aspect-4/3"
-                dangerouslySetInnerHTML={{ __html: mapEmbed }}
+              <iframe
+                src={mapEmbedUrl}
+                title="Ubicación DentPro Colombia"
+                className="aspect-4/3 h-full w-full rounded-2xl border-0"
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                allowFullScreen
               />
             </div>
           ) : null}
