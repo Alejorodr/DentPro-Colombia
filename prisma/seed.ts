@@ -11,6 +11,7 @@ import {
 } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { Pool } from "pg";
+import { bootstrapHomepageContent } from "../lib/marketing/homepage";
 
 const databaseUrl = process.env.DATABASE_URL;
 if (!databaseUrl) {
@@ -749,6 +750,7 @@ async function runSeed() {
   try {
     await ensureSpecialties();
     await ensureServices();
+    await bootstrapHomepageContent(prisma);
     await ensureAdminUser();
     await ensureReceptions();
 
