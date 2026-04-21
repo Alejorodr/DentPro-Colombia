@@ -45,12 +45,10 @@ describe("refreshFutureInventoryForAllProfessionals", () => {
     expect(findMany).toHaveBeenNthCalledWith(
       2,
       expect.objectContaining({
-        where: { active: true },
+        where: { active: true, id: { gt: "p200" } },
         take: 200,
         orderBy: { id: "asc" },
         select: { id: true },
-        cursor: { id: "p200" },
-        skip: 1,
       }),
     );
     expect(result).toEqual({ professionals: 255, removed: 0, created: 0 });
