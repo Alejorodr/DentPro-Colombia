@@ -2,8 +2,11 @@ import { requireRole } from "@/lib/auth/require-role";
 import { SectionHeader } from "@/app/portal/components/ui/SectionHeader";
 import { AdminCampaignsPanel } from "@/app/portal/admin/content/AdminCampaignsPanel";
 import { AdminHomepageSettingsPanel } from "@/app/portal/admin/content/AdminHomepageSettingsPanel";
+import { AdminHomepageHeroStatsPanel } from "@/app/portal/admin/content/AdminHomepageHeroStatsPanel";
 import { AdminHomepageServicesPanel } from "@/app/portal/admin/content/AdminHomepageServicesPanel";
 import { AdminHomepageSpecialistsPanel } from "@/app/portal/admin/content/AdminHomepageSpecialistsPanel";
+import { AdminHomepageBookingOptionsPanel } from "@/app/portal/admin/content/AdminHomepageBookingOptionsPanel";
+import { AdminHomepageBookingBenefitsPanel } from "@/app/portal/admin/content/AdminHomepageBookingBenefitsPanel";
 
 export default async function AdminContentPage() {
   await requireRole("ADMINISTRADOR");
@@ -13,11 +16,14 @@ export default async function AdminContentPage() {
       <SectionHeader
         eyebrow="CMS"
         title="Contenido del sitio"
-        description="Administra campañas, configuración del homepage, servicios y especialistas del portal de marketing."
+        description="Administra campañas y el CMS del homepage (settings, hero stats, servicios, especialistas y agenda)."
       />
       <AdminHomepageSettingsPanel />
+      <AdminHomepageHeroStatsPanel />
       <AdminHomepageServicesPanel />
       <AdminHomepageSpecialistsPanel />
+      <AdminHomepageBookingOptionsPanel />
+      <AdminHomepageBookingBenefitsPanel />
       <AdminCampaignsPanel />
     </div>
   );
