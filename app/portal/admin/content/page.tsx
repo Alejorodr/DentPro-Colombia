@@ -7,6 +7,10 @@ import { AdminHomepageServicesPanel } from "@/app/portal/admin/content/AdminHome
 import { AdminHomepageSpecialistsPanel } from "@/app/portal/admin/content/AdminHomepageSpecialistsPanel";
 import { AdminHomepageBookingOptionsPanel } from "@/app/portal/admin/content/AdminHomepageBookingOptionsPanel";
 import { AdminHomepageBookingBenefitsPanel } from "@/app/portal/admin/content/AdminHomepageBookingBenefitsPanel";
+import { AdminHomepageSocialLinksPanel } from "@/app/portal/admin/content/AdminHomepageSocialLinksPanel";
+import { AdminHomepageContactSupportItemsPanel } from "@/app/portal/admin/content/AdminHomepageContactSupportItemsPanel";
+import { AdminHomepageLocationsPanel } from "@/app/portal/admin/content/AdminHomepageLocationsPanel";
+import { AdminHomepageLegalLinksPanel } from "@/app/portal/admin/content/AdminHomepageLegalLinksPanel";
 
 export default async function AdminContentPage() {
   await requireRole("ADMINISTRADOR");
@@ -24,6 +28,10 @@ export default async function AdminContentPage() {
       <AdminHomepageSpecialistsPanel />
       <AdminHomepageBookingOptionsPanel />
       <AdminHomepageBookingBenefitsPanel />
+      <AdminHomepageSocialLinksPanel />
+      <AdminHomepageContactSupportItemsPanel />
+      <AdminHomepageLocationsPanel />
+      <AdminHomepageLegalLinksPanel />
       <AdminCampaignsPanel />
     </div>
   );
