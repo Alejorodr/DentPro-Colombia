@@ -32,16 +32,17 @@ describe("cron appointment reminders", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    process.env.NODE_ENV = originalNodeEnv;
+    vi.unstubAllEnvs();
+    vi.stubEnv("NODE_ENV", originalNodeEnv ?? "");
     if (originalCronSecret === undefined) {
       delete process.env.CRON_SECRET;
     } else {
-      process.env.CRON_SECRET = originalCronSecret;
+      vi.stubEnv("CRON_SECRET", originalCronSecret);
     }
   });
 
   it("does not execute in protected environments when CRON_SECRET is missing", async () => {
-    process.env.NODE_ENV = "production";
+    vi.stubEnv("NODE_ENV", "production");
     delete process.env.CRON_SECRET;
 
     const response = await runRemindersCron(new Request("http://localhost/api/cron/appointments/reminders"));
@@ -51,8 +52,8 @@ describe("cron appointment reminders", () => {
   });
 
   it("executes when CRON_SECRET is configured and header is authorized", async () => {
-    process.env.NODE_ENV = "production";
-    process.env.CRON_SECRET = "secret-123";
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("CRON_SECRET", "secret-123");
 
     mockFindMany.mockResolvedValue([
       { id: "a1", status: "CONFIRMED", timeSlot: { startAt: new Date(), endAt: new Date() }, patient: null, professional: null },

@@ -6,7 +6,7 @@ import { parseJson } from "@/app/api/_utils/validation";
 import { MARKETING_ICON_KEYS } from "@/lib/marketing/homepage-types";
 import { getPrismaClient } from "@/lib/prisma";
 
-import { requireAdmin, requiredAbsoluteHttpUrl, requiredText } from "../../_lib";
+import { normalizeMarketingIconKey, requireAdmin, requiredAbsoluteHttpUrl, requiredText } from "../../_lib";
 
 const socialLinkUpdateSchema = z
   .object({
@@ -21,7 +21,7 @@ type SocialLinkRecord = {
   id: string;
   href: string;
   label: string;
-  iconKey: (typeof MARKETING_ICON_KEYS)[number];
+  iconKey: string;
   sortOrder: number;
   isActive: boolean;
 };
@@ -31,7 +31,7 @@ function serializeSocialLink(link: SocialLinkRecord) {
     id: link.id,
     href: link.href,
     label: link.label,
-    iconKey: link.iconKey,
+    iconKey: normalizeMarketingIconKey(link.iconKey, "InstagramLogo"),
     sortOrder: link.sortOrder,
     isActive: link.isActive,
   };

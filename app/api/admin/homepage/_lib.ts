@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import { getSessionUser, isAuthorized } from "@/app/api/_utils/auth";
 import { errorResponse } from "@/app/api/_utils/response";
+import { MARKETING_ICON_KEYS, type MarketingIconKey } from "@/lib/marketing/homepage-types";
 
 const htmlTagPattern = /<[^>]+>/;
 
@@ -63,6 +64,13 @@ export function optionalAbsoluteHttpUrl(max: number) {
     },
     { message: "URL inválida." },
   );
+}
+
+const marketingIconSchema = z.enum(MARKETING_ICON_KEYS);
+
+export function normalizeMarketingIconKey(iconKey: string, fallback: MarketingIconKey): MarketingIconKey {
+  const parsed = marketingIconSchema.safeParse(iconKey);
+  return parsed.success ? parsed.data : fallback;
 }
 
 export async function requireAdmin() {

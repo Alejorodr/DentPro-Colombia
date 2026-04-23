@@ -6,7 +6,7 @@ import { parseJson } from "@/app/api/_utils/validation";
 import { MARKETING_ICON_KEYS } from "@/lib/marketing/homepage-types";
 import { getPrismaClient } from "@/lib/prisma";
 
-import { requireAdmin, requiredText } from "../../_lib";
+import { normalizeMarketingIconKey, requireAdmin, requiredText } from "../../_lib";
 
 const bookingBenefitUpdateSchema = z
   .object({
@@ -18,7 +18,7 @@ const bookingBenefitUpdateSchema = z
 
 type BookingBenefitRecord = {
   id: string;
-  iconKey: (typeof MARKETING_ICON_KEYS)[number];
+  iconKey: string;
   text: string;
   sortOrder: number;
   isActive: boolean;
@@ -27,7 +27,7 @@ type BookingBenefitRecord = {
 function serializeBookingBenefit(benefit: BookingBenefitRecord) {
   return {
     id: benefit.id,
-    iconKey: benefit.iconKey,
+    iconKey: normalizeMarketingIconKey(benefit.iconKey, "CalendarCheck"),
     text: benefit.text,
     sortOrder: benefit.sortOrder,
     isActive: benefit.isActive,
