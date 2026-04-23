@@ -5,6 +5,10 @@ on:
     - cron: "0 5 * * *"
   workflow_dispatch:
 
+concurrency:
+  group: nightly-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   e2e-full:
     runs-on: ubuntu-latest
@@ -23,7 +27,6 @@ jobs:
           --health-timeout 5s
           --health-retries 5
     env:
-      NODE_VERSION: "24.x"
       DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/dentpro"
       NEXTAUTH_SECRET: "test-secret"
       NEXTAUTH_URL: "http://127.0.0.1:3000"
@@ -37,19 +40,19 @@ jobs:
       E2E_SUITE: "full"
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.13.1
 
       - name: Use Node.js
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
-          node-version: ${{ env.NODE_VERSION }}
-          package-manager-cache: false
-
-      - name: Bootstrap pnpm via Corepack
-        run: |
-          corepack enable
-          corepack prepare --activate "$(node -p 'require("./package.json").packageManager')"
-          pnpm --version
+          node-version-file: .nvmrc
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
