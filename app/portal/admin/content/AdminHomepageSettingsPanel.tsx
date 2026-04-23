@@ -287,9 +287,7 @@ export function AdminHomepageSettingsPanel() {
       <section>
         <p className="text-xs font-semibold uppercase tracking-wide text-brand-teal dark:text-accent-cyan">Homepage CMS</p>
         <h2 className="text-xl font-semibold text-slate-900 dark:text-white">Configuración singleton del homepage</h2>
-        <p className="text-sm text-slate-600 dark:text-slate-300">
-          Fase 3A: edición de bloques singleton (InfoBar, Hero, Agenda, Contacto y acciones flotantes).
-        </p>
+        <p className="text-sm text-slate-600 dark:text-slate-300">Edición de bloques singleton (InfoBar, Hero, Agenda, Contacto y acciones flotantes).</p>
       </section>
 
       {loading ? <Card><p className="text-sm text-slate-600 dark:text-slate-300">Cargando configuración...</p></Card> : null}

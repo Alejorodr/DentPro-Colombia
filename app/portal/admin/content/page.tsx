@@ -20,7 +20,7 @@ export default async function AdminContentPage() {
       <SectionHeader
         eyebrow="CMS"
         title="Contenido del sitio"
-        description="Administra campañas y el CMS del homepage (settings, hero stats, servicios, especialistas y agenda)."
+        description="Administra campañas y todo el CMS del homepage: settings, hero stats, servicios, especialistas, agenda, beneficios, enlaces, soporte, sedes y legales."
       />
       <AdminHomepageSettingsPanel />
       <AdminHomepageHeroStatsPanel />

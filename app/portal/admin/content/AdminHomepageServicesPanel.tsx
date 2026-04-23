@@ -248,7 +248,7 @@ export function AdminHomepageServicesPanel() {
       <section>
         <p className="text-xs font-semibold uppercase tracking-wide text-brand-teal dark:text-accent-cyan">Homepage CMS</p>
         <h2 className="text-xl font-semibold text-slate-900 dark:text-white">Servicios del homepage</h2>
-        <p className="text-sm text-slate-600 dark:text-slate-300">Fase 3B: CRUD y orden para servicios + highlights.</p>
+        <p className="text-sm text-slate-600 dark:text-slate-300">CRUD y orden para servicios y highlights.</p>
       </section>
 
       <Card className="space-y-4">

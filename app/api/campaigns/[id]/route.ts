@@ -1,27 +1,26 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { Prisma } from "@prisma/client";
 
-import { getSessionUser, isAuthorized } from "@/app/api/_utils/auth";
 import { errorResponse } from "@/app/api/_utils/response";
 import { parseJson } from "@/app/api/_utils/validation";
 import { getPrismaClient } from "@/lib/prisma";
+import { optionalAbsoluteHttpUrl, optionalText, requireAdmin, requiredAbsoluteHttpUrl, requiredText } from "@/app/api/admin/homepage/_lib";
 
 const updateCampaignSchema = z.object({
-  title: z.string().trim().min(1).max(120).optional(),
-  description: z.string().trim().max(500).nullable().optional(),
-  imageUrl: z.string().trim().min(1).max(500).optional(),
-  ctaText: z.string().trim().max(80).nullable().optional(),
-  ctaUrl: z.string().trim().max(500).nullable().optional(),
+  title: requiredText(1, 120).optional(),
+  description: optionalText(500).optional(),
+  imageUrl: requiredAbsoluteHttpUrl(500).optional(),
+  ctaText: optionalText(80).optional(),
+  ctaUrl: optionalAbsoluteHttpUrl(500).optional(),
   startAt: z.string().trim().min(1).optional(),
   endAt: z.string().trim().min(1).optional(),
   active: z.boolean().optional(),
 });
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const sessionUser = await getSessionUser();
-  if (!sessionUser || !isAuthorized(sessionUser.role, ["ADMINISTRADOR"])) {
-    return errorResponse("No autorizado.", 401);
-  }
+  const auth = await requireAdmin();
+  if (!auth.ok) return auth.response;
 
   const { id } = await params;
   const { data: body, error } = await parseJson(request, updateCampaignSchema);
@@ -29,27 +28,40 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     return error;
   }
 
-  const startAt = body.startAt ? new Date(body.startAt) : null;
-  const endAt = body.endAt ? new Date(body.endAt) : null;
+  const startAt = body.startAt ? new Date(body.startAt) : undefined;
+  const endAt = body.endAt ? new Date(body.endAt) : undefined;
   if (
     (startAt && Number.isNaN(startAt.getTime())) ||
-    (endAt && Number.isNaN(endAt.getTime())) ||
-    (startAt && endAt && startAt >= endAt)
+    (endAt && Number.isNaN(endAt.getTime()))
   ) {
     return errorResponse("Rango de fechas inválido.", 400);
   }
 
   const prisma = getPrismaClient();
+  const existing = await prisma.campaign.findUnique({
+    where: { id },
+    select: { id: true, startAt: true, endAt: true },
+  });
+  if (!existing) {
+    return errorResponse("Campaña no encontrada.", 404);
+  }
+
+  const effectiveStartAt = startAt ?? existing.startAt;
+  const effectiveEndAt = endAt ?? existing.endAt;
+  if (effectiveStartAt >= effectiveEndAt) {
+    return errorResponse("Rango de fechas inválido.", 400);
+  }
+
   const campaign = await prisma.campaign.update({
     where: { id },
     data: {
-      ...(body.title ? { title: body.title } : {}),
+      ...(body.title !== undefined ? { title: body.title } : {}),
       ...(body.description !== undefined ? { description: body.description } : {}),
-      ...(body.imageUrl ? { imageUrl: body.imageUrl } : {}),
+      ...(body.imageUrl !== undefined ? { imageUrl: body.imageUrl } : {}),
       ...(body.ctaText !== undefined ? { ctaText: body.ctaText } : {}),
       ...(body.ctaUrl !== undefined ? { ctaUrl: body.ctaUrl } : {}),
-      ...(startAt ? { startAt } : {}),
-      ...(endAt ? { endAt } : {}),
+      ...(startAt !== undefined ? { startAt } : {}),
+      ...(endAt !== undefined ? { endAt } : {}),
       ...(typeof body.active === "boolean" ? { active: body.active } : {}),
     },
   });
@@ -58,13 +70,18 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 }
 
 export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const sessionUser = await getSessionUser();
-  if (!sessionUser || !isAuthorized(sessionUser.role, ["ADMINISTRADOR"])) {
-    return errorResponse("No autorizado.", 401);
-  }
+  const auth = await requireAdmin();
+  if (!auth.ok) return auth.response;
 
   const { id } = await params;
   const prisma = getPrismaClient();
-  await prisma.campaign.delete({ where: { id } });
+  try {
+    await prisma.campaign.delete({ where: { id } });
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
+      return errorResponse("Campaña no encontrada.", 404);
+    }
+    throw error;
+  }
   return NextResponse.json({ status: "ok" });
 }
