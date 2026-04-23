@@ -25,16 +25,41 @@ export function optionalText(max: number) {
     .transform((value) => (value === "" ? null : value));
 }
 
+function hasValidAbsoluteHttpUrl(value: string) {
+  try {
+    const url = new URL(value);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+function hasValidHref(value: string) {
+  if (value.startsWith("#") || value.startsWith("/")) {
+    return true;
+  }
+
+  try {
+    const url = new URL(value);
+    return ["http:", "https:", "mailto:", "tel:"].includes(url.protocol);
+  } catch {
+    return false;
+  }
+}
+
+export function requiredAbsoluteHttpUrl(max: number) {
+  return requiredText(1, max).refine(hasValidAbsoluteHttpUrl, "URL inválida.");
+}
+
+export function requiredHref(max: number) {
+  return requiredText(1, max).refine(hasValidHref, "URL inválida.");
+}
+
 export function optionalAbsoluteHttpUrl(max: number) {
   return optionalText(max).refine(
     (value) => {
       if (value === null) return true;
-      try {
-        const url = new URL(value);
-        return url.protocol === "http:" || url.protocol === "https:";
-      } catch {
-        return false;
-      }
+      return hasValidAbsoluteHttpUrl(value);
     },
     { message: "URL inválida." },
   );
