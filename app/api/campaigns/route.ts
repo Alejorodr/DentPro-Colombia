@@ -1,17 +1,17 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { getSessionUser, isAuthorized } from "@/app/api/_utils/auth";
 import { errorResponse } from "@/app/api/_utils/response";
 import { parseJson } from "@/app/api/_utils/validation";
 import { getPrismaClient } from "@/lib/prisma";
+import { optionalAbsoluteHttpUrl, optionalText, requireAdmin, requiredAbsoluteHttpUrl, requiredText } from "@/app/api/admin/homepage/_lib";
 
 const campaignSchema = z.object({
-  title: z.string().trim().min(1).max(120),
-  description: z.string().trim().max(500).nullable().optional(),
-  imageUrl: z.string().trim().min(1).max(500),
-  ctaText: z.string().trim().max(80).nullable().optional(),
-  ctaUrl: z.string().trim().max(500).nullable().optional(),
+  title: requiredText(1, 120),
+  description: optionalText(500).optional(),
+  imageUrl: requiredAbsoluteHttpUrl(500),
+  ctaText: optionalText(80).optional(),
+  ctaUrl: optionalAbsoluteHttpUrl(500).optional(),
   startAt: z.string().trim().min(1),
   endAt: z.string().trim().min(1),
   active: z.boolean().optional(),
@@ -40,10 +40,8 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const sessionUser = await getSessionUser();
-  if (!sessionUser || !isAuthorized(sessionUser.role, ["ADMINISTRADOR"])) {
-    return errorResponse("No autorizado.", 401);
-  }
+  const auth = await requireAdmin();
+  if (!auth.ok) return auth.response;
 
   const { data: body, error } = await parseJson(request, campaignSchema);
   if (error) {

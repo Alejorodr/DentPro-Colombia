@@ -166,7 +166,7 @@ export function AdminHomepageSpecialistsPanel() {
       <section>
         <p className="text-xs font-semibold uppercase tracking-wide text-brand-teal dark:text-accent-cyan">Homepage CMS</p>
         <h2 className="text-xl font-semibold text-slate-900 dark:text-white">Especialistas del homepage</h2>
-        <p className="text-sm text-slate-600 dark:text-slate-300">Fase 3B: CRUD, activación y orden manual de especialistas.</p>
+        <p className="text-sm text-slate-600 dark:text-slate-300">CRUD, activación y orden manual de especialistas.</p>
       </section>
 
       <Card className="space-y-4">

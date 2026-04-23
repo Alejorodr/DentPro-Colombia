@@ -36,16 +36,23 @@ export function AdminCampaignsPanel() {
   const [campaigns, setCampaigns] = useState<CampaignRecord[]>([]);
   const [query, setQuery] = useState("");
   const [form, setForm] = useState(emptyForm);
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [editing, setEditing] = useState<CampaignRecord | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   const loadCampaigns = useCallback(async () => {
+    setLoading(true);
     const response = await fetchWithRetry("/api/campaigns");
-    if (response.ok) {
-      const data = (await response.json()) as CampaignRecord[];
-      setCampaigns(data);
+    const body = (await response.json().catch(() => null)) as { error?: string } | CampaignRecord[] | null;
+    if (!response.ok) {
+      setError((body as { error?: string } | null)?.error ?? "No se pudieron cargar las campañas.");
+      setLoading(false);
+      return;
     }
+    setCampaigns(Array.isArray(body) ? body : []);
+    setLoading(false);
   }, []);
 
   useEffect(() => {
@@ -69,6 +76,7 @@ export function AdminCampaignsPanel() {
     }
     setSaving(true);
     setError(null);
+    setSuccess(null);
     const response = await fetchWithTimeout("/api/campaigns", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -87,6 +95,7 @@ export function AdminCampaignsPanel() {
     if (response.ok) {
       setForm(emptyForm);
       await loadCampaigns();
+      setSuccess("Campaña creada.");
     } else {
       const body = (await response.json().catch(() => null)) as { error?: string } | null;
       setError(body?.error ?? "No se pudo crear la campaña.");
@@ -101,6 +110,7 @@ export function AdminCampaignsPanel() {
     }
     setSaving(true);
     setError(null);
+    setSuccess(null);
     const response = await fetchWithTimeout(`/api/campaigns/${editing.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -119,6 +129,7 @@ export function AdminCampaignsPanel() {
     if (response.ok) {
       setEditing(null);
       await loadCampaigns();
+      setSuccess("Campaña actualizada.");
     } else {
       const body = (await response.json().catch(() => null)) as { error?: string } | null;
       setError(body?.error ?? "No se pudo actualizar la campaña.");
@@ -132,8 +143,17 @@ export function AdminCampaignsPanel() {
       return;
     }
     setSaving(true);
-    await fetchWithTimeout(`/api/campaigns/${campaign.id}`, { method: "DELETE" });
+    setError(null);
+    setSuccess(null);
+    const response = await fetchWithTimeout(`/api/campaigns/${campaign.id}`, { method: "DELETE" });
+    if (!response.ok) {
+      const body = (await response.json().catch(() => null)) as { error?: string } | null;
+      setError(body?.error ?? "No se pudo eliminar la campaña.");
+      setSaving(false);
+      return;
+    }
     await loadCampaigns();
+    setSuccess("Campaña eliminada.");
     setSaving(false);
   };
 
@@ -141,7 +161,7 @@ export function AdminCampaignsPanel() {
     <div className="space-y-6">
       <section className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-brand-teal dark:text-accent-cyan">Content CMS</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-brand-teal dark:text-accent-cyan">Homepage CMS</p>
           <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">Campañas activas</h1>
         </div>
         <div className="relative w-full max-w-sm">
@@ -188,14 +208,14 @@ export function AdminCampaignsPanel() {
           />
           <input
             className="input h-11 text-sm"
-            placeholder="CTA text"
+            placeholder="CTA (texto)"
             value={form.ctaText}
             onChange={(event) => setForm((prev) => ({ ...prev, ctaText: event.target.value }))}
             disabled={saving}
           />
           <input
             className="input h-11 text-sm"
-            placeholder="CTA URL"
+            placeholder="CTA (URL)"
             value={form.ctaUrl}
             onChange={(event) => setForm((prev) => ({ ...prev, ctaUrl: event.target.value }))}
             disabled={saving}
@@ -232,8 +252,9 @@ export function AdminCampaignsPanel() {
         >
           Crear campaña
         </button>
-        {error ? <p className="text-sm text-red-600">{error}</p> : null}
       </Card>
+
+      {loading ? <Card><p className="text-sm text-slate-600 dark:text-slate-300">Cargando campañas...</p></Card> : null}
 
       <Card className="space-y-4">
         <div>
@@ -326,13 +347,13 @@ export function AdminCampaignsPanel() {
               />
               <input
                 className="input h-11 text-sm"
-                placeholder="CTA text"
+                placeholder="CTA (texto)"
                 value={editing.ctaText ?? ""}
                 onChange={(event) => setEditing((prev) => (prev ? { ...prev, ctaText: event.target.value } : null))}
               />
               <input
                 className="input h-11 text-sm"
-                placeholder="CTA URL"
+                placeholder="CTA (URL)"
                 value={editing.ctaUrl ?? ""}
                 onChange={(event) => setEditing((prev) => (prev ? { ...prev, ctaUrl: event.target.value } : null))}
               />
@@ -384,6 +405,8 @@ export function AdminCampaignsPanel() {
           </div>
         </div>
       ) : null}
+      {error ? <p className="text-sm text-red-600">{error}</p> : null}
+      {success ? <p className="text-sm text-emerald-600">{success}</p> : null}
     </div>
   );
 }
