@@ -6,7 +6,7 @@ import { parseJson } from "@/app/api/_utils/validation";
 import { MARKETING_ICON_KEYS } from "@/lib/marketing/homepage-types";
 import { getPrismaClient } from "@/lib/prisma";
 
-import { requireAdmin, requiredText } from "../../_lib";
+import { normalizeMarketingIconKey, requireAdmin, requiredText } from "../../_lib";
 
 const contactSupportItemUpdateSchema = z
   .object({
@@ -18,7 +18,7 @@ const contactSupportItemUpdateSchema = z
 
 type ContactSupportItemRecord = {
   id: string;
-  iconKey: (typeof MARKETING_ICON_KEYS)[number];
+  iconKey: string;
   text: string;
   sortOrder: number;
   isActive: boolean;
@@ -27,7 +27,7 @@ type ContactSupportItemRecord = {
 function serializeContactSupportItem(item: ContactSupportItemRecord) {
   return {
     id: item.id,
-    iconKey: item.iconKey,
+    iconKey: normalizeMarketingIconKey(item.iconKey, "Headset"),
     text: item.text,
     sortOrder: item.sortOrder,
     isActive: item.isActive,
