@@ -1,11 +1,10 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { getSessionUser, isAuthorized } from "@/app/api/_utils/auth";
-import { errorResponse } from "@/app/api/_utils/response";
 import { parseJson } from "@/app/api/_utils/validation";
 import { HOMEPAGE_DEFAULT_CONTENT, HOMEPAGE_SETTINGS_SINGLETON_ID } from "@/lib/marketing/homepage-defaults";
 import { getPrismaClient } from "@/lib/prisma";
+import { requireAdmin } from "../_lib";
 
 const htmlTagPattern = /<[^>]+>/;
 
@@ -275,20 +274,16 @@ function mapPayloadToUpdateData(payload: HomepageSettingsPayload) {
 }
 
 export async function GET() {
-  const sessionUser = await getSessionUser();
-  if (!sessionUser || !isAuthorized(sessionUser.role, ["ADMINISTRADOR"])) {
-    return errorResponse("No autorizado.", 401);
-  }
+  const auth = await requireAdmin();
+  if (!auth.ok) return auth.response;
 
   const settings = await ensureSettingsRecord();
   return NextResponse.json({ settings: serializeSettings(settings) });
 }
 
 export async function PATCH(request: Request) {
-  const sessionUser = await getSessionUser();
-  if (!sessionUser || !isAuthorized(sessionUser.role, ["ADMINISTRADOR"])) {
-    return errorResponse("No autorizado.", 401);
-  }
+  const auth = await requireAdmin();
+  if (!auth.ok) return auth.response;
 
   await ensureSettingsRecord();
   const { data: body, error } = await parseJson(request, homepageSettingsSchema);
