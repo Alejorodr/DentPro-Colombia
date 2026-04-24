@@ -40,6 +40,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Prisma generate
+        run: pnpm exec prisma generate --schema prisma/schema.prisma
+
       - name: Lint
         run: pnpm run lint
 
@@ -48,9 +51,6 @@ jobs:
 
       - name: Typecheck
         run: pnpm run typecheck
-
-      - name: Prisma generate
-        run: pnpm exec prisma generate --schema prisma/schema.prisma
 
       - name: Build
         run: pnpm run build
@@ -107,8 +107,7 @@ jobs:
         run: pnpm exec prisma generate --schema prisma/schema.prisma
 
       - name: Prisma schema deploy
-        run: |
-          pnpm exec prisma migrate deploy --schema prisma/schema.prisma || pnpm exec prisma db push --schema prisma/schema.prisma
+        run: pnpm exec prisma migrate deploy --schema prisma/schema.prisma
 
       - name: Playwright browser install
         run: pnpm exec playwright install --with-deps chromium

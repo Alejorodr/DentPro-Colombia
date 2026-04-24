@@ -7,8 +7,8 @@ const mockGetPrismaClient = vi.fn(() => ({
   specialty: { upsert: mockSpecialtyUpsert },
 }));
 
-const mockIsOpsIpAllowed = vi.fn(() => true);
-const mockEnforceOpsRateLimit = vi.fn(async () => null);
+const mockIsOpsIpAllowed = vi.fn<(request: Request) => boolean>(() => true);
+const mockEnforceOpsRateLimit = vi.fn<(request: Request) => Promise<Response | null>>(async () => null);
 const mockGetOpsKey = vi.fn(() => "ops-secret");
 const mockIsValidOpsKey = vi.fn((header: string | null | undefined, opsKey: string | null) => header === opsKey);
 
@@ -30,10 +30,12 @@ vi.mock("@/lib/scheduling/slot-inventory", () => ({
 
 vi.mock("@/app/api/ops/_utils", async () => {
   const actual = await vi.importActual<typeof import("@/app/api/ops/_utils")>("@/app/api/ops/_utils");
+  type IsOpsIpAllowedArgs = Parameters<typeof actual.isOpsIpAllowed>;
+  type EnforceOpsRateLimitArgs = Parameters<typeof actual.enforceOpsRateLimit>;
   return {
     ...actual,
-    isOpsIpAllowed: (...args: unknown[]) => mockIsOpsIpAllowed(...args),
-    enforceOpsRateLimit: (...args: unknown[]) => mockEnforceOpsRateLimit(...args),
+    isOpsIpAllowed: (...args: IsOpsIpAllowedArgs) => mockIsOpsIpAllowed(...args),
+    enforceOpsRateLimit: (...args: EnforceOpsRateLimitArgs) => mockEnforceOpsRateLimit(...args),
     getOpsKey: () => mockGetOpsKey(),
     isValidOpsKey: (header: string | null | undefined, opsKey: string | null) => mockIsValidOpsKey(header, opsKey),
     respondUnauthorized: () => new Response(JSON.stringify({ error: "Operación no autorizada." }), { status: 403 }),
