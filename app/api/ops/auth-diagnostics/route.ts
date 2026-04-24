@@ -6,6 +6,7 @@ import {
   enforceOpsRateLimit,
   getOpsKey,
   isOpsIpAllowed,
+  isValidOpsKey,
   respondGenericError,
   respondNotFound,
   respondUnauthorized,
@@ -53,7 +54,7 @@ export async function GET(request: Request) {
   }
 
   const headerKey = request.headers.get("x-ops-key")?.trim();
-  if (!headerKey || headerKey !== opsKey) {
+  if (!isValidOpsKey(headerKey, opsKey)) {
     return respondUnauthorized();
   }
 

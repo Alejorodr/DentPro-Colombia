@@ -5,6 +5,7 @@ import { AppointmentStatus, Prisma, ProfessionalScheduleStatus, Role, TimeSlotSt
 import { getPrismaClient } from "@/lib/prisma";
 import { logger } from "@/lib/logger";
 import { refreshFutureInventoryForProfessional } from "@/lib/scheduling/slot-inventory";
+import { enforceOpsRateLimit, getOpsKey, isOpsIpAllowed, isValidOpsKey, respondUnauthorized } from "@/app/api/ops/_utils";
 
 const E2E_SCHEMA_HINT = "Database schema not initialized for E2E runtime. Required tables not found.";
 
@@ -16,28 +17,30 @@ export async function POST(request: Request) {
 
   if (isVercelRuntime) {
     logger.warn({ event: "test.seed.disabled", route: "/api/test/seed", nodeEnv, vercelEnv, reason: "vercel_runtime" });
-    return NextResponse.json(
-      { error: "Endpoint disabled by runtime configuration.", reason: "test seed is disabled on Vercel runtime." },
-      { status: 403 },
-    );
+    return NextResponse.json({ error: "Endpoint disabled by runtime configuration." }, { status: 403 });
   }
 
   if (!runE2EEnabled) {
     logger.warn({ event: "test.seed.disabled", route: "/api/test/seed", nodeEnv, vercelEnv, reason: "run_e2e_disabled" });
-    return NextResponse.json(
-      { error: "Endpoint disabled by runtime configuration.", reason: "Set RUN_E2E=1 to enable /api/test/seed." },
-      { status: 403 },
-    );
+    return NextResponse.json({ error: "Endpoint disabled by runtime configuration." }, { status: 403 });
   }
 
-  const opsKey = process.env.OPS_KEY?.trim();
+  if (!isOpsIpAllowed(request)) {
+    logger.warn({ event: "test.seed.disabled", route: "/api/test/seed", nodeEnv, vercelEnv, reason: "ip_not_allowed" });
+    return respondUnauthorized();
+  }
+
+  const rateLimitResponse = await enforceOpsRateLimit(request);
+  if (rateLimitResponse) {
+    logger.warn({ event: "test.seed.disabled", route: "/api/test/seed", nodeEnv, vercelEnv, reason: "rate_limited" });
+    return rateLimitResponse;
+  }
+
+  const opsKey = getOpsKey();
   const headerKey = request.headers.get("x-ops-key")?.trim();
-  if (!opsKey || !headerKey || headerKey !== opsKey) {
+  if (!isValidOpsKey(headerKey, opsKey)) {
     logger.warn({ event: "test.seed.disabled", route: "/api/test/seed", nodeEnv, vercelEnv, reason: "ops_key_mismatch" });
-    return NextResponse.json(
-      { error: "Operación no autorizada.", reason: "Missing or invalid x-ops-key." },
-      { status: 403 },
-    );
+    return respondUnauthorized();
   }
 
   logger.info({ event: "test.seed.start", route: "/api/test/seed", nodeEnv, vercelEnv });
@@ -254,17 +257,12 @@ export async function POST(request: Request) {
         {
           error: "Seed failed.",
           hint: E2E_SCHEMA_HINT,
-          route: "/api/test/seed",
-          prismaCode: error.code,
-          prismaMessage: error.message,
-          prismaMeta: error.meta ?? null,
         },
         { status: 500 },
       );
     }
 
     logger.error({ event: "test.seed.failed", route: "/api/test/seed", status: 500, error });
-    const detail = error instanceof Error ? error.message : String(error);
-    return NextResponse.json({ error: "Seed failed.", route: "/api/test/seed", detail }, { status: 500 });
+    return NextResponse.json({ error: "Seed failed." }, { status: 500 });
   }
 }

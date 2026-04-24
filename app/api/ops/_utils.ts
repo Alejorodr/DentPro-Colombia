@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { timingSafeEqual } from "node:crypto";
 
 import { enforceRateLimit } from "@/app/api/_utils/ratelimit";
 
@@ -11,6 +12,20 @@ const OPS_RATE_LIMIT_CONFIG = {
 export function getOpsKey(): string | null {
   const value = process.env.OPS_KEY?.trim();
   return value && value.length > 0 ? value : null;
+}
+
+export function isValidOpsKey(headerKey: string | null | undefined, opsKey: string | null): boolean {
+  if (!headerKey || !opsKey) {
+    return false;
+  }
+
+  const expected = Buffer.from(opsKey, "utf8");
+  const actual = Buffer.from(headerKey, "utf8");
+  if (expected.length !== actual.length) {
+    return false;
+  }
+
+  return timingSafeEqual(expected, actual);
 }
 
 export function getClientIp(request: Request): string {
@@ -52,14 +67,8 @@ export function respondNotFound(): NextResponse {
   return NextResponse.json({ error: "Not Found" }, { status: 404 });
 }
 
-export function respondDisabled(reason: string, status = 403): NextResponse {
-  return NextResponse.json(
-    {
-      error: "Endpoint disabled by runtime configuration.",
-      reason,
-    },
-    { status },
-  );
+export function respondDisabled(_reason: string, status = 403): NextResponse {
+  return NextResponse.json({ error: "Endpoint disabled by runtime configuration." }, { status });
 }
 
 export function respondUnauthorized(): NextResponse {

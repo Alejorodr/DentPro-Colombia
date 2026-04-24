@@ -8,6 +8,7 @@ import {
   enforceOpsRateLimit,
   getOpsKey,
   isOpsIpAllowed,
+  isValidOpsKey,
   respondGenericError,
   respondNotFound,
   respondUnauthorized,
@@ -55,7 +56,7 @@ export async function POST(request: Request) {
 
   const opsKey = getOpsKey();
   const headerKey = request.headers.get("x-ops-key")?.trim();
-  if (!opsKey || !headerKey || headerKey !== opsKey) {
+  if (!isValidOpsKey(headerKey, opsKey)) {
     logger.warn({
       event: "ops.migrate.unauthorized",
       route: "/api/ops/migrate",
