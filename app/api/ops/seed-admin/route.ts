@@ -9,6 +9,7 @@ import {
   enforceOpsRateLimit,
   getOpsKey,
   isOpsIpAllowed,
+  isValidOpsKey,
   respondGenericError,
   respondDisabled,
   respondUnauthorized,
@@ -74,7 +75,7 @@ export async function POST(request: Request) {
 
   const opsKey = getOpsKey();
   const headerKey = request.headers.get("x-ops-key")?.trim();
-  if (!opsKey || !headerKey || headerKey !== opsKey) {
+  if (!isValidOpsKey(headerKey, opsKey)) {
     return respondUnauthorized();
   }
 
