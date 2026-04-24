@@ -18,6 +18,10 @@ type TimeoutOptions = {
   timeoutMs?: number;
 };
 
+type ApiErrorPayload = {
+  error?: string;
+};
+
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -108,4 +112,9 @@ export async function fetchWithRetry(
     throw lastError;
   }
   return fetchWithTimeout(input, init, options);
+}
+
+export async function getApiErrorMessage(response: Response, fallbackMessage: string) {
+  const payload = (await response.json().catch(() => null)) as ApiErrorPayload | null;
+  return payload?.error ?? fallbackMessage;
 }

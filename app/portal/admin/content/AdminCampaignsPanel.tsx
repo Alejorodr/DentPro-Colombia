@@ -7,7 +7,7 @@ import { MagnifyingGlass, PencilSimple, Trash } from "@/components/ui/Icon";
 import { Card } from "@/app/portal/components/ui/Card";
 import { Table } from "@/app/portal/components/ui/Table";
 import { AdminImageField } from "@/app/portal/admin/content/components/AdminImageField";
-import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
+import { fetchWithRetry, fetchWithTimeout, getApiErrorMessage } from "@/lib/http";
 
 type CampaignRecord = {
   id: string;
@@ -97,8 +97,7 @@ export function AdminCampaignsPanel() {
       await loadCampaigns();
       setSuccess("Campaña creada.");
     } else {
-      const body = (await response.json().catch(() => null)) as { error?: string } | null;
-      setError(body?.error ?? "No se pudo crear la campaña.");
+      setError(await getApiErrorMessage(response, "No se pudo crear la campaña."));
     }
 
     setSaving(false);
@@ -131,8 +130,7 @@ export function AdminCampaignsPanel() {
       await loadCampaigns();
       setSuccess("Campaña actualizada.");
     } else {
-      const body = (await response.json().catch(() => null)) as { error?: string } | null;
-      setError(body?.error ?? "No se pudo actualizar la campaña.");
+      setError(await getApiErrorMessage(response, "No se pudo actualizar la campaña."));
     }
 
     setSaving(false);
@@ -147,8 +145,7 @@ export function AdminCampaignsPanel() {
     setSuccess(null);
     const response = await fetchWithTimeout(`/api/campaigns/${campaign.id}`, { method: "DELETE" });
     if (!response.ok) {
-      const body = (await response.json().catch(() => null)) as { error?: string } | null;
-      setError(body?.error ?? "No se pudo eliminar la campaña.");
+      setError(await getApiErrorMessage(response, "No se pudo eliminar la campaña."));
       setSaving(false);
       return;
     }

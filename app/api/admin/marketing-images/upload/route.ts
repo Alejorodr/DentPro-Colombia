@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
-
 import { requireAdmin } from "@/app/api/admin/homepage/_lib";
+import { logApiError } from "@/app/api/_utils/observability";
+import { errorResponse, internalServerErrorResponse } from "@/app/api/_utils/response";
 import {
   MARKETING_IMAGE_MAX_BYTES,
   buildMarketingImageStorageKey,
@@ -21,25 +21,19 @@ export async function POST(request: Request) {
   const folder = formData.get("folder");
 
   if (!(file instanceof File)) {
-    return NextResponse.json({ error: "Archivo inválido o ausente." }, { status: 400 });
+    return errorResponse("Archivo inválido o ausente.", 400);
   }
 
   if (typeof folder !== "string" || !isAllowedMarketingUploadFolder(folder)) {
-    return NextResponse.json({ error: "Carpeta de upload inválida." }, { status: 400 });
+    return errorResponse("Carpeta de upload inválida.", 400);
   }
 
   if (!isAllowedMarketingImageType(file.type)) {
-    return NextResponse.json(
-      { error: "Tipo de archivo no permitido. Usa JPEG, PNG o WEBP." },
-      { status: 400 },
-    );
+    return errorResponse("Tipo de archivo no permitido. Usa JPEG, PNG o WEBP.", 400);
   }
 
   if (file.size <= 0 || file.size > MARKETING_IMAGE_MAX_BYTES) {
-    return NextResponse.json(
-      { error: `Archivo demasiado grande. Máximo ${Math.floor(MARKETING_IMAGE_MAX_BYTES / 1024 / 1024)}MB.` },
-      { status: 400 },
-    );
+    return errorResponse(`Archivo demasiado grande. Máximo ${Math.floor(MARKETING_IMAGE_MAX_BYTES / 1024 / 1024)}MB.`, 400);
   }
 
   const sanitizedFilename = sanitizeMarketingImageFilename(file.name, file.type);
@@ -47,8 +41,21 @@ export async function POST(request: Request) {
 
   try {
     const publicUrl = await uploadPublicMarketingImage(file, storageKey, file.type);
-    return NextResponse.json({ url: publicUrl, pathname: storageKey }, { status: 201 });
-  } catch {
-    return NextResponse.json({ error: "No se pudo subir la imagen. Intenta de nuevo." }, { status: 500 });
+    return Response.json({ url: publicUrl, pathname: storageKey }, { status: 201 });
+  } catch (error) {
+    logApiError(
+      {
+        event: "admin.marketing_image_upload_failed",
+        route: "/api/admin/marketing-images/upload",
+        userId: admin.sessionUser.id,
+        metadata: {
+          folder,
+          mimeType: file.type,
+          fileSize: file.size,
+        },
+      },
+      error,
+    );
+    return internalServerErrorResponse("No se pudo subir la imagen. Intenta de nuevo.");
   }
 }
