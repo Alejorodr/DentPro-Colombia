@@ -75,8 +75,12 @@ export function normalizeMarketingIconKey(iconKey: string, fallback: MarketingIc
 
 export async function requireAdmin() {
   const sessionUser = await getSessionUser();
-  if (!sessionUser || !isAuthorized(sessionUser.role, ["ADMINISTRADOR"])) {
+  if (!sessionUser) {
     return { ok: false as const, response: errorResponse("No autorizado.", 401) };
+  }
+
+  if (!isAuthorized(sessionUser.role, ["ADMINISTRADOR"])) {
+    return { ok: false as const, response: errorResponse("No autorizado.", 403) };
   }
 
   return { ok: true as const, sessionUser };

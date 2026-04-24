@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { auth } from "@/auth";
+import { requireRole, requireSession } from "@/lib/authz";
 import {
   getAdminAppointmentsSummary,
   getAdminKpis,
@@ -15,14 +15,13 @@ import { AppointmentStatus } from "@prisma/client";
 import { serviceUnavailableResponse } from "@/app/api/_utils/response";
 
 export async function GET(request: Request) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const sessionResult = await requireSession();
+  if ("error" in sessionResult) {
+    return NextResponse.json({ error: sessionResult.error.message }, { status: sessionResult.error.status });
   }
-
-  const role = String(session.user.role ?? "");
-  if (!["ADMINISTRADOR", "ADMIN"].includes(role)) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const roleError = requireRole(sessionResult.user, ["ADMINISTRADOR"]);
+  if (roleError) {
+    return NextResponse.json({ error: roleError.message }, { status: roleError.status });
   }
 
   const { searchParams } = new URL(request.url);

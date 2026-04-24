@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import { getSessionUser, isAuthorized } from "@/app/api/_utils/auth";
 import { errorResponse } from "@/app/api/_utils/response";
 import { parseJson } from "@/app/api/_utils/validation";
 import { getPrismaClient } from "@/lib/prisma";
@@ -19,7 +20,10 @@ const campaignSchema = z.object({
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const activeOnly = searchParams.get("active") === "true";
+  const requestedActiveOnly = searchParams.get("active") === "true";
+  const sessionUser = await getSessionUser();
+  const canReadAllCampaigns = Boolean(sessionUser && isAuthorized(sessionUser.role, ["ADMINISTRADOR"]));
+  const activeOnly = requestedActiveOnly || !canReadAllCampaigns;
   const now = new Date();
 
   const prisma = getPrismaClient();
