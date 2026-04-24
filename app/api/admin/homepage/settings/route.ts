@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import { logApiError } from "@/app/api/_utils/observability";
+import { internalServerErrorResponse } from "@/app/api/_utils/response";
 import { parseJson } from "@/app/api/_utils/validation";
 import { HOMEPAGE_DEFAULT_CONTENT, HOMEPAGE_SETTINGS_SINGLETON_ID } from "@/lib/marketing/homepage-defaults";
 import { getPrismaClient } from "@/lib/prisma";
@@ -277,25 +279,49 @@ export async function GET() {
   const auth = await requireAdmin();
   if (!auth.ok) return auth.response;
 
-  const settings = await ensureSettingsRecord();
-  return NextResponse.json({ settings: serializeSettings(settings) });
+  try {
+    const settings = await ensureSettingsRecord();
+    return NextResponse.json({ settings: serializeSettings(settings) });
+  } catch (error) {
+    logApiError(
+      {
+        event: "admin.homepage_settings.read_failed",
+        route: "/api/admin/homepage/settings",
+        userId: auth.sessionUser.id,
+      },
+      error,
+    );
+    return internalServerErrorResponse("No se pudo cargar la configuración del homepage.");
+  }
 }
 
 export async function PATCH(request: Request) {
   const auth = await requireAdmin();
   if (!auth.ok) return auth.response;
 
-  await ensureSettingsRecord();
-  const { data: body, error } = await parseJson(request, homepageSettingsSchema);
-  if (error) {
-    return error;
+  try {
+    await ensureSettingsRecord();
+    const { data: body, error } = await parseJson(request, homepageSettingsSchema);
+    if (error) {
+      return error;
+    }
+
+    const prisma = getPrismaClient();
+    const updated = await prisma.homepageSettings.update({
+      where: { id: HOMEPAGE_SETTINGS_SINGLETON_ID },
+      data: mapPayloadToUpdateData(body),
+    });
+
+    return NextResponse.json({ settings: serializeSettings(updated) });
+  } catch (error) {
+    logApiError(
+      {
+        event: "admin.homepage_settings.update_failed",
+        route: "/api/admin/homepage/settings",
+        userId: auth.sessionUser.id,
+      },
+      error,
+    );
+    return internalServerErrorResponse("No se pudo guardar la configuración del homepage.");
   }
-
-  const prisma = getPrismaClient();
-  const updated = await prisma.homepageSettings.update({
-    where: { id: HOMEPAGE_SETTINGS_SINGLETON_ID },
-    data: mapPayloadToUpdateData(body),
-  });
-
-  return NextResponse.json({ settings: serializeSettings(updated) });
 }
