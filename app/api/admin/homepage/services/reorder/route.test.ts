@@ -57,6 +57,20 @@ describe("PATCH /api/admin/homepage/services/reorder", () => {
     expect(parseJsonMock).not.toHaveBeenCalled();
   });
 
+  it("retorna 403 cuando el usuario autenticado no es admin", async () => {
+    requireAdminMock.mockResolvedValueOnce({
+      ok: false,
+      response: NextResponse.json({ error: "No autorizado." }, { status: 403 }),
+    });
+
+    const response = await PATCH(new Request("http://localhost/api/admin/homepage/services/reorder", { method: "PATCH" }));
+    const body = await response.json();
+
+    expect(response.status).toBe(403);
+    expect(body).toEqual({ error: "No autorizado." });
+    expect(parseJsonMock).not.toHaveBeenCalled();
+  });
+
   it("rechaza listas con IDs duplicados", async () => {
     parseJsonMock.mockResolvedValueOnce({
       data: { orderedIds: ["11111111-1111-4111-8111-111111111111", "11111111-1111-4111-8111-111111111111"] },
@@ -68,6 +82,34 @@ describe("PATCH /api/admin/homepage/services/reorder", () => {
 
     expect(response.status).toBe(400);
     expect(body.error).toContain("duplicados");
+    expect(prismaMock.$transaction).not.toHaveBeenCalled();
+  });
+
+  it("rechaza cuando la cantidad de IDs no coincide con los servicios", async () => {
+    parseJsonMock.mockResolvedValueOnce({
+      data: { orderedIds: ["11111111-1111-4111-8111-111111111111"] },
+      error: null,
+    });
+
+    const response = await PATCH(new Request("http://localhost/api/admin/homepage/services/reorder", { method: "PATCH" }));
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body.error).toContain("no coincide");
+    expect(prismaMock.$transaction).not.toHaveBeenCalled();
+  });
+
+  it("rechaza cuando el conjunto de IDs no coincide", async () => {
+    parseJsonMock.mockResolvedValueOnce({
+      data: { orderedIds: ["11111111-1111-4111-8111-111111111111", "33333333-3333-4333-8333-333333333333"] },
+      error: null,
+    });
+
+    const response = await PATCH(new Request("http://localhost/api/admin/homepage/services/reorder", { method: "PATCH" }));
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body.error).toContain("inválidos");
     expect(prismaMock.$transaction).not.toHaveBeenCalled();
   });
 
