@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { AppointmentStatus, Prisma, ProfessionalScheduleStatus, Role, TimeSlotStatus } from "@prisma/client";
 
 import { getPrismaClient } from "@/lib/prisma";
+import { logAuditEvent } from "@/lib/audit";
 import { logger } from "@/lib/logger";
 import { refreshFutureInventoryForProfessional } from "@/lib/scheduling/slot-inventory";
 import { enforceOpsRateLimit, getOpsKey, isOpsIpAllowed, isValidOpsKey, respondUnauthorized } from "@/app/api/ops/_utils";
@@ -44,6 +45,18 @@ export async function POST(request: Request) {
   }
 
   logger.info({ event: "test.seed.start", route: "/api/test/seed", nodeEnv, vercelEnv });
+  await logAuditEvent({
+    actor: { identifier: "ops-key" },
+    action: "test.seed.executed",
+    resourceType: "ops_route",
+    resourceId: "/api/test/seed",
+    status: "success",
+    metadata: {
+      phase: "attempt",
+      nodeEnv,
+      vercelEnv,
+    },
+  });
 
   try {
     const prisma = getPrismaClient();
@@ -241,6 +254,16 @@ export async function POST(request: Request) {
     await refreshFutureInventoryForProfessional({ professionalId: professional.id, rangeStart, rangeEnd, prisma });
 
     logger.info({ event: "test.seed.success", route: "/api/test/seed", status: 200 });
+    await logAuditEvent({
+      actor: { identifier: "ops-key" },
+      action: "test.seed.executed",
+      resourceType: "ops_route",
+      resourceId: "/api/test/seed",
+      status: "success",
+      metadata: {
+        phase: "completed",
+      },
+    });
     return NextResponse.json({
       ok: true,
       users: {
@@ -251,6 +274,17 @@ export async function POST(request: Request) {
       },
     });
   } catch (error) {
+    await logAuditEvent({
+      actor: { identifier: "ops-key" },
+      action: "test.seed.executed",
+      resourceType: "ops_route",
+      resourceId: "/api/test/seed",
+      status: "failure",
+      metadata: {
+        nodeEnv,
+        vercelEnv,
+      },
+    });
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2021") {
       logger.error({ event: "test.seed.failed", route: "/api/test/seed", status: 500, errorCode: error.code, error });
       return NextResponse.json(

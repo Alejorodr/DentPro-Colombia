@@ -4,9 +4,10 @@ import { NextResponse } from "next/server";
 
 import { POST } from "@/app/api/admin/marketing-images/upload/route";
 
-const { requireAdminMock, uploadPublicMarketingImageMock } = vi.hoisted(() => ({
+const { requireAdminMock, uploadPublicMarketingImageMock, logAuditEventMock } = vi.hoisted(() => ({
   requireAdminMock: vi.fn(),
   uploadPublicMarketingImageMock: vi.fn(),
+  logAuditEventMock: vi.fn(),
 }));
 
 vi.mock("@/app/api/admin/homepage/_lib", () => ({
@@ -22,10 +23,14 @@ vi.mock("@/lib/marketing/images", () => ({
   uploadPublicMarketingImage: uploadPublicMarketingImageMock,
 }));
 
+vi.mock("@/lib/audit", () => ({
+  logAuditEvent: logAuditEventMock,
+}));
+
 describe("POST /api/admin/marketing-images/upload", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    requireAdminMock.mockResolvedValue({ ok: true, sessionUser: { id: "admin-1" } });
+    requireAdminMock.mockResolvedValue({ ok: true, sessionUser: { id: "admin-1", role: "ADMINISTRADOR" } });
     uploadPublicMarketingImageMock.mockResolvedValue("https://cdn.example.com/homepage/hero.webp");
   });
 
@@ -114,5 +119,12 @@ describe("POST /api/admin/marketing-images/upload", () => {
     expect(response.status).toBe(201);
     expect(body.url).toContain("https://cdn.example.com");
     expect(uploadPublicMarketingImageMock).toHaveBeenCalledTimes(1);
+    expect(logAuditEventMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: "marketing.image.uploaded",
+        resourceType: "marketing_image_upload",
+        status: "success",
+      }),
+    );
   });
 });

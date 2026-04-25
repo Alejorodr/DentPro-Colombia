@@ -146,6 +146,7 @@ model User {
   unavailabilityCreated        ProfessionalUnavailability[]     @relation("UnavailabilityCreatedBy")
   unavailabilityApproved       ProfessionalUnavailability[]     @relation("UnavailabilityApprovedBy")
   unavailabilityUpdated        ProfessionalUnavailability[]     @relation("UnavailabilityUpdatedBy")
+  auditLogs                    AuditLog[]
 
   @@index([role])
 }
@@ -672,6 +673,28 @@ model Campaign {
   @@index([active])
   @@index([startAt])
   @@index([endAt])
+}
+
+
+model AuditLog {
+  id              String   @id @default(uuid())
+  actorUserId     String?  @db.Uuid
+  actorIdentifier String?
+  actorRole       String?
+  action          String
+  resourceType    String
+  resourceId      String?
+  targetLabel     String?
+  status          String
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  actorUser       User?    @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([actorUserId])
+  @@index([action])
+  @@index([resourceType])
+  @@index([status])
+  @@index([createdAt])
 }
 
 model HomepageSettings {

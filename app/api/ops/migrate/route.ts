@@ -3,6 +3,7 @@ import { exec } from "node:child_process";
 import { promisify } from "node:util";
 
 import { getRequestId } from "@/app/api/_utils/request";
+import { logAuditEvent } from "@/lib/audit";
 import { logger } from "@/lib/logger";
 import {
   enforceOpsRateLimit,
@@ -71,11 +72,32 @@ export async function POST(request: Request) {
     route: "/api/ops/migrate",
     requestId,
   });
+  await logAuditEvent({
+    actor: { identifier: "ops-key" },
+    action: "ops.migrate.executed",
+    resourceType: "ops_route",
+    resourceId: "/api/ops/migrate",
+    status: "success",
+    metadata: {
+      phase: "attempt",
+      requestId,
+    },
+  });
 
   try {
     await runCommand("npx prisma migrate deploy");
     await runCommand("npx prisma generate");
   } catch (error) {
+    await logAuditEvent({
+      actor: { identifier: "ops-key" },
+      action: "ops.migrate.executed",
+      resourceType: "ops_route",
+      resourceId: "/api/ops/migrate",
+      status: "failure",
+      metadata: {
+        requestId,
+      },
+    });
     Sentry.captureException(error);
     logger.error({
       event: "ops.migrate.failed",
@@ -94,6 +116,18 @@ export async function POST(request: Request) {
     requestId,
     status: 200,
     durationMs: Date.now() - startedAt,
+  });
+  await logAuditEvent({
+    actor: { identifier: "ops-key" },
+    action: "ops.migrate.executed",
+    resourceType: "ops_route",
+    resourceId: "/api/ops/migrate",
+    status: "success",
+    metadata: {
+      phase: "completed",
+      requestId,
+      durationMs: Date.now() - startedAt,
+    },
   });
   return NextResponse.json({ message: GENERIC_SUCCESS_MESSAGE }, { status: 200 });
 }
