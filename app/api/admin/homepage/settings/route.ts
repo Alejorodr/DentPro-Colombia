@@ -4,6 +4,7 @@ import { z } from "zod";
 import { logApiError } from "@/app/api/_utils/observability";
 import { internalServerErrorResponse } from "@/app/api/_utils/response";
 import { parseJson } from "@/app/api/_utils/validation";
+import { logAuditEvent } from "@/lib/audit";
 import { HOMEPAGE_DEFAULT_CONTENT, HOMEPAGE_SETTINGS_SINGLETON_ID } from "@/lib/marketing/homepage-defaults";
 import { getPrismaClient } from "@/lib/prisma";
 import { requireAdmin } from "../_lib";
@@ -301,6 +302,50 @@ export async function PATCH(request: Request) {
 
   try {
     await ensureSettingsRecord();
+    const current = await getPrismaClient().homepageSettings.findUnique({
+      where: { id: HOMEPAGE_SETTINGS_SINGLETON_ID },
+      select: {
+        infoBarLocation: true,
+        infoBarHours: true,
+        infoBarWhatsappHref: true,
+        infoBarWhatsappLabel: true,
+        infoBarEmailHref: true,
+        infoBarEmailLabel: true,
+        heroBadge: true,
+        heroTitle: true,
+        heroDescription: true,
+        heroPrimaryButtonText: true,
+        heroPrimaryButtonHref: true,
+        heroSecondaryButtonText: true,
+        heroSecondaryButtonHref: true,
+        heroImageUrl: true,
+        heroImageAlt: true,
+        heroTestimonialQuote: true,
+        heroTestimonialAuthor: true,
+        heroTestimonialRole: true,
+        heroTestimonialAvatarUrl: true,
+        heroHighlightTitle: true,
+        heroHighlightDescription: true,
+        bookingTitle: true,
+        bookingDescription: true,
+        bookingSelectLabel: true,
+        bookingBenefitsTitle: true,
+        bookingScheduleNote: true,
+        bookingConsentNote: true,
+        contactTitle: true,
+        contactDescription: true,
+        contactPhone: true,
+        contactWhatsapp: true,
+        contactEmail: true,
+        contactAddress: true,
+        contactSupportTitle: true,
+        contactLocationsTitle: true,
+        contactBrand: true,
+        contactMapEmbedUrl: true,
+        floatingWhatsappNumber: true,
+        floatingPhoneNumber: true,
+      },
+    });
     const { data: body, error } = await parseJson(request, homepageSettingsSchema);
     if (error) {
       return error;
@@ -312,8 +357,36 @@ export async function PATCH(request: Request) {
       data: mapPayloadToUpdateData(body),
     });
 
+    const changedFields = current
+      ? Object.keys(body).filter((key) => body[key as keyof HomepageSettingsPayload] !== current[key as keyof typeof current])
+      : Object.keys(body);
+    await logAuditEvent({
+      actor: {
+        userId: auth.sessionUser.id,
+        role: auth.sessionUser.role,
+      },
+      action: "homepage.settings.updated",
+      resourceType: "homepage_settings",
+      resourceId: HOMEPAGE_SETTINGS_SINGLETON_ID,
+      status: "success",
+      metadata: {
+        changedFields,
+        changedFieldCount: changedFields.length,
+      },
+    });
+
     return NextResponse.json({ settings: serializeSettings(updated) });
   } catch (error) {
+    await logAuditEvent({
+      actor: {
+        userId: auth.sessionUser.id,
+        role: auth.sessionUser.role,
+      },
+      action: "homepage.settings.updated",
+      resourceType: "homepage_settings",
+      resourceId: HOMEPAGE_SETTINGS_SINGLETON_ID,
+      status: "failure",
+    });
     logApiError(
       {
         event: "admin.homepage_settings.update_failed",

@@ -11,6 +11,7 @@ const mockIsOpsIpAllowed = vi.fn<(request: Request) => boolean>(() => true);
 const mockEnforceOpsRateLimit = vi.fn<(request: Request) => Promise<Response | null>>(async () => null);
 const mockGetOpsKey = vi.fn(() => "ops-secret");
 const mockIsValidOpsKey = vi.fn((header: string | null | undefined, opsKey: string | null) => header === opsKey);
+const mockLogAuditEvent = vi.fn();
 
 vi.mock("@/lib/prisma", () => ({
   getPrismaClient: () => mockGetPrismaClient(),
@@ -26,6 +27,10 @@ vi.mock("@/lib/logger", () => ({
 
 vi.mock("@/lib/scheduling/slot-inventory", () => ({
   refreshFutureInventoryForProfessional: vi.fn(),
+}));
+
+vi.mock("@/lib/audit", () => ({
+  logAuditEvent: (...args: unknown[]) => mockLogAuditEvent(...args),
 }));
 
 vi.mock("@/app/api/ops/_utils", async () => {
@@ -63,6 +68,7 @@ describe("/api/test/seed hardening", () => {
     mockEnforceOpsRateLimit.mockResolvedValue(null);
     mockGetOpsKey.mockReturnValue("ops-secret");
     mockIsValidOpsKey.mockImplementation((header, opsKey) => header === opsKey);
+    mockLogAuditEvent.mockResolvedValue(undefined);
   });
 
   it("blocks requests from non-allowlisted IPs before touching DB", async () => {
@@ -96,5 +102,11 @@ describe("/api/test/seed hardening", () => {
     const payload = await response.json();
     expect(payload).toEqual({ error: "Seed failed." });
     expect(JSON.stringify(payload)).not.toContain("Sensitive DB detail");
+    expect(mockLogAuditEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: "test.seed.executed",
+        status: "failure",
+      }),
+    );
   });
 });

@@ -5,6 +5,7 @@ import { getSessionUser, isAuthorized } from "@/app/api/_utils/auth";
 import { logApiError } from "@/app/api/_utils/observability";
 import { errorResponse, internalServerErrorResponse } from "@/app/api/_utils/response";
 import { parseJson } from "@/app/api/_utils/validation";
+import { logAuditEvent } from "@/lib/audit";
 import { getPrismaClient } from "@/lib/prisma";
 import {
   optionalAbsoluteHttpUrl,
@@ -91,8 +92,33 @@ export async function POST(request: Request) {
       },
     });
 
+    await logAuditEvent({
+      actor: {
+        userId: auth.sessionUser.id,
+        role: auth.sessionUser.role,
+      },
+      action: "campaign.created",
+      resourceType: "campaign",
+      resourceId: campaign.id,
+      targetLabel: campaign.title,
+      status: "success",
+      metadata: {
+        active: campaign.active,
+        hasDescription: Boolean(campaign.description),
+      },
+    });
+
     return NextResponse.json(campaign);
   } catch (error) {
+    await logAuditEvent({
+      actor: {
+        userId: auth.sessionUser.id,
+        role: auth.sessionUser.role,
+      },
+      action: "campaign.created",
+      resourceType: "campaign",
+      status: "failure",
+    });
     logApiError(
       {
         event: "campaigns.create_failed",

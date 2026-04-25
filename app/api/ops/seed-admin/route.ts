@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { AppointmentStatus, InsuranceStatus, Prisma, ProfessionalScheduleStatus, Role, TimeSlotStatus } from "@prisma/client";
 
 import { getPrismaClient } from "@/lib/prisma";
+import { logAuditEvent } from "@/lib/audit";
 import { logger } from "@/lib/logger";
 import { refreshFutureInventoryForAllProfessionals } from "@/lib/scheduling/slot-inventory";
 import {
@@ -80,6 +81,18 @@ export async function POST(request: Request) {
   }
 
   logger.info({ event: "ops.seed_admin.start", route: "/api/ops/seed-admin", nodeEnv, vercelEnv });
+  await logAuditEvent({
+    actor: { identifier: "ops-key" },
+    action: "ops.seed_admin.executed",
+    resourceType: "ops_route",
+    resourceId: "/api/ops/seed-admin",
+    status: "success",
+    metadata: {
+      phase: "attempt",
+      nodeEnv,
+      vercelEnv,
+    },
+  });
 
   try {
     const adminEmail = requireSeedEnv("SEED_ADMIN_EMAIL").toLowerCase();
@@ -555,6 +568,18 @@ export async function POST(request: Request) {
     const professionalUser = createdUsers.find((user) => user.role === Role.PROFESIONAL) ?? null;
     const patientUser = createdUsers.find((user) => user.role === Role.PACIENTE) ?? null;
     logger.info({ event: "ops.seed_admin.success", route: "/api/ops/seed-admin", status: 200, existingAdmin: Boolean(existingAdmin) });
+    await logAuditEvent({
+      actor: { identifier: "ops-key" },
+      action: "ops.seed_admin.executed",
+      resourceType: "ops_route",
+      resourceId: "/api/ops/seed-admin",
+      status: "success",
+      metadata: {
+        phase: "completed",
+        existingAdmin: Boolean(existingAdmin),
+        adminEmail,
+      },
+    });
     return NextResponse.json(
       {
         message,
@@ -572,6 +597,17 @@ export async function POST(request: Request) {
       { status: 200 },
     );
   } catch (error) {
+    await logAuditEvent({
+      actor: { identifier: "ops-key" },
+      action: "ops.seed_admin.executed",
+      resourceType: "ops_route",
+      resourceId: "/api/ops/seed-admin",
+      status: "failure",
+      metadata: {
+        nodeEnv,
+        vercelEnv,
+      },
+    });
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2021") {
       logger.error({ event: "ops.seed_admin.failed", route: "/api/ops/seed-admin", status: 500, errorCode: error.code, error });
       return NextResponse.json(

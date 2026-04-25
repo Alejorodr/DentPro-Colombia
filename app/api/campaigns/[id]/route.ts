@@ -5,6 +5,7 @@ import { Prisma } from "@prisma/client";
 import { logApiError } from "@/app/api/_utils/observability";
 import { errorResponse, internalServerErrorResponse } from "@/app/api/_utils/response";
 import { parseJson } from "@/app/api/_utils/validation";
+import { logAuditEvent } from "@/lib/audit";
 import { getPrismaClient } from "@/lib/prisma";
 import {
   optionalAbsoluteHttpUrl,
@@ -72,8 +73,35 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       },
     });
 
+    const changedFields = Object.keys(body);
+    await logAuditEvent({
+      actor: {
+        userId: auth.sessionUser.id,
+        role: auth.sessionUser.role,
+      },
+      action: "campaign.updated",
+      resourceType: "campaign",
+      resourceId: campaign.id,
+      targetLabel: campaign.title,
+      status: "success",
+      metadata: {
+        changedFields,
+        changedFieldCount: changedFields.length,
+      },
+    });
+
     return NextResponse.json(campaign);
   } catch (error) {
+    await logAuditEvent({
+      actor: {
+        userId: auth.sessionUser.id,
+        role: auth.sessionUser.role,
+      },
+      action: "campaign.updated",
+      resourceType: "campaign",
+      resourceId: id,
+      status: "failure",
+    });
     logApiError(
       {
         event: "campaigns.update_failed",
@@ -94,12 +122,33 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
   const { id } = await params;
   const prisma = getPrismaClient();
   try {
-    await prisma.campaign.delete({ where: { id } });
+    const deleted = await prisma.campaign.delete({ where: { id } });
+    await logAuditEvent({
+      actor: {
+        userId: auth.sessionUser.id,
+        role: auth.sessionUser.role,
+      },
+      action: "campaign.deleted",
+      resourceType: "campaign",
+      resourceId: deleted.id,
+      targetLabel: deleted.title,
+      status: "success",
+    });
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
       return errorResponse("Campaña no encontrada.", 404);
     }
 
+    await logAuditEvent({
+      actor: {
+        userId: auth.sessionUser.id,
+        role: auth.sessionUser.role,
+      },
+      action: "campaign.deleted",
+      resourceType: "campaign",
+      resourceId: id,
+      status: "failure",
+    });
     logApiError(
       {
         event: "campaigns.delete_failed",
