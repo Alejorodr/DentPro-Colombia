@@ -8,12 +8,28 @@ import { AttachmentKind } from "@prisma/client";
 import { requireRole, requireSession } from "@/lib/authz";
 
 const allowedKinds = new Set<AttachmentKind>([AttachmentKind.XRAY, AttachmentKind.LAB, AttachmentKind.DOCUMENT]);
+
+function isSafeAttachmentUrl(url: string) {
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
 const attachmentSchema = z.object({
   kind: z.nativeEnum(AttachmentKind),
   filename: z.string().trim().min(1).max(200),
   mimeType: z.string().trim().max(120).nullable().optional(),
   size: z.number().int().min(0).nullable().optional(),
-  url: z.string().trim().max(500).nullable().optional(),
+  url: z
+    .string()
+    .trim()
+    .max(500)
+    .refine((value) => !value || isSafeAttachmentUrl(value), "La URL del adjunto es inválida.")
+    .nullable()
+    .optional(),
   dataUrl: z.string().trim().max(20000).nullable().optional(),
 });
 
