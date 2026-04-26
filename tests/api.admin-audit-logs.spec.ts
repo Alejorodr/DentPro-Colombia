@@ -2,6 +2,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { GET } from "@/app/api/admin/audit-logs/route";
+import { logApiError } from "@/app/api/_utils/observability";
 import { requireRole, requireSession } from "@/lib/authz";
 import { getPrismaClient } from "@/lib/prisma";
 
@@ -14,16 +15,21 @@ vi.mock("@/lib/prisma", () => ({
   getPrismaClient: vi.fn(),
 }));
 
+vi.mock("@/app/api/_utils/observability", () => ({
+  logApiError: vi.fn(),
+}));
+
 describe("GET /api/admin/audit-logs", () => {
   const findManyMock = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(getPrismaClient).mockReturnValue({
+    const prismaMock = {
       auditLog: {
         findMany: findManyMock,
       },
-    } as any);
+    };
+    vi.mocked(getPrismaClient).mockReturnValue(prismaMock as unknown as ReturnType<typeof getPrismaClient>);
   });
 
   it("responde 401 cuando no hay sesión", async () => {
@@ -38,7 +44,9 @@ describe("GET /api/admin/audit-logs", () => {
   });
 
   it("responde 403 cuando el rol no está autorizado", async () => {
-    vi.mocked(requireSession).mockResolvedValueOnce({ user: { id: "user-1", role: "PACIENTE" } } as any);
+    vi.mocked(requireSession).mockResolvedValueOnce({
+      user: { id: "user-1", role: "PACIENTE" },
+    } as Awaited<ReturnType<typeof requireSession>>);
     vi.mocked(requireRole).mockReturnValueOnce({ status: 403, message: "No autorizado." });
 
     const response = await GET(new Request("http://localhost/api/admin/audit-logs"));
@@ -50,7 +58,9 @@ describe("GET /api/admin/audit-logs", () => {
   });
 
   it("lista logs ordenados y devuelve nextCursor cuando hay más resultados", async () => {
-    vi.mocked(requireSession).mockResolvedValueOnce({ user: { id: "admin-1", role: "ADMINISTRADOR" } } as any);
+    vi.mocked(requireSession).mockResolvedValueOnce({
+      user: { id: "admin-1", role: "ADMINISTRADOR" },
+    } as Awaited<ReturnType<typeof requireSession>>);
     vi.mocked(requireRole).mockReturnValueOnce(null);
 
     findManyMock.mockResolvedValueOnce([
@@ -115,5 +125,27 @@ describe("GET /api/admin/audit-logs", () => {
       }),
     );
     expect(body.nextCursor).toEqual(expect.any(String));
+  });
+
+  it("responde 500 y registra observabilidad cuando falla Prisma", async () => {
+    vi.mocked(requireSession).mockResolvedValueOnce({
+      user: { id: "admin-1", role: "ADMINISTRADOR" },
+    } as Awaited<ReturnType<typeof requireSession>>);
+    vi.mocked(requireRole).mockReturnValueOnce(null);
+    findManyMock.mockRejectedValueOnce(new Error("db down"));
+
+    const response = await GET(new Request("http://localhost/api/admin/audit-logs"));
+    const body = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(body).toEqual({ error: "No se pudieron cargar los logs de auditoría." });
+    expect(logApiError).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event: "admin.audit_logs.list_failed",
+        route: "/api/admin/audit-logs",
+        userId: "admin-1",
+      }),
+      expect.any(Error),
+    );
   });
 });
