@@ -4,109 +4,116 @@ import { useCallback, useEffect, useState } from "react";
 
 import { fetchWithRetry } from "@/lib/http";
 
-const defaultFilters = {
-  patientId: "",
-  userId: "",
-  from: "",
-  to: "",
+type AuditStatus = "success" | "failure";
+
+type AuditLogItem = {
+  id: string;
+  createdAt: string;
+  action: string;
+  resourceType: string;
+  resourceId: string | null;
+  targetLabel: string | null;
+  status: AuditStatus;
+  actor: {
+    userId: string | null;
+    role: string | null;
+    identifier: string | null;
+  };
+  metadataPreview: string[];
 };
 
-type AccessLogEntry = {
-  id: string;
-  action: string;
-  route: string;
-  requestId: string;
-  createdAt: string;
-  user: { id: string; name: string; role: string };
-  patient: { id: string; name: string } | null;
+type AuditLogsResponse = {
+  items: AuditLogItem[];
+  nextCursor: string | null;
 };
+
+function StatusBadge({ status }: { status: AuditStatus }) {
+  const classes =
+    status === "success"
+      ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"
+      : "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300";
+
+  return (
+    <span className={`inline-flex rounded-full px-2 py-1 text-[11px] font-semibold uppercase tracking-wide ${classes}`}>
+      {status}
+    </span>
+  );
+}
 
 export function AdminAuditPanel() {
-  const [filters, setFilters] = useState(defaultFilters);
-  const [logs, setLogs] = useState<AccessLogEntry[]>([]);
+  const [statusFilter, setStatusFilter] = useState<"all" | AuditStatus>("all");
+  const [items, setItems] = useState<AuditLogItem[]>([]);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const loadLogs = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-
-    const query = new URLSearchParams();
-    if (filters.patientId) query.set("patientId", filters.patientId);
-    if (filters.userId) query.set("userId", filters.userId);
-    if (filters.from) query.set("from", filters.from);
-    if (filters.to) query.set("to", filters.to);
-    query.set("pageSize", "20");
-
-    try {
-      const response = await fetchWithRetry(`/api/admin/audit/access-logs?${query.toString()}`);
-      if (!response.ok) {
-        throw new Error("No se pudieron cargar los logs.");
+  const fetchLogs = useCallback(
+    async ({ cursor, append }: { cursor?: string | null; append: boolean }) => {
+      if (append) {
+        setLoadingMore(true);
+      } else {
+        setLoading(true);
       }
-      const data = (await response.json()) as { data?: AccessLogEntry[] };
-      setLogs(data.data ?? []);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Error inesperado.");
-    } finally {
-      setLoading(false);
-    }
-  }, [filters]);
+      setError(null);
+
+      const query = new URLSearchParams();
+      query.set("limit", "30");
+      if (statusFilter !== "all") {
+        query.set("status", statusFilter);
+      }
+      if (cursor) {
+        query.set("cursor", cursor);
+      }
+
+      try {
+        const response = await fetchWithRetry(`/api/admin/audit-logs?${query.toString()}`);
+        if (!response.ok) {
+          throw new Error("No se pudieron cargar los logs de auditoría.");
+        }
+
+        const body = (await response.json()) as AuditLogsResponse;
+        setItems((prev) => (append ? [...prev, ...(body.items ?? [])] : (body.items ?? [])));
+        setNextCursor(body.nextCursor ?? null);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Error inesperado.");
+      } finally {
+        if (append) {
+          setLoadingMore(false);
+        } else {
+          setLoading(false);
+        }
+      }
+    },
+    [statusFilter],
+  );
 
   useEffect(() => {
-    void loadLogs();
-  }, [loadLogs]);
+    void fetchLogs({ append: false });
+  }, [fetchLogs]);
 
   return (
     <div className="space-y-6">
       <header>
-        <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Auditoría clínica</p>
-        <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">Registro de accesos</h1>
+        <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Auditoría</p>
+        <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">Audit trail administrativo</h1>
       </header>
 
-      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xs dark:border-slate-800 dark:bg-slate-950">
-        <div className="grid gap-4 md:grid-cols-4">
-          <label className="flex flex-col gap-2 text-xs">
-            <span className="font-semibold uppercase tracking-wide text-slate-400">Paciente ID</span>
-            <input
-              value={filters.patientId}
-              onChange={(event) => setFilters((prev) => ({ ...prev, patientId: event.target.value }))}
-              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
-            />
-          </label>
-          <label className="flex flex-col gap-2 text-xs">
-            <span className="font-semibold uppercase tracking-wide text-slate-400">Usuario ID</span>
-            <input
-              value={filters.userId}
-              onChange={(event) => setFilters((prev) => ({ ...prev, userId: event.target.value }))}
-              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
-            />
-          </label>
-          <label className="flex flex-col gap-2 text-xs">
-            <span className="font-semibold uppercase tracking-wide text-slate-400">Desde</span>
-            <input
-              type="date"
-              value={filters.from}
-              onChange={(event) => setFilters((prev) => ({ ...prev, from: event.target.value }))}
-              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
-            />
-          </label>
-          <label className="flex flex-col gap-2 text-xs">
-            <span className="font-semibold uppercase tracking-wide text-slate-400">Hasta</span>
-            <input
-              type="date"
-              value={filters.to}
-              onChange={(event) => setFilters((prev) => ({ ...prev, to: event.target.value }))}
-              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
-            />
+      <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-950">
+        <div className="flex flex-wrap items-center gap-3">
+          <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+            Estado
+            <select
+              value={statusFilter}
+              onChange={(event) => setStatusFilter(event.target.value as "all" | AuditStatus)}
+              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm normal-case text-slate-900 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+            >
+              <option value="all">Todos</option>
+              <option value="success">Success</option>
+              <option value="failure">Failure</option>
+            </select>
           </label>
         </div>
-        <button
-          type="button"
-          onClick={() => void loadLogs()}
-          className="mt-4 rounded-xl bg-brand-indigo px-4 py-2 text-sm font-semibold text-white"
-        >
-          Aplicar filtros
-        </button>
       </section>
 
       <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xs dark:border-slate-800 dark:bg-slate-950">
@@ -114,31 +121,60 @@ export function AdminAuditPanel() {
           <p className="text-sm text-slate-500">Cargando logs...</p>
         ) : error ? (
           <p className="text-sm text-red-600">{error}</p>
-        ) : logs.length === 0 ? (
-          <p className="text-sm text-slate-500">Sin registros para los filtros actuales.</p>
+        ) : items.length === 0 ? (
+          <p className="text-sm text-slate-500">No hay eventos de auditoría para el filtro actual.</p>
         ) : (
           <div className="space-y-3">
-            {logs.map((log) => (
-              <div
-                key={log.id}
-                className="rounded-2xl border border-slate-200 px-4 py-3 text-xs text-slate-600 dark:border-slate-800 dark:text-slate-300"
-              >
+            {items.map((item) => (
+              <article key={item.id} className="rounded-2xl border border-slate-200 p-4 text-sm dark:border-slate-800">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <p className="font-semibold text-slate-900 dark:text-white">{log.action}</p>
-                    <p className="text-[11px] text-slate-400">{log.route}</p>
+                    <p className="font-semibold text-slate-900 dark:text-white">{item.action}</p>
+                    <p className="text-xs text-slate-500">{new Date(item.createdAt).toLocaleString("es-CO")}</p>
                   </div>
-                  <p className="text-[11px] text-slate-400">{new Date(log.createdAt).toLocaleString("es-CO")}</p>
+                  <StatusBadge status={item.status} />
                 </div>
-                <div className="mt-2 grid gap-2 text-[11px] sm:grid-cols-3">
+
+                <div className="mt-3 grid gap-2 text-xs text-slate-600 dark:text-slate-300 sm:grid-cols-2 lg:grid-cols-3">
                   <p>
-                    Usuario: {log.user.name} ({log.user.role})
+                    <span className="font-semibold">Recurso:</span> {item.resourceType}
                   </p>
-                  <p>Paciente: {log.patient ? log.patient.name : "—"}</p>
-                  <p>Request ID: {log.requestId}</p>
+                  <p>
+                    <span className="font-semibold">Resource ID:</span> {item.resourceId ?? "—"}
+                  </p>
+                  <p>
+                    <span className="font-semibold">Actor:</span> {item.actor.identifier ?? item.actor.userId ?? "—"}
+                  </p>
+                  <p>
+                    <span className="font-semibold">Rol:</span> {item.actor.role ?? "—"}
+                  </p>
+                  {item.targetLabel ? (
+                    <p className="sm:col-span-2 lg:col-span-1">
+                      <span className="font-semibold">Resumen:</span> {item.targetLabel}
+                    </p>
+                  ) : null}
                 </div>
-              </div>
+
+                {item.metadataPreview.length > 0 ? (
+                  <ul className="mt-3 list-disc space-y-1 pl-4 text-[11px] text-slate-500 dark:text-slate-400">
+                    {item.metadataPreview.map((entry) => (
+                      <li key={`${item.id}-${entry}`}>{entry}</li>
+                    ))}
+                  </ul>
+                ) : null}
+              </article>
             ))}
+
+            {nextCursor ? (
+              <button
+                type="button"
+                onClick={() => void fetchLogs({ cursor: nextCursor, append: true })}
+                disabled={loadingMore}
+                className="rounded-xl bg-brand-indigo px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+              >
+                {loadingMore ? "Cargando..." : "Cargar más"}
+              </button>
+            ) : null}
           </div>
         )}
       </section>
