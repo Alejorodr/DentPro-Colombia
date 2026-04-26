@@ -142,6 +142,7 @@ export function Navbar({ brand, links, cta, login }: NavbarProps) {
             type="button"
             className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 lg:hidden"
             id="mobileMenuBtn"
+            aria-controls="mobileMenu"
             aria-label={isOpen ? "Cerrar menú" : "Abrir menú"}
             aria-expanded={isOpen}
             onClick={toggleMenu}

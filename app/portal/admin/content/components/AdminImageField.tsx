@@ -33,6 +33,8 @@ export function AdminImageField({
 }: AdminImageFieldProps) {
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const inputId = `image-url-${label.toLowerCase().replaceAll(/[^a-z0-9]+/g, "-")}`;
+  const uploadStatusId = `${inputId}-status`;
 
   const previewSrc = useMemo(() => {
     const trimmed = value.trim();
@@ -94,20 +96,26 @@ export function AdminImageField({
 
   return (
     <div className="space-y-2 md:col-span-2">
-      <span className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{label}</span>
+      <label htmlFor={inputId} className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+        {label}
+      </label>
       <div className="grid gap-3 rounded-2xl border border-slate-200/80 p-4 dark:border-surface-muted md:grid-cols-[1fr_auto]">
         <div className="space-y-2">
           <input
+            id={inputId}
             className="input h-11 text-sm"
             value={value}
             onChange={(event) => onChange(event.target.value)}
             placeholder={placeholder ?? "https://..."}
             type="url"
             disabled={disabled || uploading}
+            aria-describedby={uploadStatusId}
           />
           <p className="text-xs text-slate-500 dark:text-slate-400">Puedes pegar una URL HTTPS o subir un archivo desde tu equipo.</p>
           <p className="text-xs text-slate-500 dark:text-slate-400">Recomendado: {recommendation} · Relación: {aspectRatio} · Máximo {Math.floor(MARKETING_IMAGE_MAX_BYTES / 1024 / 1024)}MB.</p>
-          {uploadError ? <p className="text-xs text-red-600">{uploadError}</p> : null}
+          <p id={uploadStatusId} className="text-xs text-slate-500 dark:text-slate-400" aria-live="polite">
+            {uploading ? "Subiendo imagen..." : uploadError ?? "Formato aceptado: JPG, PNG o WEBP."}
+          </p>
         </div>
         <label className="inline-flex h-11 cursor-pointer items-center justify-center rounded-full border border-slate-200 px-4 text-xs font-semibold uppercase text-slate-600 dark:border-surface-muted dark:text-slate-200">
           {uploading ? "Subiendo..." : "Subir archivo"}

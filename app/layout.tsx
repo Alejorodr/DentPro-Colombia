@@ -1,11 +1,42 @@
 import Script from "next/script";
 import { Suspense } from "react";
 import { headers } from "next/headers";
+import type { Metadata } from "next";
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
 import { AppProviders } from "./providers";
+
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://dentprocolombia.com";
+
+export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: "DentPro Colombia | Clínica dental especializada",
+    template: "%s | DentPro Colombia",
+  },
+  description:
+    "DentPro Colombia: odontología especializada con agendamiento en línea, atención humana y seguimiento clínico seguro.",
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    type: "website",
+    locale: "es_CO",
+    url: "/",
+    siteName: "DentPro Colombia",
+    title: "DentPro Colombia | Clínica dental especializada",
+    description:
+      "Odontología especializada con agendamiento en línea, atención humana y seguimiento clínico seguro.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "DentPro Colombia | Clínica dental especializada",
+    description:
+      "Odontología especializada con agendamiento en línea, atención humana y seguimiento clínico seguro.",
+  },
+};
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const requestId = (await headers()).get("x-request-id") ?? undefined;

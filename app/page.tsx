@@ -42,7 +42,7 @@ export default async function Home() {
     <>
       <InfoBar {...marketingContent.infoBar} />
       <Navbar {...navbarContent} />
-      <main id="inicio">
+      <main id="inicio" aria-label="Página principal DentPro Colombia">
         <Hero {...marketingContent.hero} />
         <CampaignCarousel />
         <ServicesSection {...marketingContent.services} />
