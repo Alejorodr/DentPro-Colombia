@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 
+import { logApiError } from "@/app/api/_utils/observability";
 import { errorResponse } from "@/app/api/_utils/response";
 import { requireRole, requireSession } from "@/lib/authz";
 import { getPrismaClient } from "@/lib/prisma";
+import type { Prisma } from "@prisma/client";
 
 type AuditListItem = {
   id: string;
@@ -21,20 +23,21 @@ type AuditListItem = {
 };
 
 const DEFAULT_LIMIT = 30;
-type AuditLogRow = {
-  id: string;
-  createdAt: Date;
-  action: string;
-  resourceType: string;
-  resourceId: string | null;
-  targetLabel: string | null;
-  status: string;
-  actorUserId: string | null;
-  actorRole: string | null;
-  actorIdentifier: string | null;
-  metadata: unknown;
-};
+const auditLogListSelect = {
+  id: true,
+  createdAt: true,
+  action: true,
+  resourceType: true,
+  resourceId: true,
+  targetLabel: true,
+  status: true,
+  actorUserId: true,
+  actorRole: true,
+  actorIdentifier: true,
+  metadata: true,
+} satisfies Prisma.AuditLogSelect;
 
+type AuditLogRow = Prisma.AuditLogGetPayload<{ select: typeof auditLogListSelect }>;
 
 const MAX_LIMIT = 50;
 const ALLOWED_STATUS = new Set(["success", "failure"] as const);
@@ -122,58 +125,58 @@ export async function GET(request: Request) {
   const status = parseStatus(searchParams);
   const cursor = decodeCursor(searchParams.get("cursor"));
 
-  const prisma = getPrismaClient();
-  const items = (await prisma.auditLog.findMany({
-    where: {
-      ...(status ? { status } : {}),
-      ...(cursor
-        ? {
-            OR: [{ createdAt: { lt: cursor.createdAt } }, { createdAt: cursor.createdAt, id: { lt: cursor.id } }],
-          }
-        : {}),
-    },
-    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-    take: limit + 1,
-    select: {
-      id: true,
-      createdAt: true,
-      action: true,
-      resourceType: true,
-      resourceId: true,
-      targetLabel: true,
-      status: true,
-      actorUserId: true,
-      actorRole: true,
-      actorIdentifier: true,
-      metadata: true,
-    },
-  })) as AuditLogRow[];
+  try {
+    const prisma = getPrismaClient();
+    const items = await prisma.auditLog.findMany({
+      where: {
+        ...(status ? { status } : {}),
+        ...(cursor
+          ? {
+              OR: [{ createdAt: { lt: cursor.createdAt } }, { createdAt: cursor.createdAt, id: { lt: cursor.id } }],
+            }
+          : {}),
+      },
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      take: limit + 1,
+      select: auditLogListSelect,
+    });
 
-  const hasNext = items.length > limit;
-  const visibleItems = hasNext ? items.slice(0, limit) : items;
-  const nextCursor = hasNext
-    ? encodeCursor(visibleItems[visibleItems.length - 1].createdAt, visibleItems[visibleItems.length - 1].id)
-    : null;
+    const hasNext = items.length > limit;
+    const visibleItems = hasNext ? items.slice(0, limit) : items;
+    const nextCursor = hasNext
+      ? encodeCursor(visibleItems[visibleItems.length - 1].createdAt, visibleItems[visibleItems.length - 1].id)
+      : null;
 
-  const responseItems: AuditListItem[] = visibleItems.map((item) => ({
-    id: item.id,
-    createdAt: item.createdAt.toISOString(),
-    action: item.action,
-    resourceType: item.resourceType,
-    resourceId: item.resourceId,
-    targetLabel: item.targetLabel,
-    status: item.status === "failure" ? "failure" : "success",
-    actor: {
-      userId: item.actorUserId,
-      role: item.actorRole,
-      identifier: item.actorIdentifier,
-    },
-    metadataPreview: buildMetadataPreview(item.metadata),
-  }));
+    const responseItems: AuditListItem[] = visibleItems.map((item: AuditLogRow) => ({
+      id: item.id,
+      createdAt: item.createdAt.toISOString(),
+      action: item.action,
+      resourceType: item.resourceType,
+      resourceId: item.resourceId,
+      targetLabel: item.targetLabel,
+      status: item.status === "failure" ? "failure" : "success",
+      actor: {
+        userId: item.actorUserId,
+        role: item.actorRole,
+        identifier: item.actorIdentifier,
+      },
+      metadataPreview: buildMetadataPreview(item.metadata),
+    }));
 
-  return NextResponse.json({
-    items: responseItems,
-    nextCursor,
-    limit,
-  });
+    return NextResponse.json({
+      items: responseItems,
+      nextCursor,
+      limit,
+    });
+  } catch (error) {
+    logApiError(
+      {
+        event: "admin.audit_logs.list_failed",
+        route: "/api/admin/audit-logs",
+        userId: sessionResult.user.id,
+      },
+      error,
+    );
+    return errorResponse("No se pudieron cargar los logs de auditoría.", 500);
+  }
 }
