@@ -22,17 +22,27 @@ export default async function AdminContentPage() {
         title="Contenido del sitio"
         description="Administra campañas y todo el CMS del homepage: settings, hero stats, servicios, especialistas, agenda, beneficios, enlaces, soporte, sedes y legales."
       />
-      <AdminHomepageSettingsPanel />
-      <AdminHomepageHeroStatsPanel />
-      <AdminHomepageServicesPanel />
-      <AdminHomepageSpecialistsPanel />
-      <AdminHomepageBookingOptionsPanel />
-      <AdminHomepageBookingBenefitsPanel />
-      <AdminHomepageSocialLinksPanel />
-      <AdminHomepageContactSupportItemsPanel />
-      <AdminHomepageLocationsPanel />
-      <AdminHomepageLegalLinksPanel />
-      <AdminCampaignsPanel />
+      <section className="space-y-6" aria-labelledby="admin-homepage-content-title">
+        <h2 id="admin-homepage-content-title" className="text-base font-semibold text-slate-900 dark:text-white">
+          Homepage público
+        </h2>
+        <AdminHomepageSettingsPanel />
+        <AdminHomepageHeroStatsPanel />
+        <AdminHomepageServicesPanel />
+        <AdminHomepageSpecialistsPanel />
+        <AdminHomepageBookingOptionsPanel />
+        <AdminHomepageBookingBenefitsPanel />
+        <AdminHomepageSocialLinksPanel />
+        <AdminHomepageContactSupportItemsPanel />
+        <AdminHomepageLocationsPanel />
+        <AdminHomepageLegalLinksPanel />
+      </section>
+      <section className="space-y-4" aria-labelledby="admin-campaigns-title">
+        <h2 id="admin-campaigns-title" className="text-base font-semibold text-slate-900 dark:text-white">
+          Campañas
+        </h2>
+        <AdminCampaignsPanel />
+      </section>
     </div>
   );
 }

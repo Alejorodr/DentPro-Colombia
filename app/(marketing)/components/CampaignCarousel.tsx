@@ -1,10 +1,8 @@
-"use client";
-
-import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
-import { fetchWithRetry } from "@/lib/http";
+import { getPrismaClient } from "@/lib/prisma";
+
 type Campaign = {
   id: string | number;
   title: string;
@@ -12,61 +10,36 @@ type Campaign = {
   imageUrl: string;
   ctaText?: string | null;
   ctaUrl?: string | null;
-  active: boolean;
-  startAt?: string | null;
-  endAt?: string | null;
 };
 
-export function CampaignCarousel() {
-  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
-  const [loading, setLoading] = useState(true);
+export async function CampaignCarousel() {
+  const now = new Date();
+  const prisma = getPrismaClient();
 
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const response = await fetchWithRetry("/api/campaigns", { cache: "no-store" });
-        if (!response.ok) {
-          throw new Error(`Failed to load campaigns: ${response.status}`);
-        }
-        const data = (await response.json()) as Campaign[] | { items?: Campaign[]; campaigns?: Campaign[] };
-        const list = Array.isArray(data) ? data : data.items ?? data.campaigns ?? [];
-        if (!cancelled) {
-          setCampaigns(list);
-        }
-      } catch {
-        if (!cancelled) {
-          setCampaigns([]);
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const campaigns = (await prisma.campaign.findMany({
+    where: {
+      active: true,
+      startAt: { lte: now },
+      endAt: { gte: now },
+    },
+    orderBy: { createdAt: "desc" },
+    take: 6,
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      imageUrl: true,
+      ctaText: true,
+      ctaUrl: true,
+    },
+  })) as Campaign[];
 
-  const visibleCampaigns = useMemo(() => {
-    const now = new Date();
-    return campaigns.filter((campaign) => {
-      if (!campaign.active) {
-        return false;
-      }
-      const startOk = !campaign.startAt || new Date(campaign.startAt) <= now;
-      const endOk = !campaign.endAt || new Date(campaign.endAt) >= now;
-      return startOk && endOk;
-    });
-  }, [campaigns]);
-
-  if (!loading && visibleCampaigns.length === 0) {
+  if (campaigns.length === 0) {
     return null;
   }
 
   return (
-    <section className="mx-auto w-full max-w-6xl px-4 pb-8">
+    <section className="mx-auto w-full max-w-6xl px-4 pb-8" aria-label="Campañas promocionales activas">
       <div className="mb-4 flex items-center justify-between">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-brand-teal">Campañas activas</p>
@@ -74,31 +47,28 @@ export function CampaignCarousel() {
         </div>
         <span className="text-xs font-semibold text-slate-500">Actualizado hoy</span>
       </div>
-      <div className="flex gap-4 overflow-x-auto pb-2">
-        {(loading ? new Array(3).fill(null) : visibleCampaigns).map((campaign, index) => (
-          <div
-            key={campaign?.id ?? `placeholder-${index}`}
+      <div className="flex gap-4 overflow-x-auto pb-2" role="list">
+        {campaigns.map((campaign) => (
+          <article
+            key={campaign.id}
             className="min-w-[280px] max-w-xs rounded-3xl border border-slate-200 bg-white shadow-lg shadow-slate-200/60"
+            role="listitem"
           >
             <div className="relative h-40 w-full overflow-hidden rounded-t-3xl">
-              {campaign ? (
-                <Image
-                  src={campaign.imageUrl}
-                  alt={campaign.title}
-                  fill
-                  className="object-cover"
-                  sizes="(max-width: 640px) 280px, 320px"
-                />
-              ) : null}
+              <Image
+                src={campaign.imageUrl}
+                alt={campaign.title}
+                fill
+                className="object-cover"
+                sizes="(max-width: 640px) 280px, 320px"
+              />
             </div>
             <div className="space-y-3 p-4">
               <div>
-                <p className="text-sm font-semibold text-slate-900">{campaign ? campaign.title : "\u00A0"}</p>
-                {campaign?.description ? (
-                  <p className="text-xs text-slate-500">{campaign.description}</p>
-                ) : null}
+                <p className="text-sm font-semibold text-slate-900">{campaign.title}</p>
+                {campaign.description ? <p className="text-xs text-slate-500">{campaign.description}</p> : null}
               </div>
-              {campaign?.ctaUrl ? (
+              {campaign.ctaUrl ? (
                 <Link
                   href={campaign.ctaUrl}
                   className="inline-flex rounded-full bg-brand-teal px-4 py-2 text-xs font-semibold uppercase text-white"
@@ -107,7 +77,7 @@ export function CampaignCarousel() {
                 </Link>
               ) : null}
             </div>
-          </div>
+          </article>
         ))}
       </div>
     </section>
