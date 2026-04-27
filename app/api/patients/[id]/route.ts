@@ -37,7 +37,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   const prisma = getPrismaClient();
   const patient = await prisma.patientProfile.findUnique({
     where: { id },
-    include: { user: true },
+    select: { userId: true },
   });
 
   if (!patient) {

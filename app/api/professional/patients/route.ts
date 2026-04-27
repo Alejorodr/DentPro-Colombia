@@ -47,7 +47,17 @@ export async function GET(request: Request) {
   const [patients, total] = await Promise.all([
     prisma.patientProfile.findMany({
       where,
-      include: { user: true },
+      select: {
+        id: true,
+        patientCode: true,
+        user: {
+          select: {
+            name: true,
+            lastName: true,
+            email: true,
+          },
+        },
+      },
       orderBy: { user: { name: "asc" } },
       skip,
       take,

@@ -1,4 +1,3 @@
-import type { Appointment, PatientProfile, ProfessionalProfile, TimeSlot } from "@prisma/client";
 import { Role } from "@prisma/client";
 
 import { sendEmail } from "@/lib/email";
@@ -13,10 +12,14 @@ import { logger } from "@/lib/logger";
 
 export type AppointmentEmailType = "confirmation" | "reminder" | "reschedule" | "cancellation";
 
-type AppointmentSnapshot = Appointment & {
-  patient: (PatientProfile & { user: AppointmentEmailUser }) | null;
-  professional: (ProfessionalProfile & { user: AppointmentEmailUser }) | null;
-  timeSlot: TimeSlot;
+type AppointmentSnapshot = {
+  id: string;
+  patient: { user: AppointmentEmailUser } | null;
+  professional: { user: AppointmentEmailUser } | null;
+  timeSlot: {
+    startAt: Date;
+    endAt: Date;
+  };
 };
 
 type AppointmentEmailUser = {

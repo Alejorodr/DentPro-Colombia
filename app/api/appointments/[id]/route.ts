@@ -12,6 +12,7 @@ import { sendAppointmentEmail } from "@/lib/notifications/email";
 import { logger } from "@/lib/logger";
 import { recordAppointmentEvent } from "@/lib/appointments/events";
 import { buildAppointmentStatusNotification } from "@/lib/appointments/activity";
+import { appointmentMutationResponseSelect, serializeAppointmentMutationResponse } from "@/lib/appointments/response";
 
 const updateAppointmentSchema = z.object({
   status: z.nativeEnum(AppointmentStatus),
@@ -67,7 +68,13 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
             ? { professional: { userId: sessionResult.user.id } }
             : {}),
       },
-      include: { timeSlot: true, professional: true, patient: true },
+      select: {
+        id: true,
+        status: true,
+        checkedInAt: true,
+        timeSlotId: true,
+        timeSlot: { select: { startAt: true } },
+      },
     });
 
     if (!appointment) {
@@ -120,12 +127,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
           },
         },
       },
-      include: {
-        patient: { include: { user: true } },
-        professional: { include: { user: true, specialty: true } },
-        timeSlot: true,
-        service: true,
-      },
+      select: appointmentMutationResponseSelect,
     });
 
     if (previousStatus !== updated.status) {
@@ -184,7 +186,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       newSlotId: updated.timeSlotId,
       timestamp: new Date().toISOString(),
     });
-    return NextResponse.json(updated);
+    return NextResponse.json(serializeAppointmentMutationResponse(updated));
   } catch (error) {
     logger.error({ event: "appointment.update.failed", requestId, error });
     if (isDatabaseUnavailableError(error)) {
@@ -224,11 +226,10 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
             ? { professional: { userId: sessionResult.user.id } }
             : {}),
       },
-      include: {
-        timeSlot: true,
-        patient: { include: { user: true } },
-        professional: { include: { user: true } },
-        service: true,
+      select: {
+        id: true,
+        status: true,
+        timeSlot: { select: { startAt: true } },
       },
     });
 
@@ -254,12 +255,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
           update: { status: TimeSlotStatus.AVAILABLE },
         },
       },
-      include: {
-        patient: { include: { user: true } },
-        professional: { include: { user: true, specialty: true } },
-        timeSlot: true,
-        service: true,
-      },
+      select: appointmentMutationResponseSelect,
     });
 
     const patientName = `${updated.patient?.user.name ?? "Paciente"} ${updated.patient?.user.lastName ?? ""}`.trim();
@@ -306,7 +302,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
       result: "success",
       timestamp: new Date().toISOString(),
     });
-    return NextResponse.json(updated);
+    return NextResponse.json(serializeAppointmentMutationResponse(updated));
   } catch (error) {
     logger.error({ event: "appointment.cancel.failed", requestId, error });
     if (isDatabaseUnavailableError(error)) {
