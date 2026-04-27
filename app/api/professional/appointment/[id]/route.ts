@@ -27,12 +27,49 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 
   const appointment = await prisma.appointment.findUnique({
     where: { id },
-    include: {
-      patient: { include: { user: true, allergies: true } },
-      timeSlot: true,
-      clinicalNotes: { orderBy: { updatedAt: "desc" } },
-      prescription: { include: { items: true } },
-      attachments: { orderBy: { createdAt: "desc" } },
+    select: {
+      id: true,
+      professionalId: true,
+      patientId: true,
+      status: true,
+      reason: true,
+      serviceName: true,
+      timeSlot: { select: { startAt: true, endAt: true } },
+      patient: {
+        select: {
+          id: true,
+          patientCode: true,
+          dateOfBirth: true,
+          gender: true,
+          insuranceProvider: true,
+          insuranceStatus: true,
+          user: { select: { name: true, lastName: true, email: true } },
+          allergies: { select: { id: true, substance: true, severity: true, notes: true } },
+        },
+      },
+      clinicalNotes: {
+        select: { id: true, content: true, updatedAt: true },
+        orderBy: { updatedAt: "desc" },
+      },
+      prescription: {
+        select: {
+          id: true,
+          items: {
+            select: {
+              id: true,
+              type: true,
+              name: true,
+              dosage: true,
+              frequency: true,
+              instructions: true,
+            },
+          },
+        },
+      },
+      attachments: {
+        select: { id: true, kind: true, filename: true, url: true, dataUrl: true, createdAt: true },
+        orderBy: { createdAt: "desc" },
+      },
     },
   });
 
@@ -45,7 +82,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       patientId: appointment.patientId,
       id: { not: appointment.id },
     },
-    include: { timeSlot: true },
+    select: { id: true, status: true, reason: true, timeSlot: { select: { startAt: true } } },
     orderBy: { timeSlot: { startAt: "desc" } },
     take: 5,
   });

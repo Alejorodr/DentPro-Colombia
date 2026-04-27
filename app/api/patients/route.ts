@@ -9,7 +9,6 @@ import { getPrismaClient } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import { requireRole, requireSession } from "@/lib/authz";
 import { PASSWORD_POLICY_MESSAGE, PASSWORD_POLICY_REGEX } from "@/lib/auth/password-policy";
-import { redactSensitiveAuthFields } from "@/lib/security/redaction";
 
 const createPatientSchema = z.object({
   email: z.string().trim().email().max(120),
@@ -54,7 +53,25 @@ export async function GET(request: Request) {
   const [patients, total] = await Promise.all([
     prisma.patientProfile.findMany({
       where,
-      include: { user: true },
+      select: {
+        id: true,
+        userId: true,
+        active: true,
+        patientCode: true,
+        phone: true,
+        documentId: true,
+        user: {
+          select: {
+            id: true,
+            name: true,
+            lastName: true,
+            email: true,
+            role: true,
+            createdAt: true,
+            updatedAt: true,
+          },
+        },
+      },
       orderBy: { user: { name: "asc" } },
       skip,
       take,
@@ -62,7 +79,7 @@ export async function GET(request: Request) {
     prisma.patientProfile.count({ where }),
   ]);
 
-  return NextResponse.json(redactSensitiveAuthFields(buildPaginatedResponse(patients, page, pageSize, total)));
+  return NextResponse.json(buildPaginatedResponse(patients, page, pageSize, total));
 }
 
 export async function POST(request: Request) {
@@ -100,10 +117,27 @@ export async function POST(request: Request) {
           },
         },
       },
-      include: { patient: true },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        name: true,
+        lastName: true,
+        createdAt: true,
+        updatedAt: true,
+        patient: {
+          select: {
+            id: true,
+            active: true,
+            patientCode: true,
+            phone: true,
+            documentId: true,
+          },
+        },
+      },
     });
 
-    return NextResponse.json(redactSensitiveAuthFields(user), { status: 201 });
+    return NextResponse.json(user, { status: 201 });
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
       const target = Array.isArray(error.meta?.target) ? error.meta?.target : [];
