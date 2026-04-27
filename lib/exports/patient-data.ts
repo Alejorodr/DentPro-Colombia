@@ -83,7 +83,28 @@ export async function buildPatientExport(
 ): Promise<PatientExportPayload | null> {
   const patient = await prisma.patientProfile.findUnique({
     where: { id: patientId },
-    include: { user: true },
+    select: {
+      id: true,
+      userId: true,
+      phone: true,
+      documentId: true,
+      dateOfBirth: true,
+      gender: true,
+      insuranceProvider: true,
+      insuranceStatus: true,
+      address: true,
+      city: true,
+      active: true,
+      user: {
+        select: {
+          name: true,
+          lastName: true,
+          email: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      },
+    },
   });
 
   if (!patient || !patient.user) {
@@ -97,10 +118,39 @@ export async function buildPatientExport(
   const [appointments, clinicalEpisodes, allergies, consents] = await Promise.all([
     prisma.appointment.findMany({
       where: { patientId },
-      include: {
-        timeSlot: true,
-        service: true,
-        professional: { include: { user: true } },
+      select: {
+        id: true,
+        status: true,
+        reason: true,
+        notes: true,
+        createdAt: true,
+        updatedAt: true,
+        serviceId: true,
+        serviceName: true,
+        servicePriceCents: true,
+        professionalId: true,
+        timeSlot: {
+          select: {
+            startAt: true,
+            endAt: true,
+          },
+        },
+        service: {
+          select: {
+            name: true,
+            priceCents: true,
+          },
+        },
+        professional: {
+          select: {
+            user: {
+              select: {
+                name: true,
+                lastName: true,
+              },
+            },
+          },
+        },
       },
       orderBy: { timeSlot: { startAt: "desc" } },
       skip: options.skip,

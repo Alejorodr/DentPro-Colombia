@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 import { z } from "zod";
 
 import { getPrismaClient } from "@/lib/prisma";
-import { errorResponse } from "@/app/api/_utils/response";
+import { errorResponse, internalServerErrorResponse } from "@/app/api/_utils/response";
 import { buildPaginatedResponse, getPaginationParams } from "@/app/api/_utils/pagination";
 import { parseJson } from "@/app/api/_utils/validation";
 import { isUserRole, type UserRole } from "@/lib/auth/roles";
@@ -11,6 +11,7 @@ import { requireRole, requireSession } from "@/lib/authz";
 import { PASSWORD_POLICY_MESSAGE, PASSWORD_POLICY_REGEX } from "@/lib/auth/password-policy";
 import { Prisma } from "@prisma/client";
 import { redactSensitiveAuthFields } from "@/lib/security/redaction";
+import { logApiError } from "@/app/api/_utils/observability";
 
 const createUserSchema = z.object({
   email: z.string().trim().email().max(120),
@@ -38,18 +39,30 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const { page, pageSize, skip, take } = getPaginationParams(searchParams);
 
-  const prisma = getPrismaClient();
-  const [users, total] = await Promise.all([
-    prisma.user.findMany({
-      orderBy: { createdAt: "desc" },
-      include: { patient: true, professional: { include: { specialty: true } } },
-      skip,
-      take,
-    }),
-    prisma.user.count(),
-  ]);
+  try {
+    const prisma = getPrismaClient();
+    const [users, total] = await Promise.all([
+      prisma.user.findMany({
+        orderBy: { createdAt: "desc" },
+        include: { patient: true, professional: { include: { specialty: true } } },
+        skip,
+        take,
+      }),
+      prisma.user.count(),
+    ]);
 
-  return NextResponse.json(redactSensitiveAuthFields(buildPaginatedResponse(users, page, pageSize, total)));
+    return NextResponse.json(redactSensitiveAuthFields(buildPaginatedResponse(users, page, pageSize, total)));
+  } catch (error) {
+    logApiError(
+      {
+        event: "admin.users.list_failed",
+        route: "/api/users",
+        userId: sessionResult.user.id,
+      },
+      error,
+    );
+    return internalServerErrorResponse("No se pudo listar usuarios.");
+  }
 }
 
 export async function POST(request: Request) {
@@ -119,6 +132,14 @@ export async function POST(request: Request) {
         return errorResponse("El correo ya existe.", 400);
       }
     }
-    return errorResponse("No se pudo crear el usuario.");
+    logApiError(
+      {
+        event: "admin.users.create_failed",
+        route: "/api/users",
+        userId: sessionResult.user.id,
+      },
+      error,
+    );
+    return internalServerErrorResponse("No se pudo crear el usuario.");
   }
 }
