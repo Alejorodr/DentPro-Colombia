@@ -43,9 +43,28 @@ export async function GET(request: Request, { params }: { params: Promise<{ epis
           }
         : {}),
     },
-    include: {
-      patient: { include: { user: true } },
-      professional: { include: { user: true } },
+    select: {
+      id: true,
+      date: true,
+      reason: true,
+      notes: true,
+      diagnosis: true,
+      treatmentPlan: true,
+      visibleToPatient: true,
+      patientId: true,
+      professionalId: true,
+      patient: {
+        select: {
+          id: true,
+          user: { select: { name: true, lastName: true } },
+        },
+      },
+      professional: {
+        select: {
+          id: true,
+          user: { select: { name: true, lastName: true } },
+        },
+      },
     },
   });
 
@@ -153,6 +172,16 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ ep
       visibleToPatient: payload.visibleToPatient ?? undefined,
       updatedByUserId: sessionResult.user.id,
     },
+    select: {
+      id: true,
+      date: true,
+      reason: true,
+      notes: true,
+      diagnosis: true,
+      treatmentPlan: true,
+      visibleToPatient: true,
+      updatedAt: true,
+    },
   });
 
   await logClinicalAccess({
@@ -164,7 +193,18 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ ep
     metadata: { episodeId },
   });
 
-  return NextResponse.json({ episode: updated });
+  return NextResponse.json({
+    episode: {
+      id: updated.id,
+      date: updated.date,
+      reason: updated.reason,
+      notes: updated.notes,
+      diagnosis: updated.diagnosis,
+      treatmentPlan: updated.treatmentPlan,
+      visibleToPatient: updated.visibleToPatient,
+      updatedAt: updated.updatedAt,
+    },
+  });
 }
 
 export async function DELETE(request: Request, { params }: { params: Promise<{ episodeId: string }> }) {
@@ -194,6 +234,11 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ e
       deletedAt: new Date(),
       deletedByUserId: sessionResult.user.id,
     },
+    select: {
+      id: true,
+      patientId: true,
+      deletedAt: true,
+    },
   });
 
   await logClinicalAccess({
@@ -205,5 +250,10 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ e
     metadata: { episodeId },
   });
 
-  return NextResponse.json({ episode: deleted });
+  return NextResponse.json({
+    episode: {
+      id: deleted.id,
+      deletedAt: deleted.deletedAt,
+    },
+  });
 }

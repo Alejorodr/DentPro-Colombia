@@ -38,11 +38,13 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
           ? { professional: { userId: sessionResult.user.id } }
           : {}),
     },
-    include: {
-      patient: { include: { user: true } },
-      professional: { include: { user: true } },
-      timeSlot: true,
-      service: true,
+    select: {
+      id: true,
+      reason: true,
+      timeSlot: { select: { startAt: true, endAt: true } },
+      service: { select: { name: true } },
+      patient: { select: { user: { select: { name: true, lastName: true } } } },
+      professional: { select: { user: { select: { name: true, lastName: true } } } },
     },
   });
 
