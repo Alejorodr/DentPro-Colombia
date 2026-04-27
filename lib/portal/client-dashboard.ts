@@ -57,7 +57,19 @@ export function computeClientDashboardMetrics(
 export async function getClientDashboardData(prisma: PrismaClient, userId: string) {
   const patient = await prisma.patientProfile.findUnique({
     where: { userId },
-    include: { user: true },
+    select: {
+      id: true,
+      patientCode: true,
+      avatarUrl: true,
+      insuranceProvider: true,
+      insuranceStatus: true,
+      user: {
+        select: {
+          name: true,
+          lastName: true,
+        },
+      },
+    },
   });
 
   if (!patient) {
@@ -66,10 +78,35 @@ export async function getClientDashboardData(prisma: PrismaClient, userId: strin
 
   const appointments = await prisma.appointment.findMany({
     where: { patientId: patient.id },
-    include: {
-      timeSlot: true,
-      professional: { include: { user: true } },
-      service: true,
+    select: {
+      id: true,
+      status: true,
+      reason: true,
+      serviceName: true,
+      servicePriceCents: true,
+      timeSlot: {
+        select: {
+          startAt: true,
+          endAt: true,
+        },
+      },
+      professional: {
+        select: {
+          user: {
+            select: {
+              name: true,
+              lastName: true,
+            },
+          },
+        },
+      },
+      service: {
+        select: {
+          id: true,
+          name: true,
+          priceCents: true,
+        },
+      },
     },
     orderBy: { timeSlot: { startAt: "asc" } },
   });
