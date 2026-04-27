@@ -32,7 +32,21 @@ export async function GET() {
       professionalId: professional.id,
       updatedAt: { gte: since },
     },
-    include: { patient: { include: { user: true } } },
+    select: {
+      id: true,
+      status: true,
+      updatedAt: true,
+      patient: {
+        select: {
+          user: {
+            select: {
+              name: true,
+              lastName: true,
+            },
+          },
+        },
+      },
+    },
     orderBy: { updatedAt: "desc" },
     take: 5,
   });

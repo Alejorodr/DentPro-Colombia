@@ -14,6 +14,7 @@ import { sendAppointmentEmail } from "@/lib/notifications/email";
 import * as Sentry from "@sentry/nextjs";
 import { recordAppointmentEvent } from "@/lib/appointments/events";
 import { assertSlotBookable } from "@/lib/scheduling/effective-availability";
+import { appointmentMutationResponseSelect, serializeAppointmentMutationResponse } from "@/lib/appointments/response";
 
 const rescheduleSchema = z
   .object({
@@ -212,12 +213,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
           timeSlotId: newSlot.id,
           professionalId: newSlot.professionalId,
         },
-        include: {
-          patient: { include: { user: true } },
-          professional: { include: { user: true, specialty: true } },
-          timeSlot: true,
-          service: true,
-        },
+        select: appointmentMutationResponseSelect,
       });
 
       await recordAppointmentEvent({
@@ -292,7 +288,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       timestamp: new Date().toISOString(),
     });
 
-    return NextResponse.json(updated);
+    return NextResponse.json(serializeAppointmentMutationResponse(updated));
   } catch (error) {
     Sentry.captureException(error);
     logger.error({

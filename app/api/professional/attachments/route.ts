@@ -69,7 +69,24 @@ export async function GET(request: Request) {
       ],
       ...(kindParam ? { kind: kindParam } : {}),
     },
-    include: { patient: { include: { user: true } } },
+    select: {
+      id: true,
+      filename: true,
+      url: true,
+      dataUrl: true,
+      createdAt: true,
+      patient: {
+        select: {
+          id: true,
+          user: {
+            select: {
+              name: true,
+              lastName: true,
+            },
+          },
+        },
+      },
+    },
     orderBy: { createdAt: "desc" },
   });
 
