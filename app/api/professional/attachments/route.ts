@@ -8,12 +8,28 @@ import { AttachmentKind } from "@prisma/client";
 import { requireRole, requireSession } from "@/lib/authz";
 
 const allowedKinds = new Set<AttachmentKind>([AttachmentKind.XRAY, AttachmentKind.LAB, AttachmentKind.DOCUMENT]);
+
+function isSafeAttachmentUrl(url: string) {
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
 const professionalAttachmentSchema = z.object({
   kind: z.nativeEnum(AttachmentKind),
   filename: z.string().trim().min(1).max(200),
   mimeType: z.string().trim().max(120).nullable().optional(),
   size: z.number().int().min(0).nullable().optional(),
-  url: z.string().trim().max(500).nullable().optional(),
+  url: z
+    .string()
+    .trim()
+    .max(500)
+    .refine((value) => !value || isSafeAttachmentUrl(value), "La URL del adjunto es inválida.")
+    .nullable()
+    .optional(),
   dataUrl: z.string().trim().max(20000).nullable().optional(),
   appointmentId: z.string().uuid().nullable().optional(),
   patientId: z.string().uuid().nullable().optional(),
@@ -118,11 +134,25 @@ export async function POST(request: Request) {
   }
 
   if (payload.patientId) {
-    const patient = await prisma.patientProfile.findUnique({
-      where: { id: payload.patientId },
+    const patient = await prisma.patientProfile.findFirst({
+      where: {
+        id: payload.patientId,
+        appointments: { some: { professionalId: professional.id } },
+      },
+      select: { id: true },
     });
     if (!patient) {
       return errorResponse("Paciente inválido.", 404);
+    }
+  }
+
+  if (payload.appointmentId && payload.patientId) {
+    const appointment = await prisma.appointment.findUnique({
+      where: { id: payload.appointmentId },
+      select: { patientId: true, professionalId: true },
+    });
+    if (!appointment || appointment.professionalId !== professional.id || appointment.patientId !== payload.patientId) {
+      return errorResponse("Relación cita/paciente inválida.", 400);
     }
   }
 

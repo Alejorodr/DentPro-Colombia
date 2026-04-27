@@ -49,6 +49,13 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     return error;
   }
 
+  if (payload.action) {
+    const canRunOperationalAction = ["ADMINISTRADOR", "RECEPCIONISTA", "PROFESIONAL"].includes(sessionResult.user.role);
+    if (!canRunOperationalAction) {
+      return errorResponse("No autorizado para esta acción.", 403);
+    }
+  }
+
   try {
     const prisma = getPrismaClient();
     const appointment = await prisma.appointment.findFirst({
@@ -92,20 +99,22 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     const previousSlotId = appointment.timeSlotId;
     const isNoShowAction = payload.action === "mark_no_show";
     const isCheckInAction = payload.action === "check_in";
+    const nextStatus = isNoShowAction
+      ? AppointmentStatus.NO_SHOW
+      : isCheckInAction
+        ? AppointmentStatus.CHECKED_IN
+        : payload.status;
+
     const updated = await prisma.appointment.update({
       where: { id },
       data: {
-        status: isNoShowAction
-          ? AppointmentStatus.NO_SHOW
-          : isCheckInAction
-            ? AppointmentStatus.CHECKED_IN
-            : payload.status,
+        status: nextStatus,
         notes: payload.notes ?? undefined,
-        checkedInAt: appointment.checkedInAt ?? null,
+        checkedInAt: nextStatus === AppointmentStatus.CHECKED_IN ? appointment.checkedInAt ?? new Date() : null,
         timeSlot: {
           update: {
             status:
-              payload.status === AppointmentStatus.CANCELLED || payload.status === AppointmentStatus.NO_SHOW || isNoShowAction
+              nextStatus === AppointmentStatus.CANCELLED || nextStatus === AppointmentStatus.NO_SHOW
                 ? TimeSlotStatus.AVAILABLE
                 : TimeSlotStatus.BOOKED,
           },

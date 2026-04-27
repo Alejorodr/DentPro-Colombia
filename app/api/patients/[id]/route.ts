@@ -6,6 +6,7 @@ import { parseJson } from "@/app/api/_utils/validation";
 import { requireRole, requireSession } from "@/lib/authz";
 import { getPrismaClient } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
+import { redactSensitiveAuthFields } from "@/lib/security/redaction";
 
 const updatePatientSchema = z.object({
   name: z.string().trim().min(1).max(120).optional(),
@@ -61,7 +62,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       include: { patient: true },
     });
 
-    return NextResponse.json(updated);
+    return NextResponse.json(redactSensitiveAuthFields(updated));
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
       const target = Array.isArray(error.meta?.target) ? error.meta?.target : [];
