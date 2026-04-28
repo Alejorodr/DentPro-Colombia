@@ -24,6 +24,9 @@ test("marketing home renders hero panel", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator("[data-hero-text-panel]")).toBeVisible();
 
+  const heroReviewWidget = page.getByText(/Testimonio real|Opinión destacada en Google|Google Maps/i).first();
+  await expect(heroReviewWidget).toBeVisible();
+
   if (consoleErrors.length || pageErrors.length) {
     throw new Error(
       `Errores detectados en consola: ${[...consoleErrors, ...pageErrors].join(" | ")}`,

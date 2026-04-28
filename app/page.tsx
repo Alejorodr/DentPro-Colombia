@@ -11,6 +11,7 @@ import { ContactSection } from "./(marketing)/components/ContactSection";
 import { FloatingActions } from "./(marketing)/components/FloatingActions";
 import { getHomepageContent } from "@/lib/marketing/homepage";
 import { adaptHomepageContent } from "@/lib/marketing/homepage-adapter";
+import { getGoogleReviews } from "@/lib/google/google-reviews";
 
 const navbarContent: Parameters<typeof Navbar>[0] = {
   brand: {
@@ -35,7 +36,11 @@ const navbarContent: Parameters<typeof Navbar>[0] = {
 };
 
 export default async function Home() {
-  const homepageContent = await getHomepageContent();
+  const [homepageContent, googleReviews] = await Promise.all([
+    getHomepageContent(),
+    getGoogleReviews(),
+  ]);
+
   const marketingContent = adaptHomepageContent(homepageContent);
 
   return (
@@ -43,7 +48,7 @@ export default async function Home() {
       <InfoBar {...marketingContent.infoBar} />
       <Navbar {...navbarContent} />
       <main id="inicio" aria-label="Página principal DentPro Colombia">
-        <Hero {...marketingContent.hero} />
+        <Hero {...marketingContent.hero} googleReviews={googleReviews} />
         <CampaignCarousel />
         <ServicesSection {...marketingContent.services} />
         <SpecialistsSlider {...marketingContent.specialists} />
