@@ -113,6 +113,7 @@ export function ReceptionistSchedule() {
   const [professionalFilter, setProfessionalFilter] = useState("all");
   const [specialtyFilter, setSpecialtyFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [patientQuery, setPatientQuery] = useState("");
   const [groupByProfessional, setGroupByProfessional] = useState(() => searchParams.get("group") === "professional");
   const [isLoadingSchedule, setIsLoadingSchedule] = useState(false);
 
@@ -140,6 +141,18 @@ export function ReceptionistSchedule() {
         page: String(pageOverride ?? page),
         pageSize: "10",
       });
+      if (professionalFilter !== "all") {
+        params.set("professionalId", professionalFilter);
+      }
+      if (specialtyFilter !== "all") {
+        params.set("specialty", specialtyFilter);
+      }
+      if (statusFilter !== "all") {
+        params.set("status", statusFilter);
+      }
+      if (patientQuery.trim()) {
+        params.set("patientQuery", patientQuery.trim());
+      }
       const response = await fetchWithRetry(`/api/analytics/receptionist?${params.toString()}`);
       if (!response.ok) {
         setError("No se pudo cargar la agenda. Intenta actualizar.");
@@ -152,7 +165,7 @@ export function ReceptionistSchedule() {
     } finally {
       setIsLoadingSchedule(false);
     }
-  }, [page, range.from, range.to, selectedDate]);
+  }, [page, patientQuery, professionalFilter, range.from, range.to, selectedDate, specialtyFilter, statusFilter]);
 
   useEffect(() => {
     setPage(1);
@@ -214,20 +227,6 @@ export function ReceptionistSchedule() {
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
     setGroupByProfessional(nextValue);
   }, [groupByProfessional, pathname, router, searchParams]);
-
-  const filteredAppointments = useMemo(() => {
-    const list = data?.appointments ?? [];
-    return list.filter((appointment) => {
-      const matchesProfessional = professionalFilter === "all" || appointment.professional?.id === professionalFilter;
-      const matchesSpecialty = specialtyFilter === "all" || appointment.professional?.specialty === specialtyFilter;
-      const matchesStatus =
-        statusFilter === "all" ||
-        (statusFilter === "no_show"
-          ? appointment.status === "NO_SHOW"
-          : appointment.status === statusFilter);
-      return matchesProfessional && matchesSpecialty && matchesStatus;
-    });
-  }, [data?.appointments, professionalFilter, specialtyFilter, statusFilter]);
 
   return (
     <div className="space-y-6" data-testid="receptionist-schedule-page">
@@ -295,8 +294,17 @@ export function ReceptionistSchedule() {
                 <option value="COMPLETED">Atendidas</option>
                 <option value="CHECKED_IN">En sala</option>
                 <option value="CANCELLED">Canceladas</option>
-                <option value="no_show">No asistió</option>
+                <option value="NO_SHOW">No asistió</option>
               </select>
+            </label>
+            <label className="text-xs font-semibold text-slate-500 dark:text-slate-300 md:col-span-2 xl:col-span-3">Paciente
+              <input
+                type="search"
+                className="input mt-1"
+                placeholder="Buscar por nombre, apellido o correo"
+                value={patientQuery}
+                onChange={(event) => setPatientQuery(event.target.value)}
+              />
             </label>
           </div>
 
@@ -332,7 +340,7 @@ export function ReceptionistSchedule() {
           )}
           {data ? (
             <AppointmentTable
-              appointments={filteredAppointments}
+              appointments={data.appointments}
               page={data.pagination.page}
               totalPages={data.pagination.totalPages}
               onPageChange={setPage}

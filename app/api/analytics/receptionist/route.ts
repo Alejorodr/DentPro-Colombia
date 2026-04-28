@@ -10,7 +10,7 @@ import {
   getAnalyticsTimeZone,
   startOfZonedDay,
 } from "@/lib/dates/tz";
-import { AppointmentStatus, TimeSlotStatus } from "@prisma/client";
+import { AppointmentStatus, Prisma, TimeSlotStatus } from "@prisma/client";
 
 function parseDateInput(value?: string | null) {
   if (!value) {
@@ -43,6 +43,10 @@ export async function GET(request: Request) {
   const rawPageSize = Number(searchParams.get("pageSize") ?? "8");
   const page = Number.isFinite(rawPage) && rawPage > 0 ? rawPage : 1;
   const pageSize = Number.isFinite(rawPageSize) && rawPageSize > 0 ? rawPageSize : 8;
+  const professionalId = searchParams.get("professionalId")?.trim() ?? "";
+  const specialty = searchParams.get("specialty")?.trim() ?? "";
+  const status = searchParams.get("status")?.trim() ?? "";
+  const patientQuery = searchParams.get("patientQuery")?.trim() ?? "";
 
   const baseDate = startOfZonedDay(new Date(), timeZone);
   const fromDate = fromParam
@@ -60,19 +64,50 @@ export async function GET(request: Request) {
     : rangeStart;
   const staffStart = startOfZonedDay(staffDate, timeZone);
   const staffEnd = addDaysZoned(staffStart, 1, timeZone);
+  const appointmentWhere: Prisma.AppointmentWhereInput = {
+    timeSlot: { startAt: { gte: rangeStart, lt: rangeEnd } },
+  };
+
+  if (professionalId) {
+    appointmentWhere.professionalId = professionalId;
+  }
+
+  if (specialty) {
+    appointmentWhere.professional = {
+      specialty: {
+        name: specialty,
+      },
+    };
+  }
+
+  if (status && Object.values(AppointmentStatus).includes(status as AppointmentStatus)) {
+    appointmentWhere.status = status as AppointmentStatus;
+  }
+
+  if (patientQuery) {
+    appointmentWhere.patient = {
+      user: {
+        OR: [
+          { name: { contains: patientQuery, mode: "insensitive" } },
+          { lastName: { contains: patientQuery, mode: "insensitive" } },
+          { email: { contains: patientQuery, mode: "insensitive" } },
+        ],
+      },
+    };
+  }
 
   const prisma = getPrismaClient();
   const [totalAppointments, statusRows, appointments, staffProfiles] = await Promise.all([
     prisma.appointment.count({
-      where: { timeSlot: { startAt: { gte: rangeStart, lt: rangeEnd } } },
+      where: appointmentWhere,
     }),
     prisma.appointment.groupBy({
       by: ["status"],
-      where: { timeSlot: { startAt: { gte: rangeStart, lt: rangeEnd } } },
+      where: appointmentWhere,
       _count: { status: true },
     }),
     prisma.appointment.findMany({
-      where: { timeSlot: { startAt: { gte: rangeStart, lt: rangeEnd } } },
+      where: appointmentWhere,
       select: {
         id: true,
         status: true,
