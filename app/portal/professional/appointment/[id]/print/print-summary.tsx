@@ -2,21 +2,30 @@
 
 import { useEffect } from "react";
 
-import type { Appointment, Attachment, ClinicalNote, PatientProfile, Prescription, PrescriptionItem, ProfessionalProfile, TimeSlot, User } from "@prisma/client";
+export interface AppointmentPrintData {
+  id: string;
+  reason: string;
+  serviceName: string | null;
+  patient: { patientCode: string | null; user: { name: string; lastName: string; email: string } } | null;
+  professional: { user: { name: string } } | null;
+  timeSlot: { startAt: Date; endAt: Date };
+  clinicalNotes: Array<{ content: string }>;
+  prescription: { items: Array<{ id: string; name: string; dosage: string | null; frequency: string | null; instructions: string | null }> } | null;
+  attachments: Array<{ id: string; filename: string; url: string | null; dataUrl: string | null }>;
+}
 
 interface PrintSummaryProps {
-  appointment: Appointment & {
-    patient: PatientProfile & { user: User };
-    professional: ProfessionalProfile & { user: User };
-    timeSlot: TimeSlot;
-    clinicalNotes: ClinicalNote[];
-    prescription: (Prescription & { items: PrescriptionItem[] }) | null;
-    attachments: Attachment[];
-  };
+  appointment: AppointmentPrintData;
 }
 
 export function PrintSummary({ appointment }: PrintSummaryProps) {
   const latestNote = appointment.clinicalNotes.at(0)?.content ?? "";
+  const patientName = appointment.patient
+    ? `${appointment.patient.user.name} ${appointment.patient.user.lastName}`
+    : "Paciente no disponible";
+  const patientCode = appointment.patient?.patientCode ?? "-";
+  const patientEmail = appointment.patient?.user.email ?? "Sin correo";
+  const professionalName = appointment.professional?.user.name ?? "Profesional no disponible";
 
   useEffect(() => {
     const timer = setTimeout(() => window.print(), 300);
@@ -43,10 +52,10 @@ export function PrintSummary({ appointment }: PrintSummaryProps) {
         <div className="rounded-2xl border border-slate-200 p-4">
           <h2 className="text-sm font-semibold uppercase text-slate-400">Patient</h2>
           <p className="mt-2 text-lg font-semibold">
-            {appointment.patient.user.name} {appointment.patient.user.lastName}
+            {patientName}
           </p>
-          <p className="text-sm text-slate-500">ID: {appointment.patient.patientCode ?? "-"}</p>
-          <p className="text-sm text-slate-500">Email: {appointment.patient.user.email}</p>
+          <p className="text-sm text-slate-500">ID: {patientCode}</p>
+          <p className="text-sm text-slate-500">Email: {patientEmail}</p>
         </div>
         <div className="rounded-2xl border border-slate-200 p-4">
           <h2 className="text-sm font-semibold uppercase text-slate-400">Appointment</h2>
@@ -54,7 +63,7 @@ export function PrintSummary({ appointment }: PrintSummaryProps) {
             {appointment.timeSlot.startAt.toLocaleString("es-CO")} - {appointment.timeSlot.endAt.toLocaleTimeString("es-CO")}
           </p>
           <p className="text-sm text-slate-600">Service: {appointment.serviceName ?? appointment.reason}</p>
-          <p className="text-sm text-slate-600">Professional: {appointment.professional.user.name}</p>
+          <p className="text-sm text-slate-600">Professional: {professionalName}</p>
         </div>
       </section>
 

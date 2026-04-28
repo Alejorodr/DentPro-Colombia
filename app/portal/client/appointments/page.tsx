@@ -16,7 +16,15 @@ export default async function ClientAppointmentsPage() {
 
   const appointments = await prisma.appointment.findMany({
     where: { patientId: patient.id },
-    include: { timeSlot: true, professional: { include: { user: true } }, service: true },
+    select: {
+      id: true,
+      status: true,
+      reason: true,
+      serviceName: true,
+      timeSlot: { select: { startAt: true, endAt: true } },
+      professional: { select: { user: { select: { name: true, lastName: true } } } },
+      service: { select: { name: true } },
+    },
     orderBy: { timeSlot: { startAt: "asc" } },
   });
 

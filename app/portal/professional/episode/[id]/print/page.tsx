@@ -18,14 +18,23 @@ export default async function EpisodePrintPage({ params }: { params: Promise<{ i
 
   const episode = await prisma.clinicalEpisode.findFirst({
     where: { id, deletedAt: null },
-    include: {
-      patient: { include: { user: true } },
-      professional: { include: { user: true } },
+    select: {
+      id: true,
+      patientId: true,
+      professionalId: true,
+      date: true,
+      reason: true,
+      diagnosis: true,
+      treatmentPlan: true,
+      notes: true,
+      patient: { select: { id: true, patientCode: true, user: { select: { name: true, lastName: true } } } },
+      professional: { select: { user: { select: { name: true, lastName: true } } } },
     },
   });
 
   const quoteTemplate = await prisma.clinicDocumentTemplate.findFirst({
     where: { type: "QUOTE", active: true },
+    select: { title: true, contentHtml: true },
     orderBy: { updatedAt: "desc" },
   });
 

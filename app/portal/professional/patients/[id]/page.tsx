@@ -11,7 +11,13 @@ export default async function ProfessionalPatientPage({ params }: { params: Prom
 
   const patient = await prisma.patientProfile.findUnique({
     where: { id },
-    include: { user: true },
+    select: {
+      id: true,
+      patientCode: true,
+      documentId: true,
+      phone: true,
+      user: { select: { name: true, lastName: true } },
+    },
   });
 
   if (!patient) {

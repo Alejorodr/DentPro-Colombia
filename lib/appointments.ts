@@ -11,17 +11,27 @@ type AppointmentSummaryOptions = {
 export async function getAppointmentsForRole({ userId, role, take = 20 }: AppointmentSummaryOptions) {
   const prisma = getPrismaClient();
   const now = new Date();
-  const baseInclude = {
-    patient: { include: { user: true } },
-    professional: { include: { user: true, specialty: true } },
-    timeSlot: true,
+  const baseSelect = {
+    id: true,
+    reason: true,
+    notes: true,
+    status: true,
+    timeSlot: { select: { startAt: true, endAt: true } },
+    patient: { select: { user: { select: { name: true, lastName: true } } } },
+    professional: {
+      select: {
+        id: true,
+        user: { select: { name: true, lastName: true } },
+        specialty: { select: { id: true, name: true } },
+      },
+    },
   };
   const baseFilter = { timeSlot: { startAt: { gte: now } } };
 
   if (role === "ADMINISTRADOR" || role === "RECEPCIONISTA") {
     return prisma.appointment.findMany({
       where: baseFilter,
-      include: baseInclude,
+      select: baseSelect,
       orderBy: { timeSlot: { startAt: "asc" } },
       take,
     });
@@ -38,7 +48,7 @@ export async function getAppointmentsForRole({ userId, role, take = 20 }: Appoin
 
     return prisma.appointment.findMany({
       where: { professionalId: professional.id, ...baseFilter },
-      include: baseInclude,
+      select: baseSelect,
       orderBy: { timeSlot: { startAt: "asc" } },
       take,
     });
@@ -55,7 +65,7 @@ export async function getAppointmentsForRole({ userId, role, take = 20 }: Appoin
 
     return prisma.appointment.findMany({
       where: { patientId: patient.id, ...baseFilter },
-      include: baseInclude,
+      select: baseSelect,
       orderBy: { timeSlot: { startAt: "asc" } },
       take,
     });

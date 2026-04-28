@@ -32,13 +32,27 @@ export default async function ClientTreatmentHistoryPage() {
 
   const appointments = await prisma.appointment.findMany({
     where: { patientId: patient.id, status: AppointmentStatus.COMPLETED },
-    include: { timeSlot: true, professional: { include: { user: true } }, service: true },
+    select: {
+      id: true,
+      reason: true,
+      serviceName: true,
+      timeSlot: { select: { startAt: true } },
+      professional: { select: { user: { select: { name: true, lastName: true } } } },
+      service: { select: { name: true } },
+    },
     orderBy: { timeSlot: { startAt: "desc" } },
   });
 
   const clinicalEpisodes = await prisma.clinicalEpisode.findMany({
     where: { patientId: patient.id, visibleToPatient: true, deletedAt: null },
-    include: { professional: { include: { user: true } } },
+    select: {
+      id: true,
+      date: true,
+      reason: true,
+      diagnosis: true,
+      treatmentPlan: true,
+      professional: { select: { user: { select: { name: true, lastName: true } } } },
+    },
     orderBy: { date: "desc" },
   });
 

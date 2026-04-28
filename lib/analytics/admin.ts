@@ -372,9 +372,10 @@ export async function getAdminStaffOnDuty(prisma: PrismaClient): Promise<AdminSt
 
   const professionals = await prisma.professionalProfile.findMany({
     where: { active: true },
-    include: {
-      user: true,
-      specialty: true,
+    select: {
+      id: true,
+      user: { select: { name: true, lastName: true } },
+      specialty: { select: { name: true } },
       appointments: {
         where: {
           timeSlot: {
@@ -384,7 +385,7 @@ export async function getAdminStaffOnDuty(prisma: PrismaClient): Promise<AdminSt
             },
           },
         },
-        include: { timeSlot: true },
+        select: { timeSlot: { select: { startAt: true, endAt: true } } },
       },
     },
     orderBy: { user: { name: "asc" } },
@@ -420,11 +421,14 @@ export async function getAdminAppointmentsSummary(
         },
       },
     },
-    include: {
-      timeSlot: true,
-      patient: { include: { user: true } },
-      professional: { include: { user: true } },
-      service: true,
+    select: {
+      id: true,
+      status: true,
+      serviceName: true,
+      timeSlot: { select: { startAt: true } },
+      patient: { select: { user: { select: { name: true, lastName: true } } } },
+      professional: { select: { user: { select: { name: true, lastName: true } } } },
+      service: { select: { name: true } },
     },
     orderBy: { timeSlot: { startAt: "asc" } },
     take: limit,
@@ -465,10 +469,17 @@ export async function getAdminRecentAppointments(
         },
       },
     },
-    include: {
-      timeSlot: true,
-      patient: { include: { user: true } },
-      professional: { include: { user: true, specialty: true } },
+    select: {
+      id: true,
+      status: true,
+      timeSlot: { select: { startAt: true } },
+      patient: { select: { user: { select: { name: true, lastName: true } } } },
+      professional: {
+        select: {
+          user: { select: { name: true, lastName: true } },
+          specialty: { select: { name: true } },
+        },
+      },
     },
     orderBy: { timeSlot: { startAt: "asc" } },
     take: limit,

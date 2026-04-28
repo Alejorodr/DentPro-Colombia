@@ -18,10 +18,16 @@ export default async function PrescriptionPrintPage({ params }: { params: Promis
 
   const prescription = await prisma.prescription.findFirst({
     where: { id, deletedAt: null },
-    include: {
-      patient: { include: { user: true } },
-      professional: { include: { user: true } },
-      episode: true,
+    select: {
+      id: true,
+      patientId: true,
+      professionalId: true,
+      content: true,
+      issuedAt: true,
+      createdAt: true,
+      patient: { select: { patientCode: true, user: { select: { name: true, lastName: true } } } },
+      professional: { select: { user: { select: { name: true, lastName: true } } } },
+      episode: { select: { reason: true } },
     },
   });
 
