@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
@@ -46,6 +46,13 @@ type AnalyticsResponse = {
     total: number;
     totalPages: number;
   };
+  staffOnDuty: Array<{
+    id: string;
+    name: string;
+    specialty: string | null;
+    status: "Free" | "Busy" | "Break" | "Offline";
+    slots: number;
+  }>;
 };
 
 type CalendarDaySummary = {
@@ -116,6 +123,7 @@ export function ReceptionistSchedule() {
   const [patientQuery, setPatientQuery] = useState("");
   const [groupByProfessional, setGroupByProfessional] = useState(() => searchParams.get("group") === "professional");
   const [isLoadingSchedule, setIsLoadingSchedule] = useState(false);
+  const previousFilterKeyRef = useRef<string>("");
 
   const range = useMemo(() => {
     if (view === "week") return { from: startOfWeek(selectedDate), to: endOfWeek(selectedDate) };
@@ -138,7 +146,7 @@ export function ReceptionistSchedule() {
         from: formatDateInput(range.from),
         to: formatDateInput(range.to),
         date: formatDateInput(selectedDate),
-        page: String(pageOverride ?? page),
+        page: String(pageOverride ?? 1),
         pageSize: "10",
       });
       if (professionalFilter !== "all") {
@@ -165,14 +173,34 @@ export function ReceptionistSchedule() {
     } finally {
       setIsLoadingSchedule(false);
     }
-  }, [page, patientQuery, professionalFilter, range.from, range.to, selectedDate, specialtyFilter, statusFilter]);
+  }, [patientQuery, professionalFilter, range.from, range.to, selectedDate, specialtyFilter, statusFilter]);
+
+  const activeFiltersKey = useMemo(
+    () =>
+      JSON.stringify({
+        from: formatDateInput(range.from),
+        to: formatDateInput(range.to),
+        date: formatDateInput(selectedDate),
+        professionalFilter,
+        specialtyFilter,
+        statusFilter,
+        patientQuery: patientQuery.trim(),
+      }),
+    [patientQuery, professionalFilter, range.from, range.to, selectedDate, specialtyFilter, statusFilter],
+  );
 
   useEffect(() => {
-    setPage(1);
-    void refresh(1);
-  }, [range.from, range.to, refresh, selectedDate]);
+    const previousFilterKey = previousFilterKeyRef.current;
+    const filtersChanged = previousFilterKey !== "" && previousFilterKey !== activeFiltersKey;
+    previousFilterKeyRef.current = activeFiltersKey;
 
-  useEffect(() => { void refresh(page); }, [page, refresh]);
+    if (filtersChanged && page !== 1) {
+      setPage(1);
+      return;
+    }
+
+    void refresh(page);
+  }, [activeFiltersKey, page, refresh]);
 
   useEffect(() => {
     const loadCalendar = async () => {
@@ -195,19 +223,19 @@ export function ReceptionistSchedule() {
 
   const professionalOptions = useMemo(() => {
     const entries = new Map<string, string>();
-    for (const appointment of data?.appointments ?? []) {
-      if (appointment.professional) entries.set(appointment.professional.id, appointment.professional.name);
+    for (const professional of data?.staffOnDuty ?? []) {
+      entries.set(professional.id, professional.name);
     }
     return Array.from(entries.entries());
-  }, [data?.appointments]);
+  }, [data?.staffOnDuty]);
 
   const specialtyOptions = useMemo(() => {
     const specialties = new Set<string>();
-    for (const appointment of data?.appointments ?? []) {
-      if (appointment.professional?.specialty) specialties.add(appointment.professional.specialty);
+    for (const professional of data?.staffOnDuty ?? []) {
+      if (professional.specialty) specialties.add(professional.specialty);
     }
     return Array.from(specialties.values());
-  }, [data?.appointments]);
+  }, [data?.staffOnDuty]);
 
 
 
