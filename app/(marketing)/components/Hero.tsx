@@ -1,5 +1,9 @@
 import Image from "next/image";
 
+import type { GoogleReviewsSummary } from "@/lib/google/google-reviews";
+
+import { HeroGoogleReviewRotator } from "./HeroGoogleReviewRotator";
+
 interface HeroStat {
   label: string;
   description: string;
@@ -36,6 +40,7 @@ interface HeroContent {
   };
   testimonial: HeroTestimonial;
   highlight: HeroHighlight;
+  googleReviews?: GoogleReviewsSummary | null;
 }
 
 export function Hero({
@@ -48,6 +53,7 @@ export function Hero({
   image,
   testimonial,
   highlight,
+  googleReviews,
 }: HeroContent) {
   return (
     <section className="hero z-10 overflow-visible! bg-hero-light pt-12 pb-24 transition-colors duration-500 dark:bg-hero-dark sm:pt-12 sm:pb-24 md:pt-16 md:pb-28 lg:pt-20 lg:pb-32">
@@ -91,23 +97,7 @@ export function Hero({
                 />
               </div>
               <div className="card relative z-20 mt-6 grid gap-4 rounded-2xl bg-white/90 p-6 text-sm shadow-lg! transition-colors duration-500 hover:translate-y-0! hover:shadow-lg! dark:bg-surface-muted/90! dark:text-slate-100">
-                <p className="font-semibold text-brand-teal dark:text-accent-cyan">Testimonio real</p>
-                <p className="text-slate-600 dark:text-slate-200">“{testimonial.quote}”</p>
-                <div className="flex items-center gap-4">
-                  <div className="relative h-12 w-12 overflow-hidden rounded-full">
-                    <Image
-                      src={testimonial.avatar}
-                      alt={testimonial.author}
-                      fill
-                      sizes="48px"
-                      className="h-full w-full object-cover"
-                    />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-slate-900 dark:text-white">{testimonial.author}</p>
-                    <p className="text-xs text-slate-500 dark:text-slate-300">{testimonial.role}</p>
-                  </div>
-                </div>
+                <HeroGoogleReviewRotator googleReviews={googleReviews} fallback={testimonial} />
               </div>
             </div>
             <div className="card mx-auto mt-6 w-full max-w-xs space-y-2 border-white/60 p-5 text-center text-sm text-slate-700 shadow-glow! backdrop-blur-sm transition-colors duration-500 hover:translate-y-0! hover:shadow-glow! dark:border-accent-cyan/15! dark:bg-surface-elevated/90! dark:text-slate-100 dark:shadow-glow-dark sm:absolute sm:right-1 sm:-bottom-16 sm:translate-y-1 sm:mx-0 sm:mt-0 sm:text-left sm:shadow-lg sm:p-6">
