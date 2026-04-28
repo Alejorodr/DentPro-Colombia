@@ -73,11 +73,20 @@ export async function GET(request: Request) {
     }),
     prisma.appointment.findMany({
       where: { timeSlot: { startAt: { gte: rangeStart, lt: rangeEnd } } },
-      include: {
-        patient: { include: { user: true } },
-        professional: { include: { user: true, specialty: true } },
-        timeSlot: true,
-        service: true,
+      select: {
+        id: true,
+        status: true,
+        reason: true,
+        timeSlot: { select: { startAt: true, endAt: true } },
+        patient: { select: { id: true, user: { select: { name: true, lastName: true } } } },
+        professional: {
+          select: {
+            id: true,
+            user: { select: { name: true, lastName: true } },
+            specialty: { select: { name: true } },
+          },
+        },
+        service: { select: { id: true, name: true } },
       },
       orderBy: { timeSlot: { startAt: "asc" } },
       skip: Math.max((page - 1) * pageSize, 0),
@@ -85,13 +94,11 @@ export async function GET(request: Request) {
     }),
     prisma.professionalProfile.findMany({
       where: { active: true },
-      include: {
-        user: true,
-        specialty: true,
-        timeSlots: {
-          where: { startAt: { gte: staffStart, lt: staffEnd } },
-          select: { status: true, startAt: true, endAt: true },
-        },
+      select: {
+        id: true,
+        user: { select: { name: true, lastName: true } },
+        specialty: { select: { name: true } },
+        timeSlots: { where: { startAt: { gte: staffStart, lt: staffEnd } }, select: { status: true, startAt: true, endAt: true } },
       },
       orderBy: { user: { name: "asc" } },
     }),

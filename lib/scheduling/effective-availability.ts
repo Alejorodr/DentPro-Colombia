@@ -296,7 +296,20 @@ export async function getEffectiveAvailability(params: {
         ...(whereProfessionals ? { professionalId: { in: whereProfessionals } } : {}),
         startAt: { gte: dateStart, lt: dateEnd },
       },
-      include: { professional: { include: { user: true, specialty: true } } },
+      select: {
+        id: true,
+        professionalId: true,
+        startAt: true,
+        endAt: true,
+        status: true,
+        professional: {
+          select: {
+            id: true,
+            user: { select: { name: true, lastName: true } },
+            specialty: { select: { name: true } },
+          },
+        },
+      },
       orderBy: { startAt: "asc" },
     }),
   ]);

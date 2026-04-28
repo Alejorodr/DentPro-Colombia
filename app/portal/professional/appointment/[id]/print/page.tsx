@@ -15,13 +15,22 @@ export default async function ProfessionalPrintPage({ params }: PrintPageProps) 
 
   const appointment = await prisma.appointment.findUnique({
     where: { id },
-    include: {
-      patient: { include: { user: true, allergies: true } },
-      professional: { include: { user: true, specialty: true } },
-      timeSlot: true,
-      clinicalNotes: { orderBy: { updatedAt: "desc" } },
-      prescription: { include: { items: true } },
-      attachments: true,
+    select: {
+      id: true,
+      reason: true,
+      serviceName: true,
+      patient: { select: { patientCode: true, user: { select: { name: true, lastName: true, email: true } } } },
+      professional: { select: { user: { select: { name: true } } } },
+      timeSlot: { select: { startAt: true, endAt: true } },
+      clinicalNotes: { select: { content: true }, orderBy: { updatedAt: "desc" } },
+      prescription: {
+        select: {
+          items: {
+            select: { id: true, name: true, dosage: true, frequency: true, instructions: true },
+          },
+        },
+      },
+      attachments: { select: { id: true, filename: true, url: true, dataUrl: true } },
     },
   });
 
