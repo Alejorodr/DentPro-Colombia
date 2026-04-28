@@ -96,8 +96,34 @@ export const getTodayAppointments = cache(async () => {
     },
     include: {
       timeSlot: true,
-      patient: { include: { user: true } },
-      professional: { include: { user: true } },
+      patient: {
+        select: {
+          id: true,
+          user: {
+            select: {
+              id: true,
+              name: true,
+              lastName: true,
+              email: true,
+              role: true,
+            },
+          },
+        },
+      },
+      professional: {
+        select: {
+          id: true,
+          user: {
+            select: {
+              id: true,
+              name: true,
+              lastName: true,
+              email: true,
+              role: true,
+            },
+          },
+        },
+      },
     },
     orderBy: { timeSlot: { startAt: "asc" } },
   });
@@ -112,8 +138,20 @@ export const getStaffList = cache(async (): Promise<StaffMember[]> => {
         { role: Role.PROFESIONAL, professional: { active: true } },
       ],
     },
-    include: {
-      professional: { include: { specialty: true } },
+    select: {
+      id: true,
+      name: true,
+      lastName: true,
+      role: true,
+      professional: {
+        select: {
+          specialty: {
+            select: {
+              name: true,
+            },
+          },
+        },
+      },
     },
     orderBy: { name: "asc" },
   });

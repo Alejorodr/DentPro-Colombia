@@ -49,8 +49,32 @@ export async function GET(request: Request) {
       },
     },
     include: {
-      patient: { include: { user: true } },
-      professional: { include: { user: true } },
+      patient: {
+        select: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+              name: true,
+              lastName: true,
+              role: true,
+            },
+          },
+        },
+      },
+      professional: {
+        select: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+              name: true,
+              lastName: true,
+              role: true,
+            },
+          },
+        },
+      },
       timeSlot: true,
     },
   });
