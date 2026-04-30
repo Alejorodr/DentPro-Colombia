@@ -382,7 +382,14 @@ export function ReceptionistSchedule() {
         </Card>
       </section>
       <ActivityFeed title="Actividad operativa reciente" limit={10} testId="receptionist-activity-feed" />
-      <NewAppointmentModal open={isNewOpen} onClose={() => setIsNewOpen(false)} onCreated={() => refresh(1)} />
+      <NewAppointmentModal
+        open={isNewOpen}
+        onClose={() => setIsNewOpen(false)}
+        onCreated={() => {
+          setPage(1);
+          void refresh(1);
+        }}
+      />
     </div>
   );
 }

@@ -100,4 +100,28 @@ describe("receptionist analytics filters", () => {
     const firstCallArg = mockPrisma.appointment.count.mock.calls[0][0] as { where: Record<string, unknown> };
     expect(firstCallArg.where.status).toBeUndefined();
   });
+
+  it("uses canonical NO_SHOW enum value and ignores lowercase no_show", async () => {
+    await receptionistAnalyticsGet(
+      new Request("http://localhost/api/analytics/receptionist?from=2026-04-28&to=2026-04-28&status=no_show"),
+    );
+    const lowercaseStatusCall = mockPrisma.appointment.count.mock.calls[0][0] as { where: Record<string, unknown> };
+    expect(lowercaseStatusCall.where.status).toBeUndefined();
+
+    vi.clearAllMocks();
+    mockGetSessionUser.mockResolvedValue({ id: "r1", role: "RECEPCIONISTA" });
+    mockIsAuthorized.mockReturnValue(true);
+    mockPrisma.appointment.count.mockResolvedValue(1);
+    mockPrisma.appointment.groupBy.mockResolvedValue([
+      { status: AppointmentStatus.NO_SHOW, _count: { status: 1 } },
+    ]);
+    mockPrisma.appointment.findMany.mockResolvedValue([]);
+    mockPrisma.professionalProfile.findMany.mockResolvedValue([]);
+
+    await receptionistAnalyticsGet(
+      new Request("http://localhost/api/analytics/receptionist?from=2026-04-28&to=2026-04-28&status=NO_SHOW"),
+    );
+    const canonicalStatusCall = mockPrisma.appointment.count.mock.calls[0][0] as { where: Record<string, unknown> };
+    expect(canonicalStatusCall.where.status).toBe(AppointmentStatus.NO_SHOW);
+  });
 });
