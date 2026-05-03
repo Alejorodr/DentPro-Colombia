@@ -42,10 +42,14 @@ interface NewAppointmentModalProps {
 }
 
 export function NewAppointmentModal({ open, onClose, onCreated }: NewAppointmentModalProps) {
-  const [patients, setPatients] = useState<PatientOption[]>([]);
   const [professionals, setProfessionals] = useState<ProfessionalOption[]>([]);
   const [services, setServices] = useState<ServiceOption[]>([]);
   const [slots, setSlots] = useState<SlotOption[]>([]);
+  const [patientSearch, setPatientSearch] = useState("");
+  const [patientResults, setPatientResults] = useState<PatientOption[]>([]);
+  const [selectedPatient, setSelectedPatient] = useState<PatientOption | null>(null);
+  const [isSearchingPatients, setIsSearchingPatients] = useState(false);
+  const [patientSearchError, setPatientSearchError] = useState<string | null>(null);
   const [form, setForm] = useState<AppointmentForm>({
     patientId: "",
     professionalId: "",
@@ -69,16 +73,11 @@ export function NewAppointmentModal({ open, onClose, onCreated }: NewAppointment
     }
 
     const loadOptions = async () => {
-      const [patientsResponse, professionalsResponse, servicesResponse] = await Promise.all([
-        fetchWithRetry("/api/patients?active=true&pageSize=50"),
+      const [professionalsResponse, servicesResponse] = await Promise.all([
         fetchWithRetry("/api/professionals?pageSize=50"),
         fetchWithRetry("/api/services?active=true&pageSize=50"),
       ]);
 
-      if (patientsResponse.ok) {
-        const data = (await patientsResponse.json()) as { data: PatientOption[] };
-        setPatients(data.data ?? []);
-      }
       if (professionalsResponse.ok) {
         const data = (await professionalsResponse.json()) as { data: ProfessionalOption[] };
         setProfessionals(data.data ?? []);
@@ -91,6 +90,54 @@ export function NewAppointmentModal({ open, onClose, onCreated }: NewAppointment
 
     void loadOptions();
   }, [open]);
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+    const query = patientSearch.trim();
+    if (query.length < 2) {
+      setPatientResults([]);
+      setIsSearchingPatients(false);
+      setPatientSearchError(null);
+      return;
+    }
+
+    let cancelled = false;
+    const timerId = window.setTimeout(async () => {
+      setIsSearchingPatients(true);
+      setPatientSearchError(null);
+      const params = new URLSearchParams({
+        active: "true",
+        pageSize: "10",
+        q: query,
+      });
+      try {
+        const response = await fetchWithRetry(`/api/patients?${params.toString()}`);
+        if (!response.ok) {
+          throw new Error("No se pudo buscar pacientes.");
+        }
+        const data = (await response.json()) as { data: PatientOption[] };
+        if (!cancelled) {
+          setPatientResults(data.data ?? []);
+        }
+      } catch {
+        if (!cancelled) {
+          setPatientResults([]);
+          setPatientSearchError("No se pudo buscar pacientes. Intenta de nuevo.");
+        }
+      } finally {
+        if (!cancelled) {
+          setIsSearchingPatients(false);
+        }
+      }
+    }, 300);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timerId);
+    };
+  }, [open, patientSearch]);
 
   useEffect(() => {
     if (!open || !form.date) {
@@ -119,6 +166,19 @@ export function NewAppointmentModal({ open, onClose, onCreated }: NewAppointment
     return null;
   }
 
+  const resetPatientState = () => {
+    setPatientSearch("");
+    setPatientResults([]);
+    setSelectedPatient(null);
+    setPatientSearchError(null);
+    setForm((prev) => ({ ...prev, patientId: "" }));
+  };
+
+  const handleClose = () => {
+    resetPatientState();
+    onClose();
+  };
+
   const submit = async () => {
     if (!form.patientId || !form.slotId || !form.serviceId) {
       setError("Paciente, servicio y slot son obligatorios.");
@@ -142,7 +202,7 @@ export function NewAppointmentModal({ open, onClose, onCreated }: NewAppointment
 
     if (response.ok) {
       onCreated();
-      onClose();
+      handleClose();
       setForm({
         patientId: "",
         professionalId: "",
@@ -171,7 +231,7 @@ export function NewAppointmentModal({ open, onClose, onCreated }: NewAppointment
           <button
             type="button"
             className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-slate-500 dark:border-surface-muted"
-            onClick={onClose}
+            onClick={handleClose}
             aria-label="Cerrar"
           >
             <X size={16} weight="bold" />
@@ -180,18 +240,70 @@ export function NewAppointmentModal({ open, onClose, onCreated }: NewAppointment
         <div className="mt-4 grid gap-4 md:grid-cols-2">
           <label className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
             Paciente
-            <select
-              className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 dark:border-surface-muted dark:bg-surface-base dark:text-slate-200"
-              value={form.patientId}
-              onChange={(event) => setForm((prev) => ({ ...prev, patientId: event.target.value }))}
-            >
-              <option value="">Selecciona paciente</option>
-              {patients.map((patient) => (
-                <option key={patient.id} value={patient.id}>
-                  {patient.user.name} {patient.user.lastName} · {patient.user.email}
-                </option>
-              ))}
-            </select>
+            {selectedPatient ? (
+              <div className="mt-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 dark:border-surface-muted dark:bg-surface-base dark:text-slate-200">
+                <p className="font-medium">
+                  {selectedPatient.user.name} {selectedPatient.user.lastName}
+                </p>
+                <p className="text-xs normal-case text-slate-500 dark:text-slate-400">{selectedPatient.user.email}</p>
+                <button
+                  type="button"
+                  className="mt-2 text-xs font-semibold normal-case text-brand-teal underline"
+                  onClick={resetPatientState}
+                  aria-label="Cambiar paciente seleccionado"
+                >
+                  Cambiar paciente
+                </button>
+              </div>
+            ) : (
+              <div className="mt-2">
+                <input
+                  id="new-appointment-patient-search"
+                  type="text"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm normal-case text-slate-700 dark:border-surface-muted dark:bg-surface-base dark:text-slate-200"
+                  value={patientSearch}
+                  onChange={(event) => setPatientSearch(event.target.value)}
+                  placeholder="Buscar por nombre, apellido o correo"
+                />
+                <div className="mt-2 min-h-6 text-xs normal-case text-slate-500 dark:text-slate-400">
+                  {isSearchingPatients ? <p>Buscando pacientes...</p> : null}
+                  {patientSearchError ? <p className="text-red-600">{patientSearchError}</p> : null}
+                  {!isSearchingPatients &&
+                  !patientSearchError &&
+                  patientSearch.trim().length >= 2 &&
+                  patientResults.length === 0 ? (
+                    <p>Sin resultados para tu búsqueda.</p>
+                  ) : null}
+                  {!isSearchingPatients && patientSearch.trim().length < 2 ? (
+                    <p>Escribe al menos 2 caracteres para buscar.</p>
+                  ) : null}
+                </div>
+                {patientResults.length > 0 ? (
+                  <ul className="mt-2 max-h-44 overflow-auto rounded-xl border border-slate-200 dark:border-surface-muted">
+                    {patientResults.map((patient) => (
+                      <li key={patient.id}>
+                        <button
+                          type="button"
+                          className="w-full px-3 py-2 text-left text-sm normal-case text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-surface-base"
+                          onClick={() => {
+                            setSelectedPatient(patient);
+                            setForm((prev) => ({ ...prev, patientId: patient.id }));
+                            setPatientSearch(`${patient.user.name} ${patient.user.lastName}`);
+                            setPatientResults([]);
+                            setPatientSearchError(null);
+                          }}
+                        >
+                          <span className="block font-medium">
+                            {patient.user.name} {patient.user.lastName}
+                          </span>
+                          <span className="block text-xs text-slate-500 dark:text-slate-400">{patient.user.email}</span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+              </div>
+            )}
           </label>
           <label className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
             Servicio
@@ -284,7 +396,7 @@ export function NewAppointmentModal({ open, onClose, onCreated }: NewAppointment
           <button
             type="button"
             className="rounded-full border border-slate-200 px-4 py-2 text-xs font-semibold uppercase text-slate-600 dark:border-surface-muted dark:text-slate-200"
-            onClick={onClose}
+            onClick={handleClose}
           >
             Cancelar
           </button>
