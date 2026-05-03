@@ -1,5 +1,4 @@
 import NextAuth from "next-auth";
-import { getServerSession } from "next-auth/next";
 import CredentialsProvider from "next-auth/providers/credentials";
 import type { JWT } from "next-auth/jwt";
 import { cookies } from "next/headers";
@@ -90,7 +89,7 @@ if (!usesSecureCookies) {
   );
 }
 
-export const authOptions = {
+export const authConfig = {
   secret: getJwtSecretString(),
   useSecureCookies: usesSecureCookies,
   ...(trustHost ? { trustHost } : {}),
@@ -114,7 +113,7 @@ export const authOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        return authorizeCredentials(credentials);
+        return authorizeCredentials(credentials as { email?: string; password?: string } | undefined);
       },
     }),
   ],
@@ -223,12 +222,12 @@ export const authOptions = {
   },
 };
 
-// The NextAuth typings are not compatible with `moduleResolution: "bundler"` here, so we cast
-// the default export to a callable handler to keep the route signature type-safe for Next.js.
-const handler = (NextAuth as unknown as (options: typeof authOptions) => any)(authOptions);
+const { handlers, auth: baseAuth, signIn, signOut } = NextAuth(authConfig);
+
+export { handlers, signIn, signOut };
 
 export async function auth(): Promise<AuthSession> {
-  const session = (await getServerSession(authOptions as any)) as AuthSession;
+  const session = (await baseAuth()) as AuthSession;
   if (session?.user) {
     return session;
   }
@@ -264,4 +263,3 @@ export async function auth(): Promise<AuthSession> {
   } satisfies AuthSession;
 }
 
-export { handler as GET, handler as POST };

@@ -1,6 +1,6 @@
 import { beforeAll, beforeEach, describe, expect, it, vi, type MockInstance } from "vitest";
 
-import { authOptions } from "@/auth";
+import { authConfig } from "@/auth";
 import { getDefaultDashboardPath } from "@/lib/auth/roles";
 import * as users from "@/lib/auth/users";
 
@@ -16,7 +16,7 @@ describe("auth options", () => {
   });
 
   it("propagates role and ids into the jwt token", async () => {
-    const jwtCallback = authOptions.callbacks.jwt as unknown as (params: {
+    const jwtCallback = authConfig.callbacks.jwt as unknown as (params: {
       token: Record<string, unknown>;
       user?: Record<string, unknown> | null;
     }) => Promise<Record<string, unknown>>;
@@ -50,7 +50,7 @@ describe("auth options", () => {
       passwordChangedAt: null,
     });
 
-    const jwtCallback = authOptions.callbacks.jwt as unknown as (params: {
+    const jwtCallback = authConfig.callbacks.jwt as unknown as (params: {
       token: Record<string, unknown>;
       user?: Record<string, unknown> | null;
     }) => Promise<Record<string, unknown>>;
@@ -67,7 +67,7 @@ describe("auth options", () => {
   });
 
   it("copies role into the session payload", async () => {
-    const sessionCallback = authOptions.callbacks.session as unknown as (params: {
+    const sessionCallback = authConfig.callbacks.session as unknown as (params: {
       session: Record<string, unknown>;
       token: Record<string, unknown>;
     }) => Promise<Record<string, unknown>>;
@@ -86,7 +86,7 @@ describe("auth options", () => {
   });
 
   it("uses strict sameSite cookies for the session token", () => {
-    expect(authOptions.cookies?.sessionToken.options.sameSite).toBe("strict");
+    expect(authConfig.cookies?.sessionToken.options.sameSite).toBe("strict");
   });
 
   it("invalidates sessions issued before a password reset", async () => {
@@ -101,12 +101,12 @@ describe("auth options", () => {
       passwordChangedAt,
     });
 
-    const jwtCallback = authOptions.callbacks.jwt as unknown as (params: {
+    const jwtCallback = authConfig.callbacks.jwt as unknown as (params: {
       token: Record<string, unknown>;
       user?: Record<string, unknown> | null;
     }) => Promise<Record<string, unknown>>;
 
-    const sessionCallback = authOptions.callbacks.session as unknown as (params: {
+    const sessionCallback = authConfig.callbacks.session as unknown as (params: {
       session: Record<string, unknown>;
       token: Record<string, unknown>;
     }) => Promise<Record<string, unknown> | null>;
