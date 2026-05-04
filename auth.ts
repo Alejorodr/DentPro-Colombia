@@ -1,8 +1,10 @@
+import { PrismaAdapter } from "@auth/prisma-adapter";
 import NextAuth from "next-auth";
 import { cookies } from "next/headers";
 
 import { authConfig } from "@/auth.config";
 import { isUserRole } from "@/lib/auth/roles";
+import { getPrismaClient } from "@/lib/prisma";
 import { findUserByEmail } from "@/lib/auth/users";
 import { getInferredAuthBaseUrl, isLocalE2EAuthRuntime } from "@/lib/auth/runtime";
 
@@ -18,7 +20,10 @@ type AuthenticatedUser = {
 
 export type AuthSession = { user?: AuthenticatedUser | null } | null;
 
-const { handlers, auth: baseAuth, signIn, signOut } = NextAuth(authConfig);
+const { handlers, auth: baseAuth, signIn, signOut } = NextAuth({
+  ...authConfig,
+  adapter: PrismaAdapter(getPrismaClient()),
+});
 
 export { handlers, signIn, signOut };
 

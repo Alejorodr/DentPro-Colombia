@@ -68,6 +68,10 @@ export async function authenticateUser(email: string, password: string): Promise
     return null;
   }
 
+  if (!user.passwordHash) {
+    return null;
+  }
+
   const passwordsMatch = await bcrypt.compare(password, user.passwordHash);
   if (!passwordsMatch) {
     return null;
