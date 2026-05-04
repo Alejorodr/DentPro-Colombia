@@ -81,7 +81,7 @@ export function LoginFormCard({
     setFormError(null);
 
     const googleResult = await signIn("google", {
-      callbackUrl: callbackUrl ?? undefined,
+      redirectTo: callbackUrl ?? undefined,
       redirect: false,
     });
 
