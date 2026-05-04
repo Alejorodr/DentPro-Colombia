@@ -1,21 +1,11 @@
 import NextAuth from "next-auth";
-import CredentialsProvider from "next-auth/providers/credentials";
-import type { JWT } from "next-auth/jwt";
 import { cookies } from "next/headers";
 
-import { getJwtSecretString } from "@/lib/auth/jwt";
-import {
-  getInferredAuthBaseUrl,
-  getTrustHostSetting,
-  getRuntimeStage,
-  isProductionRuntime,
-  isLocalE2EAuthRuntime,
-  shouldUseSecureCookies,
-  getSessionCookieName,
-} from "@/lib/auth/runtime";
+import { authConfig } from "@/auth.config";
 import { isUserRole } from "@/lib/auth/roles";
-import { authorizeCredentials } from "@/lib/auth/credentials";
-import { findUserByEmail, findUserById } from "@/lib/auth/users";
+import { findUserByEmail } from "@/lib/auth/users";
+import { getInferredAuthBaseUrl, isLocalE2EAuthRuntime } from "@/lib/auth/runtime";
+
 type AuthenticatedUser = {
   id?: string;
   name?: string | null;
@@ -24,203 +14,9 @@ type AuthenticatedUser = {
   role?: import("@/lib/auth/roles").UserRole;
   professionalId?: string | null;
   patientId?: string | null;
-  defaultDashboardPath?: string;
-  passwordChangedAt?: Date | null;
 };
+
 export type AuthSession = { user?: AuthenticatedUser | null } | null;
-type SessionToken = JWT & {
-  userId?: string;
-  role?: import("@/lib/auth/roles").UserRole;
-  professionalId?: string | null;
-  patientId?: string | null;
-  defaultDashboardPath?: string;
-  passwordChangedAt?: string | null;
-  invalidated?: boolean;
-};
-
-const inferredBaseUrl = getInferredAuthBaseUrl();
-const usesSecureCookies = shouldUseSecureCookies(inferredBaseUrl);
-const trustHost = getTrustHostSetting();
-const runtimeStage = getRuntimeStage();
-const isStrictProductionStage = runtimeStage === "vercel-production";
-const shouldEmitAuthRuntimeWarnings = runtimeStage === "vercel-production" || runtimeStage === "vercel-preview";
-
-
-type AuthWarnKey = "missing-base-url" | "missing-secret" | "insecure-cookies";
-const authWarningState = globalThis as typeof globalThis & {
-  __authWarningsLogged?: Set<AuthWarnKey>;
-};
-
-function warnAuthOnce(key: AuthWarnKey, message: string): void {
-  if (!isProductionRuntime() || !shouldEmitAuthRuntimeWarnings) {
-    return;
-  }
-
-  if (!authWarningState.__authWarningsLogged) {
-    authWarningState.__authWarningsLogged = new Set<AuthWarnKey>();
-  }
-
-  if (authWarningState.__authWarningsLogged.has(key)) {
-    return;
-  }
-
-  authWarningState.__authWarningsLogged.add(key);
-  console.warn(message);
-}
-
-function hasAuthSecretConfigured(): boolean {
-  return Boolean(process.env.AUTH_JWT_SECRET || process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET);
-}
-
-if (!inferredBaseUrl) {
-  warnAuthOnce("missing-base-url", "[auth] Missing NEXTAUTH_URL or VERCEL_URL; check production auth configuration.");
-}
-
-if (!hasAuthSecretConfigured()) {
-  warnAuthOnce("missing-secret", "[auth] Missing AUTH_JWT_SECRET/NEXTAUTH_SECRET/AUTH_SECRET in production.");
-}
-
-if (!usesSecureCookies) {
-  warnAuthOnce(
-    "insecure-cookies",
-    isStrictProductionStage
-      ? "[auth] Secure cookies are disabled in Vercel production; review NEXTAUTH_URL/VERCEL_URL."
-      : `[auth] Secure cookies are disabled in ${runtimeStage}; verify NEXTAUTH_URL/VERCEL_URL for this environment.`,
-  );
-}
-
-export const authConfig = {
-  secret: getJwtSecretString(),
-  useSecureCookies: usesSecureCookies,
-  ...(trustHost ? { trustHost } : {}),
-  cookies: {
-    sessionToken: {
-      name: getSessionCookieName(inferredBaseUrl),
-      options: {
-        httpOnly: true,
-        sameSite: "strict",
-        path: "/",
-        secure: usesSecureCookies,
-      },
-    },
-  },
-  session: { strategy: "jwt" },
-  providers: [
-    CredentialsProvider({
-      name: "credentials",
-      credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" },
-      },
-      async authorize(credentials) {
-        return authorizeCredentials(credentials as { email?: string; password?: string } | undefined);
-      },
-    }),
-  ],
-  callbacks: {
-    redirect({ url, baseUrl }: { url: string; baseUrl: string }) {
-      if (url.startsWith("/")) {
-        return `${baseUrl}${url}`;
-      }
-      if (url.startsWith(baseUrl)) {
-        return url;
-      }
-      return baseUrl;
-    },
-    async jwt({ token, user }: { token: SessionToken; user?: AuthenticatedUser | null }) {
-      let dbUser: Awaited<ReturnType<typeof findUserById>> | null = null;
-      if (user) {
-        const roleCandidate =
-          typeof (user as { role?: unknown }).role === "string" ? (user as { role: string }).role : "";
-        const resolvedRole = isUserRole(roleCandidate) ? roleCandidate : "PACIENTE";
-        const userIdCandidate =
-          typeof (user as { id?: unknown }).id === "string" ? (user as { id: string }).id : undefined;
-
-        token.role = resolvedRole;
-        token.userId = userIdCandidate ?? token.userId ?? token.sub ?? "";
-        token.professionalId = (user as { professionalId?: string | null }).professionalId ?? token.professionalId;
-        token.patientId = (user as { patientId?: string | null }).patientId ?? token.patientId;
-        token.passwordChangedAt =
-          user.passwordChangedAt instanceof Date ? user.passwordChangedAt.toISOString() : token.passwordChangedAt;
-
-        const defaultPathCandidate =
-          typeof (user as { defaultDashboardPath?: unknown }).defaultDashboardPath === "string"
-            ? (user as { defaultDashboardPath: string }).defaultDashboardPath
-            : undefined;
-
-        token.defaultDashboardPath = defaultPathCandidate ?? token.defaultDashboardPath;
-      } else if (token.sub && !token.role) {
-        dbUser = await findUserById(token.sub);
-        if (dbUser) {
-          token.role = dbUser.role;
-          token.professionalId = dbUser.professionalId ?? null;
-          token.patientId = dbUser.patientId ?? null;
-          token.passwordChangedAt = dbUser.passwordChangedAt ? dbUser.passwordChangedAt.toISOString() : null;
-        }
-      }
-
-      if (!token.userId && token.sub) {
-        token.userId = token.sub;
-      }
-      if (!token.role) {
-        token.role = "PACIENTE";
-      }
-
-      const tokenIssuedAt = typeof token.iat === "number" ? token.iat * 1000 : null;
-      if (token.sub) {
-        if (!dbUser) {
-          dbUser = await findUserById(token.sub);
-        }
-        if (dbUser?.passwordChangedAt && tokenIssuedAt) {
-          token.invalidated = tokenIssuedAt < dbUser.passwordChangedAt.getTime();
-        } else {
-          token.invalidated = false;
-        }
-      }
-
-      return token;
-    },
-    async session({
-      session,
-      token,
-    }: {
-      session: { user?: AuthenticatedUser | null } & Record<string, unknown>;
-      token: SessionToken;
-    }) {
-      if (token.invalidated) {
-        return null;
-      }
-
-      const role = token.role ?? "";
-      const resolvedRole = isUserRole(role) ? role : "PACIENTE";
-      const userId =
-        typeof token.userId === "string"
-          ? token.userId
-          : typeof token.sub === "string"
-            ? token.sub
-            : "";
-      session.user = {
-        id: userId,
-        name: session.user?.name ?? null,
-        email: session.user?.email ?? null,
-        image: session.user?.image ?? null,
-        role: resolvedRole,
-        professionalId: token.professionalId ?? null,
-        patientId: token.patientId ?? null,
-      };
-
-      if (token.defaultDashboardPath && typeof token.defaultDashboardPath === "string") {
-        (session.user as { defaultDashboardPath?: string }).defaultDashboardPath =
-          token.defaultDashboardPath;
-      }
-
-      return session;
-    },
-  },
-  pages: {
-    signIn: "/auth/login",
-  },
-};
 
 const { handlers, auth: baseAuth, signIn, signOut } = NextAuth(authConfig);
 
@@ -228,27 +24,18 @@ export { handlers, signIn, signOut };
 
 export async function auth(): Promise<AuthSession> {
   const session = (await baseAuth()) as AuthSession;
-  if (session?.user) {
-    return session;
-  }
+  if (session?.user) return session;
 
-  const baseUrl = inferredBaseUrl;
-  const allowTestSession = isLocalE2EAuthRuntime(baseUrl);
-  if (!allowTestSession) {
-    return session;
-  }
+  const baseUrl = getInferredAuthBaseUrl();
+  if (!isLocalE2EAuthRuntime(baseUrl)) return session;
 
   const cookieStore = await cookies();
   const testRole = cookieStore.get("dentpro-test-role")?.value ?? "";
   const testUserEmail = cookieStore.get("dentpro-test-user-email")?.value ?? "";
-  if (!isUserRole(testRole) || !testUserEmail) {
-    return session;
-  }
+  if (!isUserRole(testRole) || !testUserEmail) return session;
 
   const persistedUser = await findUserByEmail(testUserEmail);
-  if (!persistedUser) {
-    return session;
-  }
+  if (!persistedUser) return session;
 
   return {
     user: {
@@ -260,6 +47,5 @@ export async function auth(): Promise<AuthSession> {
       professionalId: persistedUser.professionalId ?? null,
       patientId: persistedUser.patientId ?? null,
     },
-  } satisfies AuthSession;
+  };
 }
-

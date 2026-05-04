@@ -18,8 +18,15 @@ function resolveSeededUser(role: SessionRole, seededUsers?: SeededUsersByRole) {
 export async function seedRoleSession(context: BrowserContext, role: SessionRole, seededUsers?: SeededUsersByRole) {
   const seededUser = resolveSeededUser(role, seededUsers);
   const secret = process.env.AUTH_JWT_SECRET ?? process.env.NEXTAUTH_SECRET ?? process.env.AUTH_SECRET ?? "test-secret";
+  const baseUrl = process.env.NEXTAUTH_URL ?? "http://127.0.0.1:3000";
+  const sessionCookieName = getSessionCookieName(baseUrl);
+  const sessionSalt = sessionCookieName.startsWith("__Secure-")
+    ? sessionCookieName.slice("__Secure-".length)
+    : sessionCookieName;
+
   const token = await encode({
     secret,
+    salt: sessionSalt,
     maxAge: 60 * 60 * 2,
     token: {
       role,
@@ -28,9 +35,6 @@ export async function seedRoleSession(context: BrowserContext, role: SessionRole
       sub: seededUser.id,
     },
   });
-
-  const baseUrl = process.env.NEXTAUTH_URL ?? "http://127.0.0.1:3000";
-  const sessionCookieName = getSessionCookieName(baseUrl);
 
   const urls = [baseUrl];
   const cookies = urls.flatMap((url) => [
