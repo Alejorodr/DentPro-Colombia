@@ -1,3 +1,4 @@
+import { PrismaAdapter } from "@auth/prisma-adapter";
 import type { Adapter, AdapterUser } from "next-auth/adapters";
 
 import { logAuditEvent } from "@/lib/audit";
@@ -21,7 +22,6 @@ function extractSafeUserNames(user: AdapterUser): { name: string; lastName: stri
 
 export function DentProPrismaAdapter(): Adapter {
   const prisma = getPrismaClient();
-  const { PrismaAdapter } = require("@auth/prisma-adapter") as { PrismaAdapter: (client: unknown) => Adapter };
   const baseAdapter = PrismaAdapter(prisma);
 
   return {
