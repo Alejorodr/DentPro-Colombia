@@ -14,6 +14,8 @@ const errorMessages: Record<string, string> = {
   InvalidEmail: "Debes ingresar un correo válido.",
   NetworkError: "No pudimos conectarnos. Revisa tu conexión e inténtalo de nuevo.",
   SessionRequired: "Tu sesión expiró. Inicia sesión nuevamente.",
+  OAuthSignin: "No pudimos iniciar sesión con Google. Inténtalo de nuevo.",
+  AccessDenied: "Tu cuenta de Google no cumple los requisitos de acceso.",
   Default: "No pudimos procesar tu solicitud. Inténtalo más tarde.",
 };
 
@@ -71,6 +73,27 @@ export function LoginFormCard({
     router.refresh();
   }, [resolveDestination, router, session?.user?.role, status]);
 
+
+  const handleGoogleSignIn = async () => {
+    if (isSubmitting) return;
+
+    setIsSubmitting(true);
+    setFormError(null);
+
+    const googleResult = await signIn("google", {
+      callbackUrl: callbackUrl ?? undefined,
+      redirect: false,
+    });
+
+    if (googleResult?.error) {
+      setFormError(errorMessages[googleResult.error] ?? errorMessages.Default);
+      setIsSubmitting(false);
+      return;
+    }
+
+    const destination = googleResult?.url ?? callbackUrl ?? "/";
+    router.push(destination);
+  };
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -210,6 +233,16 @@ export function LoginFormCard({
             />
           </div>
         </label>
+
+        <Button type="button" className="h-12 w-full" disabled={isSubmitting} onClick={handleGoogleSignIn}>
+          Continuar con Google
+        </Button>
+
+        <div className="flex items-center gap-3" aria-hidden="true">
+          <span className="h-px flex-1 bg-slate-200 dark:bg-slate-700" />
+          <span className="text-xs uppercase tracking-wide text-slate-500">o</span>
+          <span className="h-px flex-1 bg-slate-200 dark:bg-slate-700" />
+        </div>
 
         <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-slate-600 dark:text-slate-300">
           <div className="space-x-2">
