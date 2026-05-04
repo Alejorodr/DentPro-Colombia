@@ -37,6 +37,10 @@ type SessionToken = JWT & {
   invalidated?: boolean;
 };
 
+function resolveTokenRole(value: unknown): UserRole {
+  return typeof value == "string" && isUserRole(value) ? value : "PACIENTE";
+}
+
 const inferredBaseUrl = getInferredAuthBaseUrl();
 const usesSecureCookies = shouldUseSecureCookies(inferredBaseUrl);
 const trustHost = getTrustHostSetting();
@@ -115,12 +119,7 @@ export const authConfig = {
       let dbUser: Awaited<ReturnType<typeof findUserById>> | null = null;
 
       if (authUser) {
-        let resolvedRole: UserRole = "PACIENTE";
-        const roleCandidate = authUser.role;
-        if (isUserRole(roleCandidate ?? "")) {
-          resolvedRole = roleCandidate;
-        }
-        sessionToken.role = resolvedRole;
+        sessionToken.role = resolveTokenRole(authUser.role);
         sessionToken.userId = authUser.id ?? sessionToken.userId ?? sessionToken.sub ?? "";
         sessionToken.professionalId = authUser.professionalId ?? sessionToken.professionalId;
         sessionToken.patientId = authUser.patientId ?? sessionToken.patientId;
@@ -130,7 +129,7 @@ export const authConfig = {
       } else if (sessionToken.sub && !sessionToken.role) {
         dbUser = await findUserById(sessionToken.sub);
         if (dbUser) {
-          sessionToken.role = dbUser.role;
+          sessionToken.role = resolveTokenRole(dbUser.role);
           sessionToken.professionalId = dbUser.professionalId ?? null;
           sessionToken.patientId = dbUser.patientId ?? null;
           sessionToken.passwordChangedAt = dbUser.passwordChangedAt ? dbUser.passwordChangedAt.toISOString() : null;
@@ -138,7 +137,7 @@ export const authConfig = {
       }
 
       if (!sessionToken.userId && sessionToken.sub) sessionToken.userId = sessionToken.sub;
-      if (!sessionToken.role) sessionToken.role = "PACIENTE";
+      sessionToken.role = resolveTokenRole(sessionToken.role);
 
       const tokenIssuedAt = typeof sessionToken.iat === "number" ? sessionToken.iat * 1000 : null;
       if (sessionToken.sub) {
@@ -154,19 +153,26 @@ export const authConfig = {
         return session;
       }
 
-      const resolvedRole = isUserRole(sessionToken.role ?? "") ? sessionToken.role : "PACIENTE";
       const userId = typeof sessionToken.userId === "string" ? sessionToken.userId : typeof sessionToken.sub === "string" ? sessionToken.sub : "";
 
-      session.user = {
-        id: userId,
-        name: session.user?.name ?? null,
-        email: session.user?.email ?? "",
-        image: session.user?.image ?? null,
-        role: resolvedRole,
-        professionalId: sessionToken.professionalId ?? null,
-        patientId: sessionToken.patientId ?? null,
-        ...(sessionToken.defaultDashboardPath ? { defaultDashboardPath: sessionToken.defaultDashboardPath } : {}),
-      };
+      if (!session.user) {
+        session.user = {
+          id: userId,
+          email: "",
+          emailVerified: null,
+          name: null,
+          image: null,
+          role: "PACIENTE",
+        };
+      }
+
+      session.user.id = userId;
+      session.user.role = resolveTokenRole(sessionToken.role);
+      session.user.professionalId = sessionToken.professionalId ?? null;
+      session.user.patientId = sessionToken.patientId ?? null;
+      if (sessionToken.defaultDashboardPath) {
+        session.user.defaultDashboardPath = sessionToken.defaultDashboardPath;
+      }
       return session;
     },
   },
