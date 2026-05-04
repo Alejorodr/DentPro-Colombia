@@ -1,10 +1,11 @@
 import type { NextAuthConfig } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import GoogleProvider from "next-auth/providers/google";
 import type { JWT } from "next-auth/jwt";
 
 import { authorizeCredentials } from "@/lib/auth/credentials";
 import { getJwtSecretString } from "@/lib/auth/jwt";
-import { isUserRole, type UserRole } from "@/lib/auth/roles";
+import { getDefaultDashboardPath, isUserRole, type UserRole } from "@/lib/auth/roles";
 import {
   getInferredAuthBaseUrl,
   getRuntimeStage,
@@ -13,7 +14,9 @@ import {
   isProductionRuntime,
   shouldUseSecureCookies,
 } from "@/lib/auth/runtime";
-import { findUserById } from "@/lib/auth/users";
+
+import { findUserByEmail, findUserById } from "@/lib/auth/users";
+import { logAuditEvent } from "@/lib/audit";
 
 type AuthenticatedUser = {
   id?: string;
@@ -106,8 +109,55 @@ export const authConfig = {
         return authorizeCredentials(parsed);
       },
     }),
+    ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
+      ? [
+          GoogleProvider({
+            clientId: process.env.GOOGLE_CLIENT_ID,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+            allowDangerousEmailAccountLinking: true,
+          }),
+        ]
+      : []),
   ],
   callbacks: {
+    async signIn({ account, profile }) {
+      if (account?.provider !== "google") return true;
+
+      const profileEmail = typeof profile?.email === "string" ? profile.email.toLowerCase() : "";
+      const emailVerified = profile?.email_verified === true;
+      if (!profileEmail || !emailVerified) {
+        void logAuditEvent({
+          action: "auth.oauth.signin_rejected",
+          resourceType: "auth",
+          status: "failure",
+          metadata: {
+            provider: "google",
+            emailDomain: profileEmail.split("@")[1] ?? null,
+            reason: !profileEmail ? "missing_email" : "email_not_verified",
+          },
+        });
+        return false;
+      }
+
+      const existingUser = await findUserByEmail(profileEmail);
+      if (existingUser) return true;
+
+      if (process.env.GOOGLE_AUTO_CREATE_PATIENTS !== "true") {
+        void logAuditEvent({
+          action: "auth.oauth.signin_rejected",
+          resourceType: "auth",
+          status: "failure",
+          metadata: {
+            provider: "google",
+            emailDomain: profileEmail.split("@")[1] ?? null,
+            reason: "auto_create_disabled",
+          },
+        });
+        return false;
+      }
+
+      return true;
+    },
     redirect({ url, baseUrl }) {
       if (url.startsWith("/")) return `${baseUrl}${url}`;
       if (url.startsWith(baseUrl)) return url;
@@ -118,22 +168,32 @@ export const authConfig = {
       const authUser = user as AuthenticatedUser | undefined;
       let dbUser: Awaited<ReturnType<typeof findUserById>> | null = null;
 
+      const userIdCandidate = authUser?.id ?? sessionToken.userId ?? sessionToken.sub ?? "";
+      const shouldRefreshFromDb =
+        !!userIdCandidate &&
+        (!authUser || !authUser.role || (!authUser.professionalId && !authUser.patientId) || !authUser.defaultDashboardPath);
+      if (shouldRefreshFromDb) {
+        dbUser = await findUserById(userIdCandidate);
+      }
+
       if (authUser) {
+        sessionToken.userId = userIdCandidate;
+      }
+
+      if (dbUser) {
+        sessionToken.role = resolveTokenRole(dbUser.role);
+        sessionToken.userId = dbUser.id;
+        sessionToken.professionalId = dbUser.professionalId ?? null;
+        sessionToken.patientId = dbUser.patientId ?? null;
+        sessionToken.passwordChangedAt = dbUser.passwordChangedAt ? dbUser.passwordChangedAt.toISOString() : null;
+        sessionToken.defaultDashboardPath = getDefaultDashboardPath(dbUser.role);
+      } else if (authUser) {
         sessionToken.role = resolveTokenRole(authUser.role);
-        sessionToken.userId = authUser.id ?? sessionToken.userId ?? sessionToken.sub ?? "";
         sessionToken.professionalId = authUser.professionalId ?? sessionToken.professionalId;
         sessionToken.patientId = authUser.patientId ?? sessionToken.patientId;
         sessionToken.passwordChangedAt =
           authUser.passwordChangedAt instanceof Date ? authUser.passwordChangedAt.toISOString() : sessionToken.passwordChangedAt;
         sessionToken.defaultDashboardPath = authUser.defaultDashboardPath ?? sessionToken.defaultDashboardPath;
-      } else if (sessionToken.sub && !sessionToken.role) {
-        dbUser = await findUserById(sessionToken.sub);
-        if (dbUser) {
-          sessionToken.role = resolveTokenRole(dbUser.role);
-          sessionToken.professionalId = dbUser.professionalId ?? null;
-          sessionToken.patientId = dbUser.patientId ?? null;
-          sessionToken.passwordChangedAt = dbUser.passwordChangedAt ? dbUser.passwordChangedAt.toISOString() : null;
-        }
       }
 
       if (!sessionToken.userId && sessionToken.sub) sessionToken.userId = sessionToken.sub;
