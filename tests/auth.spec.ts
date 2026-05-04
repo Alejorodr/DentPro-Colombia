@@ -1,6 +1,6 @@
 import { beforeAll, beforeEach, describe, expect, it, vi, type MockInstance } from "vitest";
 
-import { authConfig } from "@/auth";
+import { authConfig } from "@/auth.config";
 import { getDefaultDashboardPath } from "@/lib/auth/roles";
 import * as users from "@/lib/auth/users";
 
@@ -109,7 +109,7 @@ describe("auth options", () => {
     const sessionCallback = authConfig.callbacks.session as unknown as (params: {
       session: Record<string, unknown>;
       token: Record<string, unknown>;
-    }) => Promise<Record<string, unknown> | null>;
+    }) => Promise<Record<string, unknown>>;
 
     const token = await jwtCallback({
       token: { sub: "user-5", iat: Math.floor(new Date("2024-01-01T00:00:00.000Z").getTime() / 1000) },
@@ -123,6 +123,8 @@ describe("auth options", () => {
       token,
     });
 
-    expect(session).toBeNull();
+    expect(session).toMatchObject({
+      user: { name: "User", email: "user@dentpro.test", image: null },
+    });
   });
 });
