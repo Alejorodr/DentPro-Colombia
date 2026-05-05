@@ -9,8 +9,8 @@ Run these commands locally before deploying:
 
 ## Required environment variables (Vercel)
 Use `.env.example` as the source of truth. At minimum, configure:
-- `DATABASE_URL` (Neon)
-- `DATABASE_URL_UNPOOLED` (opcional)
+- `DATABASE_URL` (Neon, incluyendo Preview y Production)
+- `DATABASE_URL_UNPOOLED` (opcional, incluyendo Preview y Production)
 - `NEXTAUTH_URL`
 - `NEXTAUTH_SECRET`
 - `AUTH_SECRET`
@@ -33,6 +33,14 @@ Optional but recommended:
 - `CRON_SECRET` (protege los recordatorios de citas)
 - `ANALYTICS_TIME_ZONE`, `CLINIC_NAME`, `CLINIC_CITY`, `CLINIC_ADDRESS`
 
+
+### Neon SSL requirements (Preview + Production)
+If your database host is Neon (`*.neon.tech`), configure **both** URLs with `sslmode=verify-full`:
+- `DATABASE_URL=...&sslmode=verify-full`
+- `DATABASE_URL_UNPOOLED=...&sslmode=verify-full`
+
+This applies to **Preview and Production** environments in Vercel. Missing `sslmode=verify-full` can fail build/runtime validation.
+
 ## Database TLS recommendation
 To avoid future TLS enforcement changes in `pg`, prefer:
 - `DATABASE_URL=...&sslmode=verify-full`
@@ -46,7 +54,7 @@ If your provider requires libpq-compatible parameters:
 
 ## Notes
 - Nunca commitear `.env` ni `.env.production`; solo mantener `.env.example` con placeholders.
-- En previews (VERCEL_ENV distinto de `production`), las migraciones se omiten y el build pasa sin DB, pero el runtime puede requerirla para APIs/portales.
+- En previews (VERCEL_ENV distinto de `production`), las migraciones se omiten; aun así, si apuntas a Neon debes mantener `DATABASE_URL`/`DATABASE_URL_UNPOOLED` con `sslmode=verify-full` para pasar validaciones de build/runtime.
 - When Upstash variables are not set, rate limiting falls back to in-memory limits (development only).
 - Vercel Blob debe estar habilitado en el proyecto y `BLOB_READ_WRITE_TOKEN` configurado para adjuntos clínicos.
 - Update CSP rules in `next.config.ts` when adding third-party scripts or assets.

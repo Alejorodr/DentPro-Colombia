@@ -7,11 +7,12 @@ import { fileURLToPath } from 'node:url';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
-const runCommand = (command, args) =>
+const runCommand = (command, args, envOverrides = {}) =>
   new Promise((resolve, reject) => {
     const child = spawn(command, args, {
       cwd: repoRoot,
       stdio: ['ignore', 'pipe', 'pipe'],
+      env: { ...process.env, ...envOverrides },
     });
 
     let stderr = '';
@@ -33,7 +34,7 @@ const logStep = (message) => {
   console.log(`\n[vercel-prisma] ${message}`);
 };
 
-const runPrisma = async (args) => runCommand('pnpm', ['exec', 'prisma', ...args]);
+const runPrisma = async (args, envOverrides) => runCommand('pnpm', ['exec', 'prisma', ...args], envOverrides);
 
 const listMigrationDirectories = async () => {
   const migrationsPath = path.join(repoRoot, 'prisma', 'migrations');
@@ -46,8 +47,44 @@ const listMigrationDirectories = async () => {
 
 const isP3005Error = ({ stderr }) => /P3005/i.test(stderr || '');
 
-const deployMigrations = async () =>
-  runPrisma(['migrate', 'deploy', '--schema', 'prisma/schema.prisma']);
+const deployMigrations = async (databaseUrl) =>
+  runPrisma(['migrate', 'deploy', '--schema', 'prisma/schema.prisma'], { DATABASE_URL: databaseUrl });
+
+
+const isAdvisoryLockTimeoutError = ({ stderr }) => {
+  const output = stderr || '';
+  return /P1002/i.test(output) || /advisory lock/i.test(output) || /pg_advisory_lock/i.test(output);
+};
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const deployWithRetry = async (databaseUrl) => {
+  const maxAttempts = 3;
+  const delaysMs = [15000, 30000, 45000];
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    logStep(`Ejecutando migrate deploy (intento ${attempt}/${maxAttempts})`);
+    const result = await deployMigrations(databaseUrl);
+
+    if (result.code === 0) {
+      return result;
+    }
+
+    if (!isAdvisoryLockTimeoutError(result)) {
+      return result;
+    }
+
+    if (attempt === maxAttempts) {
+      return result;
+    }
+
+    const waitMs = delaysMs[attempt - 1] ?? delaysMs[delaysMs.length - 1];
+    logStep(`Retry por P1002/advisory lock (intento ${attempt + 1}/${maxAttempts})`);
+    await sleep(waitMs);
+  }
+
+  return { code: 1, stderr: 'Unexpected retry flow termination.' };
+};
 
 const baselineMigrations = async () => {
   const migrations = await listMigrationDirectories();
@@ -91,16 +128,18 @@ const run = async () => {
     return;
   }
 
-  const databaseUrl = process.env.DATABASE_URL || process.env.DATABASE_URL_UNPOOLED;
-  const hasDatabaseUrl = Boolean(databaseUrl && databaseUrl.trim());
-  logStep(`DATABASE_URL status: ${hasDatabaseUrl ? 'present' : 'missing'}`);
+  const unpooledUrl = process.env.DATABASE_URL_UNPOOLED;
+  const pooledUrl = process.env.DATABASE_URL;
+  const databaseUrl = unpooledUrl || pooledUrl;
+  const selectedConnectionType = unpooledUrl ? 'unpooled' : 'pooled';
+  logStep(`Conexión de migración: ${selectedConnectionType}`);
 
   if (isInvalidDatabaseUrl(databaseUrl)) {
     throw new Error('DATABASE_URL inválida o placeholder. Configure DATABASE_URL en Vercel.');
   }
 
   logStep('Ejecutando migraciones Prisma');
-  const deployResult = await deployMigrations();
+  const deployResult = await deployWithRetry(databaseUrl);
 
   if (deployResult.code === 0) {
     logStep('Migraciones aplicadas o ya al día');
@@ -111,7 +150,7 @@ const run = async () => {
     logStep('P3005 detectado. Aplicando baseline automático');
     await baselineMigrations();
 
-    const retryResult = await deployMigrations();
+    const retryResult = await deployWithRetry(databaseUrl);
     if (retryResult.code !== 0) {
       if (retryResult.stderr) {
         console.error(retryResult.stderr);
@@ -125,6 +164,9 @@ const run = async () => {
 
   if (deployResult.stderr) {
     console.error(deployResult.stderr);
+  }
+  if (isAdvisoryLockTimeoutError(deployResult)) {
+    throw new Error('Falló prisma migrate deploy tras reintentos por P1002/advisory lock.');
   }
   throw new Error('Falló prisma migrate deploy.');
 };
