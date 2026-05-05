@@ -80,19 +80,14 @@ export function LoginFormCard({
     setIsSubmitting(true);
     setFormError(null);
 
-    const googleResult = await signIn("google", {
-      redirectTo: callbackUrl ?? undefined,
-      redirect: false,
-    });
-
-    if (googleResult?.error) {
-      setFormError(errorMessages[googleResult.error] ?? errorMessages.Default);
+    try {
+      await signIn("google", {
+        redirectTo: callbackUrl ?? undefined,
+      });
+    } catch {
+      setFormError(errorMessages.OAuthSignin);
       setIsSubmitting(false);
-      return;
     }
-
-    const destination = googleResult?.url ?? callbackUrl ?? "/";
-    router.push(destination);
   };
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
