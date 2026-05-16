@@ -41,9 +41,9 @@ export function ProfessionalTopbar({ userName, onMenuClick }: ProfessionalTopbar
   const { privacyMode, setPrivacyMode } = useProfessionalPreferences();
   const greeting = useMemo(() => {
     const hour = new Date().getHours();
-    if (hour < 12) return "Good morning";
-    if (hour < 18) return "Good afternoon";
-    return "Good evening";
+    if (hour < 12) return "Buenos días";
+    if (hour < 18) return "Buenas tardes";
+    return "Buenas noches";
   }, []);
 
   const [query, setQuery] = useState("");
@@ -110,13 +110,13 @@ export function ProfessionalTopbar({ userName, onMenuClick }: ProfessionalTopbar
           type="button"
           className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition hover:text-slate-900 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-teal/60 dark:border-slate-800 dark:text-slate-200 md:hidden"
           onClick={onMenuClick}
-          aria-label="Open menu"
-          title="Open menu"
+          aria-label="Abrir menú"
+          title="Abrir menú"
         >
           <List aria-hidden="true" size={20} weight="bold" />
         </button>
         <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Portal Dashboard</p>
+          <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Portal profesional</p>
           <p className="text-sm text-slate-500 dark:text-slate-300">
             {greeting}, {userName}
           </p>
@@ -128,9 +128,9 @@ export function ProfessionalTopbar({ userName, onMenuClick }: ProfessionalTopbar
           <MagnifyingGlass className="absolute left-4 text-slate-400" size={18} />
           <input
             type="search"
-            placeholder="Search patients, appointments, notes"
-            aria-label="Search"
-            title="Search"
+            placeholder="Buscar pacientes, citas, notas"
+            aria-label="Buscar"
+            title="Buscar"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             className="w-full rounded-full border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-sm text-slate-600 shadow-xs shadow-slate-100/60 outline-hidden transition focus-visible:ring-2 focus-visible:ring-brand-teal/60 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
@@ -138,9 +138,9 @@ export function ProfessionalTopbar({ userName, onMenuClick }: ProfessionalTopbar
           {query ? (
             <div className="absolute left-0 right-0 top-12 z-20 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl dark:border-slate-800 dark:bg-slate-950">
               {isSearching ? (
-                <p className="px-3 py-2 text-xs text-slate-500">Searching...</p>
+                <p className="px-3 py-2 text-xs text-slate-500">Buscando…</p>
               ) : results.length === 0 ? (
-                <p className="px-3 py-2 text-xs text-slate-500">No results found.</p>
+                <p className="px-3 py-2 text-xs text-slate-500">Sin resultados.</p>
               ) : (
                 <ul className="max-h-64 overflow-auto">
                   {results.map((result) => (
@@ -179,7 +179,7 @@ export function ProfessionalTopbar({ userName, onMenuClick }: ProfessionalTopbar
           onClick={() => setPrivacyMode(!privacyMode)}
         >
           <ShieldCheck size={16} weight="bold" />
-          Privacy Mode
+          Modo privado
         </button>
 
         <ThemeToggle />
@@ -188,8 +188,8 @@ export function ProfessionalTopbar({ userName, onMenuClick }: ProfessionalTopbar
           <button
             type="button"
             className="relative inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition hover:text-slate-900 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-teal/60 dark:border-slate-800 dark:text-slate-200"
-            aria-label="View notifications"
-            title="View notifications"
+            aria-label="Ver notificaciones"
+            title="Ver notificaciones"
             onClick={() => setIsNotificationsOpen((prev) => !prev)}
           >
             <Bell aria-hidden="true" className="h-5 w-5" weight="bold" />
@@ -200,11 +200,11 @@ export function ProfessionalTopbar({ userName, onMenuClick }: ProfessionalTopbar
           {isNotificationsOpen ? (
             <div className="absolute right-0 mt-3 w-80 rounded-2xl border border-slate-200 bg-white p-3 text-sm shadow-xl dark:border-slate-800 dark:bg-slate-950">
               <div className="mb-2 flex items-center justify-between">
-                <p className="text-xs uppercase tracking-wide text-slate-400">Notifications</p>
+                <p className="text-xs uppercase tracking-wide text-slate-400">Notificaciones</p>
                 <MoonStars size={16} className="text-slate-400" />
               </div>
               {notifications.length === 0 ? (
-                <p className="text-xs text-slate-500">No new updates.</p>
+                <p className="text-xs text-slate-500">Sin novedades nuevas.</p>
               ) : (
                 <ul className="space-y-2">
                   {notifications.map((notification) => (

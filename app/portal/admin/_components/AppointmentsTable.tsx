@@ -14,12 +14,21 @@ type AppointmentItem = {
 };
 
 const statusStyles: Record<string, string> = {
-  CheckedIn: "bg-emerald-100 text-emerald-700",
-  Waiting: "bg-amber-100 text-amber-700",
-  Pending: "bg-amber-100 text-amber-700",
-  Confirmed: "bg-emerald-100 text-emerald-700",
-  Cancelled: "bg-rose-100 text-rose-700",
-  Completed: "bg-blue-100 text-blue-700",
+  CHECKED_IN: "bg-emerald-100 text-emerald-700",
+  SCHEDULED: "bg-amber-100 text-amber-700",
+  CONFIRMED: "bg-emerald-100 text-emerald-700",
+  CANCELLED: "bg-rose-100 text-rose-700",
+  COMPLETED: "bg-blue-100 text-blue-700",
+  NO_SHOW: "bg-slate-100 text-slate-600",
+};
+
+const statusLabels: Record<string, string> = {
+  CHECKED_IN: "Presente",
+  SCHEDULED: "Programada",
+  CONFIRMED: "Confirmada",
+  CANCELLED: "Cancelada",
+  COMPLETED: "Completada",
+  NO_SHOW: "No asistió",
 };
 
 export function AppointmentsTable({ appointments }: { appointments: AppointmentItem[] }) {
@@ -28,69 +37,57 @@ export function AppointmentsTable({ appointments }: { appointments: AppointmentI
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-            Today&apos;s Appointments
+            Resumen del período
           </p>
           <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Agenda del día</h2>
         </div>
-        <div className="flex items-center gap-2">
-          <button className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600 dark:border-surface-muted dark:text-slate-200">
-            Filter
-          </button>
-          <button className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600 dark:border-surface-muted dark:text-slate-200">
-            Export
-          </button>
-        </div>
+        <Link
+          href="/portal/admin/appointments"
+          className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600 hover:border-brand-teal hover:text-brand-teal dark:border-surface-muted dark:text-slate-200"
+        >
+          Ver todas
+        </Link>
       </div>
       {appointments.length === 0 ? (
         <div className="rounded-xl border border-dashed border-slate-200 px-3 py-6 text-sm text-slate-500 dark:border-surface-muted/70 dark:text-slate-400">
-          No hay citas registradas.
+          No hay citas registradas para el período seleccionado.
         </div>
       ) : (
-        <>
-          <Table>
-            <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500 dark:bg-surface-muted/70 dark:text-slate-400">
-              <tr>
-                <th className="px-4 py-3 font-semibold">Paciente</th>
-                <th className="px-4 py-3 font-semibold">Servicio</th>
-                <th className="px-4 py-3 font-semibold">Profesional</th>
-                <th className="px-4 py-3 font-semibold">Hora</th>
-                <th className="px-4 py-3 font-semibold">Estado</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-200 text-sm text-slate-600 dark:divide-surface-muted dark:text-slate-200">
-              {appointments.map((appointment) => {
-                const statusKey = appointment.status
-                  .toLowerCase()
-                  .replace(/_/g, " ")
-                  .replace(/\b\w/g, (value) => value.toUpperCase());
-                return (
-                  <tr key={appointment.id} className="bg-white dark:bg-surface-elevated/60">
-                    <td className="px-4 py-3 font-semibold text-slate-900 dark:text-white">
-                      {appointment.patientName ?? "—"}
-                    </td>
-                    <td className="px-4 py-3">{appointment.serviceName ?? "—"}</td>
-                    <td className="px-4 py-3">{appointment.professionalName ?? "—"}</td>
-                    <td className="px-4 py-3">{appointment.timeLabel}</td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                          statusStyles[statusKey] ?? "bg-slate-100 text-slate-600"
-                        }`}
-                      >
-                        {statusKey}
-                      </span>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </Table>
-          <div className="text-right">
-            <Link href="/portal/admin/appointments" className="text-xs font-semibold text-brand-teal dark:text-accent-cyan">
-              Ver todas las citas
-            </Link>
-          </div>
-        </>
+        <Table>
+          <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500 dark:bg-surface-muted/70 dark:text-slate-400">
+            <tr>
+              <th className="px-4 py-3 font-semibold">Paciente</th>
+              <th className="px-4 py-3 font-semibold">Servicio</th>
+              <th className="px-4 py-3 font-semibold">Profesional</th>
+              <th className="px-4 py-3 font-semibold">Hora</th>
+              <th className="px-4 py-3 font-semibold">Estado</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-200 text-sm text-slate-600 dark:divide-surface-muted dark:text-slate-200">
+            {appointments.map((appointment) => {
+              const statusKey = appointment.status.toUpperCase();
+              return (
+                <tr key={appointment.id} className="bg-white dark:bg-surface-elevated/60">
+                  <td className="px-4 py-3 font-semibold text-slate-900 dark:text-white">
+                    {appointment.patientName ?? "—"}
+                  </td>
+                  <td className="px-4 py-3">{appointment.serviceName ?? "—"}</td>
+                  <td className="px-4 py-3">{appointment.professionalName ?? "—"}</td>
+                  <td className="px-4 py-3">{appointment.timeLabel}</td>
+                  <td className="px-4 py-3">
+                    <span
+                      className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                        statusStyles[statusKey] ?? "bg-slate-100 text-slate-600"
+                      }`}
+                    >
+                      {statusLabels[statusKey] ?? statusKey}
+                    </span>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </Table>
       )}
     </div>
   );

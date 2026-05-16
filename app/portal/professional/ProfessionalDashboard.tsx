@@ -20,6 +20,7 @@ import { operationalStatusLabel } from "@/lib/appointments/status";
 import { ActivityFeed } from "@/app/portal/components/activity/ActivityFeed";
 import { calculateAge, maskId, maskName } from "@/lib/professional";
 import { useProfessionalPreferences } from "@/app/portal/professional/components/ProfessionalContext";
+import { DayScheduleGrid } from "@/app/portal/professional/components/DayScheduleGrid";
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
 import type {
   ProfessionalAppointmentDetail,
@@ -44,9 +45,14 @@ const statusLabels: Record<AppointmentStatus, string> = {
   NO_SHOW: operationalStatusLabel("NO_SHOW"),
 };
 
-const tabOptions = ["Clinical Overview", "X-Rays & Imaging", "History"] as const;
+type TabKey = "overview" | "imaging" | "history";
 
-type TabOption = (typeof tabOptions)[number];
+const tabs: { key: TabKey; label: string }[] = [
+  { key: "overview", label: "Resumen clínico" },
+  { key: "imaging", label: "Radiografías e imágenes" },
+  { key: "history", label: "Historial" },
+];
+
 type PrescriptionFormState = {
   type: PrescriptionItemType;
   name: string;
@@ -66,7 +72,7 @@ export function ProfessionalDashboard() {
   const [appointmentDetail, setAppointmentDetail] = useState<ProfessionalAppointmentDetail | null>(null);
   const [notesContent, setNotesContent] = useState("");
   const [isSaving, setIsSaving] = useState(false);
-  const [tab, setTab] = useState<TabOption>("Clinical Overview");
+  const [tab, setTab] = useState<TabKey>("overview");
   const [prescriptionForm, setPrescriptionForm] = useState<PrescriptionFormState>({
     type: PrescriptionItemType.MEDICATION,
     name: "",
@@ -78,6 +84,7 @@ export function ProfessionalDashboard() {
   const [uploading, setUploading] = useState(false);
   const [markCompleted, setMarkCompleted] = useState(false);
   const [hasSpeechSupport, setHasSpeechSupport] = useState(false);
+  const [calendarView, setCalendarView] = useState<"list" | "grid">("grid");
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -239,9 +246,9 @@ export function ProfessionalDashboard() {
     setUploadError(null);
 
     let dataUrl: string | undefined;
-    let filename = file?.name ?? url?.split("/").pop() ?? "Attachment";
-    let mimeType = file?.type;
-    let size = file?.size;
+    const filename = file?.name ?? url?.split("/").pop() ?? "Adjunto";
+    const mimeType = file?.type;
+    const size = file?.size;
 
     if (file) {
       if (file.size > 2 * 1024 * 1024) {
@@ -251,7 +258,7 @@ export function ProfessionalDashboard() {
       dataUrl = await new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = () => resolve(String(reader.result));
-        reader.onerror = () => reject(new Error("Error reading file"));
+        reader.onerror = () => reject(new Error("Error al leer el archivo"));
         reader.readAsDataURL(file);
       });
     }
@@ -309,12 +316,18 @@ export function ProfessionalDashboard() {
     }
   };
 
+  const formattedDate = new Date(selectedDate + "T12:00:00").toLocaleDateString("es-CO", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  });
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Portal Profesional</p>
-          <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">Dashboard</h1>
+          <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">Mi agenda</h1>
         </div>
         <label className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500 shadow-xs dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">
           <CalendarBlank size={16} />
@@ -333,85 +346,125 @@ export function ProfessionalDashboard() {
           <p className="mt-2 text-2xl font-semibold text-slate-900 dark:text-white">{dayMetrics.total}</p>
         </div>
         <div className="rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900/60">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Citas atendidas</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Atendidas</p>
           <p className="mt-2 text-2xl font-semibold text-slate-900 dark:text-white">{dayMetrics.attended}</p>
         </div>
       </section>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1.6fr)_minmax(0,1.1fr)]">
+        {/* Left column: schedule */}
         <section className="rounded-3xl border border-slate-200 bg-white/80 p-5 shadow-xs dark:border-slate-800 dark:bg-slate-900/60">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">Daily Schedule</h2>
-            <span className="rounded-full bg-brand-indigo/10 px-3 py-1 text-xs font-semibold text-brand-indigo">
-              {new Date(selectedDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-            </span>
+          <div className="mb-4 flex items-center justify-between gap-2">
+            <div>
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Agenda del día</h2>
+              <p className="text-xs capitalize text-slate-500">{formattedDate}</p>
+            </div>
+            <div className="flex items-center gap-1 rounded-full border border-slate-200 bg-white px-1 py-1 dark:border-slate-800 dark:bg-slate-900">
+              <button
+                type="button"
+                onClick={() => setCalendarView("grid")}
+                title="Vista de horario"
+                className={cn(
+                  "rounded-full px-3 py-1 text-xs font-semibold transition",
+                  calendarView === "grid"
+                    ? "bg-brand-indigo text-white"
+                    : "text-slate-500 hover:text-slate-900 dark:text-slate-300",
+                )}
+              >
+                Cuadrícula
+              </button>
+              <button
+                type="button"
+                onClick={() => setCalendarView("list")}
+                title="Vista de lista"
+                className={cn(
+                  "rounded-full px-3 py-1 text-xs font-semibold transition",
+                  calendarView === "list"
+                    ? "bg-brand-indigo text-white"
+                    : "text-slate-500 hover:text-slate-900 dark:text-slate-300",
+                )}
+              >
+                Lista
+              </button>
+            </div>
           </div>
 
-          <div className="mt-4 space-y-3">
-            {schedule.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-slate-200 px-4 py-6 text-center text-sm text-slate-500 dark:border-slate-700">
-                No appointments scheduled for this day.
-              </div>
-            ) : (
-              schedule.map((appointment) => {
-                const isActive = appointment.id === selectedAppointmentId;
-                const patientName = `${appointment.patient.name} ${appointment.patient.lastName}`.trim();
-                return (
-                  <button
-                    type="button"
-                    key={appointment.id}
-                    onClick={() => setSelectedAppointmentId(appointment.id)}
-                    className={cn(
-                      "w-full rounded-2xl border px-4 py-3 text-left transition",
-                      isActive
-                        ? "border-brand-indigo bg-brand-indigo/10 shadow-lg shadow-brand-indigo/20"
-                        : "border-slate-200 bg-white hover:border-brand-indigo/50 dark:border-slate-800 dark:bg-slate-900",
-                    )}
-                  >
-                    <div className="flex items-center justify-between text-xs text-slate-500">
-                      <span>
-                        {new Date(appointment.startAt).toLocaleTimeString("en-US", {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </span>
-                      <span className={cn("rounded-full border px-2 py-0.5 text-[10px]", statusStyles[appointment.status])}>
-                        {statusLabels[appointment.status]}
-                      </span>
-                    </div>
-                    <p className="mt-2 text-sm font-semibold text-slate-900 dark:text-white">
-                      {privacyMode ? maskName(patientName) : patientName}
-                    </p>
-                    <p className="text-xs text-slate-500">
-                      {appointment.serviceName ?? appointment.reason}
-                    </p>
-                  </button>
-                );
-              })
-            )}
-          </div>
+          {calendarView === "grid" ? (
+            <DayScheduleGrid
+              appointments={schedule}
+              selectedId={selectedAppointmentId}
+              onSelect={setSelectedAppointmentId}
+              privacyMode={privacyMode}
+            />
+          ) : (
+            <div className="space-y-3">
+              {schedule.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-slate-200 px-4 py-6 text-center text-sm text-slate-500 dark:border-slate-700">
+                  Sin citas programadas para este día.
+                </div>
+              ) : (
+                schedule.map((appointment) => {
+                  const isActive = appointment.id === selectedAppointmentId;
+                  const patientName = `${appointment.patient.name} ${appointment.patient.lastName}`.trim();
+                  return (
+                    <button
+                      type="button"
+                      key={appointment.id}
+                      onClick={() => setSelectedAppointmentId(appointment.id)}
+                      className={cn(
+                        "w-full rounded-2xl border px-4 py-3 text-left transition",
+                        isActive
+                          ? "border-brand-indigo bg-brand-indigo/10 shadow-lg shadow-brand-indigo/20"
+                          : "border-slate-200 bg-white hover:border-brand-indigo/50 dark:border-slate-800 dark:bg-slate-900",
+                      )}
+                    >
+                      <div className="flex items-center justify-between text-xs text-slate-500">
+                        <span>
+                          {new Date(appointment.startAt).toLocaleTimeString("es-CO", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            hour12: false,
+                          })}
+                        </span>
+                        <span className={cn("rounded-full border px-2 py-0.5 text-[10px]", statusStyles[appointment.status])}>
+                          {statusLabels[appointment.status]}
+                        </span>
+                      </div>
+                      <p className="mt-2 text-sm font-semibold text-slate-900 dark:text-white">
+                        {privacyMode ? maskName(patientName) : patientName}
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        {appointment.serviceName ?? appointment.reason}
+                      </p>
+                    </button>
+                  );
+                })
+              )}
+            </div>
+          )}
         </section>
 
+        {/* Center column: patient detail */}
         <section className="rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-xs dark:border-slate-800 dark:bg-slate-900/60">
           {!appointmentDetail ? (
             <div className="flex h-full flex-col items-center justify-center text-center text-sm text-slate-500">
-              <p className="text-base font-semibold text-slate-900 dark:text-white">Select an appointment</p>
-              <p className="mt-2 max-w-xs">Choose an appointment from the schedule to review patient details.</p>
+              <p className="text-base font-semibold text-slate-900 dark:text-white">Selecciona una cita</p>
+              <p className="mt-2 max-w-xs">Elige una cita de la agenda para ver el detalle del paciente.</p>
             </div>
           ) : (
             <div className="space-y-6">
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <div>
-                  <p className="text-xs uppercase tracking-wide text-slate-400">Patient</p>
+                  <p className="text-xs uppercase tracking-wide text-slate-400">Paciente</p>
                   <h3 className="text-2xl font-semibold text-slate-900 dark:text-white">{selectedPatientName}</h3>
                   <div className="mt-2 flex flex-wrap items-center gap-4 text-xs text-slate-500">
-                    <span>{selectedAge ? `${selectedAge} Years` : "Age N/A"}</span>
+                    <span>{selectedAge ? `${selectedAge} años` : "Edad no disponible"}</span>
                     <span>{appointmentDetail.patient.gender ?? ""}</span>
                     <span>ID: {selectedPatientCode || "—"}</span>
                   </div>
                 </div>
                 <span className="rounded-full border border-emerald-400/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-400">
-                  ACTIVE PATIENT
+                  PACIENTE ACTIVO
                 </span>
               </div>
 
@@ -419,79 +472,83 @@ export function ProfessionalDashboard() {
                 <div className="flex items-start gap-3 rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
                   <ShieldWarning size={20} className="mt-1" />
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-rose-300">Critical Allergy</p>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-rose-300">Alergia crítica</p>
                     <p className="font-semibold text-rose-100">
-                      Patient is allergic to {criticalAllergy.substance}.
+                      El paciente es alérgico a {criticalAllergy.substance}.
                     </p>
                   </div>
                 </div>
               ) : null}
 
               <div className="flex flex-wrap gap-3">
-                {tabOptions.map((option) => (
+                {tabs.map((tabItem) => (
                   <button
-                    key={option}
+                    key={tabItem.key}
                     type="button"
-                    onClick={() => setTab(option)}
+                    onClick={() => setTab(tabItem.key)}
                     className={cn(
                       "flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-semibold uppercase tracking-wide",
-                      tab === option
+                      tab === tabItem.key
                         ? "border-brand-indigo bg-brand-indigo/10 text-brand-indigo"
                         : "border-slate-200 text-slate-500 dark:border-slate-800 dark:text-slate-300",
                     )}
                   >
-                    {option}
+                    {tabItem.label}
                   </button>
                 ))}
               </div>
 
-              {tab === "Clinical Overview" ? (
+              {tab === "overview" ? (
                 <div className="grid gap-4 md:grid-cols-3">
                   <div className="rounded-2xl border border-slate-200 bg-white/70 p-4 dark:border-slate-800 dark:bg-slate-900">
-                    <p className="text-xs uppercase tracking-wide text-slate-400">Last Visit</p>
+                    <p className="text-xs uppercase tracking-wide text-slate-400">Última visita</p>
                     <p className="mt-2 text-lg font-semibold text-slate-900 dark:text-white">
                       {appointmentDetail.history[0]?.startAt
-                        ? new Date(appointmentDetail.history[0].startAt).toLocaleDateString("en-US", {
+                        ? new Date(appointmentDetail.history[0].startAt).toLocaleDateString("es-CO", {
                             month: "short",
                             day: "numeric",
                             year: "numeric",
                           })
-                        : "No previous visits"}
+                        : "Sin visitas previas"}
                     </p>
                     <p className="text-xs text-slate-500">
                       {appointmentDetail.history[0]?.reason ?? "-"}
                     </p>
                   </div>
                   <div className="rounded-2xl border border-slate-200 bg-white/70 p-4 dark:border-slate-800 dark:bg-slate-900">
-                    <p className="text-xs uppercase tracking-wide text-slate-400">Plan Status</p>
+                    <p className="text-xs uppercase tracking-wide text-slate-400">Plan de salud</p>
                     <p className="mt-2 text-lg font-semibold text-slate-900 dark:text-white">
-                      {appointmentDetail.patient.insuranceStatus === "ACTIVE" ? "Active" : "No active plan"}
+                      {appointmentDetail.patient.insuranceStatus === "ACTIVE" ? "Activo" : "Sin plan activo"}
                     </p>
                     <p className="text-xs text-slate-500">{appointmentDetail.patient.insuranceProvider ?? "—"}</p>
                   </div>
                   <div className="rounded-2xl border border-slate-200 bg-white/70 p-4 dark:border-slate-800 dark:bg-slate-900">
-                    <p className="text-xs uppercase tracking-wide text-slate-400">Insurance</p>
+                    <p className="text-xs uppercase tracking-wide text-slate-400">Aseguradora</p>
                     <p className="mt-2 text-lg font-semibold text-slate-900 dark:text-white">
-                      {appointmentDetail.patient.insuranceProvider ?? "No provider"}
+                      {appointmentDetail.patient.insuranceProvider ?? "Sin proveedor"}
                     </p>
                     <p className="text-xs text-slate-500">
-                      {appointmentDetail.patient.insuranceStatus ?? "UNKNOWN"}
+                      {appointmentDetail.patient.insuranceStatus === "ACTIVE"
+                        ? "Activa"
+                        : appointmentDetail.patient.insuranceStatus === "INACTIVE"
+                          ? "Inactiva"
+                          : "No definida"}
                     </p>
                   </div>
                 </div>
               ) : null}
 
-              {tab === "X-Rays & Imaging" ? (
+              {tab === "imaging" ? (
                 <div className="space-y-3">
                   {appointmentDetail.attachments.filter((item) => item.kind === AttachmentKind.XRAY).length === 0 ? (
-                    <p className="text-sm text-slate-500">No imaging files added yet.</p>
+                    <p className="text-sm text-slate-500">No hay imágenes adjuntas aún.</p>
                   ) : (
                     appointmentDetail.attachments
                       .filter((item) => item.kind === AttachmentKind.XRAY)
                       .map((item) => (
                         <div
                           key={item.id}
-                        className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm dark:border-slate-800 dark:bg-slate-900"
+                          className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm dark:border-slate-800 dark:bg-slate-900"
                         >
                           <div>
                             <p className="font-medium text-slate-900 dark:text-white">{item.filename}</p>
@@ -499,11 +556,11 @@ export function ProfessionalDashboard() {
                           </div>
                           {item.url ? (
                             <Link className="text-xs font-semibold text-brand-indigo" href={item.url} target="_blank">
-                              Open
+                              Abrir
                             </Link>
                           ) : item.dataUrl ? (
                             <Link className="text-xs font-semibold text-brand-indigo" href={item.dataUrl} target="_blank">
-                              Preview
+                              Vista previa
                             </Link>
                           ) : null}
                         </div>
@@ -512,10 +569,10 @@ export function ProfessionalDashboard() {
                 </div>
               ) : null}
 
-              {tab === "History" ? (
+              {tab === "history" ? (
                 <div className="space-y-3">
                   {appointmentDetail.history.length === 0 ? (
-                    <p className="text-sm text-slate-500">No previous history recorded.</p>
+                    <p className="text-sm text-slate-500">Sin historial previo registrado.</p>
                   ) : (
                     appointmentDetail.history.map((history) => (
                       <div
@@ -524,7 +581,9 @@ export function ProfessionalDashboard() {
                       >
                         <div className="flex items-center justify-between">
                           <p className="font-semibold text-slate-900 dark:text-white">{history.reason}</p>
-                          <span>{history.status}</span>
+                          <span className={cn("rounded-full border px-2 py-0.5 text-[10px]", statusStyles[history.status])}>
+                            {statusLabels[history.status]}
+                          </span>
                         </div>
                         <p className="text-xs text-slate-500">
                           {new Date(history.startAt).toLocaleDateString("es-CO", {
@@ -542,15 +601,16 @@ export function ProfessionalDashboard() {
           )}
         </section>
 
+        {/* Right column: clinical actions */}
         <section className="space-y-4">
           <div className="rounded-3xl border border-slate-200 bg-white/80 p-5 shadow-xs dark:border-slate-800 dark:bg-slate-900/60">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">Procedural Notes</h3>
+              <h3 className="text-lg font-semibold">Notas del procedimiento</h3>
               <button
                 type="button"
                 onClick={handleSpeech}
                 disabled={!hasSpeechSupport}
-                title={hasSpeechSupport ? "Dictate" : "No disponible"}
+                title={hasSpeechSupport ? "Dictar nota" : "Dictado no disponible"}
                 className={cn(
                   "inline-flex h-9 w-9 items-center justify-center rounded-full border",
                   hasSpeechSupport
@@ -564,24 +624,25 @@ export function ProfessionalDashboard() {
             <textarea
               value={notesContent}
               onChange={(event) => setNotesContent(event.target.value)}
-              placeholder="Start typing procedural observations here..."
+              placeholder="Escribe aquí las observaciones del procedimiento…"
               className="mt-4 h-48 w-full rounded-2xl border border-slate-200 bg-white/80 p-4 text-sm text-slate-700 outline-hidden focus-visible:ring-2 focus-visible:ring-brand-indigo/40 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
             />
             <div className="mt-4 flex items-center justify-between text-xs text-slate-500">
-              <span>{appointmentDetail?.clinicalNotes.at(0)?.updatedAt ? "Autosaved" : "No notes yet"}</span>
+              <span>{appointmentDetail?.clinicalNotes.at(0)?.updatedAt ? "Guardado automáticamente" : "Sin notas aún"}</span>
               <button
                 type="button"
                 onClick={saveNotes}
+                disabled={isSaving}
                 className="rounded-full border border-brand-indigo px-4 py-2 text-xs font-semibold uppercase tracking-wide text-brand-indigo"
               >
-                Save notes
+                {isSaving ? "Guardando…" : "Guardar notas"}
               </button>
             </div>
           </div>
 
           <div className="rounded-3xl border border-slate-200 bg-white/80 p-5 shadow-xs dark:border-slate-800 dark:bg-slate-900/60">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">Issue Prescription</h3>
+              <h3 className="text-lg font-semibold">Emitir prescripción</h3>
               <FileText size={20} className="text-slate-400" />
             </div>
             <div className="mt-4 space-y-3">
@@ -595,33 +656,33 @@ export function ProfessionalDashboard() {
                 }
                 className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
               >
-                <option value={PrescriptionItemType.MEDICATION}>Medication</option>
-                <option value={PrescriptionItemType.PROCEDURE}>Procedure</option>
+                <option value={PrescriptionItemType.MEDICATION}>Medicamento</option>
+                <option value={PrescriptionItemType.PROCEDURE}>Procedimiento</option>
               </select>
               <input
                 value={prescriptionForm.name}
                 onChange={(event) => setPrescriptionForm((prev) => ({ ...prev, name: event.target.value }))}
-                placeholder="Medication or procedure"
+                placeholder="Nombre del medicamento o procedimiento"
                 className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
               />
               <div className="grid gap-2 md:grid-cols-2">
                 <input
                   value={prescriptionForm.dosage}
                   onChange={(event) => setPrescriptionForm((prev) => ({ ...prev, dosage: event.target.value }))}
-                  placeholder="Dosage"
+                  placeholder="Dosis"
                   className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
                 />
                 <input
                   value={prescriptionForm.frequency}
                   onChange={(event) => setPrescriptionForm((prev) => ({ ...prev, frequency: event.target.value }))}
-                  placeholder="Frequency"
+                  placeholder="Frecuencia"
                   className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
                 />
               </div>
               <input
                 value={prescriptionForm.instructions}
                 onChange={(event) => setPrescriptionForm((prev) => ({ ...prev, instructions: event.target.value }))}
-                placeholder="Instructions"
+                placeholder="Instrucciones"
                 className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
               />
             </div>
@@ -631,7 +692,7 @@ export function ProfessionalDashboard() {
               className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-brand-indigo bg-brand-indigo/10 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-brand-indigo"
             >
               <CheckCircle size={16} />
-              Add to Prescription
+              Agregar a prescripción
             </button>
             {appointmentDetail?.prescription?.items?.length ? (
               <div className="mt-4 space-y-2">
@@ -649,8 +710,8 @@ export function ProfessionalDashboard() {
 
           <div className="grid gap-4 md:grid-cols-2">
             <div className="rounded-3xl border border-slate-200 bg-white/80 p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900/60">
-              <h4 className="text-sm font-semibold">Upload X-Ray</h4>
-              <p className="text-xs text-slate-500">Import from device or add a link.</p>
+              <h4 className="text-sm font-semibold">Subir radiografía</h4>
+              <p className="text-xs text-slate-500">Importa desde tu dispositivo o agrega un enlace.</p>
               <div className="mt-3 space-y-2">
                 <input
                   type="file"
@@ -663,7 +724,7 @@ export function ProfessionalDashboard() {
                 />
                 <input
                   type="url"
-                  placeholder="Add imaging link (URL)"
+                  placeholder="URL de imagen o archivo"
                   onBlur={(event) => {
                     if (event.target.value.trim()) {
                       void handleUpload(null, event.target.value.trim());
@@ -673,13 +734,12 @@ export function ProfessionalDashboard() {
                   className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
                 />
                 {uploadError ? <p className="text-xs text-rose-400">{uploadError}</p> : null}
-                {uploading ? <p className="text-xs text-slate-400">Uploading...</p> : null}
-                <p className="text-[11px] text-slate-400">For production, configure external storage.</p>
+                {uploading ? <p className="text-xs text-slate-400">Subiendo…</p> : null}
               </div>
             </div>
             <div className="rounded-3xl border border-slate-200 bg-white/80 p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900/60">
-              <h4 className="text-sm font-semibold">Print Summary</h4>
-              <p className="text-xs text-slate-500">Generate a printable visit summary.</p>
+              <h4 className="text-sm font-semibold">Imprimir resumen</h4>
+              <p className="text-xs text-slate-500">Genera un resumen imprimible de la visita.</p>
               <Link
                 href={selectedAppointmentId ? `/portal/professional/appointment/${selectedAppointmentId}/print` : "#"}
                 className={cn(
@@ -691,7 +751,7 @@ export function ProfessionalDashboard() {
                 target="_blank"
               >
                 <Printer size={16} />
-                Print Summary
+                Imprimir resumen
               </Link>
             </div>
           </div>
@@ -704,16 +764,16 @@ export function ProfessionalDashboard() {
                 onChange={(event) => setMarkCompleted(event.target.checked)}
                 className="h-4 w-4 rounded-sm border-slate-300 text-brand-indigo focus:ring-brand-indigo"
               />
-              Mark appointment as completed
+              Marcar cita como completada
             </label>
             <button
               type="button"
               onClick={handleSaveToHistory}
               disabled={!selectedAppointmentId || isSaving}
-              className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-brand-indigo bg-brand-indigo px-4 py-3 text-xs font-semibold uppercase tracking-wide text-white"
+              className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-brand-indigo bg-brand-indigo px-4 py-3 text-xs font-semibold uppercase tracking-wide text-white disabled:opacity-50"
             >
               <FileArrowUp size={16} />
-              Save to History
+              {isSaving ? "Guardando…" : "Guardar en historial"}
             </button>
           </div>
         </section>

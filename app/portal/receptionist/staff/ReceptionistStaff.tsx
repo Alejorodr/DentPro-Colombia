@@ -12,6 +12,20 @@ const formatDateInput = (date: Date) => {
   return `${year}-${month}-${day}`;
 };
 
+const staffStatusLabels: Record<string, string> = {
+  Free: "Disponible",
+  Busy: "Ocupado",
+  Break: "En pausa",
+  Offline: "Sin turno",
+};
+
+const staffStatusStyles: Record<string, string> = {
+  Free: "bg-emerald-100 text-emerald-700",
+  Busy: "bg-amber-100 text-amber-700",
+  Break: "bg-slate-100 text-slate-500",
+  Offline: "bg-slate-200 text-slate-600",
+};
+
 type StaffItem = {
   id: string;
   name: string;
@@ -45,8 +59,8 @@ export function ReceptionistStaff() {
     <div className="space-y-6">
       <section className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-brand-teal dark:text-accent-cyan">Staff</p>
-          <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">Dentists on Duty</h1>
+          <p className="text-xs font-semibold uppercase tracking-wide text-brand-teal dark:text-accent-cyan">Personal</p>
+          <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">Profesionales en turno</h1>
         </div>
         <input
           type="date"
@@ -62,7 +76,7 @@ export function ReceptionistStaff() {
         </div>
         <div className="grid gap-4 md:grid-cols-2">
           {staff.length === 0 ? (
-            <p className="text-sm text-slate-500 dark:text-slate-400">No hay profesionales cargados.</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400">No hay profesionales en turno para esta fecha.</p>
           ) : (
             staff.map((member) => (
               <div
@@ -76,19 +90,13 @@ export function ReceptionistStaff() {
                   </div>
                   <span
                     className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                      member.status === "Free"
-                        ? "bg-emerald-100 text-emerald-700"
-                        : member.status === "Busy"
-                          ? "bg-amber-100 text-amber-700"
-                          : member.status === "Break"
-                            ? "bg-slate-100 text-slate-500"
-                            : "bg-slate-200 text-slate-600"
+                      staffStatusStyles[member.status] ?? "bg-slate-200 text-slate-600"
                     }`}
                   >
-                    {member.status}
+                    {staffStatusLabels[member.status] ?? member.status}
                   </span>
                 </div>
-                <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">Slots del día: {member.slots}</p>
+                <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">Turnos del día: {member.slots}</p>
               </div>
             ))
           )}

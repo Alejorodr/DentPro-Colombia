@@ -13,12 +13,26 @@ import { NewAppointmentModal } from "@/app/portal/receptionist/components/NewApp
 import { fetchWithRetry } from "@/lib/http";
 
 const viewOptions = [
-  { value: "day", label: "Day" },
-  { value: "week", label: "Week" },
-  { value: "month", label: "Month" },
+  { value: "day", label: "Día" },
+  { value: "week", label: "Semana" },
+  { value: "month", label: "Mes" },
 ] as const;
 
 type ViewMode = (typeof viewOptions)[number]["value"];
+
+const staffStatusLabels: Record<string, string> = {
+  Free: "Disponible",
+  Busy: "Ocupado",
+  Break: "En pausa",
+  Offline: "Sin turno",
+};
+
+const staffStatusStyles: Record<string, string> = {
+  Free: "bg-emerald-100 text-emerald-700",
+  Busy: "bg-amber-100 text-amber-700",
+  Break: "bg-slate-100 text-slate-500",
+  Offline: "bg-slate-200 text-slate-600",
+};
 
 type AnalyticsResponse = {
   metrics: {
@@ -171,15 +185,15 @@ export function ReceptionistDashboard() {
   const stats = data
     ? [
         {
-          label: "Citas hoy",
+          label: "Citas del período",
           value: `${data.metrics.totalAppointments}`,
-          change: view === "day" ? "Hoy" : view === "week" ? "Semana" : "Mes",
+          change: view === "day" ? "Hoy" : view === "week" ? "Esta semana" : "Este mes",
           icon: CalendarCheck,
         },
         {
           label: "Confirmadas",
           value: `${data.metrics.confirmed}`,
-          change: "Listas",
+          change: "Listas para atender",
           icon: UsersFour,
         },
         {
@@ -189,7 +203,7 @@ export function ReceptionistDashboard() {
           icon: Clock,
         },
         {
-          label: "No-show",
+          label: "No asistieron",
           value: `${data.metrics.noShow}`,
           change: "Inasistencias",
           icon: ClipboardText,
@@ -209,7 +223,7 @@ export function ReceptionistDashboard() {
       <section className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-brand-teal dark:text-accent-cyan">
-            Today&apos;s Operations
+            Operaciones del día
           </p>
           <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">{scheduleLabel}</h1>
         </div>
@@ -222,14 +236,14 @@ export function ReceptionistDashboard() {
               window.open(`/portal/receptionist/print?${params.toString()}`, "_blank", "noopener,noreferrer");
             }}
           >
-            Print Schedule
+            Imprimir agenda
           </button>
           <button
             type="button"
             className="rounded-full bg-brand-teal px-4 py-2 text-xs font-semibold uppercase text-white"
             onClick={() => setIsNewOpen(true)}
           >
-            + New Appointment
+            + Nueva cita
           </button>
         </div>
       </section>
@@ -258,7 +272,7 @@ export function ReceptionistDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                  Dentists on Duty
+                  Turno activo
                 </p>
                 <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Equipo disponible</h2>
               </div>
@@ -277,21 +291,15 @@ export function ReceptionistDashboard() {
                     </div>
                     <span
                       className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                        staff.status === "Free"
-                          ? "bg-emerald-100 text-emerald-700"
-                          : staff.status === "Busy"
-                            ? "bg-amber-100 text-amber-700"
-                            : staff.status === "Break"
-                              ? "bg-slate-100 text-slate-500"
-                              : "bg-slate-200 text-slate-600"
+                        staffStatusStyles[staff.status] ?? "bg-slate-200 text-slate-600"
                       }`}
                     >
-                      {staff.status}
+                      {staffStatusLabels[staff.status] ?? staff.status}
                     </span>
                   </div>
                 ))
               ) : (
-                <p className="text-sm text-slate-500 dark:text-slate-400">Sin profesionales cargados.</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400">Sin profesionales en turno.</p>
               )}
             </div>
           </Card>
@@ -301,7 +309,7 @@ export function ReceptionistDashboard() {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Agenda</p>
-              <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Appointments</h2>
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Citas programadas</h2>
             </div>
             <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-2 py-1 text-xs font-semibold uppercase text-slate-500 dark:border-surface-muted dark:bg-surface-base dark:text-slate-300">
               {viewOptions.map((option) => (

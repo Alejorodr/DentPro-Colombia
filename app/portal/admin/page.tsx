@@ -43,27 +43,27 @@ export default async function AdminPortalPage({
 
   const stats = [
     {
-      label: "Appointments Today",
+      label: "Citas del período",
       value: `${kpis.totalAppointments}`,
       change: `En ${range.label.toLowerCase()}`,
       testId: "admin-kpi-appointments",
     },
     {
-      label: "Revenue MTD",
+      label: "Ingresos del período",
       value: formatCurrency(kpis.revenueCents / 100),
-      change: "Ingresos del período",
+      change: "Acumulado en el rango seleccionado",
       testId: "admin-kpi-revenue",
     },
     {
-      label: "Active Staff",
+      label: "Profesionales activos",
       value: `${kpis.activeProfessionals}`,
-      change: "Profesionales activos",
+      change: "Con agenda configurada",
       testId: "admin-kpi-active-staff",
     },
     {
-      label: "Pending Approvals",
+      label: "Citas pendientes",
       value: `${kpis.pendingApprovals}`,
-      change: "Citas pendientes",
+      change: "Por confirmar o gestionar",
       testId: "admin-kpi-pending-approvals",
     },
   ];
@@ -90,8 +90,8 @@ export default async function AdminPortalPage({
         <RevenueTrendChart
           series={revenueTrend.series.map((value) => value / 100)}
           labels={revenueTrend.labels}
-          title="Revenue Trends"
-          subtitle="Last 30 Days Performance"
+          title="Tendencia de ingresos"
+          subtitle="Evolución en el período seleccionado"
           totalLabel={formatCurrency(revenueTrend.totalCents / 100)}
           deltaLabel={`${trend.series.reduce((acc, value) => acc + value, 0)} citas en el período`}
         />

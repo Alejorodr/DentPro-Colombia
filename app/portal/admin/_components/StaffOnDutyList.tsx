@@ -29,7 +29,7 @@ export function StaffOnDutyList({ staff }: { staff: StaffMember[] }) {
       <div className="flex items-center justify-between">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-            Staff On Duty
+            Turno activo
           </p>
           <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Equipo activo</h2>
         </div>
@@ -40,7 +40,7 @@ export function StaffOnDutyList({ staff }: { staff: StaffMember[] }) {
       <div className="space-y-3">
         {staff.length === 0 ? (
           <div className="rounded-xl border border-dashed border-slate-200 px-3 py-6 text-sm text-slate-500 dark:border-surface-muted/70 dark:text-slate-400">
-            No hay staff activo aún.
+            No hay profesionales activos en este momento.
           </div>
         ) : (
           staff.map((member) => (
