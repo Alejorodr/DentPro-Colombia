@@ -82,7 +82,13 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       patientId: appointment.patientId,
       id: { not: appointment.id },
     },
-    select: { id: true, status: true, reason: true, timeSlot: { select: { startAt: true } } },
+    select: {
+      id: true,
+      status: true,
+      reason: true,
+      timeSlot: { select: { startAt: true } },
+      clinicalNotes: { select: { content: true }, orderBy: { updatedAt: "desc" }, take: 1 },
+    },
     orderBy: { timeSlot: { startAt: "desc" } },
     take: 5,
   });
@@ -144,6 +150,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       startAt: historyItem.timeSlot.startAt.toISOString(),
       status: historyItem.status,
       reason: historyItem.reason,
+      notes: historyItem.clinicalNotes.at(0)?.content ?? null,
     })),
   });
 }

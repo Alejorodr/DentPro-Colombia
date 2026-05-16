@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
 
@@ -58,14 +58,16 @@ const SLOT_REFRESH_MS = 45_000;
 
 export function ClientBookingForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [services, setServices] = useState<Service[]>([]);
   const [slots, setSlots] = useState<Slot[]>([]);
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [clinic, setClinic] = useState<DashboardClinic | null>(null);
   const [selectedServiceId, setSelectedServiceId] = useState("");
   const [selectedDate, setSelectedDate] = useState(() => {
-    const today = new Date();
-    return today.toISOString().split("T")[0];
+    const paramDate = searchParams.get("date");
+    if (paramDate && /^\d{4}-\d{2}-\d{2}$/.test(paramDate)) return paramDate;
+    return new Date().toISOString().split("T")[0];
   });
   const [selectedSlotId, setSelectedSlotId] = useState("");
   const [slotStale, setSlotStale] = useState(false);
