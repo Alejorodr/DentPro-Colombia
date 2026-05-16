@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { CalendarPlus, ClockCounterClockwise, UserCircle } from "@/components/ui/Icon";
 import { requireRole } from "@/lib/auth/require-role";
 import { getPrismaClient } from "@/lib/prisma";
 import { getClientDashboardData } from "@/lib/portal/client-dashboard";
@@ -55,15 +56,39 @@ export default async function ClientPortalPage() {
         <Link
           href="/portal/client/book"
           data-testid="client-book-appointment-link"
-          className="rounded-2xl border border-slate-200 bg-white p-4 text-sm font-semibold text-slate-700 shadow-xs hover:border-blue-200 dark:border-surface-muted/70 dark:bg-surface-elevated dark:text-slate-100"
+          className="group flex items-start gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-xs transition hover:border-brand-teal hover:shadow-sm dark:border-surface-muted/70 dark:bg-surface-elevated"
         >
-          Reservar turno
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-teal/10 text-brand-teal group-hover:bg-brand-teal group-hover:text-white dark:bg-accent-cyan/10 dark:text-accent-cyan">
+            <CalendarPlus size={20} weight="bold" />
+          </span>
+          <div>
+            <p className="text-sm font-semibold text-slate-900 dark:text-white">Reservar turno</p>
+            <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">Agenda una nueva cita</p>
+          </div>
         </Link>
-        <Link href="/portal/client/treatment-history" className="rounded-2xl border border-slate-200 bg-white p-4 text-sm font-semibold text-slate-700 shadow-xs hover:border-blue-200 dark:border-surface-muted/70 dark:bg-surface-elevated dark:text-slate-100">
-          Ver historial
+        <Link
+          href="/portal/client/treatment-history"
+          className="group flex items-start gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-xs transition hover:border-brand-teal hover:shadow-sm dark:border-surface-muted/70 dark:bg-surface-elevated"
+        >
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-teal/10 text-brand-teal group-hover:bg-brand-teal group-hover:text-white dark:bg-accent-cyan/10 dark:text-accent-cyan">
+            <ClockCounterClockwise size={20} weight="bold" />
+          </span>
+          <div>
+            <p className="text-sm font-semibold text-slate-900 dark:text-white">Ver historial</p>
+            <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">Consultas y tratamientos</p>
+          </div>
         </Link>
-        <Link href="/portal/client/profile" className="rounded-2xl border border-slate-200 bg-white p-4 text-sm font-semibold text-slate-700 shadow-xs hover:border-blue-200 dark:border-surface-muted/70 dark:bg-surface-elevated dark:text-slate-100">
-          Actualizar perfil
+        <Link
+          href="/portal/client/profile"
+          className="group flex items-start gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-xs transition hover:border-brand-teal hover:shadow-sm dark:border-surface-muted/70 dark:bg-surface-elevated"
+        >
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-teal/10 text-brand-teal group-hover:bg-brand-teal group-hover:text-white dark:bg-accent-cyan/10 dark:text-accent-cyan">
+            <UserCircle size={20} weight="bold" />
+          </span>
+          <div>
+            <p className="text-sm font-semibold text-slate-900 dark:text-white">Mi perfil</p>
+            <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">Actualiza tus datos personales</p>
+          </div>
         </Link>
       </section>
 

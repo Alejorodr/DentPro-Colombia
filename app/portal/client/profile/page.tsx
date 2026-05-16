@@ -7,7 +7,7 @@ export default async function ClientProfilePage() {
   return (
     <div className="space-y-6">
       <header>
-        <p className="text-sm font-semibold text-blue-600">Profile</p>
+        <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Mi perfil</p>
         <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">Tu información personal</h1>
       </header>
       <ClientProfileForm />

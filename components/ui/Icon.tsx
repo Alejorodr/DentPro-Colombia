@@ -9,6 +9,7 @@ export const {
   Bell,
   CalendarBlank,
   CalendarCheck,
+  CalendarPlus,
   CaretLeft,
   CaretRight,
   ChartLineUp,

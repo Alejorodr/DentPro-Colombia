@@ -36,6 +36,35 @@ type Unavailability = {
 
 const weekDays = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
 
+const scheduleStatusLabels: Record<string, string> = {
+  PENDING_CONFIRMATION: "Pendiente de confirmación",
+  CONFIRMED: "Confirmado",
+  CHANGES_REQUESTED: "Cambios solicitados",
+};
+
+const scheduleStatusStyles: Record<string, string> = {
+  PENDING_CONFIRMATION: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
+  CONFIRMED: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300",
+  CHANGES_REQUESTED: "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300",
+};
+
+const unavailabilityStatusLabels: Record<string, string> = {
+  PENDING: "Pendiente",
+  APPROVED: "Aprobado",
+  REJECTED: "Rechazado",
+  CANCELLED: "Cancelado",
+};
+
+const unavailabilityTypeLabels: Record<string, string> = {
+  VACATION: "Vacaciones",
+  SICK_LEAVE: "Incapacidad médica",
+  TRAINING: "Capacitación",
+  ADMIN_TIME: "Tiempo administrativo",
+  PERSONAL_LEAVE: "Permiso personal",
+  INTERNAL_BLOCK: "Bloqueo interno",
+  OTHER: "Otro",
+};
+
 export function ProfessionalCalendar() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -181,7 +210,9 @@ export function ProfessionalCalendar() {
             <div key={schedule.id} className="rounded-2xl border border-slate-200 px-3 py-3 text-sm dark:border-slate-800">
               <p className="font-semibold text-slate-900 dark:text-white">{weekDays[schedule.dayOfWeek]} · {schedule.startTime} - {schedule.endTime}</p>
               <p className="text-xs text-slate-500">{schedule.timezone}</p>
-              <p className="mt-1 text-xs font-semibold text-slate-500">Estado: {schedule.status}</p>
+              <span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold ${scheduleStatusStyles[schedule.status] ?? "bg-slate-100 text-slate-500"}`}>
+                {scheduleStatusLabels[schedule.status] ?? schedule.status}
+              </span>
             </div>
           ))}
           {!loading && baselineSchedules.length === 0 ? <p className="text-sm text-slate-500">No tienes horario base asignado aún.</p> : null}
@@ -212,7 +243,7 @@ export function ProfessionalCalendar() {
             {adjustments.map((item) => (
               <div key={item.id} className="rounded-xl border border-slate-200 px-3 py-2 dark:border-slate-800">
                 <p className="font-semibold">{item.dayOfWeek !== null && item.dayOfWeek !== undefined ? weekDays[item.dayOfWeek] : "Sin día"} · {item.startTime ?? "--:--"} - {item.endTime ?? "--:--"}</p>
-                <p className="text-xs text-slate-500">{new Date(item.effectiveFrom).toLocaleDateString("es-CO")} · {item.status}</p>
+                <p className="text-xs text-slate-500">{new Date(item.effectiveFrom).toLocaleDateString("es-CO")} · {scheduleStatusLabels[item.status] ?? item.status}</p>
               </div>
             ))}
           </div>
@@ -244,9 +275,9 @@ export function ProfessionalCalendar() {
           <div className="mt-4 space-y-2 text-sm">
             {unavailability.map((item) => (
               <div key={item.id} className="rounded-xl border border-slate-200 px-3 py-2 dark:border-slate-800">
-                <p className="font-semibold">{item.type} · {item.fullDay ? "Día completo" : "Parcial"}</p>
+                <p className="font-semibold">{unavailabilityTypeLabels[item.type] ?? item.type} · {item.fullDay ? "Día completo" : "Parcial"}</p>
                 <p className="text-xs text-slate-500">{new Date(item.startsAt).toLocaleString("es-CO")} → {new Date(item.endsAt).toLocaleString("es-CO")}</p>
-                <p className="text-xs text-slate-500">Estado: {item.status}</p>
+                <p className="text-xs text-slate-500">Estado: {unavailabilityStatusLabels[item.status] ?? item.status}</p>
               </div>
             ))}
           </div>

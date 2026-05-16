@@ -51,27 +51,27 @@ const navByRole: Record<UserRole, NavItem[]> = {
   ],
   PROFESIONAL: [{ label: "Agenda", href: "/portal/professional", icon: CalendarCheck }],
   RECEPCIONISTA: [
-    { label: "Dashboard", href: "/portal/receptionist/dashboard", icon: House },
-    { label: "Schedule", href: "/portal/receptionist/schedule", icon: CalendarCheck },
-    { label: "Patients", href: "/portal/receptionist/patients", icon: Users },
-    { label: "Staff", href: "/portal/receptionist/staff", icon: Users },
-    { label: "Billing", href: "/portal/receptionist/billing", icon: ClipboardText },
-    { label: "Settings", href: "/portal/receptionist/settings", icon: Gear },
+    { label: "Inicio", href: "/portal/receptionist/dashboard", icon: House },
+    { label: "Agenda", href: "/portal/receptionist/schedule", icon: CalendarCheck },
+    { label: "Pacientes", href: "/portal/receptionist/patients", icon: Users },
+    { label: "Personal", href: "/portal/receptionist/staff", icon: Users },
+    { label: "Facturación", href: "/portal/receptionist/billing", icon: ClipboardText },
+    { label: "Configuración", href: "/portal/receptionist/settings", icon: Gear },
   ],
   ADMINISTRADOR: [
-    { label: "Dashboard", href: "/portal/admin", icon: House },
-    { label: "Staff Management", href: "/portal/admin/staff", icon: Users },
-    { label: "Patient Records", href: "/portal/admin/patients", icon: Users },
-    { label: "Services & Pricing", href: "/portal/admin/services", icon: ClipboardText },
-    { label: "Scheduling Ops", href: "/portal/admin/scheduling", icon: CalendarCheck },
-    { label: "Content CMS", href: "/portal/admin/content", icon: SquaresFour },
-    { label: "Clinical Templates", href: "/portal/admin/templates", icon: ClipboardText },
-    { label: "Audit Logs", href: "/portal/admin/audit", icon: ShieldCheck },
+    { label: "Inicio", href: "/portal/admin", icon: House },
+    { label: "Gestión de personal", href: "/portal/admin/staff", icon: Users },
+    { label: "Registro de pacientes", href: "/portal/admin/patients", icon: Users },
+    { label: "Servicios y tarifas", href: "/portal/admin/services", icon: ClipboardText },
+    { label: "Gestión de agenda", href: "/portal/admin/scheduling", icon: CalendarCheck },
+    { label: "Contenido", href: "/portal/admin/content", icon: SquaresFour },
+    { label: "Plantillas clínicas", href: "/portal/admin/templates", icon: ClipboardText },
+    { label: "Auditoría", href: "/portal/admin/audit", icon: ShieldCheck },
   ],
 };
 
 const settingsByRole: Partial<Record<UserRole, NavItem[]>> = {
-  ADMINISTRADOR: [{ label: "Settings", href: "/portal/admin/settings", icon: Gear }],
+  ADMINISTRADOR: [{ label: "Configuración", href: "/portal/admin/settings", icon: Gear }],
 };
 
 function resolveActiveRole(pathname: string, fallback?: UserRole): UserRole | null {
@@ -129,15 +129,15 @@ export function PortalShell({ children, session, clinic }: PortalShellProps) {
         onClose={() => setIsSidebarOpen(false)}
         onSignOut={() => signOut({ callbackUrl: "/auth/login" })}
         brandTitle={isAdmin ? "DentPro Admin" : "DentPro"}
-        brandSubtitle={isAdmin ? "Administrator portal" : `${roleLabel || "Portal"} dashboard`}
+        brandSubtitle={isAdmin ? "Portal administrador" : `${roleLabel || "Portal"}`}
       />
       <div className="flex min-h-screen flex-col md:pl-72">
         <Topbar
           roleLabel={roleLabel}
           userName={userName}
           onMenuClick={() => setIsSidebarOpen(true)}
-          title={isAdmin ? "Administrator Portal" : undefined}
-          subtitle={isAdmin ? "Dashboard Overview" : undefined}
+          title={isAdmin ? "Portal Administrador" : undefined}
+          subtitle={isAdmin ? "Panel principal" : undefined}
           searchSlot={isAdmin ? <AdminGlobalSearch /> : undefined}
           notificationsSlot={isAdmin ? <NotificationsDropdown scope="admin" /> : undefined}
         />

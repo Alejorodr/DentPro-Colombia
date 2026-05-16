@@ -19,7 +19,7 @@ export function KPIStatCard({ label, value, change, accent, testId }: KPIStatCar
       <div className="flex items-center justify-between">
         <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{label}</p>
         <span className="rounded-full bg-brand-teal/10 px-2 py-1 text-[10px] font-semibold text-brand-teal dark:bg-accent-cyan/10 dark:text-accent-cyan">
-          <TrendUp className="inline h-3 w-3" /> {accent ?? "MTD"}
+          <TrendUp className="inline h-3 w-3" /> {accent ?? "Período"}
         </span>
       </div>
       <p className="mt-3 text-2xl font-semibold text-slate-900 dark:text-white">{value}</p>

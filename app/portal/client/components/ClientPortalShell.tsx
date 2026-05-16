@@ -27,6 +27,7 @@ type PatientSummary = {
   patientCode?: string | null;
   avatarUrl?: string | null;
   id: string;
+  needsOnboarding?: boolean;
 };
 
 type DashboardResponse = {
@@ -34,14 +35,14 @@ type DashboardResponse = {
 };
 
 const navItems = [
-  { label: "Dashboard", href: "/portal/client", icon: House },
-  { label: "Appointments", href: "/portal/client/appointments", icon: CalendarCheck },
-  { label: "Treatment History", href: "/portal/client/treatment-history", icon: ClockCounterClockwise },
-  { label: "Consents", href: "/portal/client/consents", icon: FileText },
-  { label: "Profile", href: "/portal/client/profile", icon: UserCircle },
+  { label: "Inicio", href: "/portal/client", icon: House },
+  { label: "Mis citas", href: "/portal/client/appointments", icon: CalendarCheck },
+  { label: "Historial de tratamientos", href: "/portal/client/treatment-history", icon: ClockCounterClockwise },
+  { label: "Consentimientos", href: "/portal/client/consents", icon: FileText },
+  { label: "Mi perfil", href: "/portal/client/profile", icon: UserCircle },
 ];
 
-const settingsItems = [{ label: "Settings", href: "/portal/client/settings", icon: Gear }];
+const settingsItems = [{ label: "Configuración", href: "/portal/client/settings", icon: Gear }];
 
 export function ClientPortalShell({
   children,
@@ -120,6 +121,19 @@ export function ClientPortalShell({
         />
         <main className="flex-1 px-6 py-8">
           <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
+            {patient?.needsOnboarding && pathname !== "/portal/client/onboarding" ? (
+              <div className="flex items-center justify-between gap-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm dark:border-amber-800/50 dark:bg-amber-950/30">
+                <p className="text-amber-800 dark:text-amber-300">
+                  <span className="font-semibold">¡Bienvenido!</span> Completa tu perfil para aprovechar todas las funciones del portal.
+                </p>
+                <Link
+                  href="/portal/client/onboarding"
+                  className="shrink-0 rounded-xl bg-amber-500 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-amber-600"
+                >
+                  Completar perfil
+                </Link>
+              </div>
+            ) : null}
             <Card className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div className="flex items-center gap-4">
                 {avatarUrl ? (

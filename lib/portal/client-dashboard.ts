@@ -61,6 +61,8 @@ export async function getClientDashboardData(prisma: PrismaClient, userId: strin
       id: true,
       patientCode: true,
       avatarUrl: true,
+      phone: true,
+      documentId: true,
       insuranceProvider: true,
       insuranceStatus: true,
       user: {
@@ -114,12 +116,15 @@ export async function getClientDashboardData(prisma: PrismaClient, userId: strin
   const metrics = computeClientDashboardMetrics(appointments);
   const clinic = getClinicInfo();
 
+  const needsOnboarding = !patient.phone && !patient.documentId;
+
   return {
     patient: {
       id: patient.id,
       name: `${patient.user.name} ${patient.user.lastName}`.trim(),
       patientCode: patient.patientCode,
       avatarUrl: patient.avatarUrl,
+      needsOnboarding,
     },
     insurance: {
       provider: patient.insuranceProvider,
