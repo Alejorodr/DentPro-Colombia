@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
@@ -85,6 +85,8 @@ export function ProfessionalDashboard() {
   const [markCompleted, setMarkCompleted] = useState(false);
   const [hasSpeechSupport, setHasSpeechSupport] = useState(false);
   const [calendarView, setCalendarView] = useState<"list" | "grid">("grid");
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
+  const autoSaveRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -154,6 +156,20 @@ export function ProfessionalDashboard() {
     };
   }, [selectedAppointmentId]);
 
+  // Auto-save notes 2 s after the user stops typing
+  useEffect(() => {
+    if (!selectedAppointmentId || !notesContent) return;
+    if (autoSaveRef.current) clearTimeout(autoSaveRef.current);
+    autoSaveRef.current = setTimeout(() => {
+      void persistNotes();
+    }, 2000);
+    return () => {
+      if (autoSaveRef.current) clearTimeout(autoSaveRef.current);
+    };
+    // persistNotes reads selectedAppointmentId and notesContent via closure — intentionally excluded
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [notesContent, selectedAppointmentId]);
+
   const selectedPatientName = useMemo(() => {
     if (!appointmentDetail) return "";
     const fullName = `${appointmentDetail.patient.name} ${appointmentDetail.patient.lastName}`.trim();
@@ -207,6 +223,7 @@ export function ProfessionalDashboard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ content: notesContent }),
       });
+      setLastSavedAt(new Date());
     } catch (error) {
       console.error(error);
     }
@@ -216,6 +233,35 @@ export function ProfessionalDashboard() {
     setIsSaving(true);
     await persistNotes();
     setIsSaving(false);
+  };
+
+  const changeStatus = async (newStatus: AppointmentStatus) => {
+    if (!selectedAppointmentId) return;
+    setIsSaving(true);
+    try {
+      const response = await fetchWithTimeout(`/api/appointments/${selectedAppointmentId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      if (!response.ok) return;
+      const [detailRes, scheduleRes] = await Promise.all([
+        fetchWithRetry(`/api/professional/appointment/${selectedAppointmentId}`),
+        fetchWithRetry(`/api/professional/dashboard?date=${selectedDate}`),
+      ]);
+      if (detailRes.ok) {
+        const data = (await detailRes.json()) as ProfessionalAppointmentDetail;
+        setAppointmentDetail(data);
+      }
+      if (scheduleRes.ok) {
+        const data = (await scheduleRes.json()) as { appointments: ProfessionalDashboardAppointment[] };
+        setSchedule(data.appointments ?? []);
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const addPrescriptionItem = async () => {
@@ -592,6 +638,11 @@ export function ProfessionalDashboard() {
                             day: "numeric",
                           })}
                         </p>
+                        {history.notes ? (
+                          <p className="mt-2 line-clamp-3 whitespace-pre-wrap text-xs text-slate-600 dark:text-slate-300">
+                            {history.notes}
+                          </p>
+                        ) : null}
                       </div>
                     ))
                   )}
@@ -603,6 +654,35 @@ export function ProfessionalDashboard() {
 
         {/* Right column: clinical actions */}
         <section className="space-y-4">
+          {/* Status widget */}
+          {appointmentDetail ? (
+            <div className="rounded-3xl border border-slate-200 bg-white/80 p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900/60">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-slate-400">Estado de la cita</p>
+                  <span className={cn("mt-1 inline-block rounded-full border px-3 py-1 text-xs font-semibold", statusStyles[appointmentDetail.appointment.status])}>
+                    {statusLabels[appointmentDetail.appointment.status]}
+                  </span>
+                </div>
+                {(appointmentDetail.appointment.status === AppointmentStatus.SCHEDULED || appointmentDetail.appointment.status === AppointmentStatus.CONFIRMED) ? (
+                  <button
+                    type="button"
+                    onClick={() => void changeStatus(AppointmentStatus.CHECKED_IN)}
+                    disabled={isSaving}
+                    className="shrink-0 rounded-2xl border border-cyan-400/40 bg-cyan-500/10 px-4 py-2 text-xs font-semibold text-cyan-600 transition hover:bg-cyan-500/20 disabled:opacity-50 dark:text-cyan-400"
+                  >
+                    Registrar llegada
+                  </button>
+                ) : null}
+                {appointmentDetail.appointment.status === AppointmentStatus.CHECKED_IN ? (
+                  <span className="shrink-0 rounded-2xl border border-cyan-400/40 bg-cyan-500/10 px-4 py-2 text-xs font-semibold text-cyan-600 dark:text-cyan-400">
+                    Paciente presente ✓
+                  </span>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
+
           <div className="rounded-3xl border border-slate-200 bg-white/80 p-5 shadow-xs dark:border-slate-800 dark:bg-slate-900/60">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold">Notas del procedimiento</h3>
@@ -628,7 +708,13 @@ export function ProfessionalDashboard() {
               className="mt-4 h-48 w-full rounded-2xl border border-slate-200 bg-white/80 p-4 text-sm text-slate-700 outline-hidden focus-visible:ring-2 focus-visible:ring-brand-indigo/40 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
             />
             <div className="mt-4 flex items-center justify-between text-xs text-slate-500">
-              <span>{appointmentDetail?.clinicalNotes.at(0)?.updatedAt ? "Guardado automáticamente" : "Sin notas aún"}</span>
+              <span>
+                {lastSavedAt
+                  ? `Auto-guardado ${lastSavedAt.toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })}`
+                  : appointmentDetail?.clinicalNotes.at(0)?.updatedAt
+                    ? "Guardado"
+                    : "Sin notas aún"}
+              </span>
               <button
                 type="button"
                 onClick={saveNotes}

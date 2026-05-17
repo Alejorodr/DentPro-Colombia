@@ -70,5 +70,6 @@ export interface ProfessionalAppointmentDetail {
     startAt: string;
     status: AppointmentStatus;
     reason: string;
+    notes?: string | null;
   }>;
 }
