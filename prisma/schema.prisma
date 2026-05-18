@@ -103,6 +103,18 @@ enum LabOrderStatus {
   CANCELLED
 }
 
+enum PaymentStatus {
+  PENDING
+  PAID
+  WAIVED
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  TRANSFER
+}
+
 model Specialty {
   id                         String                @id @default(uuid())
   name                       String                @unique
@@ -281,6 +293,10 @@ model Appointment {
   reason            String
   notes             String?
   status            AppointmentStatus   @default(SCHEDULED)
+  paymentStatus     PaymentStatus       @default(PENDING)
+  paymentMethod     PaymentMethod?
+  paidAmountCents   Int?
+  paidAt            DateTime?
   checkedInAt       DateTime?
   createdAt         DateTime            @default(now())
   updatedAt         DateTime            @updatedAt

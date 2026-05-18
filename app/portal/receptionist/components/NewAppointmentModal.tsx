@@ -351,7 +351,7 @@ export function NewAppointmentModal({ open, onClose, onCreated }: NewAppointment
             />
           </label>
           <label className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-            Slot
+            Horario disponible
             <select
               className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 dark:border-surface-muted dark:bg-surface-base dark:text-slate-200"
               value={form.slotId}
@@ -368,6 +368,11 @@ export function NewAppointmentModal({ open, onClose, onCreated }: NewAppointment
                 );
               })}
             </select>
+            {form.date && slots.length === 0 ? (
+              <p className="mt-1 text-xs normal-case text-amber-600 dark:text-amber-400">
+                No hay horarios disponibles para esta fecha. Prueba con otra fecha o cambia el profesional.
+              </p>
+            ) : null}
           </label>
           <label className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
             Estado inicial

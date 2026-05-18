@@ -99,9 +99,9 @@ export function buildAppointmentConfirmationEmail(data: AppointmentEmailData) {
 
 export function buildAppointmentReminderEmail(data: AppointmentEmailData) {
   const payload = {
-    subject: "Recordatorio: turno en DentPro mañana",
-    title: "Recordatorio de turno",
-    message: "Este es un recordatorio de tu turno programado para mañana.",
+    subject: `Recordatorio: tu cita en DentPro es mañana · ${data.timeLabel}`,
+    title: "Te esperamos mañana",
+    message: `Hola ${data.patientName.split(" ")[0]}, te recordamos que tienes una cita programada para mañana. Si necesitas cancelar o reprogramar, contáctanos con anticipación.`,
     data,
   };
 
