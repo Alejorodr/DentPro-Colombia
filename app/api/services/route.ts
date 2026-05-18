@@ -14,6 +14,7 @@ const serviceSchema = z.object({
   priceCents: z.number().int().min(0),
   durationMinutes: z.number().int().min(0).nullable().optional(),
   active: z.boolean().optional(),
+  specialtyId: z.string().uuid().nullable().optional(),
 });
 
 export async function GET(request: Request) {
@@ -66,6 +67,7 @@ export async function POST(request: Request) {
       priceCents: body.priceCents,
       durationMinutes: body.durationMinutes ?? null,
       active: body.active ?? true,
+      specialtyId: body.specialtyId ?? null,
     },
   });
 

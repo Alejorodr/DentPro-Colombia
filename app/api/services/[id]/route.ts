@@ -12,6 +12,7 @@ const updateServiceSchema = z.object({
   priceCents: z.number().int().min(0).optional(),
   durationMinutes: z.number().int().min(0).nullable().optional(),
   active: z.boolean().optional(),
+  specialtyId: z.string().uuid().nullable().optional(),
 });
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -35,6 +36,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       ...(typeof body.priceCents === "number" ? { priceCents: body.priceCents } : {}),
       ...(body.durationMinutes !== undefined ? { durationMinutes: body.durationMinutes } : {}),
       ...(typeof body.active === "boolean" ? { active: body.active } : {}),
+      ...(body.specialtyId !== undefined ? { specialtyId: body.specialtyId } : {}),
     },
   });
 
