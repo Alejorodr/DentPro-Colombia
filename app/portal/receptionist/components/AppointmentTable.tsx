@@ -57,6 +57,8 @@ export function AppointmentTable({ appointments, page, totalPages, onPageChange,
   const [rescheduleId, setRescheduleId] = useState<string | null>(null);
   const [eventsAppointmentId, setEventsAppointmentId] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [cancelTarget, setCancelTarget] = useState<string | null>(null);
+  const [cancelReason, setCancelReason] = useState("");
 
   useEffect(() => {
     if (initialEventsAppointmentId) {
@@ -64,8 +66,8 @@ export function AppointmentTable({ appointments, page, totalPages, onPageChange,
     }
   }, [initialEventsAppointmentId]);
 
-  const updateStatus = async (id: string, status: AppointmentStatus, action?: "check_in" | "mark_no_show") => {
-    if ((status === AppointmentStatus.CANCELLED || action === "mark_no_show") && !window.confirm("¿Confirmas este cambio de estado?")) {
+  const updateStatus = async (id: string, status: AppointmentStatus, action?: "check_in" | "mark_no_show", notes?: string) => {
+    if (action === "mark_no_show" && !window.confirm("¿Confirmas marcar como 'No asistió'?")) {
       return;
     }
 
@@ -74,7 +76,7 @@ export function AppointmentTable({ appointments, page, totalPages, onPageChange,
     const response = await fetchWithTimeout(`/api/appointments/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status, action }),
+      body: JSON.stringify({ status, action, ...(notes ? { notes } : {}) }),
     });
 
     if (response.ok) {
@@ -85,6 +87,13 @@ export function AppointmentTable({ appointments, page, totalPages, onPageChange,
     }
 
     setBusyId(null);
+  };
+
+  const confirmCancel = async () => {
+    if (!cancelTarget) return;
+    await updateStatus(cancelTarget, AppointmentStatus.CANCELLED, undefined, cancelReason.trim() || undefined);
+    setCancelTarget(null);
+    setCancelReason("");
   };
 
   const timeline = useMemo(() => {
@@ -238,7 +247,7 @@ export function AppointmentTable({ appointments, page, totalPages, onPageChange,
                         <button type="button" className="inline-flex items-center gap-1 rounded-full border border-fuchsia-200 px-3 py-1 text-xs font-semibold uppercase text-fuchsia-700 disabled:opacity-50" onClick={() => updateStatus(appointment.id, AppointmentStatus.NO_SHOW, "mark_no_show")} disabled={busyId === appointment.id || ([AppointmentStatus.CANCELLED, AppointmentStatus.COMPLETED, AppointmentStatus.NO_SHOW] as AppointmentStatus[]).includes(appointment.status)}>
                           <WarningCircle size={14} />No asistió
                         </button>
-                        <button type="button" className="inline-flex items-center gap-1 rounded-full border border-rose-200 px-3 py-1 text-xs font-semibold uppercase text-rose-700 disabled:opacity-50" onClick={() => updateStatus(appointment.id, AppointmentStatus.CANCELLED)} disabled={busyId === appointment.id || ([AppointmentStatus.CANCELLED, AppointmentStatus.NO_SHOW] as AppointmentStatus[]).includes(appointment.status)}>
+                        <button type="button" className="inline-flex items-center gap-1 rounded-full border border-rose-200 px-3 py-1 text-xs font-semibold uppercase text-rose-700 disabled:opacity-50" onClick={() => setCancelTarget(appointment.id)} disabled={busyId === appointment.id || ([AppointmentStatus.CANCELLED, AppointmentStatus.NO_SHOW] as AppointmentStatus[]).includes(appointment.status)}>
                           <XCircle size={14} />Cancelar
                         </button>
                       </div>
@@ -259,6 +268,43 @@ export function AppointmentTable({ appointments, page, totalPages, onPageChange,
         </>
       )}
       <RescheduleModal appointmentId={rescheduleId} open={Boolean(rescheduleId)} onClose={() => setRescheduleId(null)} onUpdated={() => onRefresh()} />
+
+      {cancelTarget ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 px-4">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl dark:bg-surface-elevated">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Confirmar cancelación</p>
+            <h3 className="mt-1 text-lg font-semibold text-slate-900 dark:text-white">¿Cancelar esta cita?</h3>
+            <p className="mt-1 text-sm text-slate-500">Esta acción no se puede deshacer.</p>
+            <label className="mt-4 block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              Motivo de cancelación (opcional)
+              <textarea
+                value={cancelReason}
+                onChange={(event) => setCancelReason(event.target.value)}
+                placeholder="Ej. Paciente no puede asistir, reagendamiento solicitado…"
+                rows={3}
+                className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm normal-case text-slate-700 focus:outline-none focus:ring-2 focus:ring-rose-300 dark:border-surface-muted dark:bg-surface-base dark:text-slate-200"
+              />
+            </label>
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                type="button"
+                className="rounded-full border border-slate-200 px-4 py-2 text-xs font-semibold uppercase text-slate-600 dark:border-surface-muted dark:text-slate-200"
+                onClick={() => { setCancelTarget(null); setCancelReason(""); }}
+              >
+                Volver
+              </button>
+              <button
+                type="button"
+                className="rounded-full bg-rose-600 px-4 py-2 text-xs font-semibold uppercase text-white disabled:opacity-50"
+                onClick={confirmCancel}
+                disabled={busyId === cancelTarget}
+              >
+                {busyId === cancelTarget ? "Cancelando…" : "Sí, cancelar cita"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

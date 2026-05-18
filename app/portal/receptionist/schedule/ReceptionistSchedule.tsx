@@ -264,7 +264,7 @@ export function ReceptionistSchedule() {
           <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">Agenda del día</h1>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Link href="/appointments/new" className="rounded-full border border-slate-200 px-4 py-2 text-xs font-semibold uppercase text-slate-700 dark:border-surface-muted dark:text-slate-200">Crear cita</Link>
+          <button type="button" onClick={() => setIsNewOpen(true)} className="rounded-full border border-slate-200 px-4 py-2 text-xs font-semibold uppercase text-slate-700 dark:border-surface-muted dark:text-slate-200">Crear cita</button>
           <Link href="/portal/receptionist/patients" className="rounded-full border border-slate-200 px-4 py-2 text-xs font-semibold uppercase text-slate-700 dark:border-surface-muted dark:text-slate-200">Buscar paciente</Link>
           <button type="button" className="rounded-full bg-brand-teal px-4 py-2 text-xs font-semibold uppercase text-white" onClick={() => setIsNewOpen(true)}>Registrar paciente / turno</button>
         </div>
