@@ -43,14 +43,12 @@ export function BookingFormSection({
   const [publicSlots, setPublicSlots] = useState<string[]>([]);
   const [slotsLoading, setSlotsLoading] = useState(true);
   const [slotsError, setSlotsError] = useState(false);
-  const minDate = useMemo(() => new Date().toISOString().split("T")[0], []);
 
   const validateForm = (form: HTMLFormElement) => {
     const errors: Record<string, string> = {};
     const name = (form.elements.namedItem("name") as HTMLInputElement | null)?.value ?? "";
     const email = (form.elements.namedItem("email") as HTMLInputElement | null)?.value ?? "";
     const phone = (form.elements.namedItem("phone") as HTMLInputElement | null)?.value ?? "";
-    const preferredDate = (form.elements.namedItem("preferredDate") as HTMLInputElement | null)?.value ?? "";
 
     if (name.trim().length < 3) {
       errors.name = "Ingresa tu nombre completo.";
@@ -62,10 +60,6 @@ export function BookingFormSection({
 
     if (!/^[0-9+()\s-]{7,}$/.test(phone)) {
       errors.phone = "Incluye un celular válido.";
-    }
-
-    if (preferredDate && preferredDate < minDate) {
-      errors.preferredDate = "La fecha debe ser hoy o futura.";
     }
 
     setFieldErrors(errors);
@@ -168,34 +162,48 @@ export function BookingFormSection({
         <div className="rounded-3xl bg-gradient p-10 text-white shadow-xl transition-colors duration-500 dark:bg-card-dark dark:text-slate-100 dark:shadow-glow-dark">
           <h2 className="text-3xl font-bold">{title}</h2>
           <p className="mt-4 text-base text-brand-light">{description}</p>
-          <div className="mt-6 grid gap-3 rounded-2xl border border-white/25 bg-white/10 p-4 text-sm" data-testid="availability-block">
-            <div className="flex flex-wrap items-center gap-3">
-              <a href="/appointments/new" className="btn-primary">
-                Reservar turno
-              </a>
-              <a href="#contacto" className="btn-secondary border-white/60 text-white hover:bg-white/15 dark:text-white">
-                Te contactamos
-              </a>
-            </div>
-            <p className="text-xs text-brand-light/90">
-              {publicSlots.length > 0 ? "Próximos turnos disponibles:" : "Disponibilidad orientativa:"}
-            </p>
-            <ul className="grid gap-1 text-xs text-brand-light">
-              {slotsLoading ? <li>Consultando disponibilidad…</li> : null}
-              {!slotsLoading && renderedSlots.map((slot) => (
-                <li key={slot}>• {slot}</li>
-              ))}
-            </ul>
-            {slotsError ? (
-              <p className="text-[11px] text-brand-light/80" role="status" aria-live="polite">
-                Mostramos horarios orientativos mientras actualizamos la agenda en línea.
+
+          {/* Primary action — direct online booking */}
+          <div className="mt-6 grid gap-4 rounded-2xl border border-white/25 bg-white/10 p-5" data-testid="availability-block">
+            <a
+              href="/appointments/new"
+              className="flex items-center justify-center gap-2 rounded-2xl bg-white px-6 py-4 text-base font-bold text-brand-teal shadow-md transition hover:bg-brand-light dark:bg-accent-cyan dark:text-slate-900 dark:hover:bg-accent-cyan/90"
+            >
+              Reservar turno ahora
+              <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-700 dark:bg-green-900/60 dark:text-green-300">
+                Confirmación inmediata
+              </span>
+            </a>
+            <div>
+              <p className="text-xs font-semibold text-brand-light/90 uppercase tracking-wide">
+                {publicSlots.length > 0 ? "Próximos turnos disponibles" : "Disponibilidad orientativa"}
               </p>
-            ) : null}
+              <ul className="mt-2 grid gap-1 text-xs text-brand-light">
+                {slotsLoading ? <li>Consultando disponibilidad…</li> : null}
+                {!slotsLoading && renderedSlots.map((slot) => (
+                  <li key={slot}>• {slot}</li>
+                ))}
+              </ul>
+              {slotsError ? (
+                <p className="mt-1 text-[11px] text-brand-light/70" role="status" aria-live="polite">
+                  Mostramos horarios orientativos mientras actualizamos la agenda en línea.
+                </p>
+              ) : null}
+            </div>
+          </div>
+
+          {/* Secondary action — contact request form */}
+          <div className="mt-8 flex items-center gap-3">
+            <div className="h-px flex-1 bg-white/20" />
+            <p className="text-xs font-semibold uppercase tracking-widest text-brand-light/70">
+              O envianos un mensaje
+            </p>
+            <div className="h-px flex-1 bg-white/20" />
           </div>
           <form
-            className="mt-8 grid gap-6"
+            className="mt-6 grid gap-5"
             id="bookingForm"
-            aria-label="Formulario de agendamiento"
+            aria-label="Formulario de contacto"
             onSubmit={handleFormSubmit}
           >
             <div className="grid gap-2">
@@ -285,40 +293,19 @@ export function BookingFormSection({
               </select>
             </div>
             <div className="grid gap-2">
-              <label htmlFor="preferredDate" className="text-sm font-semibold">
-                Fecha preferida
-              </label>
-              <input
-                id="preferredDate"
-                name="preferredDate"
-                type="date"
-                min={minDate}
-                className={`input dark:bg-surface-muted dark:text-slate-100 dark:placeholder:text-slate-500 ${
-                  fieldErrors.preferredDate ? "border-red-500 ring-1 ring-red-400" : ""
-                }`}
-                aria-invalid={Boolean(fieldErrors.preferredDate)}
-                aria-describedby={fieldErrors.preferredDate ? "preferredDate-error" : undefined}
-              />
-              {fieldErrors.preferredDate ? (
-                <p id="preferredDate-error" className="text-xs text-red-100">
-                  {fieldErrors.preferredDate}
-                </p>
-              ) : null}
-            </div>
-            <div className="grid gap-2">
               <label htmlFor="message" className="text-sm font-semibold">
                 Mensaje
               </label>
               <textarea
                 id="message"
                 name="message"
-                rows={4}
+                rows={3}
                 className="input dark:bg-surface-muted dark:text-slate-100 dark:placeholder:text-slate-500"
                 placeholder="Cuéntanos cómo podemos ayudarte"
               ></textarea>
             </div>
-            <button type="submit" className="btn-primary justify-center" disabled={isPending}>
-              {isPending ? "Enviando..." : "Solicitar agenda"}
+            <button type="submit" className="btn-secondary justify-center border-white/60 text-white hover:bg-white/15 dark:text-white" disabled={isPending}>
+              {isPending ? "Enviando..." : "Solicitar que me contacten"}
             </button>
             <p className="text-xs text-brand-light/80">{consentNote}</p>
             <p className={feedbackClasses} role={feedbackRole} aria-live={feedbackAriaLive}>

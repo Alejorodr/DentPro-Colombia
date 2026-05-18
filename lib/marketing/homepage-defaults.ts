@@ -26,7 +26,7 @@ export const HOMEPAGE_DEFAULT_CONTENT: HomepageNormalizedContent = {
     title: "Cuidamos tu sonrisa con tecnología y calidez humana",
     description:
       "Agenda tu valoración en DentPro Colombia y accede a tratamientos preventivos y especializados sin salir de Chía.",
-    primaryCta: { href: "#agenda", label: "Ver disponibilidad" },
+    primaryCta: { href: "/appointments/new", label: "Reservar turno" },
     secondaryCta: { href: "#agenda", label: "Te contactamos" },
     stats: [
       { label: "+2.500 sonrisas", description: "atendidas en Cundinamarca" },
@@ -43,7 +43,7 @@ export const HOMEPAGE_DEFAULT_CONTENT: HomepageNormalizedContent = {
       author: "Mariana López",
       role: "Paciente de ortodoncia",
       avatar:
-        "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=200&q=80",
+        "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=200&q=80",
     },
     highlight: {
       title: "Seguimiento personalizado",
@@ -155,7 +155,7 @@ export const HOMEPAGE_DEFAULT_CONTENT: HomepageNormalizedContent = {
         specialty: "Estética dental",
         description: "Especialista en diseño de sonrisa integral y rehabilitación estética.",
         image: {
-          src: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=600&q=80",
+          src: "https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&w=600&q=80",
           alt: "Dr. Daniel Kim, odontólogo estético",
         },
       },

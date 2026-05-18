@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import type { GoogleReviewsSummary } from "@/lib/google/google-reviews";
 
@@ -17,6 +17,7 @@ type HeroGoogleReviewRotatorProps = {
 };
 
 const ROTATION_INTERVAL_MS = 10_000;
+const FADE_DURATION_MS = 250;
 
 export function HeroGoogleReviewRotator({
   googleReviews,
@@ -24,24 +25,31 @@ export function HeroGoogleReviewRotator({
 }: HeroGoogleReviewRotatorProps) {
   const reviews = googleReviews?.reviews ?? [];
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [visible, setVisible] = useState(true);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    if (reviews.length < 2) {
-      return;
-    }
+    if (reviews.length < 2) return;
 
     const interval = window.setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % reviews.length);
+      setVisible(false);
+      timeoutRef.current = setTimeout(() => {
+        setCurrentIndex((prev) => (prev + 1) % reviews.length);
+        setVisible(true);
+      }, FADE_DURATION_MS);
     }, ROTATION_INTERVAL_MS);
 
-    return () => window.clearInterval(interval);
+    return () => {
+      window.clearInterval(interval);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
   }, [reviews.length]);
 
   if (!googleReviews || reviews.length === 0) {
     return (
       <>
         <p className="font-semibold text-brand-teal dark:text-accent-cyan">Testimonio real</p>
-        <p className="min-h-[5.5rem] text-slate-600 dark:text-slate-200">“{fallback.quote}”</p>
+        <p className="min-h-[5.5rem] text-slate-600 dark:text-slate-200">"{fallback.quote}"</p>
         <div className="flex items-center gap-4">
           <img
             src={fallback.avatar}
@@ -64,17 +72,59 @@ export function HeroGoogleReviewRotator({
 
   return (
     <>
-      <p className="font-semibold text-brand-teal dark:text-accent-cyan">Opinión destacada en Google</p>
-      <p className="text-xs font-medium text-slate-500 dark:text-slate-300">Google Maps</p>
-      <div
-        className="text-amber-400"
-        aria-label={`Calificación de la reseña: ${review.rating} de 5 estrellas`}
-      >
-        {"★".repeat(reviewStars)}
-        <span className="text-slate-300">{"★".repeat(5 - reviewStars)}</span>
+      {/* Global rating — shown prominently at the top */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          {globalRating ? (
+            <span className="text-lg font-bold text-slate-900 dark:text-white">{globalRating}</span>
+          ) : null}
+          <span className="text-amber-400 text-base leading-none" aria-hidden="true">★★★★★</span>
+          {typeof googleReviews.userRatingCount === "number" ? (
+            <span className="text-xs text-slate-500 dark:text-slate-400">
+              {googleReviews.userRatingCount.toLocaleString("es-CO")} reseñas
+            </span>
+          ) : null}
+        </div>
+        {googleReviews.googleMapsUri ? (
+          <a
+            href={googleReviews.googleMapsUri}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[11px] font-semibold text-brand-teal underline decoration-brand-teal/40 underline-offset-2 hover:text-brand-indigo dark:text-accent-cyan"
+          >
+            Google Maps
+          </a>
+        ) : (
+          <span className="text-[11px] text-slate-400">Google Maps</span>
+        )}
       </div>
-      <p className="min-h-[5.5rem] text-slate-600 dark:text-slate-200">“{review.text}”</p>
-      <div className="flex items-center gap-4">
+
+      {/* Review text with fade transition */}
+      <div
+        className="min-h-[5.5rem] transition-opacity"
+        style={{
+          opacity: visible ? 1 : 0,
+          transitionDuration: `${FADE_DURATION_MS}ms`,
+        }}
+      >
+        <div
+          className="mb-1 text-amber-400"
+          aria-label={`Calificación: ${review.rating} de 5 estrellas`}
+        >
+          {"★".repeat(reviewStars)}
+          <span className="text-slate-300 dark:text-slate-600">{"★".repeat(5 - reviewStars)}</span>
+        </div>
+        <p className="text-slate-600 dark:text-slate-200">"{review.text}"</p>
+      </div>
+
+      {/* Author */}
+      <div
+        className="flex items-center gap-4 transition-opacity"
+        style={{
+          opacity: visible ? 1 : 0,
+          transitionDuration: `${FADE_DURATION_MS}ms`,
+        }}
+      >
         {review.authorPhotoUri ? (
           <img
             src={review.authorPhotoUri}
@@ -106,24 +156,32 @@ export function HeroGoogleReviewRotator({
           ) : null}
         </div>
       </div>
-      {(globalRating || googleReviews.userRatingCount) && (
-        <p className="text-xs text-slate-500 dark:text-slate-300">
-          Google Maps
-          {globalRating ? ` · ${globalRating}/5` : ""}
-          {typeof googleReviews.userRatingCount === "number"
-            ? ` · ${googleReviews.userRatingCount} valoraciones`
-            : ""}
-        </p>
-      )}
-      {googleReviews.googleMapsUri ? (
-        <a
-          href={googleReviews.googleMapsUri}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-xs font-semibold text-brand-teal underline decoration-brand-teal/50 underline-offset-2 hover:text-brand-indigo dark:text-accent-cyan"
-        >
-          Ver perfil en Google Maps
-        </a>
+
+      {/* Dot indicators */}
+      {reviews.length > 1 ? (
+        <div className="flex items-center gap-1.5" role="tablist" aria-label="Reseñas">
+          {reviews.map((_, i) => (
+            <button
+              key={i}
+              role="tab"
+              aria-selected={i === currentIndex}
+              aria-label={`Reseña ${i + 1} de ${reviews.length}`}
+              onClick={() => {
+                setVisible(false);
+                if (timeoutRef.current) clearTimeout(timeoutRef.current);
+                timeoutRef.current = setTimeout(() => {
+                  setCurrentIndex(i);
+                  setVisible(true);
+                }, FADE_DURATION_MS);
+              }}
+              className={`h-1.5 rounded-full transition-all duration-300 ${
+                i === currentIndex
+                  ? "w-4 bg-brand-teal dark:bg-accent-cyan"
+                  : "w-1.5 bg-slate-300 hover:bg-slate-400 dark:bg-slate-600 dark:hover:bg-slate-500"
+              }`}
+            />
+          ))}
+        </div>
       ) : null}
     </>
   );
