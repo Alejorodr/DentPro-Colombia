@@ -85,7 +85,7 @@ export function Hero({
         </div>
         <div className="relative isolate mx-auto w-full max-w-[31rem] lg:max-h-[600px] lg:scale-95 xl:max-h-[640px] xl:scale-[0.98]">
           <div className="relative z-10">
-            <div className="card border-white/40 bg-white/80 p-6 shadow-xl shadow-brand-teal/20 backdrop-blur-sm transition-colors duration-500 hover:translate-y-0! hover:shadow-xl! dark:border-accent-cyan/10! dark:bg-surface-elevated/70! dark:shadow-surface-dark lg:p-8">
+            <div className="card relative z-10 border-white/40 bg-white/80 p-6 shadow-xl shadow-brand-teal/20 backdrop-blur-sm transition-colors duration-500 hover:translate-y-0! hover:shadow-xl! dark:border-accent-cyan/10! dark:bg-surface-elevated/70! dark:shadow-surface-dark lg:p-8">
               <div className="relative aspect-4/5 max-h-[32rem] overflow-hidden rounded-2xl bg-linear-to-br from-brand-teal via-brand-sky to-brand-indigo dark:from-accent-cyan dark:via-brand-teal dark:to-brand-midnight">
                 <Image
                   src={image.src}
