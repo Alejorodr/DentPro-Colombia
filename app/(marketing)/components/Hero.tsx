@@ -16,11 +16,6 @@ interface HeroTestimonial {
   avatar: string;
 }
 
-interface HeroHighlight {
-  title: string;
-  description?: string;
-}
-
 interface HeroContent {
   badge: string;
   title: string;
@@ -39,7 +34,6 @@ interface HeroContent {
     alt: string;
   };
   testimonial: HeroTestimonial;
-  highlight: HeroHighlight;
   googleReviews?: GoogleReviewsSummary | null;
 }
 
@@ -52,7 +46,6 @@ export function Hero({
   stats,
   image,
   testimonial,
-  highlight,
   googleReviews,
 }: HeroContent) {
   return (
@@ -99,11 +92,6 @@ export function Hero({
               <div className="card relative z-20 mt-6 grid gap-4 rounded-2xl bg-white/90 p-6 text-sm shadow-lg! transition-colors duration-500 hover:translate-y-0! hover:shadow-lg! dark:bg-surface-muted/90! dark:text-slate-100">
                 <HeroGoogleReviewRotator googleReviews={googleReviews} fallback={testimonial} />
               </div>
-            </div>
-            <div className="card mx-auto mt-6 w-full max-w-xs space-y-2 border-white/60 p-5 text-center text-sm text-slate-700 shadow-glow! backdrop-blur-sm transition-colors duration-500 hover:translate-y-0! hover:shadow-glow! dark:border-accent-cyan/15! dark:bg-surface-elevated/90! dark:text-slate-100 dark:shadow-glow-dark sm:absolute sm:right-1 sm:-bottom-16 sm:translate-y-1 sm:mx-0 sm:mt-0 sm:text-left sm:shadow-lg sm:p-6">
-              <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-accent-cyan/80">Indicadores clínicos</p>
-              <p className="text-2xl font-bold text-brand-indigo dark:text-accent-cyan">{highlight.title}</p>
-              {highlight.description ? <p>{highlight.description}</p> : null}
             </div>
           </div>
         </div>
