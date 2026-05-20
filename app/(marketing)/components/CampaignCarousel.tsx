@@ -42,16 +42,16 @@ export async function CampaignCarousel() {
     <section className="mx-auto w-full max-w-6xl px-4 pb-8" aria-label="Campañas promocionales activas">
       <div className="mb-4 flex items-center justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-brand-teal">Campañas activas</p>
-          <h2 className="text-2xl font-semibold text-slate-900">Promociones destacadas</h2>
+          <p className="text-xs font-semibold uppercase tracking-wide text-brand-teal dark:text-accent-cyan">Campañas activas</p>
+          <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">Promociones destacadas</h2>
         </div>
-        <span className="text-xs font-semibold text-slate-500">Actualizado hoy</span>
+        <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Actualizado hoy</span>
       </div>
       <div className="flex gap-4 overflow-x-auto pb-2" role="list">
         {campaigns.map((campaign) => (
           <article
             key={campaign.id}
-            className="min-w-[280px] max-w-xs rounded-3xl border border-slate-200 bg-white shadow-lg shadow-slate-200/60"
+            className="min-w-[280px] max-w-xs rounded-3xl border border-slate-200 bg-white shadow-lg shadow-slate-200/60 dark:border-accent-cyan/10 dark:bg-surface-elevated dark:shadow-none"
             role="listitem"
           >
             <div className="relative h-40 w-full overflow-hidden rounded-t-3xl">
@@ -65,13 +65,13 @@ export async function CampaignCarousel() {
             </div>
             <div className="space-y-3 p-4">
               <div>
-                <p className="text-sm font-semibold text-slate-900">{campaign.title}</p>
-                {campaign.description ? <p className="text-xs text-slate-500">{campaign.description}</p> : null}
+                <p className="text-sm font-semibold text-slate-900 dark:text-white">{campaign.title}</p>
+                {campaign.description ? <p className="text-xs text-slate-500 dark:text-slate-400">{campaign.description}</p> : null}
               </div>
               {campaign.ctaUrl ? (
                 <Link
                   href={campaign.ctaUrl}
-                  className="inline-flex rounded-full bg-brand-teal px-4 py-2 text-xs font-semibold uppercase text-white"
+                  className="inline-flex rounded-full bg-brand-teal px-4 py-2 text-xs font-semibold uppercase text-white hover:bg-brand-indigo dark:bg-accent-cyan dark:text-slate-900 dark:hover:bg-accent-cyan/80"
                 >
                   {campaign.ctaText ?? "Ver más"}
                 </Link>

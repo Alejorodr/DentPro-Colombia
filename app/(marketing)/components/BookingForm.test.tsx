@@ -27,11 +27,10 @@ const props = {
 };
 
 describe("BookingFormSection", () => {
-  it("renders a single email field and booking CTAs", () => {
+  it("renders a single email field and a primary booking CTA", () => {
     render(<BookingFormSection {...props} />);
 
     expect(screen.getAllByLabelText("Correo electrónico")).toHaveLength(1);
-    expect(screen.getByRole("link", { name: "Reservar turno" }).getAttribute("href")).toBe("/appointments/new");
-    expect(screen.getByRole("link", { name: "Te contactamos" }).getAttribute("href")).toBe("#contacto");
+    expect(screen.getByRole("link", { name: /Reservar turno ahora/i }).getAttribute("href")).toBe("/appointments/new");
   });
 });

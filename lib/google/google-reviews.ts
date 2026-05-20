@@ -82,7 +82,7 @@ export async function getGoogleReviews(): Promise<GoogleReviewsSummary | null> {
         publishTime,
       };
     })
-    .filter((review) => review.rating >= 4 && review.text.length > 0);
+    .filter((review) => review.rating >= 4 && review.text.length >= 30);
 
   return {
     placeId: data.id ?? placeId,
