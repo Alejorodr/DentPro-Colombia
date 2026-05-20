@@ -26,8 +26,8 @@ const navbarContent: Parameters<typeof Navbar>[0] = {
     { href: "#contacto", label: "Contacto" },
   ],
   cta: {
-    href: "#agenda",
-    label: "Agenda tu cita",
+    href: "/appointments/new",
+    label: "Reservar turno",
   },
   login: {
     href: "/auth/login",
