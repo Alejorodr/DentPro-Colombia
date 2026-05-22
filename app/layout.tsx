@@ -10,14 +10,30 @@ import { AppProviders } from "./providers";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://dentprocolombia.com";
 
+const OG_IMAGE = {
+  url: "/og-image.jpg",
+  width: 1200,
+  height: 630,
+  alt: "DentPro Colombia — Odontología especializada en Chía, Cundinamarca",
+};
+
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "DentPro Colombia | Clínica dental especializada",
+    default: "DentPro Colombia | Odontología en Chía, Cundinamarca",
     template: "%s | DentPro Colombia",
   },
   description:
-    "DentPro Colombia: odontología especializada con agendamiento en línea, atención humana y seguimiento clínico seguro.",
+    "Clínica odontológica en Chía, Cundinamarca. Ortodoncia, implantes, estética dental, endodoncia y odontopediatría. Agenda tu cita en línea — confirmación inmediata.",
+  keywords: [
+    "odontología Chía",
+    "dentista Chía Cundinamarca",
+    "ortodoncia Chía",
+    "implantes dentales Chía",
+    "estética dental Cundinamarca",
+    "clínica dental Chía",
+    "DentPro Colombia",
+  ],
   alternates: {
     canonical: "/",
   },
@@ -26,15 +42,17 @@ export const metadata: Metadata = {
     locale: "es_CO",
     url: "/",
     siteName: "DentPro Colombia",
-    title: "DentPro Colombia | Clínica dental especializada",
+    title: "DentPro Colombia | Odontología en Chía, Cundinamarca",
     description:
-      "Odontología especializada con agendamiento en línea, atención humana y seguimiento clínico seguro.",
+      "Ortodoncia, implantes, estética dental y más. Agenda tu cita en línea con confirmación inmediata en nuestra sede de Chía.",
+    images: [OG_IMAGE],
   },
   twitter: {
     card: "summary_large_image",
-    title: "DentPro Colombia | Clínica dental especializada",
+    title: "DentPro Colombia | Odontología en Chía, Cundinamarca",
     description:
-      "Odontología especializada con agendamiento en línea, atención humana y seguimiento clínico seguro.",
+      "Ortodoncia, implantes, estética dental y más. Agenda tu cita en línea con confirmación inmediata en nuestra sede de Chía.",
+    images: [OG_IMAGE.url],
   },
 };
 

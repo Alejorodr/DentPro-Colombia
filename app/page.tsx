@@ -1,5 +1,6 @@
 export const revalidate = 300;
 
+import type { Metadata } from "next";
 import { InfoBar } from "./(marketing)/components/InfoBar";
 import { Navbar } from "./(marketing)/components/Navbar";
 import { Hero } from "./(marketing)/components/Hero";
@@ -9,9 +10,17 @@ import { SpecialistsSlider } from "./(marketing)/components/SpecialistsSlider";
 import { BookingFormSection } from "./(marketing)/components/BookingForm";
 import { ContactSection } from "./(marketing)/components/ContactSection";
 import { FloatingActions } from "./(marketing)/components/FloatingActions";
+import { FAQSection } from "./(marketing)/components/FAQSection";
 import { getHomepageContent } from "@/lib/marketing/homepage";
 import { adaptHomepageContent } from "@/lib/marketing/homepage-adapter";
 import { getGoogleReviews } from "@/lib/google/google-reviews";
+
+export const metadata: Metadata = {
+  title: "Odontología especializada en Chía | Agenda online",
+  description:
+    "DentPro Colombia — ortodoncia, implantes, estética dental, endodoncia y odontopediatría en Chía, Cundinamarca. Reserva tu turno en línea con confirmación inmediata.",
+  alternates: { canonical: "/" },
+};
 
 const navbarContent: Parameters<typeof Navbar>[0] = {
   brand: {
@@ -42,6 +51,39 @@ export default async function Home() {
   ]);
 
   const marketingContent = adaptHomepageContent(homepageContent);
+
+  const faqItems = [
+    {
+      question: "¿Cómo agendo una cita en DentPro?",
+      answer:
+        "Podés reservar tu turno directamente en línea desde el botón "Reservar turno" de esta página — el sistema confirma disponibilidad en tiempo real y te envía un correo de confirmación. También podés escribirnos por WhatsApp al 323 796 8435 o llamarnos al mismo número.",
+    },
+    {
+      question: "¿Cuánto cuesta la primera consulta?",
+      answer:
+        "La valoración inicial incluye revisión clínica completa, diagnóstico y plan de tratamiento personalizado. Consultá el valor actualizado escribiéndonos por WhatsApp — los precios varían según el especialista y el tratamiento requerido.",
+    },
+    {
+      question: "¿Atienden urgencias dentales?",
+      answer:
+        "Sí. Reservamos cupos de urgencia todos los días de la semana. Si tenés dolor intenso, fractura o pérdida de una pieza, escribinos por WhatsApp y te damos turno el mismo día o al siguiente.",
+    },
+    {
+      question: "¿Tienen convenios con seguros o EPS?",
+      answer:
+        "Trabajamos principalmente como clínica particular. Para convenios empresariales o con aseguradoras, contactanos directamente a dentprocolombia@gmail.com y evaluamos opciones según tu caso.",
+    },
+    {
+      question: "¿Qué debo llevar a mi primera cita?",
+      answer:
+        "Documento de identidad, radiografías recientes (si tenés), y cualquier tratamiento o medicación que estés tomando actualmente. Si sos menor de edad, un acudiente debe acompañarte.",
+    },
+    {
+      question: "¿Ofrecen planes de pago o financiación?",
+      answer:
+        "Sí, manejamos planes de pago para tratamientos de mayor valor como ortodoncia, implantes y rehabilitación. Conversalo con nuestro equipo al momento de la valoración inicial.",
+    },
+  ];
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -89,11 +131,28 @@ export default async function Home() {
       : {}),
   };
 
+  const faqJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqItems.map((item) => ({
+      "@type": "Question",
+      name: item.question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: item.answer,
+      },
+    })),
+  };
+
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
       />
       <InfoBar {...marketingContent.infoBar} />
       <Navbar {...navbarContent} />
@@ -103,6 +162,7 @@ export default async function Home() {
         <ServicesSection {...marketingContent.services} />
         <SpecialistsSlider {...marketingContent.specialists} />
         <BookingFormSection {...marketingContent.booking} />
+        <FAQSection items={faqItems} />
         <ContactSection {...marketingContent.contact} />
       </main>
       <FloatingActions {...marketingContent.floatingActions} />
