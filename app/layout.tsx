@@ -10,8 +10,9 @@ import { AppProviders } from "./providers";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://dentprocolombia.com";
 
+// Reemplazar por /og-image.jpg cuando tengas una foto real de la clínica (1200×630px)
 const OG_IMAGE = {
-  url: "/og-image.jpg",
+  url: "https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?auto=format&fit=crop&w=1200&h=630&q=80",
   width: 1200,
   height: 630,
   alt: "DentPro Colombia — Odontología especializada en Chía, Cundinamarca",

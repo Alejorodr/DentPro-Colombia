@@ -32,6 +32,7 @@ const navbarContent: Parameters<typeof Navbar>[0] = {
     { href: "#servicios", label: "Servicios" },
     { href: "#especialistas", label: "Especialistas" },
     { href: "#agenda", label: "Agenda" },
+    { href: "#preguntas-frecuentes", label: "FAQ" },
     { href: "#contacto", label: "Contacto" },
   ],
   cta: {
