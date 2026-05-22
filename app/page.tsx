@@ -154,7 +154,18 @@ export default async function Home() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
       />
-      <InfoBar {...marketingContent.infoBar} />
+      <InfoBar
+        {...marketingContent.infoBar}
+        googleRating={
+          googleReviews?.rating && googleReviews.userRatingCount
+            ? {
+                rating: googleReviews.rating,
+                count: googleReviews.userRatingCount,
+                url: googleReviews.googleMapsUri,
+              }
+            : undefined
+        }
+      />
       <Navbar {...navbarContent} />
       <main id="inicio" aria-label="Página principal DentPro Colombia">
         <Hero {...marketingContent.hero} googleReviews={googleReviews} />
