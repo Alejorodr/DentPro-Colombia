@@ -1,5 +1,7 @@
 import type { MetadataRoute } from "next";
 
+import { SERVICES } from "@/lib/marketing/services-data";
+
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://dentprocolombia.com";
 
 export default function sitemap(): MetadataRoute.Sitemap {
@@ -42,5 +44,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "monthly",
       priority: 0.5,
     },
+    ...SERVICES.map((service) => ({
+      url: `${siteUrl}/servicios/${service.slug}`,
+      lastModified: now,
+      changeFrequency: "monthly" as const,
+      priority: 0.8,
+    })),
   ];
 }
