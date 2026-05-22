@@ -43,8 +43,58 @@ export default async function Home() {
 
   const marketingContent = adaptHomepageContent(homepageContent);
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Dentist",
+    name: "DentPro Colombia",
+    url: "https://dentprocolombia.com",
+    telephone: "+573237968435",
+    email: "dentprocolombia@gmail.com",
+    description:
+      "Clínica odontológica en Chía, Cundinamarca. Ortodoncia, implantes, estética dental, endodoncia y odontopediatría.",
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: "Cra. 7 #13-180",
+      addressLocality: "Chía",
+      addressRegion: "Cundinamarca",
+      addressCountry: "CO",
+    },
+    geo: {
+      "@type": "GeoCoordinates",
+      latitude: 4.862466,
+      longitude: -74.06082,
+    },
+    openingHoursSpecification: [
+      {
+        "@type": "OpeningHoursSpecification",
+        dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+        opens: "08:00",
+        closes: "19:00",
+      },
+    ],
+    sameAs: [
+      "https://www.instagram.com/dentprocol",
+      "https://www.facebook.com/dentprocol",
+      "https://www.tiktok.com/@dentprocol",
+    ],
+    priceRange: "$$",
+    ...(googleReviews?.rating && googleReviews.userRatingCount
+      ? {
+          aggregateRating: {
+            "@type": "AggregateRating",
+            ratingValue: googleReviews.rating.toFixed(1),
+            reviewCount: googleReviews.userRatingCount,
+          },
+        }
+      : {}),
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <InfoBar {...marketingContent.infoBar} />
       <Navbar {...navbarContent} />
       <main id="inicio" aria-label="Página principal DentPro Colombia">
