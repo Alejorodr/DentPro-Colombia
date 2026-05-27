@@ -9,6 +9,18 @@ import { NextVisitActions } from "@/app/portal/client/components/NextVisitAction
 import { operationalStatusLabel, toOperationalStatus } from "@/lib/appointments/status";
 import { ActivityFeed } from "@/app/portal/components/activity/ActivityFeed";
 
+function statusBadgeClass(status: string): string {
+  const map: Record<string, string> = {
+    COMPLETED: "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
+    CONFIRMED: "bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+    SCHEDULED: "bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
+    CANCELLED: "bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400",
+    NO_SHOW: "bg-slate-100 text-slate-500 dark:bg-surface-muted/50 dark:text-slate-400",
+    CHECKED_IN: "bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
+  };
+  return map[status] ?? "bg-slate-100 text-slate-500 dark:bg-surface-muted/50 dark:text-slate-400";
+}
+
 function formatDate(date: Date) {
   const timeZone = getAnalyticsTimeZone();
   return formatInTimeZone(date, timeZone, { month: "short", day: "2-digit", year: "numeric" });
@@ -47,7 +59,7 @@ export default async function ClientPortalPage() {
   return (
     <div className="space-y-8" data-testid="client-dashboard-page">
       <header className="space-y-2">
-        <p className="text-sm font-semibold text-blue-600">Hola, {patientName}</p>
+        <p className="text-sm font-semibold text-brand-teal dark:text-accent-cyan">Hola, {patientName}</p>
         <h1 className="text-3xl font-semibold text-slate-900 dark:text-white">Tu portal de paciente</h1>
         <p className="text-sm text-slate-500 dark:text-slate-300">Revisa tus próximas citas, historial y accesos rápidos en un solo lugar.</p>
       </header>
@@ -92,7 +104,7 @@ export default async function ClientPortalPage() {
         </Link>
       </section>
 
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <section className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-5">
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs dark:border-surface-muted/70 dark:bg-surface-elevated">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Próximo turno</p>
           <p className="mt-4 text-2xl font-semibold text-slate-900 dark:text-white">
@@ -128,7 +140,7 @@ export default async function ClientPortalPage() {
             <div className="mt-4 rounded-3xl border border-slate-200 bg-white p-6 shadow-xs dark:border-surface-muted/70 dark:bg-surface-elevated">
               {nextAppointment ? (
                 <div className="space-y-4">
-                  <span className="inline-flex w-fit rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-blue-600 dark:bg-surface-muted dark:text-accent-cyan">
+                  <span className={`inline-flex w-fit rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide ${statusBadgeClass(nextAppointment.status)}`}>
                     {operationalStatusLabel(toOperationalStatus(nextAppointment))}
                   </span>
                   <div>
@@ -156,7 +168,7 @@ export default async function ClientPortalPage() {
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Historial reciente</h2>
-            <Link href="/portal/client/treatment-history" className="text-sm font-semibold text-blue-600">
+            <Link href="/portal/client/treatment-history" className="text-sm font-semibold text-brand-teal hover:underline dark:text-accent-cyan">
               Ver todo
             </Link>
           </div>
@@ -167,9 +179,11 @@ export default async function ClientPortalPage() {
                   key={appointment.id}
                   className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs dark:border-surface-muted/70 dark:bg-surface-elevated"
                 >
-                  <div className="flex items-center justify-between text-xs text-slate-400">
-                    <span>{operationalStatusLabel(toOperationalStatus(appointment))}</span>
-                    <span>{formatDate(appointment.timeSlot.startAt)}</span>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${statusBadgeClass(appointment.status)}`}>
+                      {operationalStatusLabel(toOperationalStatus(appointment))}
+                    </span>
+                    <span className="text-xs text-slate-400">{formatDate(appointment.timeSlot.startAt)}</span>
                   </div>
                   <p className="mt-2 text-sm font-semibold text-slate-900 dark:text-white">
                     {appointment.serviceName ?? appointment.service?.name ?? appointment.reason}

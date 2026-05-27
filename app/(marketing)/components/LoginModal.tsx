@@ -56,8 +56,8 @@ export function LoginModal({ open, onClose }: LoginModalProps) {
           <LoginFormCard
             onSuccess={handleSuccess}
             showBackLink={false}
-            heading="Accede a tu tablero"
-            description="Comparte tus credenciales para continuar con la gestión de la clínica."
+            heading="Accede a tu portal"
+            description="Ingresa con tus credenciales para continuar."
             autoFocusEmail
           />
         </section>
@@ -70,9 +70,9 @@ export function LoginModal({ open, onClose }: LoginModalProps) {
               <ChartLineUp className="h-6 w-6" weight="bold" aria-hidden="true" />
             </div>
             <div className="space-y-2">
-              <h3 className="text-xl font-semibold">Control total de tu clínica</h3>
+              <h3 className="text-xl font-semibold">Tu portal clínico</h3>
               <p className="text-sm text-white/90">
-                Consolida la agenda, confirma asistencia y coordina a los especialistas desde un solo panel.
+                Accede a tu historial, administra tus citas y revisa tu información clínica desde un solo lugar.
               </p>
             </div>
           </div>
@@ -83,7 +83,7 @@ export function LoginModal({ open, onClose }: LoginModalProps) {
             </div>
             <div className="flex items-center gap-2">
               <span className="h-2 w-2 rounded-full bg-white" aria-hidden="true" />
-              <p>Atención prioritaria para roles clínicos.</p>
+              <p>Acceso personalizado según tu perfil.</p>
             </div>
           </div>
         </aside>

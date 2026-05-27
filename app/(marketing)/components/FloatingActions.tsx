@@ -25,13 +25,15 @@ export function FloatingActions({ actions }: FloatingActionsProps) {
           <a
             key={action.href}
             href={action.href}
-            className={`floating-action-btn ${action.className ?? ""}`.trim()}
+            className={`group relative floating-action-btn ${action.className ?? ""}`.trim()}
             aria-label={action.label}
             target={action.external ? "_blank" : undefined}
             rel={action.external ? "noopener noreferrer" : undefined}
           >
             <ActionIcon className="h-6 w-6" weight="bold" aria-hidden="true" />
-            <span className="sr-only">{action.label}</span>
+            <span className="pointer-events-none absolute right-[calc(100%+0.75rem)] top-1/2 -translate-y-1/2 whitespace-nowrap rounded-lg bg-slate-900/90 px-2.5 py-1 text-xs font-medium text-white opacity-0 shadow-lg transition-opacity duration-200 group-hover:opacity-100 dark:bg-surface-elevated/95 dark:text-slate-100">
+              {action.label}
+            </span>
           </a>
         );
       })}
