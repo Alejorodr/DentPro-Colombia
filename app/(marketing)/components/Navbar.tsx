@@ -34,6 +34,14 @@ interface NavbarProps {
 export function Navbar({ brand, links, cta, login }: NavbarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handler = () => setScrolled(window.scrollY > 20);
+    handler();
+    window.addEventListener("scroll", handler, { passive: true });
+    return () => window.removeEventListener("scroll", handler);
+  }, []);
   const loginButtonRef = useRef<HTMLButtonElement>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -94,7 +102,7 @@ export function Navbar({ brand, links, cta, login }: NavbarProps) {
   }, [authParam, pathname, router, searchParams]);
 
   return (
-    <header className="topbar">
+    <header className={`topbar transition-shadow duration-300 ${scrolled ? "shadow-lg shadow-slate-900/8 dark:shadow-surface-dark/60" : ""}`}>
       <div className="container mx-auto flex items-center justify-between px-6 py-4">
         <a href={brand.href} className="flex items-center gap-3 text-lg font-semibold text-brand-teal dark:text-accent-cyan">
           <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-brand-teal text-white">

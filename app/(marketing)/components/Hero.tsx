@@ -67,11 +67,14 @@ export function Hero({
               {secondaryCta.label}
             </a>
           </div>
-          <dl className="grid gap-6 text-sm text-slate-600 dark:text-slate-200 sm:grid-cols-3">
-            {stats.map((stat) => (
-              <div key={stat.label}>
-                <dt className="font-semibold text-slate-900 dark:text-white">{stat.label}</dt>
-                <dd>{stat.description}</dd>
+          <dl className="grid gap-4 sm:grid-cols-3">
+            {stats.map((stat, i) => (
+              <div
+                key={stat.label}
+                className={`space-y-0.5 text-sm ${i > 0 ? "sm:border-l sm:border-slate-200/70 sm:pl-4 dark:sm:border-surface-muted/50" : ""}`}
+              >
+                <dt className="font-bold text-slate-900 dark:text-white">{stat.label}</dt>
+                <dd className="text-slate-500 dark:text-slate-300">{stat.description}</dd>
               </div>
             ))}
           </dl>
