@@ -359,7 +359,7 @@ export function ProfessionalDashboard() {
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Portal Profesional</p>
           <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">Mi agenda</h1>
         </div>
-        <label className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500 shadow-xs dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">
+        <label className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500 shadow-xs dark:border-surface-muted/60 dark:bg-surface-elevated dark:text-slate-300">
           <CalendarBlank size={16} />
           <input
             type="date"
@@ -371,11 +371,11 @@ export function ProfessionalDashboard() {
       </div>
 
       <section className="grid gap-4 sm:grid-cols-2">
-        <div className="rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900/60">
+        <div className="rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-xs dark:border-surface-muted/60 dark:bg-surface-muted/60">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Citas del día</p>
           <p className="mt-2 text-2xl font-semibold text-slate-900 dark:text-white">{dayMetrics.total}</p>
         </div>
-        <div className="rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900/60">
+        <div className="rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-xs dark:border-surface-muted/60 dark:bg-surface-muted/60">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Atendidas</p>
           <p className="mt-2 text-2xl font-semibold text-slate-900 dark:text-white">{dayMetrics.attended}</p>
         </div>
@@ -383,13 +383,13 @@ export function ProfessionalDashboard() {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1.6fr)_minmax(0,1.1fr)]">
         {/* Left column: schedule */}
-        <section className="rounded-3xl border border-slate-200 bg-white/80 p-5 shadow-xs dark:border-slate-800 dark:bg-slate-900/60">
+        <section className="rounded-3xl border border-slate-200 bg-white/80 p-5 shadow-xs dark:border-surface-muted/60 dark:bg-surface-muted/60">
           <div className="mb-4 flex items-center justify-between gap-2">
             <div>
               <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Agenda del día</h2>
               <p className="text-xs capitalize text-slate-500">{formattedDate}</p>
             </div>
-            <div className="flex items-center gap-1 rounded-full border border-slate-200 bg-white px-1 py-1 dark:border-slate-800 dark:bg-slate-900">
+            <div className="flex items-center gap-1 rounded-full border border-slate-200 bg-white px-1 py-1 dark:border-surface-muted/60 dark:bg-surface-elevated">
               <button
                 type="button"
                 onClick={() => setCalendarView("grid")}
@@ -445,7 +445,7 @@ export function ProfessionalDashboard() {
                         "w-full rounded-2xl border px-4 py-3 text-left transition",
                         isActive
                           ? "border-brand-indigo bg-brand-indigo/10 shadow-lg shadow-brand-indigo/20"
-                          : "border-slate-200 bg-white hover:border-brand-indigo/50 dark:border-slate-800 dark:bg-slate-900",
+                          : "border-slate-200 bg-white hover:border-brand-indigo/50 dark:border-surface-muted/60 dark:bg-surface-elevated",
                       )}
                     >
                       <div className="flex items-center justify-between text-xs text-slate-500">
@@ -475,7 +475,7 @@ export function ProfessionalDashboard() {
         </section>
 
         {/* Center column: patient detail */}
-        <section className="rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-xs dark:border-slate-800 dark:bg-slate-900/60">
+        <section className="rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-xs dark:border-surface-muted/60 dark:bg-surface-muted/60">
           {!appointmentDetail ? (
             <div className="flex h-full flex-col items-center justify-center text-center text-sm text-slate-500">
               <p className="text-base font-semibold text-slate-900 dark:text-white">Selecciona una cita</p>
@@ -520,7 +520,7 @@ export function ProfessionalDashboard() {
                       "flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-semibold uppercase tracking-wide",
                       tab === tabItem.key
                         ? "border-brand-indigo bg-brand-indigo/10 text-brand-indigo"
-                        : "border-slate-200 text-slate-500 dark:border-slate-800 dark:text-slate-300",
+                        : "border-slate-200 text-slate-500 dark:border-surface-muted/60 dark:text-slate-300",
                     )}
                   >
                     {tabItem.label}
@@ -530,7 +530,7 @@ export function ProfessionalDashboard() {
 
               {tab === "overview" ? (
                 <div className="grid gap-4 md:grid-cols-3">
-                  <div className="rounded-2xl border border-slate-200 bg-white/70 p-4 dark:border-slate-800 dark:bg-slate-900">
+                  <div className="rounded-2xl border border-slate-200 bg-white/70 p-4 dark:border-surface-muted/60 dark:bg-surface-elevated">
                     <p className="text-xs uppercase tracking-wide text-slate-400">Última visita</p>
                     <p className="mt-2 text-lg font-semibold text-slate-900 dark:text-white">
                       {appointmentDetail.history[0]?.startAt
@@ -545,14 +545,14 @@ export function ProfessionalDashboard() {
                       {appointmentDetail.history[0]?.reason ?? "-"}
                     </p>
                   </div>
-                  <div className="rounded-2xl border border-slate-200 bg-white/70 p-4 dark:border-slate-800 dark:bg-slate-900">
+                  <div className="rounded-2xl border border-slate-200 bg-white/70 p-4 dark:border-surface-muted/60 dark:bg-surface-elevated">
                     <p className="text-xs uppercase tracking-wide text-slate-400">Plan de salud</p>
                     <p className="mt-2 text-lg font-semibold text-slate-900 dark:text-white">
                       {appointmentDetail.patient.insuranceStatus === "ACTIVE" ? "Activo" : "Sin plan activo"}
                     </p>
                     <p className="text-xs text-slate-500">{appointmentDetail.patient.insuranceProvider ?? "—"}</p>
                   </div>
-                  <div className="rounded-2xl border border-slate-200 bg-white/70 p-4 dark:border-slate-800 dark:bg-slate-900">
+                  <div className="rounded-2xl border border-slate-200 bg-white/70 p-4 dark:border-surface-muted/60 dark:bg-surface-elevated">
                     <p className="text-xs uppercase tracking-wide text-slate-400">Aseguradora</p>
                     <p className="mt-2 text-lg font-semibold text-slate-900 dark:text-white">
                       {appointmentDetail.patient.insuranceProvider ?? "Sin proveedor"}
@@ -578,7 +578,7 @@ export function ProfessionalDashboard() {
                       .map((item) => (
                         <div
                           key={item.id}
-                          className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm dark:border-slate-800 dark:bg-slate-900"
+                          className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm dark:border-surface-muted/60 dark:bg-surface-elevated"
                         >
                           <div>
                             <p className="font-medium text-slate-900 dark:text-white">{item.filename}</p>
@@ -607,7 +607,7 @@ export function ProfessionalDashboard() {
                     appointmentDetail.history.map((history) => (
                       <div
                         key={history.id}
-                        className="rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm dark:border-slate-800 dark:bg-slate-900"
+                        className="rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm dark:border-surface-muted/60 dark:bg-surface-elevated"
                       >
                         <div className="flex items-center justify-between">
                           <p className="font-semibold text-slate-900 dark:text-white">{history.reason}</p>
@@ -640,7 +640,7 @@ export function ProfessionalDashboard() {
         <section className="space-y-4">
           {/* Status widget */}
           {appointmentDetail ? (
-            <div className="rounded-3xl border border-slate-200 bg-white/80 p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900/60">
+            <div className="rounded-3xl border border-slate-200 bg-white/80 p-4 shadow-xs dark:border-surface-muted/60 dark:bg-surface-muted/60">
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <p className="text-xs uppercase tracking-wide text-slate-400">Estado de la cita</p>
@@ -667,7 +667,7 @@ export function ProfessionalDashboard() {
             </div>
           ) : null}
 
-          <div className="rounded-3xl border border-slate-200 bg-white/80 p-5 shadow-xs dark:border-slate-800 dark:bg-slate-900/60">
+          <div className="rounded-3xl border border-slate-200 bg-white/80 p-5 shadow-xs dark:border-surface-muted/60 dark:bg-surface-muted/60">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold">Notas del procedimiento</h3>
               <button
@@ -689,7 +689,7 @@ export function ProfessionalDashboard() {
               value={notesContent}
               onChange={(event) => setNotesContent(event.target.value)}
               placeholder="Escribe aquí las observaciones del procedimiento…"
-              className="mt-4 h-48 w-full rounded-2xl border border-slate-200 bg-white/80 p-4 text-sm text-slate-700 outline-hidden focus-visible:ring-2 focus-visible:ring-brand-indigo/40 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
+              className="mt-4 h-48 w-full rounded-2xl border border-slate-200 bg-white/80 p-4 text-sm text-slate-700 outline-hidden focus-visible:ring-2 focus-visible:ring-brand-indigo/40 dark:border-surface-muted/60 dark:bg-surface-elevated dark:text-slate-100"
             />
             <div className="mt-4 flex items-center justify-between text-xs text-slate-500">
               <span>
@@ -710,7 +710,7 @@ export function ProfessionalDashboard() {
             </div>
           </div>
 
-          <div className="rounded-3xl border border-slate-200 bg-white/80 p-5 shadow-xs dark:border-slate-800 dark:bg-slate-900/60">
+          <div className="rounded-3xl border border-slate-200 bg-white/80 p-5 shadow-xs dark:border-surface-muted/60 dark:bg-surface-muted/60">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold">Emitir prescripción</h3>
               <FileText size={20} className="text-slate-400" />
@@ -724,7 +724,7 @@ export function ProfessionalDashboard() {
                     type: event.target.value as PrescriptionItemType,
                   }))
                 }
-                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 dark:border-surface-muted/60 dark:bg-surface-elevated dark:text-slate-100"
               >
                 <option value={PrescriptionItemType.MEDICATION}>Medicamento</option>
                 <option value={PrescriptionItemType.PROCEDURE}>Procedimiento</option>
@@ -733,27 +733,27 @@ export function ProfessionalDashboard() {
                 value={prescriptionForm.name}
                 onChange={(event) => setPrescriptionForm((prev) => ({ ...prev, name: event.target.value }))}
                 placeholder="Nombre del medicamento o procedimiento"
-                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 dark:border-surface-muted/60 dark:bg-surface-elevated dark:text-slate-100"
               />
               <div className="grid gap-2 md:grid-cols-2">
                 <input
                   value={prescriptionForm.dosage}
                   onChange={(event) => setPrescriptionForm((prev) => ({ ...prev, dosage: event.target.value }))}
                   placeholder="Dosis"
-                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 dark:border-surface-muted/60 dark:bg-surface-elevated dark:text-slate-100"
                 />
                 <input
                   value={prescriptionForm.frequency}
                   onChange={(event) => setPrescriptionForm((prev) => ({ ...prev, frequency: event.target.value }))}
                   placeholder="Frecuencia"
-                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 dark:border-surface-muted/60 dark:bg-surface-elevated dark:text-slate-100"
                 />
               </div>
               <input
                 value={prescriptionForm.instructions}
                 onChange={(event) => setPrescriptionForm((prev) => ({ ...prev, instructions: event.target.value }))}
                 placeholder="Instrucciones"
-                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 dark:border-surface-muted/60 dark:bg-surface-elevated dark:text-slate-100"
               />
             </div>
             <button
@@ -767,7 +767,7 @@ export function ProfessionalDashboard() {
             {appointmentDetail?.prescription?.items?.length ? (
               <div className="mt-4 space-y-2">
                 {appointmentDetail.prescription.items.map((item) => (
-                  <div key={item.id} className="rounded-2xl border border-slate-200 bg-white/70 px-3 py-2 text-xs dark:border-slate-800 dark:bg-slate-900">
+                  <div key={item.id} className="rounded-2xl border border-slate-200 bg-white/70 px-3 py-2 text-xs dark:border-surface-muted/60 dark:bg-surface-elevated">
                     <p className="font-semibold text-slate-900 dark:text-white">{item.name}</p>
                     <p className="text-slate-500">
                       {item.dosage || ""} {item.frequency ? `· ${item.frequency}` : ""}
@@ -779,7 +779,7 @@ export function ProfessionalDashboard() {
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
-            <div className="rounded-3xl border border-slate-200 bg-white/80 p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900/60">
+            <div className="rounded-3xl border border-slate-200 bg-white/80 p-4 shadow-xs dark:border-surface-muted/60 dark:bg-surface-muted/60">
               <h4 className="text-sm font-semibold">Subir radiografía</h4>
               <p className="text-xs text-slate-500">Importa desde tu dispositivo o agrega un enlace.</p>
               <div className="mt-3 space-y-2">
@@ -801,13 +801,13 @@ export function ProfessionalDashboard() {
                       event.target.value = "";
                     }
                   }}
-                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600 dark:border-surface-muted/60 dark:bg-surface-elevated dark:text-slate-100"
                 />
                 {uploadError ? <p className="text-xs text-rose-400">{uploadError}</p> : null}
                 {uploading ? <p className="text-xs text-slate-400">Subiendo…</p> : null}
               </div>
             </div>
-            <div className="rounded-3xl border border-slate-200 bg-white/80 p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900/60">
+            <div className="rounded-3xl border border-slate-200 bg-white/80 p-4 shadow-xs dark:border-surface-muted/60 dark:bg-surface-muted/60">
               <h4 className="text-sm font-semibold">Imprimir resumen</h4>
               <p className="text-xs text-slate-500">Genera un resumen imprimible de la visita.</p>
               <Link
@@ -826,7 +826,7 @@ export function ProfessionalDashboard() {
             </div>
           </div>
 
-          <div className="rounded-3xl border border-slate-200 bg-white/80 p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900/60">
+          <div className="rounded-3xl border border-slate-200 bg-white/80 p-4 shadow-xs dark:border-surface-muted/60 dark:bg-surface-muted/60">
             <label className="flex items-center gap-3 text-xs text-slate-500">
               <input
                 type="checkbox"

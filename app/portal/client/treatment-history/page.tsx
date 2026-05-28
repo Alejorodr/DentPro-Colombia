@@ -193,7 +193,7 @@ export default async function ClientTreatmentHistoryPage() {
                     <span className={`absolute left-0 top-2 flex h-6 w-6 items-center justify-center rounded-full border-2 text-[10px] font-bold ${
                       item.kind === "appointment"
                         ? "border-emerald-400 bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-300"
-                        : "border-blue-400 bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-300"
+                        : "border-brand-teal bg-brand-light text-brand-teal dark:bg-accent-cyan/10 dark:text-accent-cyan"
                     }`}>
                       {item.kind === "appointment" ? "C" : "E"}
                     </span>

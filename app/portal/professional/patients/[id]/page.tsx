@@ -44,14 +44,14 @@ export default async function ProfessionalPatientPage({ params }: { params: Prom
             </h1>
             <p className="text-sm text-slate-500 dark:text-slate-300">ID: {patient.patientCode ?? patient.id}</p>
           </div>
-          <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-500 shadow-xs dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300">
+          <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-500 shadow-xs dark:border-surface-muted/60 dark:bg-surface-base dark:text-slate-300">
             <p>Documento: {patient.documentId ?? "Sin documento"}</p>
             <p>Contacto: {patient.phone ?? "Sin teléfono"}</p>
           </div>
         </div>
       </header>
 
-      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xs dark:border-slate-800 dark:bg-slate-950">
+      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xs dark:border-surface-muted/60 dark:bg-surface-base">
         <div className="flex flex-col gap-2">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Historia clínica</p>
           <h2 className="text-xl font-semibold text-slate-900 dark:text-white">Episodios clínicos</h2>

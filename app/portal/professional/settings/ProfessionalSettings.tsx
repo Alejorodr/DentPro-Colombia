@@ -36,7 +36,7 @@ export function ProfessionalSettings() {
       </header>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-xs dark:border-slate-800 dark:bg-slate-900/60">
+        <div className="rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-xs dark:border-surface-muted/60 dark:bg-surface-muted/60">
           <h2 className="text-lg font-semibold">Perfil profesional</h2>
           {profile ? (
             <div className="mt-4 space-y-2 text-sm text-slate-600 dark:text-slate-300">
@@ -55,7 +55,7 @@ export function ProfessionalSettings() {
           )}
         </div>
 
-        <div className="rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-xs dark:border-slate-800 dark:bg-slate-900/60">
+        <div className="rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-xs dark:border-surface-muted/60 dark:bg-surface-muted/60">
           <div className="flex items-center gap-2">
             <ShieldCheck size={20} className="text-slate-400" />
             <h2 className="text-lg font-semibold">Modo privado</h2>
