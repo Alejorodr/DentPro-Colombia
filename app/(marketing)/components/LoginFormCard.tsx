@@ -165,7 +165,7 @@ export function LoginFormCard({
   };
 
   return (
-    <div className="space-y-6 rounded-2xl bg-white p-8 shadow-lg shadow-brand-teal/10 ring-1 ring-slate-200 transition-colors duration-300 dark:bg-surface-base dark:ring-surface-muted">
+    <div className="space-y-6 rounded-[1.75rem] border border-white/70 bg-white/90 p-8 shadow-xl shadow-slate-900/10 transition-colors duration-300 dark:border-surface-muted/60 dark:bg-surface-base/85 dark:shadow-surface-dark">
       <div className="space-y-2 text-left">
         <p className="inline-flex items-center gap-2 rounded-full bg-brand-light/60 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-brand-teal dark:bg-surface-muted/70 dark:text-accent-cyan">
           <Lock className="h-4 w-4" weight="bold" aria-hidden="true" />
@@ -275,6 +275,13 @@ export function LoginFormCard({
           {!isSubmitting && <ArrowRight className="h-4 w-4" weight="bold" aria-hidden="true" />}
           {isSubmitting ? "Validando credenciales..." : "Ingresar"}
         </Button>
+
+        <p className="text-center text-sm text-slate-600 dark:text-slate-300">
+          ¿No tienes cuenta?{" "}
+          <Link href="/auth/register" className="font-semibold text-brand-teal transition-colors hover:text-brand-indigo dark:text-accent-cyan">
+            Regístrate gratis
+          </Link>
+        </p>
       </form>
 
       <p className="text-center text-xs text-slate-500 dark:text-slate-300">

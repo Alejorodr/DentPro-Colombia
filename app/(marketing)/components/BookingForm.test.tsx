@@ -1,16 +1,7 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
 
 import { BookingFormSection } from "./BookingForm";
-
-vi.mock("@/hooks/useBookingForm", () => ({
-  useBookingForm: () => ({
-    handleSubmit: vi.fn(),
-    isSuccess: false,
-    isPending: false,
-    error: null,
-  }),
-}));
 
 const props = {
   title: "Agenda",
@@ -27,10 +18,16 @@ const props = {
 };
 
 describe("BookingFormSection", () => {
-  it("renders a single email field and a primary booking CTA", () => {
+  it("renders the primary booking CTA linking to /appointments/new", () => {
     render(<BookingFormSection {...props} />);
 
-    expect(screen.getAllByLabelText("Correo electrónico")).toHaveLength(1);
-    expect(screen.getByRole("link", { name: /Reservar turno ahora/i }).getAttribute("href")).toBe("/appointments/new");
+    const cta = screen.getByRole("link", { name: /ver disponibilidad y reservar/i });
+    expect(cta.getAttribute("href")).toBe("/appointments/new");
+  });
+
+  it("does not render a contact form", () => {
+    render(<BookingFormSection {...props} />);
+
+    expect(screen.queryByRole("form")).toBeNull();
   });
 });
