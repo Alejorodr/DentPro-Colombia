@@ -20,11 +20,11 @@ interface ServicesProps {
 
 export function ServicesSection({ title, description, services }: ServicesProps) {
   return (
-    <section id="servicios" className="py-20 transition-colors duration-300 dark:bg-surface-base">
+    <section id="servicios" className="py-24 transition-colors duration-300 dark:bg-surface-base">
       <div className="container mx-auto px-6">
         <div className="max-w-2xl">
           <h2 className="text-3xl font-bold text-slate-900 dark:text-white">{title}</h2>
-          <p className="mt-4 text-lg text-slate-600 dark:text-slate-200">{description}</p>
+          <p className="mt-4 text-base text-slate-500 dark:text-slate-300">{description}</p>
         </div>
         <div className="mt-12 grid gap-8 md:grid-cols-2 xl:grid-cols-3">
           {services.map((service, index) => {
@@ -64,4 +64,3 @@ export function ServicesSection({ title, description, services }: ServicesProps)
     </section>
   );
 }
-

@@ -217,6 +217,7 @@
     --color-surface-muted: #e2e8f0;
     --color-surface-elevated: #ffffff;
     --color-card-dark: #10243d;
+    --color-gold-bright: #e6b450;
   }
 
   :root.dark {
