@@ -42,7 +42,6 @@ export async function CampaignCarousel() {
     <section className="mx-auto w-full max-w-6xl px-4 pb-8" aria-label="Campañas promocionales activas">
       <div className="mb-4 flex items-center justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-brand-teal dark:text-accent-cyan">Campañas activas</p>
           <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">Promociones destacadas</h2>
         </div>
         <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Actualizado hoy</span>

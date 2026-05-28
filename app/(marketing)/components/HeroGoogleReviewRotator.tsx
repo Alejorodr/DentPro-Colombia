@@ -46,17 +46,19 @@ export function HeroGoogleReviewRotator({
   }, [reviews.length]);
 
   if (!googleReviews || reviews.length === 0) {
+    const initials = fallback.author
+      .split(" ")
+      .slice(0, 2)
+      .map((w) => w[0])
+      .join("")
+      .toUpperCase();
     return (
       <>
-        <p className="font-semibold text-brand-teal dark:text-accent-cyan">Testimonio real</p>
         <p className="min-h-[5.5rem] text-slate-600 dark:text-slate-200">"{fallback.quote}"</p>
         <div className="flex items-center gap-4">
-          <img
-            src={fallback.avatar}
-            alt={fallback.author}
-            className="h-12 w-12 rounded-full object-cover"
-            loading="lazy"
-          />
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-brand-teal/15 text-sm font-semibold text-brand-teal dark:bg-accent-cyan/15 dark:text-accent-cyan">
+            {initials}
+          </div>
           <div>
             <p className="font-semibold text-slate-900 dark:text-white">{fallback.author}</p>
             <p className="text-xs text-slate-500 dark:text-slate-300">{fallback.role}</p>
@@ -78,7 +80,7 @@ export function HeroGoogleReviewRotator({
           {globalRating ? (
             <span className="text-lg font-bold text-slate-900 dark:text-white">{globalRating}</span>
           ) : null}
-          <span className="text-base leading-none" style={{ color: 'var(--color-gold-bright)' }} aria-hidden="true">★★★★★</span>
+          <span className="text-base leading-none text-gold-bright" aria-hidden="true">★★★★★</span>
           {typeof googleReviews.userRatingCount === "number" ? (
             <span className="text-xs text-slate-500 dark:text-slate-400">
               {googleReviews.userRatingCount.toLocaleString("es-CO")} reseñas
@@ -108,8 +110,7 @@ export function HeroGoogleReviewRotator({
         }}
       >
         <div
-          className="mb-1"
-          style={{ color: 'var(--color-gold-bright)' }}
+          className="mb-1 text-gold-bright"
           aria-label={`Calificación: ${review.rating} de 5 estrellas`}
         >
           {"★".repeat(reviewStars)}
