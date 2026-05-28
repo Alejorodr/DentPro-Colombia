@@ -10,7 +10,7 @@ import {
   Lock,
   Phone,
   ShieldCheck,
-  User,
+  UserCircle,
   WarningCircle,
 } from "@/components/ui/Icon";
 import { Button } from "@/components/ui/Button";
@@ -145,7 +145,7 @@ export function RegisterForm({ googleEnabled = false }: RegisterFormProps) {
             onChange={setName}
             disabled={isSubmitting}
             error={fieldErrors.name}
-            icon={<User className="h-4 w-4" aria-hidden="true" />}
+            icon={<UserCircle className="h-4 w-4" aria-hidden="true" />}
             placeholder="Tu nombre"
             autoComplete="given-name"
           />
@@ -156,7 +156,7 @@ export function RegisterForm({ googleEnabled = false }: RegisterFormProps) {
             onChange={setLastName}
             disabled={isSubmitting}
             error={fieldErrors.lastName}
-            icon={<User className="h-4 w-4" aria-hidden="true" />}
+            icon={<UserCircle className="h-4 w-4" aria-hidden="true" />}
             placeholder="Tu apellido"
             autoComplete="family-name"
           />
