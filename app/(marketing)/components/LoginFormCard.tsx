@@ -26,6 +26,7 @@ interface LoginFormCardProps {
   description?: string;
   showBackLink?: boolean;
   autoFocusEmail?: boolean;
+  googleEnabled?: boolean;
 }
 
 export function LoginFormCard({
@@ -35,6 +36,7 @@ export function LoginFormCard({
   description = "Usa las credenciales que te compartió el equipo administrador para acceder a tu tablero.",
   showBackLink = true,
   autoFocusEmail = false,
+  googleEnabled = false,
 }: LoginFormCardProps) {
   const router = useRouter();
   const { data: session, status } = useSession();
@@ -84,8 +86,11 @@ export function LoginFormCard({
       await signIn("google", {
         redirectTo: callbackUrl ?? undefined,
       });
+      // Reached only when signIn returns without redirecting (provider not configured server-side).
+      setFormError(errorMessages.OAuthSignin);
     } catch {
       setFormError(errorMessages.OAuthSignin);
+    } finally {
       setIsSubmitting(false);
     }
   };
@@ -229,15 +234,19 @@ export function LoginFormCard({
           </div>
         </label>
 
-        <Button type="button" className="h-12 w-full" disabled={isSubmitting} onClick={handleGoogleSignIn}>
-          Continuar con Google
-        </Button>
+        {googleEnabled ? (
+          <>
+            <Button type="button" className="h-12 w-full" disabled={isSubmitting} onClick={handleGoogleSignIn}>
+              Continuar con Google
+            </Button>
 
-        <div className="flex items-center gap-3" aria-hidden="true">
-          <span className="h-px flex-1 bg-slate-200 dark:bg-surface-muted/60" />
-          <span className="text-xs uppercase tracking-wide text-slate-500">o</span>
-          <span className="h-px flex-1 bg-slate-200 dark:bg-surface-muted/60" />
-        </div>
+            <div className="flex items-center gap-3" aria-hidden="true">
+              <span className="h-px flex-1 bg-slate-200 dark:bg-surface-muted/60" />
+              <span className="text-xs uppercase tracking-wide text-slate-500">o</span>
+              <span className="h-px flex-1 bg-slate-200 dark:bg-surface-muted/60" />
+            </div>
+          </>
+        ) : null}
 
         <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-slate-600 dark:text-slate-300">
           <div className="space-x-2">

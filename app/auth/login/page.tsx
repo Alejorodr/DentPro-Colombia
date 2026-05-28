@@ -23,6 +23,7 @@ export default async function AuthLoginPage(props: any) {
   const callbackUrlRaw = searchParams?.callbackUrl;
   const callbackUrl = typeof callbackUrlRaw === "string" && callbackUrlRaw.trim().length > 0 ? callbackUrlRaw : undefined;
   const session = await auth();
+  const googleEnabled = Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
 
   if (session?.user?.role) {
     redirect(resolveRoleAwarePortalPath(session.user.role, callbackUrl));
@@ -53,7 +54,7 @@ export default async function AuthLoginPage(props: any) {
               />
             </div>
           ) : null}
-          <LoginForm callbackUrl={callbackUrl} />
+          <LoginForm callbackUrl={callbackUrl} googleEnabled={googleEnabled} />
         </div>
       </div>
     </main>
