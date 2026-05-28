@@ -158,11 +158,7 @@ export default async function ClientPortalPage() {
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Historial reciente</h2>
-<<<<<<< HEAD
             <Link href="/portal/client/treatment-history" className="text-sm font-semibold text-brand-teal hover:underline dark:text-accent-cyan">
-=======
-            <Link href="/portal/client/treatment-history" className="text-sm font-semibold text-brand-teal">
->>>>>>> 82e9d61 (refactor(portal): audit de uniformidad de estilos — fase completa)
               Ver todo
             </Link>
           </div>
