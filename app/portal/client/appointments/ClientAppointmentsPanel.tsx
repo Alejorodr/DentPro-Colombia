@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { RescheduleModal } from "@/app/portal/components/RescheduleModal";
 import { CalendarBlank, CheckCircle, Clock, WarningCircle, XCircle } from "@/components/ui/Icon";
 import { operationalStatusLabel } from "@/lib/appointments/status";
+import { appointmentStatusBadge } from "@/lib/portal/appointment-status";
 
 type AppointmentItem = {
   id: string;
@@ -13,15 +14,6 @@ type AppointmentItem = {
   endsAt: string;
   serviceLabel: string;
   professionalName: string;
-};
-
-const statusStyles: Record<AppointmentItem["status"], string> = {
-  SCHEDULED: "bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-200",
-  CONFIRMED: "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-200",
-  CHECKED_IN: "bg-blue-50 text-blue-700 dark:bg-blue-500/15 dark:text-blue-200",
-  CANCELLED: "bg-rose-50 text-rose-700 dark:bg-rose-500/15 dark:text-rose-200",
-  COMPLETED: "bg-sky-50 text-sky-700 dark:bg-sky-500/15 dark:text-sky-200",
-  NO_SHOW: "bg-fuchsia-50 text-fuchsia-700 dark:bg-fuchsia-500/15 dark:text-fuchsia-200",
 };
 
 
@@ -110,7 +102,7 @@ export function ClientAppointmentsPanel({ upcoming, past }: { upcoming: Appointm
             >
               <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
-                  <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${statusStyles[appointment.status]}`}>
+                  <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${appointmentStatusBadge(appointment.status)}`}>
                     {operationalStatusLabel(appointment.status)}
                   </span>
                   <p className="mt-2 text-lg font-semibold text-slate-900 dark:text-white">{appointment.serviceLabel}</p>
@@ -164,7 +156,7 @@ export function ClientAppointmentsPanel({ upcoming, past }: { upcoming: Appointm
                   <p className="text-base font-semibold text-slate-900 dark:text-white">{appointment.serviceLabel}</p>
                   <p className="text-sm text-slate-500 dark:text-slate-300">{formatDateTime(appointment.startsAt)}</p>
                 </div>
-                <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${statusStyles[appointment.status]}`}>
+                <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${appointmentStatusBadge(appointment.status)}`}>
                   {operationalStatusLabel(appointment.status)}
                 </span>
               </div>

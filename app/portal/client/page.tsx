@@ -7,19 +7,9 @@ import { getClientDashboardData } from "@/lib/portal/client-dashboard";
 import { formatInTimeZone, getAnalyticsTimeZone } from "@/lib/dates/tz";
 import { NextVisitActions } from "@/app/portal/client/components/NextVisitActions";
 import { operationalStatusLabel, toOperationalStatus } from "@/lib/appointments/status";
+import { appointmentStatusBadge } from "@/lib/portal/appointment-status";
 import { ActivityFeed } from "@/app/portal/components/activity/ActivityFeed";
 
-function statusBadgeClass(status: string): string {
-  const map: Record<string, string> = {
-    COMPLETED: "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
-    CONFIRMED: "bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
-    SCHEDULED: "bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
-    CANCELLED: "bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400",
-    NO_SHOW: "bg-slate-100 text-slate-500 dark:bg-surface-muted/50 dark:text-slate-400",
-    CHECKED_IN: "bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
-  };
-  return map[status] ?? "bg-slate-100 text-slate-500 dark:bg-surface-muted/50 dark:text-slate-400";
-}
 
 function formatDate(date: Date) {
   const timeZone = getAnalyticsTimeZone();
@@ -68,7 +58,7 @@ export default async function ClientPortalPage() {
         <Link
           href="/portal/client/book"
           data-testid="client-book-appointment-link"
-          className="group flex items-start gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-xs transition hover:border-brand-teal hover:shadow-sm dark:border-surface-muted/70 dark:bg-surface-elevated"
+          className="group flex items-start gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-xs transition hover:border-brand-teal hover:shadow-md dark:border-surface-muted/70 dark:bg-surface-elevated"
         >
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-teal/10 text-brand-teal group-hover:bg-brand-teal group-hover:text-white dark:bg-accent-cyan/10 dark:text-accent-cyan">
             <CalendarPlus size={20} weight="bold" />
@@ -80,7 +70,7 @@ export default async function ClientPortalPage() {
         </Link>
         <Link
           href="/portal/client/treatment-history"
-          className="group flex items-start gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-xs transition hover:border-brand-teal hover:shadow-sm dark:border-surface-muted/70 dark:bg-surface-elevated"
+          className="group flex items-start gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-xs transition hover:border-brand-teal hover:shadow-md dark:border-surface-muted/70 dark:bg-surface-elevated"
         >
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-teal/10 text-brand-teal group-hover:bg-brand-teal group-hover:text-white dark:bg-accent-cyan/10 dark:text-accent-cyan">
             <ClockCounterClockwise size={20} weight="bold" />
@@ -92,7 +82,7 @@ export default async function ClientPortalPage() {
         </Link>
         <Link
           href="/portal/client/profile"
-          className="group flex items-start gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-xs transition hover:border-brand-teal hover:shadow-sm dark:border-surface-muted/70 dark:bg-surface-elevated"
+          className="group flex items-start gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-xs transition hover:border-brand-teal hover:shadow-md dark:border-surface-muted/70 dark:bg-surface-elevated"
         >
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-teal/10 text-brand-teal group-hover:bg-brand-teal group-hover:text-white dark:bg-accent-cyan/10 dark:text-accent-cyan">
             <UserCircle size={20} weight="bold" />
@@ -140,7 +130,7 @@ export default async function ClientPortalPage() {
             <div className="mt-4 rounded-3xl border border-slate-200 bg-white p-6 shadow-xs dark:border-surface-muted/70 dark:bg-surface-elevated">
               {nextAppointment ? (
                 <div className="space-y-4">
-                  <span className={`inline-flex w-fit rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide ${statusBadgeClass(nextAppointment.status)}`}>
+                  <span className={`inline-flex w-fit rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wide ${appointmentStatusBadge(nextAppointment.status)}`}>
                     {operationalStatusLabel(toOperationalStatus(nextAppointment))}
                   </span>
                   <div>
@@ -168,7 +158,11 @@ export default async function ClientPortalPage() {
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Historial reciente</h2>
+<<<<<<< HEAD
             <Link href="/portal/client/treatment-history" className="text-sm font-semibold text-brand-teal hover:underline dark:text-accent-cyan">
+=======
+            <Link href="/portal/client/treatment-history" className="text-sm font-semibold text-brand-teal">
+>>>>>>> 82e9d61 (refactor(portal): audit de uniformidad de estilos — fase completa)
               Ver todo
             </Link>
           </div>
@@ -180,7 +174,7 @@ export default async function ClientPortalPage() {
                   className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs dark:border-surface-muted/70 dark:bg-surface-elevated"
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${statusBadgeClass(appointment.status)}`}>
+                    <span className={`rounded-full border px-2.5 py-0.5 text-xs font-semibold ${appointmentStatusBadge(appointment.status)}`}>
                       {operationalStatusLabel(toOperationalStatus(appointment))}
                     </span>
                     <span className="text-xs text-slate-400">{formatDate(appointment.timeSlot.startAt)}</span>

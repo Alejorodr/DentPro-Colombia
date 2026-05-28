@@ -78,7 +78,7 @@ export function HeroGoogleReviewRotator({
           {globalRating ? (
             <span className="text-lg font-bold text-slate-900 dark:text-white">{globalRating}</span>
           ) : null}
-          <span className="text-amber-400 text-base leading-none" aria-hidden="true">★★★★★</span>
+          <span className="text-base leading-none" style={{ color: 'var(--color-gold-bright)' }} aria-hidden="true">★★★★★</span>
           {typeof googleReviews.userRatingCount === "number" ? (
             <span className="text-xs text-slate-500 dark:text-slate-400">
               {googleReviews.userRatingCount.toLocaleString("es-CO")} reseñas
@@ -108,7 +108,8 @@ export function HeroGoogleReviewRotator({
         }}
       >
         <div
-          className="mb-1 text-amber-400"
+          className="mb-1"
+          style={{ color: 'var(--color-gold-bright)' }}
           aria-label={`Calificación: ${review.rating} de 5 estrellas`}
         >
           {"★".repeat(reviewStars)}

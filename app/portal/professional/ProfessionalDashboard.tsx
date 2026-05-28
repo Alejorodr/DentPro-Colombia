@@ -17,6 +17,7 @@ import { AppointmentStatus, AttachmentKind, PrescriptionItemType } from "@prisma
 
 import { cn } from "@/lib/utils";
 import { operationalStatusLabel } from "@/lib/appointments/status";
+import { appointmentStatusBadge } from "@/lib/portal/appointment-status";
 import { ActivityFeed } from "@/app/portal/components/activity/ActivityFeed";
 import { calculateAge, maskId, maskName } from "@/lib/professional";
 import { useProfessionalPreferences } from "@/app/portal/professional/components/ProfessionalContext";
@@ -27,23 +28,6 @@ import type {
   ProfessionalDashboardAppointment,
 } from "@/app/portal/professional/types";
 
-const statusStyles: Record<AppointmentStatus, string> = {
-  SCHEDULED: "text-amber-400 bg-amber-500/10 border-amber-400/30",
-  CONFIRMED: "text-emerald-400 bg-emerald-500/10 border-emerald-400/30",
-  CHECKED_IN: "text-cyan-400 bg-cyan-500/10 border-cyan-400/30",
-  CANCELLED: "text-rose-400 bg-rose-500/10 border-rose-400/30",
-  COMPLETED: "text-blue-400 bg-blue-500/10 border-blue-400/30",
-  NO_SHOW: "text-fuchsia-400 bg-fuchsia-500/10 border-fuchsia-400/30",
-};
-
-const statusLabels: Record<AppointmentStatus, string> = {
-  SCHEDULED: operationalStatusLabel("SCHEDULED"),
-  CONFIRMED: operationalStatusLabel("CONFIRMED"),
-  CHECKED_IN: operationalStatusLabel("CHECKED_IN"),
-  CANCELLED: operationalStatusLabel("CANCELLED"),
-  COMPLETED: operationalStatusLabel("COMPLETED"),
-  NO_SHOW: operationalStatusLabel("NO_SHOW"),
-};
 
 type TabKey = "overview" | "imaging" | "history";
 
@@ -472,8 +456,8 @@ export function ProfessionalDashboard() {
                             hour12: false,
                           })}
                         </span>
-                        <span className={cn("rounded-full border px-2 py-0.5 text-[10px]", statusStyles[appointment.status])}>
-                          {statusLabels[appointment.status]}
+                        <span className={cn("rounded-full border px-2 py-0.5 text-[10px]", appointmentStatusBadge(appointment.status))}>
+                          {operationalStatusLabel(appointment.status)}
                         </span>
                       </div>
                       <p className="mt-2 text-sm font-semibold text-slate-900 dark:text-white">
@@ -627,8 +611,8 @@ export function ProfessionalDashboard() {
                       >
                         <div className="flex items-center justify-between">
                           <p className="font-semibold text-slate-900 dark:text-white">{history.reason}</p>
-                          <span className={cn("rounded-full border px-2 py-0.5 text-[10px]", statusStyles[history.status])}>
-                            {statusLabels[history.status]}
+                          <span className={cn("rounded-full border px-2 py-0.5 text-[10px]", appointmentStatusBadge(history.status))}>
+                            {operationalStatusLabel(history.status)}
                           </span>
                         </div>
                         <p className="text-xs text-slate-500">
@@ -660,8 +644,8 @@ export function ProfessionalDashboard() {
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <p className="text-xs uppercase tracking-wide text-slate-400">Estado de la cita</p>
-                  <span className={cn("mt-1 inline-block rounded-full border px-3 py-1 text-xs font-semibold", statusStyles[appointmentDetail.appointment.status])}>
-                    {statusLabels[appointmentDetail.appointment.status]}
+                  <span className={cn("mt-1 inline-block rounded-full border px-3 py-1 text-xs font-semibold", appointmentStatusBadge(appointmentDetail.appointment.status))}>
+                    {operationalStatusLabel(appointmentDetail.appointment.status)}
                   </span>
                 </div>
                 {(appointmentDetail.appointment.status === AppointmentStatus.SCHEDULED || appointmentDetail.appointment.status === AppointmentStatus.CONFIRMED) ? (
@@ -848,7 +832,7 @@ export function ProfessionalDashboard() {
                 type="checkbox"
                 checked={markCompleted}
                 onChange={(event) => setMarkCompleted(event.target.checked)}
-                className="h-4 w-4 rounded-sm border-slate-300 text-brand-indigo focus:ring-brand-indigo"
+                className="h-4 w-4 rounded border-slate-300 text-brand-indigo focus:ring-brand-indigo"
               />
               Marcar cita como completada
             </label>

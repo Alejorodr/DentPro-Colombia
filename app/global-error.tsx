@@ -19,7 +19,7 @@ export default function GlobalError({ error }: GlobalErrorProps) {
     <html lang="es">
       <body className="min-h-screen bg-slate-50 px-6 text-slate-900">
         <div className="flex min-h-screen items-center justify-center">
-          <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl shadow-slate-900/10">
             <h1 className="text-lg font-semibold">Algo salió mal</h1>
             <p className="mt-2 text-sm text-slate-600">
               No pudimos cargar la aplicación. Por favor intenta nuevamente en unos minutos.

@@ -3,6 +3,7 @@
 import Link from "next/link";
 
 import { Table } from "@/app/portal/components/ui/Table";
+import { appointmentStatusBadge } from "@/lib/portal/appointment-status";
 
 type AppointmentItem = {
   id: string;
@@ -13,14 +14,6 @@ type AppointmentItem = {
   status: string;
 };
 
-const statusStyles: Record<string, string> = {
-  CHECKED_IN: "bg-emerald-100 text-emerald-700",
-  SCHEDULED: "bg-amber-100 text-amber-700",
-  CONFIRMED: "bg-emerald-100 text-emerald-700",
-  CANCELLED: "bg-rose-100 text-rose-700",
-  COMPLETED: "bg-blue-100 text-blue-700",
-  NO_SHOW: "bg-slate-100 text-slate-600",
-};
 
 const statusLabels: Record<string, string> = {
   CHECKED_IN: "Presente",
@@ -76,9 +69,7 @@ export function AppointmentsTable({ appointments }: { appointments: AppointmentI
                   <td className="px-4 py-3">{appointment.timeLabel}</td>
                   <td className="px-4 py-3">
                     <span
-                      className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                        statusStyles[statusKey] ?? "bg-slate-100 text-slate-600"
-                      }`}
+                      className={`rounded-full px-3 py-1 text-xs font-semibold ${appointmentStatusBadge(statusKey)}`}
                     >
                       {statusLabels[statusKey] ?? statusKey}
                     </span>

@@ -18,8 +18,8 @@ export default function GlobalError({ error, reset }: ErrorProps) {
   }, [error]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50 px-6 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
-      <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+    <div className="flex min-h-screen items-center justify-center bg-slate-50 px-6 text-slate-900 dark:bg-surface-base dark:text-slate-100">
+      <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl shadow-slate-900/10 dark:border-surface-muted/60 dark:bg-surface-muted">
         <h1 className="text-lg font-semibold">No pudimos cargar esta pantalla</h1>
         <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
           Estamos teniendo problemas temporales para acceder a la información. Intenta nuevamente en unos minutos.

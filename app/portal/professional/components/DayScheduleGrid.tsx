@@ -69,14 +69,14 @@ export function DayScheduleGrid({ appointments, selectedId, onSelect, privacyMod
   });
 
   return (
-    <div className="relative overflow-auto rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900/60">
+    <div className="relative overflow-auto rounded-2xl border border-slate-200 bg-white dark:border-surface-muted/60 dark:bg-surface-muted">
       <div className="flex" style={{ minHeight: `${gridHeight}px` }}>
         {/* Hour labels column */}
-        <div className="sticky left-0 z-10 w-12 shrink-0 select-none bg-white dark:bg-slate-900/60">
+        <div className="sticky left-0 z-10 w-12 shrink-0 select-none bg-white dark:bg-surface-muted">
           {hours.map((hour) => (
             <div
               key={hour}
-              className="relative border-b border-slate-100 dark:border-slate-800"
+              className="relative border-b border-slate-100 dark:border-surface-muted/60"
               style={{ height: `${60 * PX_PER_MINUTE}px` }}
             >
               <span className="absolute -top-2.5 left-1 text-[10px] font-medium text-slate-400">
@@ -92,7 +92,7 @@ export function DayScheduleGrid({ appointments, selectedId, onSelect, privacyMod
           {hours.map((hour) => (
             <div
               key={hour}
-              className="absolute left-0 right-0 border-b border-slate-100 dark:border-slate-800"
+              className="absolute left-0 right-0 border-b border-slate-100 dark:border-surface-muted/60"
               style={{ top: `${(hour - GRID_START_HOUR) * 60 * PX_PER_MINUTE}px` }}
             />
           ))}
@@ -101,7 +101,7 @@ export function DayScheduleGrid({ appointments, selectedId, onSelect, privacyMod
           {hours.slice(0, -1).map((hour) => (
             <div
               key={`half-${hour}`}
-              className="absolute left-0 right-0 border-b border-dashed border-slate-50 dark:border-slate-800/50"
+              className="absolute left-0 right-0 border-b border-dashed border-slate-50 dark:border-surface-muted/50"
               style={{ top: `${((hour - GRID_START_HOUR) * 60 + 30) * PX_PER_MINUTE}px` }}
             />
           ))}
@@ -126,7 +126,7 @@ export function DayScheduleGrid({ appointments, selectedId, onSelect, privacyMod
                 onClick={() => onSelect(appt.id)}
                 style={{ top: `${top}px`, height: `${height}px` }}
                 className={cn(
-                  "absolute left-1 right-1 flex cursor-pointer overflow-hidden rounded-lg border text-left transition-all",
+                  "absolute left-1 right-1 flex cursor-pointer overflow-hidden rounded-xl border text-left transition-all",
                   statusBgColors[appt.status],
                   isSelected && "ring-2 ring-brand-indigo ring-offset-1",
                 )}

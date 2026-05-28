@@ -21,6 +21,7 @@ import { RescheduleModal } from "@/app/portal/components/RescheduleModal";
 import { AppointmentEventTimeline } from "@/app/portal/components/appointments/AppointmentEventTimeline";
 import { fetchWithTimeout } from "@/lib/http";
 import { operationalStatusLabel, toOperationalStatus } from "@/lib/appointments/status";
+import { appointmentStatusBadge } from "@/lib/portal/appointment-status";
 
 type AppointmentSummary = {
   id: string;
@@ -43,14 +44,6 @@ interface AppointmentTableProps {
   initialEventsAppointmentId?: string | null;
 }
 
-const statusStyles: Record<string, string> = {
-  SCHEDULED: "border border-amber-200 bg-amber-100 text-amber-800",
-  CONFIRMED: "border border-emerald-200 bg-emerald-100 text-emerald-800",
-  CHECKED_IN: "border border-cyan-200 bg-cyan-100 text-cyan-800",
-  COMPLETED: "border border-indigo-200 bg-indigo-100 text-indigo-800",
-  CANCELLED: "border border-rose-200 bg-rose-100 text-rose-800",
-  NO_SHOW: "border border-fuchsia-200 bg-fuchsia-100 text-fuchsia-800",
-};
 
 export function AppointmentTable({ appointments, page, totalPages, onPageChange, onRefresh, initialEventsAppointmentId = null, groupByProfessional = false }: AppointmentTableProps) {
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -161,7 +154,7 @@ export function AppointmentTable({ appointments, page, totalPages, onPageChange,
                             <span>
                               {new Date(appointment.startAt).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })} · {appointment.patient?.name ?? "Paciente"}
                             </span>
-                            <span className={`rounded-full px-2 py-1 font-semibold ${statusStyles[slot]}`}>{operationalStatusLabel(slot)}</span>
+                            <span className={`rounded-full border px-2 py-1 font-semibold ${appointmentStatusBadge(slot)}`}>{operationalStatusLabel(slot)}</span>
                           </div>
                         );
                       })}
@@ -178,7 +171,7 @@ export function AppointmentTable({ appointments, page, totalPages, onPageChange,
                       <span>
                         {new Date(appointment.startAt).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })} · {appointment.patient?.name ?? "Paciente"}
                       </span>
-                      <span className={`rounded-full px-2 py-1 font-semibold ${statusStyles[slot]}`}>{operationalStatusLabel(slot)}</span>
+                      <span className={`rounded-full border px-2 py-1 font-semibold ${appointmentStatusBadge(slot)}`}>{operationalStatusLabel(slot)}</span>
                     </div>
                   );
                 })}
@@ -219,7 +212,7 @@ export function AppointmentTable({ appointments, page, totalPages, onPageChange,
                       <p className="text-xs text-slate-500">{appointment.professional?.specialty ?? ""}</p>
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${statusStyles[operationalStatus]}`}>
+                      <span className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${appointmentStatusBadge(operationalStatus)}`}>
                         {operationalStatusLabel(operationalStatus)}
                       </span>
                     </td>

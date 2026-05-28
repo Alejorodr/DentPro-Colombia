@@ -124,7 +124,7 @@ export function ClientPortalShell({
             {patient?.needsOnboarding && pathname !== "/portal/client/onboarding" ? (
               <div className="flex items-center justify-between gap-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm dark:border-amber-800/50 dark:bg-amber-950/30">
                 <p className="text-amber-800 dark:text-amber-300">
-                  <span className="font-semibold">¡Bienvenido!</span> Completa tu perfil para aprovechar todas las funciones del portal.
+                  <span className="font-semibold">Bienvenido</span> Completa tu perfil para aprovechar todas las funciones del portal.
                 </p>
                 <Link
                   href="/portal/client/onboarding"

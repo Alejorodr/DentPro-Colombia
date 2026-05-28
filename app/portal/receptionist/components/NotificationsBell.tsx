@@ -145,7 +145,7 @@ export function NotificationsBell() {
               </div>
             ) : null}
             {error ? (
-              <div className="rounded-lg border border-rose-200 bg-rose-50 p-2 text-xs text-rose-600" role="alert">
+              <div className="rounded-2xl border border-rose-200 bg-rose-50 p-2 text-xs text-rose-600" role="alert">
                 <p>{error}</p>
                 <button
                   type="button"
