@@ -234,9 +234,9 @@ export function LoginFormCard({
         </Button>
 
         <div className="flex items-center gap-3" aria-hidden="true">
-          <span className="h-px flex-1 bg-slate-200 dark:bg-slate-700" />
+          <span className="h-px flex-1 bg-slate-200 dark:bg-surface-muted/60" />
           <span className="text-xs uppercase tracking-wide text-slate-500">o</span>
-          <span className="h-px flex-1 bg-slate-200 dark:bg-slate-700" />
+          <span className="h-px flex-1 bg-slate-200 dark:bg-surface-muted/60" />
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-slate-600 dark:text-slate-300">

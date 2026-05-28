@@ -242,7 +242,7 @@ export default async function ClientTreatmentHistoryPage() {
                                 {item.prescriptionItems.map((rx, index) => (
                                   <li
                                     key={index}
-                                    className="flex flex-wrap items-center gap-x-3 rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-xs dark:border-surface-muted/50 dark:bg-surface-base/60"
+                                    className="flex flex-wrap items-center gap-x-3 rounded-xl border border-slate-100 bg-slate-50 px-3 py-2 text-xs dark:border-surface-muted/50 dark:bg-surface-base/60"
                                   >
                                     <span className="font-semibold text-slate-800 dark:text-slate-100">{rx.name}</span>
                                     {rx.dosage && <span className="text-slate-500">{rx.dosage}</span>}
@@ -266,14 +266,14 @@ export default async function ClientTreatmentHistoryPage() {
                                       key={att.id}
                                       href={href}
                                       target="_blank"
-                                      className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-brand-teal hover:bg-slate-50 dark:border-surface-muted dark:bg-surface-elevated dark:hover:bg-surface-muted"
+                                      className="rounded-2xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-brand-teal hover:bg-slate-50 dark:border-surface-muted dark:bg-surface-elevated dark:hover:bg-surface-muted"
                                     >
                                       {att.filename}
                                     </Link>
                                   ) : (
                                     <span
                                       key={att.id}
-                                      className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs text-slate-400"
+                                      className="rounded-2xl border border-slate-200 px-3 py-1.5 text-xs text-slate-400"
                                     >
                                       {att.filename}
                                     </span>

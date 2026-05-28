@@ -89,7 +89,7 @@ export function CalendarMonth({ month, selectedDate, onSelect, onMonthChange, da
               onClick={() => onSelect(date)}
               className={`relative flex h-9 w-9 items-center justify-center rounded-full text-xs font-semibold transition ${
                 isSelected
-                  ? "bg-brand-teal text-white shadow-sm"
+                  ? "bg-brand-teal text-white shadow-xl shadow-slate-900/10"
                   : isToday
                     ? "border border-brand-teal text-brand-teal"
                     : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-surface-muted"

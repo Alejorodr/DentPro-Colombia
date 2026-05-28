@@ -53,7 +53,7 @@ export default async function ClientAppointmentsPage() {
   return (
     <div className="space-y-8" data-testid="client-appointments-page">
       <header>
-        <p className="text-sm font-semibold text-blue-600">Mis turnos</p>
+        <p className="text-sm font-semibold text-brand-teal">Mis turnos</p>
         <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">Gestiona tus citas</h1>
         <p className="text-sm text-slate-500 dark:text-slate-300">Puedes revisar estado, cancelar o reprogramar desde aquí.</p>
       </header>

@@ -170,7 +170,7 @@ export function BookingFormSection({
               className="flex items-center justify-center gap-2 rounded-2xl bg-white px-6 py-4 text-base font-bold text-brand-teal shadow-md transition hover:bg-brand-light dark:bg-accent-cyan dark:text-slate-900 dark:hover:bg-accent-cyan/90"
             >
               Reservar turno ahora
-              <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-700 dark:bg-green-900/60 dark:text-green-300">
+              <span className="rounded-full border border-brand-teal/30 bg-brand-light px-2 py-0.5 text-xs font-semibold text-brand-teal">
                 Confirmación inmediata
               </span>
             </a>

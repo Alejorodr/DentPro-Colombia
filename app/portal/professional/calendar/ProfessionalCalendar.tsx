@@ -194,7 +194,7 @@ export function ProfessionalCalendar() {
 
       {error ? <p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-600">{error}</p> : null}
 
-      <section className="rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-xs dark:border-slate-800 dark:bg-slate-900/60">
+      <section className="rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-xs dark:border-surface-muted/60 dark:bg-surface-muted">
         <div className="flex items-center justify-between gap-3">
           <div>
             <h2 className="text-lg font-semibold">Horario base asignado por administración</h2>
@@ -207,7 +207,7 @@ export function ProfessionalCalendar() {
 
         <div className="mt-4 grid gap-3 md:grid-cols-2">
           {(baselineSchedules ?? []).map((schedule) => (
-            <div key={schedule.id} className="rounded-2xl border border-slate-200 px-3 py-3 text-sm dark:border-slate-800">
+            <div key={schedule.id} className="rounded-2xl border border-slate-200 px-3 py-3 text-sm dark:border-surface-muted/60">
               <p className="font-semibold text-slate-900 dark:text-white">{weekDays[schedule.dayOfWeek]} · {schedule.startTime} - {schedule.endTime}</p>
               <p className="text-xs text-slate-500">{schedule.timezone}</p>
               <span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold ${scheduleStatusStyles[schedule.status] ?? "bg-slate-100 text-slate-500"}`}>
@@ -220,7 +220,7 @@ export function ProfessionalCalendar() {
       </section>
 
       <section className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-xs dark:border-slate-800 dark:bg-slate-900/60">
+        <div className="rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-xs dark:border-surface-muted/60 dark:bg-surface-muted">
           <h2 className="text-lg font-semibold">Solicitar ajuste temporal</h2>
           <p className="text-sm text-slate-500">Solicita cambios de horario sin editar reglas técnicas.</p>
           <div className="mt-4 grid gap-3">
@@ -241,7 +241,7 @@ export function ProfessionalCalendar() {
 
           <div className="mt-4 space-y-2 text-sm">
             {adjustments.map((item) => (
-              <div key={item.id} className="rounded-xl border border-slate-200 px-3 py-2 dark:border-slate-800">
+              <div key={item.id} className="rounded-xl border border-slate-200 px-3 py-2 dark:border-surface-muted/60">
                 <p className="font-semibold">{item.dayOfWeek !== null && item.dayOfWeek !== undefined ? weekDays[item.dayOfWeek] : "Sin día"} · {item.startTime ?? "--:--"} - {item.endTime ?? "--:--"}</p>
                 <p className="text-xs text-slate-500">{new Date(item.effectiveFrom).toLocaleDateString("es-CO")} · {scheduleStatusLabels[item.status] ?? item.status}</p>
               </div>
@@ -249,7 +249,7 @@ export function ProfessionalCalendar() {
           </div>
         </div>
 
-        <div className="rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-xs dark:border-slate-800 dark:bg-slate-900/60">
+        <div className="rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-xs dark:border-surface-muted/60 dark:bg-surface-muted">
           <h2 className="text-lg font-semibold">Ausencias y bloqueos</h2>
           <p className="text-sm text-slate-500">Vacaciones, incapacidad, capacitación o bloques internos.</p>
           <div className="mt-4 grid gap-3">
@@ -274,7 +274,7 @@ export function ProfessionalCalendar() {
 
           <div className="mt-4 space-y-2 text-sm">
             {unavailability.map((item) => (
-              <div key={item.id} className="rounded-xl border border-slate-200 px-3 py-2 dark:border-slate-800">
+              <div key={item.id} className="rounded-xl border border-slate-200 px-3 py-2 dark:border-surface-muted/60">
                 <p className="font-semibold">{unavailabilityTypeLabels[item.type] ?? item.type} · {item.fullDay ? "Día completo" : "Parcial"}</p>
                 <p className="text-xs text-slate-500">{new Date(item.startsAt).toLocaleString("es-CO")} → {new Date(item.endsAt).toLocaleString("es-CO")}</p>
                 <p className="text-xs text-slate-500">Estado: {unavailabilityStatusLabels[item.status] ?? item.status}</p>

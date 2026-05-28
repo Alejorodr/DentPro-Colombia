@@ -51,14 +51,14 @@ export function ProfessionalPatients() {
         <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">Patient list</h1>
       </header>
 
-      <div className="rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-xs dark:border-slate-800 dark:bg-slate-900/60">
+      <div className="rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-xs dark:border-surface-muted/60 dark:bg-surface-muted">
         <div className="relative max-w-md">
           <MagnifyingGlass className="absolute left-3 top-3 text-slate-400" size={18} />
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Search patients by name, email, or code"
-            className="w-full rounded-2xl border border-slate-200 bg-white py-2 pl-10 pr-4 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
+            className="w-full rounded-2xl border border-slate-200 bg-white py-2 pl-10 pr-4 text-sm text-slate-600 dark:border-surface-muted/60 dark:bg-surface-base dark:text-slate-100"
           />
         </div>
 
@@ -69,7 +69,7 @@ export function ProfessionalPatients() {
             patients.map((patient) => (
               <div
                 key={patient.id}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 px-4 py-3 text-sm dark:border-slate-800"
+                className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 px-4 py-3 text-sm dark:border-surface-muted/60"
               >
                 <div>
                   <p className="font-semibold text-slate-900 dark:text-white">

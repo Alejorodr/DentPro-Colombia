@@ -115,7 +115,7 @@ export function ClinicalHistoryPanel({ patientId }: { patientId: string }) {
     <div className="space-y-6">
       <form
         onSubmit={handleSubmit}
-        className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-900/40 dark:text-slate-200"
+        className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600 dark:border-surface-muted/60 dark:bg-surface-base/40 dark:text-slate-200"
       >
         <h3 className="text-base font-semibold text-slate-900 dark:text-white">Nuevo episodio</h3>
         <div className="mt-3 grid gap-4 md:grid-cols-2">
@@ -125,7 +125,7 @@ export function ClinicalHistoryPanel({ patientId }: { patientId: string }) {
               type="text"
               value={formState.reason}
               onChange={(event) => setFormState((prev) => ({ ...prev, reason: event.target.value }))}
-              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-xs outline-none focus:border-brand-indigo dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-xs outline-none focus:border-brand-indigo dark:border-surface-muted/60 dark:bg-surface-base dark:text-white"
               placeholder="Dolor, control, seguimiento..."
             />
           </label>
@@ -135,7 +135,7 @@ export function ClinicalHistoryPanel({ patientId }: { patientId: string }) {
               type="text"
               value={formState.diagnosis}
               onChange={(event) => setFormState((prev) => ({ ...prev, diagnosis: event.target.value }))}
-              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-xs outline-none focus:border-brand-indigo dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-xs outline-none focus:border-brand-indigo dark:border-surface-muted/60 dark:bg-surface-base dark:text-white"
               placeholder="Diagnóstico principal"
             />
           </label>
@@ -145,7 +145,7 @@ export function ClinicalHistoryPanel({ patientId }: { patientId: string }) {
               rows={3}
               value={formState.treatmentPlan}
               onChange={(event) => setFormState((prev) => ({ ...prev, treatmentPlan: event.target.value }))}
-              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-xs outline-none focus:border-brand-indigo dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-xs outline-none focus:border-brand-indigo dark:border-surface-muted/60 dark:bg-surface-base dark:text-white"
               placeholder="Plan sugerido, fases y recomendaciones"
             />
           </label>
@@ -155,7 +155,7 @@ export function ClinicalHistoryPanel({ patientId }: { patientId: string }) {
               rows={3}
               value={formState.notes}
               onChange={(event) => setFormState((prev) => ({ ...prev, notes: event.target.value }))}
-              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-xs outline-none focus:border-brand-indigo dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-xs outline-none focus:border-brand-indigo dark:border-surface-muted/60 dark:bg-surface-base dark:text-white"
               placeholder="Observaciones relevantes"
             />
           </label>
@@ -311,7 +311,7 @@ function EpisodeCard({ episode }: { episode: EpisodeSummary }) {
   };
 
   return (
-    <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-xs dark:border-slate-800 dark:bg-slate-950">
+    <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-xs dark:border-surface-muted/60 dark:bg-surface-base">
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{formattedDate}</p>
@@ -324,7 +324,7 @@ function EpisodeCard({ episode }: { episode: EpisodeSummary }) {
           className={`rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-wide ${
             episode.visibleToPatient
               ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-300"
-              : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-300"
+              : "bg-slate-100 text-slate-500 dark:bg-surface-muted dark:text-slate-300"
           }`}
         >
           {episode.visibleToPatient ? "Visible para paciente" : "Solo interno"}
@@ -363,7 +363,7 @@ function EpisodeCard({ episode }: { episode: EpisodeSummary }) {
               <li className="text-xs text-slate-500">Sin notas registradas.</li>
             ) : (
               notes.map((note) => (
-                <li key={note.id} className="rounded-xl border border-slate-200 p-3 text-xs dark:border-slate-800">
+                <li key={note.id} className="rounded-xl border border-slate-200 p-3 text-xs dark:border-surface-muted/60">
                   <p className="font-semibold text-slate-700 dark:text-slate-200">{note.type}</p>
                   <p className="mt-1 text-slate-600 dark:text-slate-300">{note.content}</p>
                   <p className="mt-2 text-[11px] text-slate-400">
@@ -377,7 +377,7 @@ function EpisodeCard({ episode }: { episode: EpisodeSummary }) {
             <select
               value={noteType}
               onChange={(event) => setNoteType(event.target.value)}
-              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-700 shadow-xs dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200"
+              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-700 shadow-xs dark:border-surface-muted/60 dark:bg-surface-base dark:text-slate-200"
             >
               <option value="EVOLUTION">Evolución</option>
               <option value="OBSERVATION">Observación</option>
@@ -388,7 +388,7 @@ function EpisodeCard({ episode }: { episode: EpisodeSummary }) {
               rows={3}
               value={noteContent}
               onChange={(event) => setNoteContent(event.target.value)}
-              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-700 shadow-xs dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200"
+              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-700 shadow-xs dark:border-surface-muted/60 dark:bg-surface-base dark:text-slate-200"
               placeholder="Escribe una nota..."
             />
             <button
@@ -409,7 +409,7 @@ function EpisodeCard({ episode }: { episode: EpisodeSummary }) {
               <li className="text-xs text-slate-500">Sin recetas emitidas.</li>
             ) : (
               prescriptions.map((prescription) => (
-                <li key={prescription.id} className="rounded-xl border border-slate-200 p-3 text-xs dark:border-slate-800">
+                <li key={prescription.id} className="rounded-xl border border-slate-200 p-3 text-xs dark:border-surface-muted/60">
                   <p className="font-semibold text-slate-700 dark:text-slate-200">Receta</p>
                   <p className="mt-1 text-slate-600 dark:text-slate-300">
                     {prescription.content?.text ?? "Sin detalle"}
@@ -432,7 +432,7 @@ function EpisodeCard({ episode }: { episode: EpisodeSummary }) {
               rows={3}
               value={prescriptionContent}
               onChange={(event) => setPrescriptionContent(event.target.value)}
-              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-700 shadow-xs dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200"
+              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-700 shadow-xs dark:border-surface-muted/60 dark:bg-surface-base dark:text-slate-200"
               placeholder="Indicaciones de la receta"
             />
             <button
@@ -453,7 +453,7 @@ function EpisodeCard({ episode }: { episode: EpisodeSummary }) {
               <li className="text-xs text-slate-500">Sin archivos cargados.</li>
             ) : (
               attachments.map((attachment) => (
-                <li key={attachment.id} className="rounded-xl border border-slate-200 p-3 text-xs dark:border-slate-800">
+                <li key={attachment.id} className="rounded-xl border border-slate-200 p-3 text-xs dark:border-surface-muted/60">
                   <p className="font-semibold text-slate-700 dark:text-slate-200">{attachment.filename}</p>
                   <p className="mt-1 text-slate-500">
                     {attachment.mimeType} · {(attachment.size / 1024).toFixed(1)} KB
@@ -478,7 +478,7 @@ function EpisodeCard({ episode }: { episode: EpisodeSummary }) {
               name="file"
               type="file"
               accept={CLINICAL_ATTACHMENT_ALLOWED_TYPES.join(",")}
-              className="w-full text-xs text-slate-500 file:mr-3 file:rounded-lg file:border-0 file:bg-slate-100 file:px-3 file:py-1 file:text-xs file:font-semibold file:text-slate-600 dark:file:bg-slate-800 dark:file:text-slate-200"
+              className="w-full text-xs text-slate-500 file:mr-3 file:rounded-2xl file:border-0 file:bg-slate-100 file:px-3 file:py-1 file:text-xs file:font-semibold file:text-slate-600 dark:file:bg-slate-800 dark:file:text-slate-200"
             />
             <label className="flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-300">
               <input

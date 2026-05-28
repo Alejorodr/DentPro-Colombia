@@ -58,7 +58,7 @@ export function AppointmentEventTimeline({ appointmentId }: { appointmentId: str
   }
 
   if (error) {
-    return <p className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">{error}</p>;
+    return <p className="rounded-2xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">{error}</p>;
   }
 
   if (events.length === 0) {

@@ -92,7 +92,7 @@ export function ActivityFeed({
           <p>{error}</p>
           <button
             type="button"
-            className="mt-2 inline-flex rounded-md border border-rose-300 px-2 py-1 font-semibold"
+            className="mt-2 inline-flex rounded-2xl border border-rose-300 px-2 py-1 font-semibold"
             onClick={async () => {
               setLoading(true);
               setError(null);
@@ -151,7 +151,7 @@ export function ActivityFeed({
           Tipo
           <select
             aria-label="Filtrar actividad por tipo"
-            className="ml-2 rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-teal/60"
+            className="ml-2 rounded-2xl border border-slate-200 bg-white px-2 py-1 text-xs focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-teal/60"
             value={typeFilter}
             onChange={(event) => setTypeFilter(event.target.value)}
           >

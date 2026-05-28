@@ -125,12 +125,12 @@ export function AdminTemplatesPanel() {
       </header>
 
       <div className="grid gap-6 lg:grid-cols-[260px,1fr]">
-        <aside className="rounded-3xl border border-slate-200 bg-white p-4 text-sm shadow-xs dark:border-slate-800 dark:bg-slate-950">
+        <aside className="rounded-3xl border border-slate-200 bg-white p-4 text-sm shadow-xs dark:border-surface-muted/60 dark:bg-surface-base">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Plantillas</p>
           <button
             type="button"
             onClick={() => setSelectedId(null)}
-            className="mt-3 w-full rounded-2xl border border-dashed border-slate-200 px-3 py-2 text-xs font-semibold text-slate-500 transition hover:border-brand-indigo hover:text-brand-indigo dark:border-slate-800 dark:text-slate-300"
+            className="mt-3 w-full rounded-2xl border border-dashed border-slate-200 px-3 py-2 text-xs font-semibold text-slate-500 transition hover:border-brand-indigo hover:text-brand-indigo dark:border-surface-muted/60 dark:text-slate-300"
           >
             + Nueva plantilla
           </button>
@@ -146,7 +146,7 @@ export function AdminTemplatesPanel() {
                   className={`w-full rounded-2xl border px-3 py-2 text-left text-xs font-semibold transition ${
                     selectedId === template.id
                       ? "border-brand-indigo bg-brand-indigo/10 text-brand-indigo"
-                      : "border-slate-200 text-slate-600 hover:border-brand-indigo dark:border-slate-800 dark:text-slate-300"
+                      : "border-slate-200 text-slate-600 hover:border-brand-indigo dark:border-surface-muted/60 dark:text-slate-300"
                   }`}
                 >
                   <p>{template.title}</p>
@@ -157,7 +157,7 @@ export function AdminTemplatesPanel() {
           </div>
         </aside>
 
-        <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xs dark:border-slate-800 dark:bg-slate-950">
+        <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xs dark:border-surface-muted/60 dark:bg-surface-base">
           <form onSubmit={handleSave} className="space-y-4 text-sm">
             <div className="grid gap-4 md:grid-cols-2">
               <label className="flex flex-col gap-2">
@@ -165,7 +165,7 @@ export function AdminTemplatesPanel() {
                 <select
                   value={formState.type}
                   onChange={(event) => setFormState((prev) => ({ ...prev, type: event.target.value }))}
-                  className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+                  className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 dark:border-surface-muted/60 dark:bg-surface-base dark:text-white"
                 >
                   {templateTypes.map((type) => (
                     <option key={type.value} value={type.value}>
@@ -179,7 +179,7 @@ export function AdminTemplatesPanel() {
                 <input
                   value={formState.title}
                   onChange={(event) => setFormState((prev) => ({ ...prev, title: event.target.value }))}
-                  className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+                  className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 dark:border-surface-muted/60 dark:bg-surface-base dark:text-white"
                   placeholder="Título del documento"
                 />
               </label>
@@ -190,7 +190,7 @@ export function AdminTemplatesPanel() {
                 rows={8}
                 value={formState.contentHtml}
                 onChange={(event) => setFormState((prev) => ({ ...prev, contentHtml: event.target.value }))}
-                className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+                className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 dark:border-surface-muted/60 dark:bg-surface-base dark:text-white"
                 placeholder="Escribe el contenido del documento..."
               />
             </label>

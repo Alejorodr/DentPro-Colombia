@@ -16,7 +16,7 @@ export default async function ClientOnboardingPage() {
         </p>
       </header>
 
-      <div className="rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-xs dark:border-slate-800 dark:bg-slate-900/60">
+      <div className="rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-xs dark:border-surface-muted/60 dark:bg-surface-muted">
         <OnboardingForm />
       </div>
     </div>

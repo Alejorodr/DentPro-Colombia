@@ -99,14 +99,14 @@ export function AdminAuditPanel() {
         <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">Audit trail administrativo</h1>
       </header>
 
-      <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-950">
+      <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-xs dark:border-surface-muted/60 dark:bg-surface-base">
         <div className="flex flex-wrap items-center gap-3">
           <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
             Estado
             <select
               value={statusFilter}
               onChange={(event) => setStatusFilter(event.target.value as "all" | AuditStatus)}
-              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm normal-case text-slate-900 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm normal-case text-slate-900 dark:border-surface-muted/60 dark:bg-surface-base dark:text-white"
             >
               <option value="all">Todos</option>
               <option value="success">Success</option>
@@ -116,7 +116,7 @@ export function AdminAuditPanel() {
         </div>
       </section>
 
-      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xs dark:border-slate-800 dark:bg-slate-950">
+      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xs dark:border-surface-muted/60 dark:bg-surface-base">
         {loading ? (
           <p className="text-sm text-slate-500">Cargando logs...</p>
         ) : error ? (
@@ -126,7 +126,7 @@ export function AdminAuditPanel() {
         ) : (
           <div className="space-y-3">
             {items.map((item) => (
-              <article key={item.id} className="rounded-2xl border border-slate-200 p-4 text-sm dark:border-slate-800">
+              <article key={item.id} className="rounded-2xl border border-slate-200 p-4 text-sm dark:border-surface-muted/60">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
                     <p className="font-semibold text-slate-900 dark:text-white">{item.action}</p>

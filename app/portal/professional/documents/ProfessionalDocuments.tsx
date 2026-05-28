@@ -96,7 +96,7 @@ export function ProfessionalDocuments() {
         <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">Document library</h1>
       </header>
 
-      <div className="rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-xs dark:border-slate-800 dark:bg-slate-900/60">
+      <div className="rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-xs dark:border-surface-muted/60 dark:bg-surface-muted">
         <div className="flex items-center gap-2">
           <FileText size={20} className="text-slate-400" />
           <h2 className="text-lg font-semibold">Upload document</h2>
@@ -105,7 +105,7 @@ export function ProfessionalDocuments() {
           <select
             value={selectedPatientId}
             onChange={(event) => setSelectedPatientId(event.target.value)}
-            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
+            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600 dark:border-surface-muted/60 dark:bg-surface-base dark:text-slate-100"
           >
             <option value="">Select patient (optional)</option>
             {patients.map((patient) => (
@@ -129,14 +129,14 @@ export function ProfessionalDocuments() {
                 event.target.value = "";
               }
             }}
-            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
+            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600 dark:border-surface-muted/60 dark:bg-surface-base dark:text-slate-100"
           />
           {uploadError ? <p className="text-xs text-rose-400">{uploadError}</p> : null}
           <p className="text-[11px] text-slate-400">For production, configure external storage.</p>
         </div>
       </div>
 
-      <div className="rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-xs dark:border-slate-800 dark:bg-slate-900/60">
+      <div className="rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-xs dark:border-surface-muted/60 dark:bg-surface-muted">
         <h2 className="text-lg font-semibold">Documents</h2>
         <div className="mt-4 space-y-3">
           {attachments.length === 0 ? (
@@ -147,7 +147,7 @@ export function ProfessionalDocuments() {
               .map((attachment) => (
                 <div
                   key={attachment.id}
-                  className="flex items-center justify-between rounded-2xl border border-slate-200 px-4 py-3 text-sm dark:border-slate-800"
+                  className="flex items-center justify-between rounded-2xl border border-slate-200 px-4 py-3 text-sm dark:border-surface-muted/60"
                 >
                   <div>
                     <p className="font-semibold text-slate-900 dark:text-white">{attachment.filename}</p>
