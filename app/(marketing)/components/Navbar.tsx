@@ -1,13 +1,11 @@
 "use client";
 
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { List, SignIn, UserCircle, X } from "@/components/ui/Icon";
 
 import { ThemeToggle } from "@/components/ThemeToggle";
 import PwaInstallButton from "@/components/PwaInstallButton";
-import { LoginModal } from "./LoginModal";
 
 interface NavLink {
   href: string;
@@ -33,7 +31,6 @@ interface NavbarProps {
 
 export function Navbar({ brand, links, cta, login }: NavbarProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -42,20 +39,10 @@ export function Navbar({ brand, links, cta, login }: NavbarProps) {
     window.addEventListener("scroll", handler, { passive: true });
     return () => window.removeEventListener("scroll", handler);
   }, []);
-  const loginButtonRef = useRef<HTMLButtonElement>(null);
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const pathname = usePathname();
 
   useEffect(() => {
     if (typeof document === "undefined") return;
-
-    if (isOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-
+    document.body.style.overflow = isOpen ? "hidden" : "";
     return () => {
       document.body.style.overflow = "";
     };
@@ -63,43 +50,6 @@ export function Navbar({ brand, links, cta, login }: NavbarProps) {
 
   const toggleMenu = () => setIsOpen((prev) => !prev);
   const closeMenu = () => setIsOpen(false);
-  const toggleLoginModal = () => {
-    setIsLoginModalOpen((prev) => {
-      const next = !prev;
-      if (next) {
-        closeMenu();
-      }
-      return next;
-    });
-  };
-  const closeLoginModal = () => {
-    setIsLoginModalOpen(false);
-    if (loginButtonRef.current) {
-      loginButtonRef.current.focus();
-    }
-  };
-  useEffect(() => {
-    if (isOpen) {
-      setIsLoginModalOpen(false);
-    }
-  }, [isOpen]);
-
-  const authParam = searchParams.get("auth");
-
-  useEffect(() => {
-    if (authParam !== "1") {
-      return;
-    }
-
-    setIsLoginModalOpen(true);
-    setIsOpen(false);
-
-    const params = new URLSearchParams(searchParams.toString());
-    params.delete("auth");
-
-    const nextUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
-    router.replace(nextUrl, { scroll: false });
-  }, [authParam, pathname, router, searchParams]);
 
   return (
     <header className={`topbar transition-shadow duration-300 ${scrolled ? "shadow-lg shadow-slate-900/8 dark:shadow-surface-dark/60" : ""}`}>
@@ -125,23 +75,15 @@ export function Navbar({ brand, links, cta, login }: NavbarProps) {
           <PwaInstallButton className="hidden lg:inline-flex" />
           <ThemeToggle />
           {login ? (
-            <div className="relative">
-              <button
-                type="button"
-                ref={loginButtonRef}
-                className="btn-secondary inline-flex h-11 items-center justify-center gap-2 rounded-full px-4"
-                aria-haspopup="dialog"
-                aria-expanded={isLoginModalOpen}
-                aria-controls="loginModal"
-                aria-label={login.label}
-                onClick={toggleLoginModal}
-              >
-                <UserCircle className="h-5 w-5" weight="bold" aria-hidden="true" />
-                <span className="hidden text-sm font-semibold lg:inline">{login.label}</span>
-                <SignIn className="hidden h-4 w-4 lg:inline" weight="bold" aria-hidden="true" />
-              </button>
-              <LoginModal open={isLoginModalOpen} onClose={closeLoginModal} />
-            </div>
+            <a
+              href={login.href}
+              className="btn-secondary inline-flex h-11 items-center justify-center gap-2 rounded-full px-4"
+              aria-label={login.label}
+            >
+              <UserCircle className="h-5 w-5" weight="bold" aria-hidden="true" />
+              <span className="hidden text-sm font-semibold lg:inline">{login.label}</span>
+              <SignIn className="hidden h-4 w-4 lg:inline" weight="bold" aria-hidden="true" />
+            </a>
           ) : null}
           <a href={cta.href} className="btn-primary hidden lg:inline-flex">
             {cta.label}
@@ -176,7 +118,11 @@ export function Navbar({ brand, links, cta, login }: NavbarProps) {
                 {link.label}
               </a>
             ))}
-            <PwaInstallButton className="w-full justify-center lg:hidden" />
+            {login ? (
+              <a href={login.href} className="btn-secondary text-center" onClick={closeMenu}>
+                {login.label}
+              </a>
+            ) : null}
             <a href={cta.href} className="btn-primary" onClick={closeMenu}>
               {cta.label}
             </a>
