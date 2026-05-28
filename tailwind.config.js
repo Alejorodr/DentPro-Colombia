@@ -15,6 +15,7 @@ module.exports = {
         "surface-muted": "var(--color-surface-muted)",
         "surface-elevated": "var(--color-surface-elevated)",
         "card-dark": "var(--color-card-dark)",
+        "gold-bright": "var(--color-gold-bright)",
       },
     },
   },

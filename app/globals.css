@@ -58,6 +58,13 @@
   }
 }
 
+@layer base {
+  html,
+  body {
+    overflow-x: clip;
+  }
+}
+
 @utility hero {
   @apply relative isolate overflow-hidden;
 }
