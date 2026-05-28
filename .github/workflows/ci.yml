@@ -14,6 +14,20 @@ concurrency:
 jobs:
   build-test:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: dentpro
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d dentpro"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     env:
       DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/dentpro"
       NEXTAUTH_SECRET: "test-secret"
@@ -23,7 +37,7 @@ jobs:
       NEXT_TELEMETRY_DISABLED: "1"
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -31,7 +45,7 @@ jobs:
           version: 10.13.1
 
       - name: Use Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
           cache: pnpm
@@ -43,14 +57,17 @@ jobs:
       - name: Prisma generate
         run: pnpm exec prisma generate --schema prisma/schema.prisma
 
+      - name: Prisma migrate deploy
+        run: pnpm exec prisma migrate deploy --schema prisma/schema.prisma
+
       - name: Lint
         run: pnpm run lint
 
-      - name: Test
-        run: pnpm run test
-
       - name: Typecheck
         run: pnpm typecheck --pretty false
+
+      - name: Test
+        run: pnpm run test
 
       - name: Build
         run: pnpm run build
