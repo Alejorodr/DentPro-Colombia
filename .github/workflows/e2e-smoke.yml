@@ -32,6 +32,7 @@ jobs:
       DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/dentpro"
       NEXTAUTH_SECRET: "test-secret"
       NEXTAUTH_URL: "http://127.0.0.1:3000"
+      NEXT_PUBLIC_APP_URL: "http://localhost:3000"
       AUTH_TRUST_HOST: "true"
       NEXT_TELEMETRY_DISABLED: "1"
       OPS_ENABLED: "1"
@@ -42,7 +43,7 @@ jobs:
       E2E_SUITE: "smoke"
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -50,7 +51,7 @@ jobs:
           version: 10.13.1
 
       - name: Use Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
           cache: pnpm
@@ -62,11 +63,23 @@ jobs:
       - name: Prisma generate
         run: pnpm exec prisma generate --schema prisma/schema.prisma
 
-      - name: Prisma schema deploy
+      - name: Prisma migrate deploy
         run: pnpm exec prisma migrate deploy --schema prisma/schema.prisma
 
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+
       - name: Playwright browser install
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: pnpm exec playwright install --with-deps chromium
+
+      - name: Playwright browser deps
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: pnpm exec playwright install-deps chromium
 
       - name: E2E smoke
         run: pnpm run e2e:smoke
