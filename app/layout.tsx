@@ -97,7 +97,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
         <meta name="theme-color" content="#0b0b0f" media="(prefers-color-scheme: dark)" />
       </head>
-      <body className="min-h-screen bg-white dark:bg-neutral-900" data-request-id={requestId}>
+      <body className="min-h-screen bg-white dark:bg-surface-base" data-request-id={requestId}>
         <Suspense fallback={null}>
           <AppProviders>
             {children}

@@ -29,8 +29,8 @@ export const HOMEPAGE_DEFAULT_CONTENT: HomepageNormalizedContent = {
     primaryCta: { href: "/appointments/new", label: "Reservar turno" },
     secondaryCta: { href: "#agenda", label: "Te contactamos" },
     stats: [
-      { label: "+2.500 sonrisas", description: "atendidas en Cundinamarca" },
-      { label: "98% satisfacción", description: "de nuestros pacientes" },
+      { label: "Chía · Cundinamarca", description: "consultorio propio en el municipio" },
+      { label: "Agendamiento en línea", description: "citas confirmadas en minutos" },
       { label: "Horario extendido", description: "Lun–Sáb 8:00 am a 7:00 pm" },
     ],
     image: {
@@ -40,10 +40,9 @@ export const HOMEPAGE_DEFAULT_CONTENT: HomepageNormalizedContent = {
     testimonial: {
       quote:
         "Desde que llegué a DentPro Chía me guiaron en todo el proceso. El equipo es cercano y muy profesional.",
-      author: "Mariana López",
-      role: "Paciente de ortodoncia",
-      avatar:
-        "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=200&q=80",
+      author: "Paciente de DentPro",
+      role: "Ortodoncia",
+      avatar: "",
     },
     highlight: {
       title: "Seguimiento personalizado",
