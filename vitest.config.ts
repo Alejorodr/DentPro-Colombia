@@ -16,5 +16,10 @@ export default defineConfig({
   test: {
     environment: "jsdom",
     exclude: [".next/**", "e2e/**", "**/node_modules/**"],
+    server: {
+      deps: {
+        inline: ["next-auth", "@auth/core"],
+      },
+    },
   },
 });
