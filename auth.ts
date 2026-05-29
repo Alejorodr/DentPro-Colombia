@@ -1,18 +1,20 @@
 import NextAuth from "next-auth";
+import { decode } from "next-auth/jwt";
 import { cookies } from "next/headers";
 
 import { authConfig } from "@/auth.config";
-import { isUserRole } from "@/lib/auth/roles";
+import { isUserRole, type UserRole } from "@/lib/auth/roles";
 import { DentProPrismaAdapter } from "@/lib/auth/dentpro-prisma-adapter";
 import { findUserByEmail } from "@/lib/auth/users";
-import { getInferredAuthBaseUrl, isLocalE2EAuthRuntime } from "@/lib/auth/runtime";
+import { getJwtSecretString } from "@/lib/auth/jwt";
+import { getInferredAuthBaseUrl, getSessionCookieName, isLocalE2EAuthRuntime } from "@/lib/auth/runtime";
 
 type AuthenticatedUser = {
   id?: string;
   name?: string | null;
   email?: string | null;
   image?: string | null;
-  role?: import("@/lib/auth/roles").UserRole;
+  role?: UserRole;
   professionalId?: string | null;
   patientId?: string | null;
 };
@@ -30,26 +32,68 @@ export async function auth(): Promise<AuthSession> {
   const session = (await baseAuth()) as AuthSession;
   if (session?.user) return session;
 
-  const baseUrl = getInferredAuthBaseUrl();
-  if (!isLocalE2EAuthRuntime(baseUrl)) return session;
-
+  // @auth/core@0.41.2 calls next/headers cookies() synchronously; Next.js 16
+  // made cookies() strictly async, so baseAuth() returns null in server components.
+  // Read and decode the JWT directly as a fallback.
   const cookieStore = await cookies();
-  const testRole = cookieStore.get("dentpro-test-role")?.value ?? "";
-  const testUserEmail = cookieStore.get("dentpro-test-user-email")?.value ?? "";
-  if (!isUserRole(testRole) || !testUserEmail) return session;
+  const baseUrl = getInferredAuthBaseUrl();
+  const cookieName = getSessionCookieName(baseUrl);
+  const tokenValue = cookieStore.get(cookieName)?.value;
 
-  const persistedUser = await findUserByEmail(testUserEmail);
-  if (!persistedUser) return session;
+  if (tokenValue) {
+    try {
+      const token = await decode({
+        token: tokenValue,
+        secret: getJwtSecretString(),
+        salt: cookieName,
+      }) as Record<string, unknown> | null;
 
-  return {
-    user: {
-      id: persistedUser.id,
-      name: persistedUser.name,
-      email: persistedUser.email,
-      image: null,
-      role: persistedUser.role,
-      professionalId: persistedUser.professionalId ?? null,
-      patientId: persistedUser.patientId ?? null,
-    },
-  };
+      if (token && !token["invalidated"]) {
+        const role = token["role"];
+        const userId =
+          typeof token["userId"] === "string" ? token["userId"] :
+          typeof token["sub"] === "string" ? token["sub"] : "";
+
+        if (userId && isUserRole(role as string)) {
+          return {
+            user: {
+              id: userId,
+              name: (token["name"] as string | null) ?? null,
+              email: (token["email"] as string | null) ?? null,
+              image: (token["picture"] as string | null) ?? null,
+              role: role as UserRole,
+              professionalId: (token["professionalId"] as string | null) ?? null,
+              patientId: (token["patientId"] as string | null) ?? null,
+            },
+          };
+        }
+      }
+    } catch {
+      // Decode failed — fall through to unauthenticated
+    }
+  }
+
+  // E2E test bypass (local only)
+  if (isLocalE2EAuthRuntime(baseUrl)) {
+    const testRole = cookieStore.get("dentpro-test-role")?.value ?? "";
+    const testUserEmail = cookieStore.get("dentpro-test-user-email")?.value ?? "";
+    if (isUserRole(testRole) && testUserEmail) {
+      const persistedUser = await findUserByEmail(testUserEmail);
+      if (persistedUser) {
+        return {
+          user: {
+            id: persistedUser.id,
+            name: persistedUser.name,
+            email: persistedUser.email,
+            image: null,
+            role: persistedUser.role,
+            professionalId: persistedUser.professionalId ?? null,
+            patientId: persistedUser.patientId ?? null,
+          },
+        };
+      }
+    }
+  }
+
+  return session;
 }
