@@ -30,7 +30,7 @@ describe("GET /api/client/dashboard", () => {
     vi.mocked(requireSession).mockResolvedValue({ user: { id: "user-1", role: "PACIENTE" } });
     vi.mocked(getPrismaClient).mockReturnValue({} as any);
     vi.mocked(getClientDashboardData).mockResolvedValue({
-      patient: { id: "patient-1", name: "Andrea Gomez", patientCode: "8930211", avatarUrl: null },
+      patient: { id: "patient-1", name: "Andrea Gomez", patientCode: "8930211", avatarUrl: null, needsOnboarding: false },
       insurance: { provider: "Colsanitas", status: "ACTIVE" },
       clinic: { name: "DentPro Portal", city: "Chía, Colombia", address: "Cra. 7 #13-180" },
       totalVisits: 2,
