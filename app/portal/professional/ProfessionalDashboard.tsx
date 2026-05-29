@@ -150,8 +150,6 @@ export function ProfessionalDashboard() {
     return () => {
       if (autoSaveRef.current) clearTimeout(autoSaveRef.current);
     };
-    // persistNotes reads selectedAppointmentId and notesContent via closure — intentionally excluded
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [notesContent, selectedAppointmentId]);
 
   const selectedPatientName = useMemo(() => {
