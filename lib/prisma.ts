@@ -173,7 +173,9 @@ function requireDatabaseUrl() {
 function makeClient(): PrismaClient {
   const pooledUrl = requireDatabaseUrl();
 
-  if (process.env.NODE_ENV === "production") {
+  // NEXT_PHASE=phase-production-build during `next build` — skip SSL validation then because
+  // the preview DATABASE_URL may lack sslmode and no real connections are made at build time.
+  if (process.env.NODE_ENV === "production" && process.env.NEXT_PHASE !== "phase-production-build") {
     assertNeonSslMode(pooledUrl, "DATABASE_URL");
     assertNeonSslMode(process.env.DATABASE_URL_UNPOOLED, "DATABASE_URL_UNPOOLED");
   }
