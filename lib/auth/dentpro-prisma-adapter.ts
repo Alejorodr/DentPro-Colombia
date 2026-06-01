@@ -21,46 +21,67 @@ function extractSafeUserNames(user: AdapterUser): { name: string; lastName: stri
 }
 
 export function DentProPrismaAdapter(): Adapter {
-  const prisma = getPrismaClient();
-  const baseAdapter = PrismaAdapter(prisma);
+  // Lazy — never call getPrismaClient() at construction time because this function runs
+  // at module-load of auth.ts. Eager initialization triggers DATABASE_URL validation before
+  // the server is ready (and throws during `next build` preview deployments).
+  let _prisma: ReturnType<typeof getPrismaClient> | null = null;
+  let _base: Adapter | null = null;
 
-  return {
-    ...baseAdapter,
-    async createUser(user) {
-      const email = user.email.toLowerCase();
-      const { name, lastName } = extractSafeUserNames(user);
+  function db() {
+    if (!_prisma) _prisma = getPrismaClient();
+    return _prisma;
+  }
 
-      const createdUser = await prisma.user.create({
-        data: {
-          email,
-          name,
-          lastName,
-          role: "PACIENTE",
-          passwordHash: null,
-          emailVerified: user.emailVerified ?? null,
-          image: user.image ?? null,
-          patient: {
-            create: {
-              avatarUrl: user.image ?? null,
+  function getBase(): Adapter {
+    if (!_base) _base = PrismaAdapter(db());
+    return _base;
+  }
+
+  return new Proxy({} as Adapter, {
+    get(_target, prop) {
+      if (prop === "createUser") {
+        return async (user: AdapterUser) => {
+          const prisma = db();
+          const email = user.email.toLowerCase();
+          const { name, lastName } = extractSafeUserNames(user);
+
+          const createdUser = await prisma.user.create({
+            data: {
+              email,
+              name,
+              lastName,
+              role: "PACIENTE",
+              passwordHash: null,
+              emailVerified: user.emailVerified ?? null,
+              image: user.image ?? null,
+              patient: {
+                create: {
+                  avatarUrl: user.image ?? null,
+                },
+              },
             },
-          },
-        },
-      });
+          });
 
-      void logAuditEvent({
-        action: "auth.oauth.patient_created",
-        resourceType: "user",
-        resourceId: createdUser.id,
-        targetLabel: createdUser.email,
-        status: "success",
-        metadata: {
-          provider: "google",
-          emailDomain: createdUser.email.split("@")[1] ?? null,
-          reason: "google_auto_provision",
-        },
-      });
+          void logAuditEvent({
+            action: "auth.oauth.patient_created",
+            resourceType: "user",
+            resourceId: createdUser.id,
+            targetLabel: createdUser.email,
+            status: "success",
+            metadata: {
+              provider: "google",
+              emailDomain: createdUser.email.split("@")[1] ?? null,
+              reason: "google_auto_provision",
+            },
+          });
 
-      return createdUser;
+          return createdUser;
+        };
+      }
+
+      const base = getBase();
+      const val = base[prop as keyof Adapter];
+      return typeof val === "function" ? (val as (...args: unknown[]) => unknown).bind(base) : val;
     },
-  };
+  });
 }

@@ -1,6 +1,7 @@
 import NextAuth from "next-auth";
 import { decode } from "next-auth/jwt";
 import { cookies } from "next/headers";
+import { NextRequest } from "next/server";
 
 import { authConfig } from "@/auth.config";
 import { isUserRole, type UserRole } from "@/lib/auth/roles";
