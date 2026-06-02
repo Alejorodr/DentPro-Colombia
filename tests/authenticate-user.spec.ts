@@ -34,8 +34,30 @@ describe("authenticateUser", () => {
 
     const result = await authenticateUser("admin@dentpro.test", "secret");
 
+    expect(findUnique).toHaveBeenCalledWith(expect.objectContaining({ where: { email: "admin@dentpro.test" } }));
     expect(compareSpy).toHaveBeenCalledWith("secret", "hashed");
     expect(result).toMatchObject({ id: "user-1", role: "ADMINISTRADOR" });
+  });
+
+  it("trims and lowercases email before querying", async () => {
+    vi.spyOn(bcrypt, "compare").mockResolvedValue(true as never);
+    const findUnique = vi.fn().mockResolvedValue({
+      id: "user-1",
+      name: "Admin",
+      email: "admin@dentpro.test",
+      passwordHash: "hashed",
+      role: "ADMINISTRADOR",
+      passwordChangedAt: null,
+      mfaEnabled: false,
+      professional: null,
+      patient: null,
+    });
+
+    mockedGetPrismaClient.mockReturnValue({ user: { findUnique } } as never);
+
+    await authenticateUser("  Admin@DentPro.Test  ", "secret");
+
+    expect(findUnique).toHaveBeenCalledWith(expect.objectContaining({ where: { email: "admin@dentpro.test" } }));
   });
 
   it("rejects users without passwordHash", async () => {
