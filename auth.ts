@@ -1,4 +1,5 @@
 import NextAuth from "next-auth";
+import { decode } from "next-auth/jwt";
 import { cookies } from "next/headers";
 import { NextRequest } from "next/server";
 
@@ -6,7 +7,8 @@ import { authConfig } from "@/auth.config";
 import { isUserRole, type UserRole } from "@/lib/auth/roles";
 import { DentProPrismaAdapter } from "@/lib/auth/dentpro-prisma-adapter";
 import { findUserByEmail } from "@/lib/auth/users";
-import { getInferredAuthBaseUrl, isLocalE2EAuthRuntime } from "@/lib/auth/runtime";
+import { getJwtSecretString } from "@/lib/auth/jwt";
+import { getInferredAuthBaseUrl, getSessionCookieName, isLocalE2EAuthRuntime } from "@/lib/auth/runtime";
 
 type AuthenticatedUser = {
   id?: string;
@@ -33,32 +35,43 @@ export async function auth(): Promise<AuthSession> {
 
   // @auth/core@0.41.2 calls next/headers cookies() synchronously; Next.js 16
   // made cookies() strictly async, so baseAuth() returns null in server components.
-  // Call the session handler directly with a fake Request that carries the cookies —
-  // handlers.GET reads from request.headers.get("cookie"), not from next/headers.
+  // Read and decode the JWT directly as a fallback.
   const cookieStore = await cookies();
   const baseUrl = getInferredAuthBaseUrl();
+  const cookieName = getSessionCookieName(baseUrl);
+  const tokenValue = cookieStore.get(cookieName)?.value;
 
-  try {
-    const cookieHeader = cookieStore
-      .getAll()
-      .map(({ name, value }) => `${name}=${value}`)
-      .join("; ");
-    const sessionUrl = `${baseUrl || "http://localhost:3000"}/api/auth/session`;
-    const fakeRequest = new NextRequest(sessionUrl, {
-      headers: {
-        cookie: cookieHeader,
-        ...(baseUrl ? { host: new URL(baseUrl).host } : {}),
-      },
-    });
-    const response = await handlers.GET(fakeRequest);
-    if (response.ok) {
-      const data = (await response.json()) as { user?: AuthenticatedUser | null } | null;
-      if (data?.user?.role && isUserRole(data.user.role)) {
-        return { user: data.user };
+  if (tokenValue) {
+    try {
+      const token = await decode({
+        token: tokenValue,
+        secret: getJwtSecretString(),
+        salt: cookieName,
+      }) as Record<string, unknown> | null;
+
+      if (token && !token["invalidated"]) {
+        const role = token["role"];
+        const userId =
+          typeof token["userId"] === "string" ? token["userId"] :
+          typeof token["sub"] === "string" ? token["sub"] : "";
+
+        if (userId && isUserRole(role as string)) {
+          return {
+            user: {
+              id: userId,
+              name: (token["name"] as string | null) ?? null,
+              email: (token["email"] as string | null) ?? null,
+              image: (token["picture"] as string | null) ?? null,
+              role: role as UserRole,
+              professionalId: (token["professionalId"] as string | null) ?? null,
+              patientId: (token["patientId"] as string | null) ?? null,
+            },
+          };
+        }
       }
+    } catch {
+      // Decode failed — fall through to unauthenticated
     }
-  } catch {
-    // Fall through to unauthenticated
   }
 
   // E2E test bypass (local only)
