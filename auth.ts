@@ -1,7 +1,6 @@
 import NextAuth from "next-auth";
 import { decode } from "next-auth/jwt";
 import { cookies } from "next/headers";
-import { NextRequest } from "next/server";
 
 import { authConfig } from "@/auth.config";
 import { isUserRole, type UserRole } from "@/lib/auth/roles";
@@ -22,20 +21,18 @@ type AuthenticatedUser = {
 
 export type AuthSession = { user?: AuthenticatedUser | null } | null;
 
-const { handlers, auth: baseAuth, signIn, signOut } = NextAuth({
+const { handlers, signIn, signOut } = NextAuth({
   ...authConfig,
   adapter: DentProPrismaAdapter(),
 });
 
 export { handlers, signIn, signOut };
 
+// @auth/core@0.41.2 calls next/headers cookies() synchronously; Next.js 16
+// made cookies() strictly async — baseAuth() throws instead of returning null,
+// so the fallback never runs. Skip baseAuth entirely and decode the JWT
+// directly using await cookies(), which is the proper async API.
 export async function auth(): Promise<AuthSession> {
-  const session = (await baseAuth()) as AuthSession;
-  if (session?.user) return session;
-
-  // @auth/core@0.41.2 calls next/headers cookies() synchronously; Next.js 16
-  // made cookies() strictly async, so baseAuth() returns null in server components.
-  // Read and decode the JWT directly as a fallback.
   const cookieStore = await cookies();
   const baseUrl = getInferredAuthBaseUrl();
   const cookieName = getSessionCookieName(baseUrl);
@@ -96,5 +93,5 @@ export async function auth(): Promise<AuthSession> {
     }
   }
 
-  return session;
+  return null;
 }
