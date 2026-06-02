@@ -104,6 +104,7 @@ export type HomepageNormalizedContent = {
     highlight: { title: string; description: string };
   };
   services: {
+    badge?: string;
     title: string;
     description: string;
     services: HomepageServiceContent[];

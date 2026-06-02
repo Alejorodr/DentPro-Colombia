@@ -42,6 +42,7 @@ export function useSpecialistsCarousel(totalItems: number) {
 
   const goPrev = useCallback(() => setCurrentIndex((prev) => Math.max(prev - 1, 0)), []);
   const goNext = useCallback(() => setCurrentIndex((prev) => Math.min(prev + 1, maxIndex)), [maxIndex]);
+  const goTo = useCallback((index: number) => setCurrentIndex(Math.min(Math.max(index, 0), maxIndex)), [maxIndex]);
 
   const translateX = metrics.width ? -(currentIndex * (metrics.width + metrics.gap)) : 0;
 
@@ -52,6 +53,7 @@ export function useSpecialistsCarousel(totalItems: number) {
     maxIndex,
     goPrev,
     goNext,
+    goTo,
     translateX,
   };
 }

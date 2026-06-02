@@ -50,6 +50,7 @@ export const HOMEPAGE_DEFAULT_CONTENT: HomepageNormalizedContent = {
     },
   },
   services: {
+    badge: "SERVICIOS",
     title: "Tratamientos personalizados para cada etapa",
     description:
       "Desde prevención hasta rehabilitación avanzada, diseñamos planes odontológicos a tu medida.",
