@@ -8,7 +8,7 @@ type CredentialsInput = {
 };
 
 export async function authorizeCredentials(credentials?: CredentialsInput) {
-  const email = credentials?.email;
+  const email = credentials?.email?.trim().toLowerCase();
   const password = credentials?.password;
 
   if (!email || !password) {
@@ -29,8 +29,8 @@ export async function authorizeCredentials(credentials?: CredentialsInput) {
     const bypassRoleCandidate = process.env.TEST_AUTH_ROLE ?? "ADMINISTRADOR";
     const resolvedRole = isUserRole(bypassRoleCandidate) ? bypassRoleCandidate : "ADMINISTRADOR";
 
-    if (email.toLowerCase() === bypassEmail.toLowerCase() && password === bypassPassword) {
-      const persistedUser = await findUserByEmail(bypassEmail);
+    if (email === bypassEmail.toLowerCase() && password === bypassPassword) {
+      const persistedUser = databaseUrl ? await findUserByEmail(bypassEmail) : null;
       if (persistedUser) {
         logger.info({ event: "auth.credentials.bypass_success", role: persistedUser.role, userId: persistedUser.id });
         return {
@@ -45,8 +45,8 @@ export async function authorizeCredentials(credentials?: CredentialsInput) {
         } as const;
       }
 
-      logger.warn({ event: "auth.credentials.bypass_user_missing", email: bypassEmail });
       if (databaseUrl) {
+        logger.warn({ event: "auth.credentials.bypass_user_missing", email: bypassEmail });
         return null;
       }
 
