@@ -6,6 +6,7 @@ import { CalendarCheck, ClipboardText, Clock, UsersFour } from "@/components/ui/
 
 import { Card } from "@/app/portal/components/ui/Card";
 import { StatCard } from "@/app/portal/components/ui/StatCard";
+import { StatusBadge } from "@/app/portal/components/ui/StatusBadge";
 import { ActivityFeed } from "@/app/portal/components/activity/ActivityFeed";
 import { AppointmentTable } from "@/app/portal/receptionist/components/AppointmentTable";
 import { CalendarMonth } from "@/app/portal/receptionist/components/CalendarMonth";
@@ -20,19 +21,6 @@ const viewOptions = [
 
 type ViewMode = (typeof viewOptions)[number]["value"];
 
-const staffStatusLabels: Record<string, string> = {
-  Free: "Disponible",
-  Busy: "Ocupado",
-  Break: "En pausa",
-  Offline: "Sin turno",
-};
-
-const staffStatusStyles: Record<string, string> = {
-  Free: "bg-brand-light text-brand-teal dark:bg-accent-cyan/15 dark:text-accent-cyan",
-  Busy: "bg-slate-100 text-slate-700 dark:bg-surface-muted dark:text-slate-300",
-  Break: "bg-slate-200 text-slate-500 dark:bg-surface-base/60 dark:text-slate-400",
-  Offline: "bg-slate-100 text-slate-400 dark:bg-surface-base dark:text-slate-500",
-};
 
 type AnalyticsResponse = {
   metrics: {
@@ -289,13 +277,7 @@ export function ReceptionistDashboard() {
                       <p className="font-semibold text-slate-900 dark:text-white">{staff.name}</p>
                       <p className="text-xs text-slate-500 dark:text-slate-400">{staff.specialty ?? "Sin especialidad"}</p>
                     </div>
-                    <span
-                      className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                        staffStatusStyles[staff.status] ?? "bg-slate-200 text-slate-600"
-                      }`}
-                    >
-                      {staffStatusLabels[staff.status] ?? staff.status}
-                    </span>
+                    <StatusBadge status={staff.status} />
                   </div>
                 ))
               ) : (
