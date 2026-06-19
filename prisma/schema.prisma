@@ -133,6 +133,7 @@ model User {
   role                         Role
   name                         String
   lastName                     String
+  active                       Boolean                          @default(true)
   privacyMode                  Boolean                          @default(false)
   mfaEnabled                   Boolean                          @default(false)
   createdAt                    DateTime                         @default(now())
