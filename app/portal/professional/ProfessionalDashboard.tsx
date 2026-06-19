@@ -16,8 +16,7 @@ import {
 import { AppointmentStatus, AttachmentKind, PrescriptionItemType } from "@prisma/client";
 
 import { cn } from "@/lib/utils";
-import { operationalStatusLabel } from "@/lib/appointments/status";
-import { appointmentStatusBadge } from "@/lib/portal/appointment-status";
+import { StatusBadge } from "@/app/portal/components/ui/StatusBadge";
 import { ActivityFeed } from "@/app/portal/components/activity/ActivityFeed";
 import { calculateAge, maskId, maskName } from "@/lib/professional";
 import { useProfessionalPreferences } from "@/app/portal/professional/components/ProfessionalContext";
@@ -454,9 +453,7 @@ export function ProfessionalDashboard() {
                             hour12: false,
                           })}
                         </span>
-                        <span className={cn("rounded-full border px-2 py-0.5 text-[10px]", appointmentStatusBadge(appointment.status))}>
-                          {operationalStatusLabel(appointment.status)}
-                        </span>
+                        <StatusBadge status={appointment.status} />
                       </div>
                       <p className="mt-2 text-sm font-semibold text-slate-900 dark:text-white">
                         {privacyMode ? maskName(patientName) : patientName}
@@ -609,9 +606,7 @@ export function ProfessionalDashboard() {
                       >
                         <div className="flex items-center justify-between">
                           <p className="font-semibold text-slate-900 dark:text-white">{history.reason}</p>
-                          <span className={cn("rounded-full border px-2 py-0.5 text-[10px]", appointmentStatusBadge(history.status))}>
-                            {operationalStatusLabel(history.status)}
-                          </span>
+                          <StatusBadge status={history.status} />
                         </div>
                         <p className="text-xs text-slate-500">
                           {new Date(history.startAt).toLocaleDateString("es-CO", {
@@ -642,9 +637,9 @@ export function ProfessionalDashboard() {
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <p className="text-xs uppercase tracking-wide text-slate-400">Estado de la cita</p>
-                  <span className={cn("mt-1 inline-block rounded-full border px-3 py-1 text-xs font-semibold", appointmentStatusBadge(appointmentDetail.appointment.status))}>
-                    {operationalStatusLabel(appointmentDetail.appointment.status)}
-                  </span>
+                  <div className="mt-1">
+                    <StatusBadge status={appointmentDetail.appointment.status} />
+                  </div>
                 </div>
                 {(appointmentDetail.appointment.status === AppointmentStatus.SCHEDULED || appointmentDetail.appointment.status === AppointmentStatus.CONFIRMED) ? (
                   <button
