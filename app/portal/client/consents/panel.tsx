@@ -95,7 +95,7 @@ export function ClientConsentsPanel() {
                     </p>
                   </div>
                   {signed ? (
-                    <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-300">
+                    <span className="rounded-full bg-brand-light px-3 py-1 text-xs font-semibold text-brand-teal dark:bg-accent-cyan/15 dark:text-accent-cyan">
                       Aceptado {new Date(signed.acceptedAt).toLocaleDateString("es-CO")}
                     </span>
                   ) : (
