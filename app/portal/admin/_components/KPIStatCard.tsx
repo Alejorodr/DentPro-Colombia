@@ -8,9 +8,10 @@ type KPIStatCardProps = {
   change?: string;
   accent?: string;
   testId?: string;
+  delta?: number | null;
 };
 
-export function KPIStatCard({ label, value, change, accent, testId }: KPIStatCardProps) {
+export function KPIStatCard({ label, value, change, accent, testId, delta }: KPIStatCardProps) {
   return (
     <div
       data-testid={testId}
@@ -22,7 +23,14 @@ export function KPIStatCard({ label, value, change, accent, testId }: KPIStatCar
           <TrendUp className="inline h-3 w-3" /> {accent ?? "Período"}
         </span>
       </div>
-      <p className="mt-3 text-2xl font-semibold text-slate-900 dark:text-white">{value}</p>
+      <div className="flex items-end justify-between">
+        <p className="mt-3 text-2xl font-semibold text-slate-900 dark:text-white">{value}</p>
+        {delta != null ? (
+          <span className={`text-xs font-semibold ${delta >= 0 ? "text-brand-teal dark:text-accent-cyan" : "text-slate-500 dark:text-slate-400"}`}>
+            {delta >= 0 ? "+" : ""}{delta.toFixed(1)}%
+          </span>
+        ) : null}
+      </div>
       {change ? <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">{change}</p> : null}
     </div>
   );
