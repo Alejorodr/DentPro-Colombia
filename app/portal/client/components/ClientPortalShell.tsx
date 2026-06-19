@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
+import { useQuery } from "@tanstack/react-query";
 import {
   CalendarCheck,
   Gear,
@@ -15,12 +17,13 @@ import {
 
 import type { AuthSession } from "@/auth";
 import type { ClinicInfo } from "@/lib/clinic";
-import { fetchWithRetry } from "@/lib/http";
+import { fetchWithTimeout } from "@/lib/http";
 import { Sidebar } from "@/app/portal/components/layout/Sidebar";
 import { Topbar } from "@/app/portal/components/layout/Topbar";
 import { Card } from "@/app/portal/components/ui/Card";
 import { AvatarFallback } from "@/app/portal/components/ui/AvatarFallback";
 import { buttonClasses } from "@/components/ui/Button";
+import { NotificationsBell } from "@/app/portal/receptionist/components/NotificationsBell";
 
 type PatientSummary = {
   name: string;
@@ -54,30 +57,17 @@ export function ClientPortalShell({
   clinic: ClinicInfo;
 }) {
   const pathname = usePathname();
-  const [patient, setPatient] = useState<PatientSummary | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  useEffect(() => {
-    let isMounted = true;
-
-    fetchWithRetry("/api/client/dashboard")
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data: DashboardResponse | null) => {
-        if (!isMounted || !data?.patient) {
-          return;
-        }
-        setPatient(data.patient);
-      })
-      .catch(() => {
-        if (isMounted) {
-          setPatient(null);
-        }
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+  const { data: patient = null } = useQuery<PatientSummary | null>({
+    queryKey: ["client-dashboard"],
+    queryFn: async () => {
+      const res = await fetchWithTimeout("/api/client/dashboard");
+      if (!res.ok) return null;
+      const data = (await res.json()) as DashboardResponse | null;
+      return data?.patient ?? null;
+    },
+  });
 
   const userName = useMemo(() => {
     if (patient?.name) {
@@ -108,6 +98,7 @@ export function ClientPortalShell({
           onMenuClick={() => setIsSidebarOpen(true)}
           title="Portal Paciente"
           subtitle={clinic.city ?? "Panel de control"}
+          notificationsSlot={<NotificationsBell />}
           extra={
             <Link
               href="/portal/client/book"
@@ -137,8 +128,7 @@ export function ClientPortalShell({
             <Card className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div className="flex items-center gap-4">
                 {avatarUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={avatarUrl} alt={userName} className="h-14 w-14 rounded-full object-cover" />
+                  <Image src={avatarUrl} alt={userName} width={56} height={56} className="rounded-full object-cover" unoptimized />
                 ) : (
                   <AvatarFallback name={userName} className="h-14 w-14 text-base" />
                 )}
