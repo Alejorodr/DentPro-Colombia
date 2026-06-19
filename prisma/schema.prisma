@@ -166,6 +166,7 @@ model User {
   sessions                     Session[]
 
   @@index([role])
+  @@index([active])
 }
 
 model Account {
