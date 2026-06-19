@@ -56,7 +56,7 @@ export function AppointmentsTable({ appointments }: { appointments: AppointmentI
                 <td className="px-4 py-3">{appointment.professionalName ?? "—"}</td>
                 <td className="px-4 py-3">{appointment.timeLabel}</td>
                 <td className="px-4 py-3">
-                  <StatusBadge status={appointment.status} />
+                  <StatusBadge status={appointment.status.toUpperCase()} />
                 </td>
               </tr>
             ))}

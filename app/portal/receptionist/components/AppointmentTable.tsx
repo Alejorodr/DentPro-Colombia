@@ -21,7 +21,20 @@ import { StatusBadge } from "@/app/portal/components/ui/StatusBadge";
 import { RescheduleModal } from "@/app/portal/components/RescheduleModal";
 import { AppointmentEventTimeline } from "@/app/portal/components/appointments/AppointmentEventTimeline";
 import { fetchWithTimeout } from "@/lib/http";
-import { operationalStatusLabel, toOperationalStatus } from "@/lib/appointments/status";
+import { toOperationalStatus } from "@/lib/appointments/status";
+
+/** Labels consistent with StatusBadge for timeline blocks */
+function timelineStatusLabel(status: string): string {
+  const labels: Record<string, string> = {
+    SCHEDULED:  "Programada",
+    CONFIRMED:  "Confirmada",
+    CHECKED_IN: "En consulta",
+    COMPLETED:  "Completada",
+    CANCELLED:  "Cancelada",
+    NO_SHOW:    "No asistió",
+  };
+  return labels[status] ?? status;
+}
 import { appointmentStatusBadge } from "@/lib/portal/appointment-status";
 
 type AppointmentSummary = {
@@ -155,7 +168,7 @@ export function AppointmentTable({ appointments, page, totalPages, onPageChange,
                             <span>
                               {new Date(appointment.startAt).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })} · {appointment.patient?.name ?? "Paciente"}
                             </span>
-                            <span className={`rounded-full border px-2 py-1 font-semibold ${appointmentStatusBadge(slot)}`}>{operationalStatusLabel(slot)}</span>
+                            <span className={`rounded-full border px-2 py-1 font-semibold ${appointmentStatusBadge(slot)}`}>{timelineStatusLabel(slot)}</span>
                           </div>
                         );
                       })}
@@ -172,7 +185,7 @@ export function AppointmentTable({ appointments, page, totalPages, onPageChange,
                       <span>
                         {new Date(appointment.startAt).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })} · {appointment.patient?.name ?? "Paciente"}
                       </span>
-                      <span className={`rounded-full border px-2 py-1 font-semibold ${appointmentStatusBadge(slot)}`}>{operationalStatusLabel(slot)}</span>
+                      <span className={`rounded-full border px-2 py-1 font-semibold ${appointmentStatusBadge(slot)}`}>{timelineStatusLabel(slot)}</span>
                     </div>
                   );
                 })}
