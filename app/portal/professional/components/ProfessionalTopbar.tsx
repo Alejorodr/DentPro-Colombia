@@ -15,6 +15,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { cn } from "@/lib/utils";
 import { useProfessionalPreferences } from "@/app/portal/professional/components/ProfessionalContext";
 import { fetchWithRetry } from "@/lib/http";
+import { logger } from "@/lib/logger";
 
 interface ProfessionalTopbarProps {
   userName: string;
@@ -63,7 +64,7 @@ export function ProfessionalTopbar({ userName, onMenuClick }: ProfessionalTopbar
           setNotifications(data.notifications ?? []);
         }
       } catch (error) {
-        console.error(error);
+        logger.error({ error }, "Professional notifications fetch failed");
       }
     };
     loadNotifications();
@@ -90,7 +91,7 @@ export function ProfessionalTopbar({ userName, onMenuClick }: ProfessionalTopbar
         setResults(data.results ?? []);
       } catch (error) {
         if ((error as Error).name !== "AbortError") {
-          console.error(error);
+          logger.error({ error }, "Professional search failed");
         }
       } finally {
         setIsSearching(false);
