@@ -125,25 +125,27 @@ export function ClientPortalShell({
                 </Link>
               </div>
             ) : null}
-            <Card className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-              <div className="flex items-center gap-4">
-                {avatarUrl ? (
-                  <Image src={avatarUrl} alt={userName} width={56} height={56} className="rounded-full object-cover" unoptimized />
-                ) : (
-                  <AvatarFallback name={userName} className="h-14 w-14 text-base" />
-                )}
-                <div>
-                  <p className="text-sm font-semibold text-slate-900 dark:text-white">{userName}</p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">ID: #{patientCode}</p>
+            {pathname === "/portal/client" ? (
+              <Card className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <div className="flex items-center gap-4">
+                  {avatarUrl ? (
+                    <Image src={avatarUrl} alt={userName} width={56} height={56} className="rounded-full object-cover" unoptimized />
+                  ) : (
+                    <AvatarFallback name={userName} className="h-14 w-14 text-base" />
+                  )}
+                  <div>
+                    <p className="text-sm font-semibold text-slate-900 dark:text-white">{userName}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">ID: #{patientCode}</p>
+                  </div>
                 </div>
-              </div>
-              <div className="flex flex-wrap gap-2 text-xs text-slate-500 dark:text-slate-300">
-                <span className="rounded-full bg-brand-light/80 px-3 py-1 text-brand-teal dark:bg-surface-muted/60 dark:text-accent-cyan">
-                  {clinic.name}
-                </span>
-                {clinic.city ? <span className="px-2 py-1">{clinic.city}</span> : null}
-              </div>
-            </Card>
+                <div className="flex flex-wrap gap-2 text-xs text-slate-500 dark:text-slate-300">
+                  <span className="rounded-full bg-brand-light/80 px-3 py-1 text-brand-teal dark:bg-surface-muted/60 dark:text-accent-cyan">
+                    {clinic.name}
+                  </span>
+                  {clinic.city ? <span className="px-2 py-1">{clinic.city}</span> : null}
+                </div>
+              </Card>
+            ) : null}
             {children}
           </div>
         </main>
