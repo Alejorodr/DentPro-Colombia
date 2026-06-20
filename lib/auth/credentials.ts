@@ -32,6 +32,10 @@ export async function authorizeCredentials(credentials?: CredentialsInput) {
     if (email.toLowerCase() === bypassEmail.toLowerCase() && password === bypassPassword) {
       const persistedUser = await findUserByEmail(bypassEmail);
       if (persistedUser) {
+        if (!persistedUser.active) {
+          logger.warn({ event: "auth.credentials.account_inactive", userId: persistedUser.id });
+          return null;
+        }
         logger.info({ event: "auth.credentials.bypass_success", role: persistedUser.role, userId: persistedUser.id });
         return {
           id: persistedUser.id,
@@ -72,6 +76,11 @@ export async function authorizeCredentials(credentials?: CredentialsInput) {
   const user = await authenticateUser(email, password);
   if (!user) {
     logger.warn({ event: "auth.credentials.invalid" });
+    return null;
+  }
+
+  if (!user.active) {
+    logger.warn({ event: "auth.credentials.account_inactive", userId: user.id });
     return null;
   }
 
