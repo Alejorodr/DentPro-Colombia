@@ -187,7 +187,13 @@ export const authConfig = {
       }
 
       if (!sessionToken.userId && sessionToken.sub) sessionToken.userId = sessionToken.sub;
+
+      const rawRole = sessionToken.role;
       sessionToken.role = resolveTokenRole(sessionToken.role);
+      if (rawRole !== sessionToken.role && !dbUser && !authUser) {
+        sessionToken.invalidated = true;
+        return sessionToken;
+      }
 
       const tokenIssuedAt = typeof sessionToken.iat === "number" ? sessionToken.iat * 1000 : null;
       if (sessionToken.sub) {
@@ -200,6 +206,7 @@ export const authConfig = {
     async session({ session, token }) {
       const sessionToken = token as SessionToken;
       if (sessionToken.invalidated) {
+        session.user = undefined as unknown as typeof session.user;
         return session;
       }
 
