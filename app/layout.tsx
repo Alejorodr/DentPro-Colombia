@@ -42,7 +42,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const requestId = (await headers()).get("x-request-id") ?? undefined;
   const shouldLoadVercelInsights = process.env.VERCEL === "1" && process.env.RUN_E2E !== "1";
   return (
-    <html lang="es" className="h-full">
+    <html lang="es" className="h-full" suppressHydrationWarning>
       <head>
         <Script id="theme" strategy="beforeInteractive">
           {`
