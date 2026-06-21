@@ -25,6 +25,7 @@ describe("authorizeCredentials", () => {
       name: "Admin",
       email: "admin@dentpro.test",
       role: "ADMINISTRADOR",
+      active: true,
       professionalId: null,
       patientId: null,
     });
@@ -49,6 +50,7 @@ describe("authorizeCredentials", () => {
       name: "Neon User",
       email: "real@dentpro.co",
       role: "ADMINISTRADOR",
+      active: true,
       professionalId: null,
       patientId: null,
     });
@@ -78,6 +80,7 @@ describe("authorizeCredentials", () => {
       name: "Admin",
       email: "admin@dentpro.test",
       role: "ADMINISTRADOR",
+      active: true,
       professionalId: null,
       patientId: null,
     });
