@@ -115,6 +115,9 @@ export const authConfig = {
           GoogleProvider({
             clientId: process.env.GOOGLE_CLIENT_ID,
             clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+            // signIn callback already validates email exists + active in Neon,
+            // so auto-linking to an existing user by email is safe here.
+            allowDangerousEmailAccountLinking: true,
           }),
         ]
       : []),
