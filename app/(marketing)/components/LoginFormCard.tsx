@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { getSession, signIn, useSession } from "next-auth/react";
-import { ArrowRight, EnvelopeSimple, Lock, ShieldCheck, WarningCircle } from "@/components/ui/Icon";
+import { ArrowRight, EnvelopeSimple, GoogleLogo, Lock, ShieldCheck, WarningCircle } from "@/components/ui/Icon";
 import { Button } from "@/components/ui/Button";
 
 import { isUserRole, resolveRoleAwarePortalPath, type UserRole } from "@/lib/auth/roles";
@@ -234,20 +234,6 @@ export function LoginFormCard({
           </div>
         </label>
 
-        {googleEnabled ? (
-          <>
-            <Button type="button" className="h-12 w-full" disabled={isSubmitting} onClick={handleGoogleSignIn}>
-              Continuar con Google
-            </Button>
-
-            <div className="flex items-center gap-3" aria-hidden="true">
-              <span className="h-px flex-1 bg-slate-200 dark:bg-surface-muted/60" />
-              <span className="text-xs uppercase tracking-wide text-slate-500">o</span>
-              <span className="h-px flex-1 bg-slate-200 dark:bg-surface-muted/60" />
-            </div>
-          </>
-        ) : null}
-
         <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-slate-600 dark:text-slate-300">
           <div className="space-x-2">
             <span className="font-semibold uppercase tracking-wide">Recordatorio</span>
@@ -275,6 +261,21 @@ export function LoginFormCard({
           {!isSubmitting && <ArrowRight className="h-4 w-4" weight="bold" aria-hidden="true" />}
           {isSubmitting ? "Validando credenciales..." : "Ingresar"}
         </Button>
+
+        {googleEnabled ? (
+          <>
+            <div className="flex items-center gap-3" aria-hidden="true">
+              <span className="h-px flex-1 bg-slate-200 dark:bg-surface-muted/60" />
+              <span className="text-xs uppercase tracking-wide text-slate-500">o</span>
+              <span className="h-px flex-1 bg-slate-200 dark:bg-surface-muted/60" />
+            </div>
+
+            <Button type="button" className="h-12 w-full" disabled={isSubmitting} onClick={handleGoogleSignIn}>
+              <GoogleLogo className="h-5 w-5" aria-hidden="true" />
+              Continuar con Google
+            </Button>
+          </>
+        ) : null}
 
         <p className="text-center text-sm text-slate-600 dark:text-slate-300">
           ¿No tienes cuenta?{" "}
