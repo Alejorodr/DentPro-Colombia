@@ -183,12 +183,27 @@ const PATIENT_SEED = [
   },
 ];
 
-function requireEnv(name: string): string {
-  const value = process.env[name]?.trim();
+function getSeedEnv(name: string, fallbackNames: string[] = []): string | null {
+  for (const candidate of [name, ...fallbackNames]) {
+    const value = process.env[candidate]?.trim();
+    if (value) {
+      return value;
+    }
+  }
+
+  return null;
+}
+
+function requireEnv(name: string, fallbackNames: string[] = []): string {
+  const value = getSeedEnv(name, fallbackNames);
   if (!value) {
-    throw new Error(`Falta configurar ${name} para ejecutar el seed.`);
+    throw new Error(`Falta configurar ${[name, ...fallbackNames].join(" o ")} para ejecutar el seed.`);
   }
   return value;
+}
+
+async function hashSeedPassword(password: string) {
+  return bcrypt.hash(password, 10);
 }
 
 function buildSlotTimes(start: Date, count: number, durationMinutes: number): Array<{ startAt: Date; endAt: Date }> {
@@ -318,16 +333,18 @@ async function ensureProfessional({
   lastName: string;
   specialtyName: string;
 }) {
+  const passwordHash = await hashSeedPassword(getSeedEnv("PROFESSIONAL_SEED_PASSWORD") ?? "DentProDemo!1");
   const professional = await prisma.user.upsert({
     where: { email },
     update: {
       role: Role.PROFESIONAL,
+      passwordHash,
     },
     create: {
       email,
       name,
       lastName,
-      passwordHash: await bcrypt.hash(requireEnv("PROFESSIONAL_SEED_PASSWORD"), 10),
+      passwordHash,
       role: Role.PROFESIONAL,
       professional: {
         create: {
@@ -380,16 +397,18 @@ async function ensurePatient({
   city: string;
   patientCode: string;
 }) {
+  const passwordHash = await hashSeedPassword(getSeedEnv("PATIENT_SEED_PASSWORD") ?? "DentProDemo!1");
   const patient = await prisma.user.upsert({
     where: { email },
     update: {
       role: Role.PACIENTE,
+      passwordHash,
     },
     create: {
       email,
       name,
       lastName,
-      passwordHash: await bcrypt.hash(requireEnv("PATIENT_SEED_PASSWORD"), 10),
+      passwordHash,
       role: Role.PACIENTE,
       patient: {
         create: {
@@ -533,36 +552,41 @@ async function ensureOperationalSchedulingFoundation() {
   }
 }
 async function ensureAdminUser() {
-  const adminEmail = requireEnv("ADMIN_SEED_EMAIL");
+  const adminEmail = requireEnv("ADMIN_SEED_EMAIL", ["SEED_ADMIN_EMAIL"]).toLowerCase();
+  const adminPassword = getSeedEnv("ADMIN_SEED_PASSWORD", ["SEED_ADMIN_PASSWORD"]);
+  const passwordHash = adminPassword ? await hashSeedPassword(adminPassword) : undefined;
 
   await prisma.user.upsert({
     where: { email: adminEmail },
     update: {
       role: Role.ADMINISTRADOR,
+      ...(passwordHash ? { passwordHash } : {}),
     },
     create: {
       email: adminEmail,
       name: "Admin",
       lastName: "DentPro",
-      passwordHash: await bcrypt.hash(requireEnv("ADMIN_SEED_PASSWORD"), 10),
+      passwordHash: passwordHash ?? await hashSeedPassword(requireEnv("ADMIN_SEED_PASSWORD", ["SEED_ADMIN_PASSWORD"])),
       role: Role.ADMINISTRADOR,
     },
   });
 }
 
 async function ensureReceptions() {
-  const receptionistEmail = requireEnv("RECEPTIONIST_SEED_EMAIL");
+  const receptionistEmail = (getSeedEnv("RECEPTIONIST_SEED_EMAIL") ?? "demo-recepcion@dentpro.co").toLowerCase();
+  const passwordHash = await hashSeedPassword(getSeedEnv("RECEPTIONIST_SEED_PASSWORD") ?? "RecepDentPro!1");
 
   await prisma.user.upsert({
     where: { email: receptionistEmail },
     update: {
       role: Role.RECEPCIONISTA,
+      passwordHash,
     },
     create: {
       email: receptionistEmail,
       name: "Marta",
       lastName: "Zuluaga",
-      passwordHash: await bcrypt.hash(requireEnv("RECEPTIONIST_SEED_PASSWORD"), 10),
+      passwordHash,
       role: Role.RECEPCIONISTA,
     },
   });

@@ -17,6 +17,8 @@ describe("authorizeCredentials", () => {
     mockedAuthenticateUser.mockReset();
     mockedFindUserByEmail.mockReset();
     process.env.TEST_AUTH_BYPASS = "0";
+    process.env.DATABASE_URL = "postgresql://example";
+    process.env.NEXTAUTH_URL = "";
   });
 
   it("returns a user for valid credentials", async () => {
@@ -39,7 +41,21 @@ describe("authorizeCredentials", () => {
     });
   });
 
+  it("normalizes email before database authentication", async () => {
+    mockedAuthenticateUser.mockResolvedValue({
+      id: "user-1",
+      name: "Admin",
+      email: "admin@dentpro.test",
+      role: "ADMINISTRADOR",
+      active: true,
+      professionalId: null,
+      patientId: null,
+    });
 
+    await authorizeCredentials({ email: "  Admin@DentPro.Test  ", password: "secret" });
+
+    expect(mockedAuthenticateUser).toHaveBeenCalledWith("admin@dentpro.test", "secret");
+  });
 
   it("falls back to database auth when bypass is enabled but credentials do not match bypass user", async () => {
     process.env.TEST_AUTH_BYPASS = "1";
@@ -90,6 +106,21 @@ describe("authorizeCredentials", () => {
     expect(mockedFindUserByEmail).toHaveBeenCalledWith("admin@dentpro.test");
     expect(result).toMatchObject({
       id: "admin-id",
+      email: "admin@dentpro.test",
+      role: "ADMINISTRADOR",
+    });
+  });
+
+  it("does not query the database for valid bypass credentials when db is unavailable", async () => {
+    process.env.TEST_AUTH_BYPASS = "1";
+    process.env.DATABASE_URL = "";
+    process.env.NEXTAUTH_URL = "http://127.0.0.1:3000";
+
+    const result = await authorizeCredentials({ email: " admin@dentpro.test ", password: "Test1234!" });
+
+    expect(mockedFindUserByEmail).not.toHaveBeenCalled();
+    expect(result).toMatchObject({
+      id: "00000000-0000-4000-8000-000000000001",
       email: "admin@dentpro.test",
       role: "ADMINISTRADOR",
     });

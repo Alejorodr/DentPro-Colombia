@@ -49,7 +49,7 @@ function mapUser(user: UserRecord | null): DatabaseUser | null {
 }
 
 export async function authenticateUser(email: string, password: string): Promise<DatabaseUser | null> {
-  const normalizedEmail = email.toLowerCase();
+  const normalizedEmail = email.trim().toLowerCase();
   const prisma = getPrismaClient();
 
   const user = await prisma.user.findUnique({
@@ -107,7 +107,7 @@ export async function findUserById(id: string): Promise<DatabaseUser | null> {
 }
 
 export async function findUserByEmail(email: string): Promise<DatabaseUser | null> {
-  const normalizedEmail = email.toLowerCase();
+  const normalizedEmail = email.trim().toLowerCase();
   const prisma = getPrismaClient();
   const user = await prisma.user.findUnique({
     where: { email: normalizedEmail },
