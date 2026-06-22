@@ -1,10 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 const mockFetch = vi.fn();
 vi.stubGlobal("fetch", mockFetch);
 
-const { middleware } = await import("./middleware");
+const { applyAuthRateLimit } = await import("./proxy");
+
+// Wrap applyAuthRateLimit to match test expectations: null → 200 pass-through
+async function middleware(req: NextRequest): Promise<NextResponse> {
+  return (await applyAuthRateLimit(req)) ?? new NextResponse(null, { status: 200 });
+}
 
 function req(path: string, ip = "1.2.3.4") {
   return new NextRequest(`http://localhost${path}`, {

@@ -4,6 +4,9 @@ import { getToken } from "next-auth/jwt";
 import { isLocalE2EAuthRuntime } from "@/lib/auth/runtime";
 import { getDefaultDashboardPath, isUserRole, roleFromSlug, type UserRole } from "@/lib/auth/roles";
 
+const RATE_LIMIT_WINDOW_SECONDS = 60;
+const RATE_LIMIT_MAX_REQUESTS = 10;
+
 function resolveRequestId(request: NextRequest) {
   const existing = request.headers.get("x-request-id");
   if (existing) {
@@ -23,6 +26,43 @@ function withRequestId(response: NextResponse, requestId: string) {
 function resolveRole(token: { role?: string } | null): UserRole | null {
   const roleCandidate = token?.role ?? "";
   return isUserRole(roleCandidate) ? roleCandidate : null;
+}
+
+export async function applyAuthRateLimit(request: NextRequest): Promise<NextResponse | null> {
+  if (!request.nextUrl.pathname.startsWith("/api/auth/")) return null;
+
+  const upstashUrl = process.env.UPSTASH_REDIS_REST_URL;
+  const upstashToken = process.env.UPSTASH_REDIS_REST_TOKEN;
+
+  if (!upstashUrl || !upstashToken) return null;
+
+  const ip =
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+    request.headers.get("x-real-ip") ??
+    "unknown";
+
+  const key = `rl:auth:${ip}`;
+
+  try {
+    const incrRes = await fetch(`${upstashUrl}/incr/${key}`, {
+      headers: { Authorization: `Bearer ${upstashToken}` },
+    });
+    const { result: count } = (await incrRes.json()) as { result: number };
+
+    if (count === 1) {
+      void fetch(`${upstashUrl}/expire/${key}/${RATE_LIMIT_WINDOW_SECONDS}`, {
+        headers: { Authorization: `Bearer ${upstashToken}` },
+      });
+    }
+
+    if (count > RATE_LIMIT_MAX_REQUESTS) {
+      return new NextResponse("Too many requests", { status: 429 });
+    }
+  } catch {
+    // Upstash unavailable — allow through
+  }
+
+  return null;
 }
 
 export default async function proxy(request: NextRequest) {
@@ -67,6 +107,9 @@ export default async function proxy(request: NextRequest) {
     redirectUrl.search = "";
     return withRequestId(NextResponse.redirect(redirectUrl), requestId);
   }
+
+  const rateLimitResponse = await applyAuthRateLimit(request);
+  if (rateLimitResponse) return withRequestId(rateLimitResponse, requestId);
 
   if (!isPortalRoute) {
     const response = NextResponse.next({
