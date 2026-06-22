@@ -56,8 +56,8 @@ export function LoginFormCard({
   }, []);
 
   const canSubmit = useMemo(
-    () => isHydrated && email.trim().length > 0 && password.trim().length > 0 && !isSubmitting,
-    [email, isHydrated, isSubmitting, password],
+    () => email.trim().length > 0 && password.trim().length > 0 && !isSubmitting,
+    [email, isSubmitting, password],
   );
 
   useEffect(() => {
