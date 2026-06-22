@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 
 import { auth } from "@/auth";
+import { ArrowLeft } from "@/components/ui/Icon";
 import { resolveRoleAwarePortalPath } from "@/lib/auth/roles";
 import { RegisterForm } from "./RegisterForm";
 
@@ -27,7 +28,15 @@ export default async function RegisterPage() {
 
   return (
     <div className="min-h-screen bg-hero-light px-4 py-14 transition-colors duration-300 dark:bg-hero-dark">
-      <div className="mx-auto grid max-w-5xl gap-12 lg:grid-cols-[1fr_1.1fr] lg:items-start">
+      <div className="mx-auto max-w-5xl space-y-8">
+      <Link
+        href="/"
+        className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-teal transition-colors hover:text-brand-indigo dark:text-accent-cyan"
+      >
+        <ArrowLeft className="h-4 w-4" weight="bold" aria-hidden="true" />
+        Volver al inicio
+      </Link>
+      <div className="grid gap-12 lg:grid-cols-[1fr_1.1fr] lg:items-start">
 
         {/* Left — brand column */}
         <div className="space-y-8 pt-2">
@@ -65,6 +74,7 @@ export default async function RegisterPage() {
 
         {/* Right — form column */}
         <RegisterForm googleEnabled={googleEnabled} />
+      </div>
       </div>
     </div>
   );
