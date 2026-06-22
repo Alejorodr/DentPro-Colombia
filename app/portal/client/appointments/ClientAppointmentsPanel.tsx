@@ -3,9 +3,8 @@
 import { useMemo, useState } from "react";
 
 import { RescheduleModal } from "@/app/portal/components/RescheduleModal";
+import { StatusBadge } from "@/app/portal/components/ui/StatusBadge";
 import { CalendarBlank, CheckCircle, Clock, WarningCircle, XCircle } from "@/components/ui/Icon";
-import { operationalStatusLabel } from "@/lib/appointments/status";
-import { appointmentStatusBadge } from "@/lib/portal/appointment-status";
 
 type AppointmentItem = {
   id: string;
@@ -102,9 +101,7 @@ export function ClientAppointmentsPanel({ upcoming, past }: { upcoming: Appointm
             >
               <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
-                  <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${appointmentStatusBadge(appointment.status)}`}>
-                    {operationalStatusLabel(appointment.status)}
-                  </span>
+                  <StatusBadge status={appointment.status} />
                   <p className="mt-2 text-lg font-semibold text-slate-900 dark:text-white">{appointment.serviceLabel}</p>
                   <p className="mt-1 text-sm text-slate-500 dark:text-slate-300">{formatDateTime(appointment.startsAt)}</p>
                   <p className="text-sm text-slate-500 dark:text-slate-300">{appointment.professionalName}</p>
@@ -156,9 +153,7 @@ export function ClientAppointmentsPanel({ upcoming, past }: { upcoming: Appointm
                   <p className="text-base font-semibold text-slate-900 dark:text-white">{appointment.serviceLabel}</p>
                   <p className="text-sm text-slate-500 dark:text-slate-300">{formatDateTime(appointment.startsAt)}</p>
                 </div>
-                <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${appointmentStatusBadge(appointment.status)}`}>
-                  {operationalStatusLabel(appointment.status)}
-                </span>
+                <StatusBadge status={appointment.status} />
               </div>
             </article>
           ))

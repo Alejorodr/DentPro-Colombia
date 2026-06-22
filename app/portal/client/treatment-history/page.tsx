@@ -192,7 +192,7 @@ export default async function ClientTreatmentHistoryPage() {
                   >
                     <span className={`absolute left-0 top-2 flex h-6 w-6 items-center justify-center rounded-full border-2 text-[10px] font-bold ${
                       item.kind === "appointment"
-                        ? "border-emerald-400 bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-300"
+                        ? "border-brand-indigo bg-brand-light text-brand-indigo dark:bg-brand-teal/10 dark:text-accent-cyan"
                         : "border-brand-teal bg-brand-light text-brand-teal dark:bg-accent-cyan/10 dark:text-accent-cyan"
                     }`}>
                       {item.kind === "appointment" ? "C" : "E"}
@@ -214,8 +214,8 @@ export default async function ClientTreatmentHistoryPage() {
                           )}
                           <span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold ${
                             item.kind === "appointment"
-                              ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300"
-                              : "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300"
+                              ? "bg-brand-light text-brand-indigo dark:bg-brand-teal/10 dark:text-accent-cyan"
+                              : "bg-slate-100 text-slate-600 dark:bg-surface-muted dark:text-slate-300"
                           }`}>
                             {item.kind === "appointment" ? "Cita" : "Episodio clínico"}
                           </span>

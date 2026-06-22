@@ -45,6 +45,7 @@ describe("auth options", () => {
       name: "User",
       email: "user@dentpro.test",
       role: "RECEPCIONISTA",
+      active: true,
       professionalId: null,
       patientId: null,
       passwordChangedAt: null,
@@ -96,6 +97,7 @@ describe("auth options", () => {
       name: "User",
       email: "user@dentpro.test",
       role: "ADMINISTRADOR",
+      active: true,
       professionalId: null,
       patientId: null,
       passwordChangedAt,
@@ -123,8 +125,6 @@ describe("auth options", () => {
       token,
     });
 
-    expect(session).toMatchObject({
-      user: { name: "User", email: "user@dentpro.test", image: null },
-    });
+    expect((session as { user: unknown }).user).toBeUndefined();
   });
 });

@@ -252,7 +252,7 @@ export function ClientProfileForm() {
 
       <button
         type="submit"
-        className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
+        className="rounded-xl bg-brand-teal px-4 py-2 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:shadow-glow disabled:cursor-not-allowed disabled:opacity-60 dark:bg-accent-cyan dark:text-slate-900"
         disabled={saving}
       >
         Guardar cambios

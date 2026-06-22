@@ -17,6 +17,7 @@ import {
 
 import { findUserByEmail, findUserById } from "@/lib/auth/users";
 import { logAuditEvent } from "@/lib/audit";
+import { validateGoogleSignIn } from "@/lib/auth/google-signin-guard";
 
 type AuthenticatedUser = {
   id?: string;
@@ -114,7 +115,6 @@ export const authConfig = {
           GoogleProvider({
             clientId: process.env.GOOGLE_CLIENT_ID,
             clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-            allowDangerousEmailAccountLinking: true,
           }),
         ]
       : []),
@@ -123,9 +123,16 @@ export const authConfig = {
     async signIn({ account, profile }) {
       if (account?.provider !== "google") return true;
 
-      const profileEmail = typeof profile?.email === "string" ? profile.email.toLowerCase() : "";
-      const emailVerified = profile?.email_verified === true;
-      if (!profileEmail || !emailVerified) {
+      const autoCreate = process.env.GOOGLE_AUTO_CREATE_PATIENTS === "true";
+      const allowed = await validateGoogleSignIn(
+        profile as { email?: string; email_verified?: boolean } | undefined,
+        findUserByEmail,
+        autoCreate,
+      );
+
+      if (!allowed) {
+        const profileEmail =
+          typeof profile?.email === "string" ? profile.email.toLowerCase() : "";
         void logAuditEvent({
           action: "auth.oauth.signin_rejected",
           resourceType: "auth",
@@ -133,24 +140,7 @@ export const authConfig = {
           metadata: {
             provider: "google",
             emailDomain: profileEmail.split("@")[1] ?? null,
-            reason: !profileEmail ? "missing_email" : "email_not_verified",
-          },
-        });
-        return false;
-      }
-
-      const existingUser = await findUserByEmail(profileEmail);
-      if (existingUser) return true;
-
-      if (process.env.GOOGLE_AUTO_CREATE_PATIENTS !== "true") {
-        void logAuditEvent({
-          action: "auth.oauth.signin_rejected",
-          resourceType: "auth",
-          status: "failure",
-          metadata: {
-            provider: "google",
-            emailDomain: profileEmail.split("@")[1] ?? null,
-            reason: "auto_create_disabled",
+            reason: !profileEmail ? "missing_email" : "access_denied",
           },
         });
         return false;
@@ -197,7 +187,13 @@ export const authConfig = {
       }
 
       if (!sessionToken.userId && sessionToken.sub) sessionToken.userId = sessionToken.sub;
+
+      const rawRole = sessionToken.role;
       sessionToken.role = resolveTokenRole(sessionToken.role);
+      if (rawRole !== sessionToken.role && !dbUser && !authUser) {
+        sessionToken.invalidated = true;
+        return sessionToken;
+      }
 
       const tokenIssuedAt = typeof sessionToken.iat === "number" ? sessionToken.iat * 1000 : null;
       if (sessionToken.sub) {
@@ -210,6 +206,7 @@ export const authConfig = {
     async session({ session, token }) {
       const sessionToken = token as SessionToken;
       if (sessionToken.invalidated) {
+        session.user = undefined as unknown as typeof session.user;
         return session;
       }
 

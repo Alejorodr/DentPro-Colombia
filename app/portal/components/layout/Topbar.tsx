@@ -73,14 +73,16 @@ export function Topbar({
             <Bell aria-hidden="true" className="h-5 w-5" weight="bold" />
           </button>
         )}
-        <button
-          type="button"
+        <a
+          href="https://wa.me/573237968435"
+          target="_blank"
+          rel="noopener noreferrer"
           className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition hover:text-slate-900 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-teal/60 dark:border-surface-muted dark:text-slate-200"
-          aria-label="Ayuda"
-          title="Ayuda"
+          aria-label="Soporte por WhatsApp"
+          title="Soporte por WhatsApp"
         >
           <Question aria-hidden="true" className="h-5 w-5" weight="bold" />
-        </button>
+        </a>
         <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-2 py-1 text-sm text-slate-600 shadow-xs shadow-slate-100/40 dark:border-surface-muted dark:bg-surface-base dark:text-slate-200">
           <AvatarFallback name={userName} className="h-9 w-9" />
           <span className="hidden pr-2 text-xs font-medium md:inline">{userName}</span>

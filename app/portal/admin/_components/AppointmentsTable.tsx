@@ -3,7 +3,7 @@
 import Link from "next/link";
 
 import { Table } from "@/app/portal/components/ui/Table";
-import { appointmentStatusBadge } from "@/lib/portal/appointment-status";
+import { StatusBadge } from "@/app/portal/components/ui/StatusBadge";
 
 type AppointmentItem = {
   id: string;
@@ -12,16 +12,6 @@ type AppointmentItem = {
   serviceName: string | null;
   timeLabel: string;
   status: string;
-};
-
-
-const statusLabels: Record<string, string> = {
-  CHECKED_IN: "Presente",
-  SCHEDULED: "Programada",
-  CONFIRMED: "Confirmada",
-  CANCELLED: "Cancelada",
-  COMPLETED: "Completada",
-  NO_SHOW: "No asistió",
 };
 
 export function AppointmentsTable({ appointments }: { appointments: AppointmentItem[] }) {
@@ -57,26 +47,19 @@ export function AppointmentsTable({ appointments }: { appointments: AppointmentI
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-200 text-sm text-slate-600 dark:divide-surface-muted dark:text-slate-200">
-            {appointments.map((appointment) => {
-              const statusKey = appointment.status.toUpperCase();
-              return (
-                <tr key={appointment.id} className="bg-white dark:bg-surface-elevated/60">
-                  <td className="px-4 py-3 font-semibold text-slate-900 dark:text-white">
-                    {appointment.patientName ?? "—"}
-                  </td>
-                  <td className="px-4 py-3">{appointment.serviceName ?? "—"}</td>
-                  <td className="px-4 py-3">{appointment.professionalName ?? "—"}</td>
-                  <td className="px-4 py-3">{appointment.timeLabel}</td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`rounded-full px-3 py-1 text-xs font-semibold ${appointmentStatusBadge(statusKey)}`}
-                    >
-                      {statusLabels[statusKey] ?? statusKey}
-                    </span>
-                  </td>
-                </tr>
-              );
-            })}
+            {appointments.map((appointment) => (
+              <tr key={appointment.id} className="bg-white dark:bg-surface-elevated/60">
+                <td className="px-4 py-3 font-semibold text-slate-900 dark:text-white">
+                  {appointment.patientName ?? "—"}
+                </td>
+                <td className="px-4 py-3">{appointment.serviceName ?? "—"}</td>
+                <td className="px-4 py-3">{appointment.professionalName ?? "—"}</td>
+                <td className="px-4 py-3">{appointment.timeLabel}</td>
+                <td className="px-4 py-3">
+                  <StatusBadge status={appointment.status.toUpperCase()} />
+                </td>
+              </tr>
+            ))}
           </tbody>
         </Table>
       )}
