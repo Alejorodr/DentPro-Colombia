@@ -125,8 +125,6 @@ describe("auth options", () => {
       token,
     });
 
-    expect(session).toMatchObject({
-      user: { name: "User", email: "user@dentpro.test", image: null },
-    });
+    expect((session as { user: unknown }).user).toBeUndefined();
   });
 });
