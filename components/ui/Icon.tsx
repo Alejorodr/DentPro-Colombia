@@ -27,6 +27,7 @@ export const {
   EnvelopeSimple,
   Eye,
   FacebookLogo,
+  GoogleLogo,
   FileArrowUp,
   FileText,
   Flask,

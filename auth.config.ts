@@ -170,6 +170,23 @@ export const authConfig = {
         sessionToken.userId = userIdCandidate;
       }
 
+      // Google OAuth users arrive with user.id = Google sub (not a DB UUID).
+      // If the ID lookup missed, fall back to email so the role comes from Neon.
+      if (!dbUser) {
+        const emailLookup =
+          typeof authUser?.email === "string"
+            ? authUser.email
+            : typeof sessionToken.email === "string"
+              ? sessionToken.email
+              : null;
+        if (emailLookup) {
+          dbUser = await findUserByEmail(emailLookup);
+          if (dbUser) {
+            sessionToken.userId = dbUser.id;
+          }
+        }
+      }
+
       if (dbUser) {
         sessionToken.role = resolveTokenRole(dbUser.role);
         sessionToken.userId = dbUser.id;
