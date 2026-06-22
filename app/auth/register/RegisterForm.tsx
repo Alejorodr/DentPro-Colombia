@@ -7,6 +7,7 @@ import { signIn } from "next-auth/react";
 import {
   ArrowRight,
   EnvelopeSimple,
+  GoogleLogo,
   Lock,
   Phone,
   ShieldCheck,
@@ -127,6 +128,7 @@ export function RegisterForm({ googleEnabled = false }: RegisterFormProps) {
         {googleEnabled ? (
           <>
             <Button type="button" className="h-12 w-full" disabled={isSubmitting} onClick={handleGoogleSignUp}>
+              <GoogleLogo className="h-5 w-5" aria-hidden="true" />
               Continuar con Google
             </Button>
             <div className="flex items-center gap-3" aria-hidden="true">

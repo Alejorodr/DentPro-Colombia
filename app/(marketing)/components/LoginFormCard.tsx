@@ -84,7 +84,7 @@ export function LoginFormCard({
 
     try {
       await signIn("google", {
-        redirectTo: callbackUrl ?? undefined,
+        redirectTo: callbackUrl ?? "/auth/login",
       });
       // Reached only when signIn returns without redirecting (provider not configured server-side).
       setFormError(errorMessages.OAuthSignin);
