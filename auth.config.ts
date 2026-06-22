@@ -233,5 +233,5 @@ export const authConfig = {
       return session;
     },
   },
-  pages: { signIn: "/auth/login" },
+  pages: { signIn: "/auth/login", error: "/auth/login" },
 } satisfies NextAuthConfig;

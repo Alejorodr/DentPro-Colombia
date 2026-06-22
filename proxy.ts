@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 
-import { isLocalE2EAuthRuntime } from "@/lib/auth/runtime";
+import { getInferredAuthBaseUrl, getSessionCookieName, isLocalE2EAuthRuntime } from "@/lib/auth/runtime";
 import { getDefaultDashboardPath, isUserRole, roleFromSlug, type UserRole } from "@/lib/auth/roles";
 
 const RATE_LIMIT_WINDOW_SECONDS = 60;
@@ -81,7 +81,12 @@ export default async function proxy(request: NextRequest) {
     }
     console.warn(message);
   }
-  const token = await getToken({ req: request, secret });
+  // @auth/core v5 beta removed the HTTPS auto-detection in getToken — it defaults
+  // to secureCookie=false (reads "next-auth.session-token") even on HTTPS.
+  // We must pass cookieName explicitly so the proxy reads the same cookie that
+  // authConfig.cookies.sessionToken.name writes ("__Secure-next-auth.session-token").
+  const cookieName = getSessionCookieName(getInferredAuthBaseUrl());
+  const token = await getToken({ req: request, secret, cookieName });
   let role = resolveRole(token);
   const testRoleCookie = request.cookies.get("dentpro-test-role")?.value ?? "";
   const isProductionEnv = process.env.NODE_ENV === "production" || process.env.VERCEL_ENV === "production";
