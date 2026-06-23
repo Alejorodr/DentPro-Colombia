@@ -39,6 +39,18 @@ export function DentProPrismaAdapter(): Adapter {
 
   return new Proxy({} as Adapter, {
     get(_target, prop) {
+      // @auth/prisma-adapter uses Prisma fluent API (.user()) in getUserByAccount,
+      // which breaks on $extends-wrapped clients. Use include instead.
+      if (prop === "getUserByAccount") {
+        return async ({ provider, providerAccountId }: { provider: string; providerAccountId: string }) => {
+          const account = await db().account.findUnique({
+            where: { provider_providerAccountId: { provider, providerAccountId } },
+            include: { user: true },
+          });
+          return account?.user ?? null;
+        };
+      }
+
       if (prop === "createUser") {
         return async (user: AdapterUser) => {
           const prisma = db();
