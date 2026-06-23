@@ -37,63 +37,69 @@ export function DentProPrismaAdapter(): Adapter {
     return _base;
   }
 
-  return new Proxy({} as Adapter, {
-    get(_target, prop) {
-      // @auth/prisma-adapter uses Prisma fluent API (.user()) in getUserByAccount,
-      // which breaks on $extends-wrapped clients. Use include instead.
-      if (prop === "getUserByAccount") {
-        return async ({ provider, providerAccountId }: { provider: string; providerAccountId: string }) => {
-          const account = await db().account.findUnique({
-            where: { provider_providerAccountId: { provider, providerAccountId } },
-            include: { user: true },
-          });
-          return account?.user ?? null;
-        };
-      }
-
-      if (prop === "createUser") {
-        return async (user: AdapterUser) => {
-          const prisma = db();
-          const email = user.email.toLowerCase();
-          const { name, lastName } = extractSafeUserNames(user);
-
-          const createdUser = await prisma.user.create({
-            data: {
-              email,
-              name,
-              lastName,
-              role: "PACIENTE",
-              passwordHash: null,
-              emailVerified: user.emailVerified ?? null,
-              image: user.image ?? null,
-              patient: {
-                create: {
-                  avatarUrl: user.image ?? null,
-                },
-              },
-            },
-          });
-
-          void logAuditEvent({
-            action: "auth.oauth.patient_created",
-            resourceType: "user",
-            resourceId: createdUser.id,
-            targetLabel: createdUser.email,
-            status: "success",
-            metadata: {
-              provider: "google",
-              emailDomain: createdUser.email.split("@")[1] ?? null,
-              reason: "google_auto_provision",
-            },
-          });
-
-          return createdUser;
-        };
-      }
-
-      const base = getBase();
-      const val = base[prop as keyof Adapter];
-      return typeof val === "function" ? (val as (...args: unknown[]) => unknown).bind(base) : val;
+  // IMPORTANT: Do NOT use Proxy here. @auth/core's adapterErrorHandler wraps the adapter
+  // by calling Object.keys(adapter), which only sees own enumerable properties. A Proxy
+  // with an empty target ({}) returns [] from Object.keys, so every method becomes undefined
+  // and the OAuth callback throws "TypeError: a is not a function".
+  // A plain object makes all methods visible as own enumerable properties.
+  return {
+    getUserByAccount: async ({ provider, providerAccountId }) => {
+      const account = await db().account.findUnique({
+        where: { provider_providerAccountId: { provider, providerAccountId } },
+        include: { user: true },
+      });
+      return (account?.user ?? null) as AdapterUser | null;
     },
-  });
+
+    createUser: async (user: AdapterUser) => {
+      const prisma = db();
+      const email = user.email.toLowerCase();
+      const { name, lastName } = extractSafeUserNames(user);
+
+      const createdUser = await prisma.user.create({
+        data: {
+          email,
+          name,
+          lastName,
+          role: "PACIENTE",
+          passwordHash: null,
+          emailVerified: user.emailVerified ?? null,
+          image: user.image ?? null,
+          patient: {
+            create: {
+              avatarUrl: user.image ?? null,
+            },
+          },
+        },
+      });
+
+      void logAuditEvent({
+        action: "auth.oauth.patient_created",
+        resourceType: "user",
+        resourceId: createdUser.id,
+        targetLabel: createdUser.email,
+        status: "success",
+        metadata: {
+          provider: "google",
+          emailDomain: createdUser.email.split("@")[1] ?? null,
+          reason: "google_auto_provision",
+        },
+      });
+
+      return createdUser as AdapterUser;
+    },
+
+    async getUser(id) { return (await getBase().getUser!(id)) as AdapterUser | null; },
+    async getUserByEmail(email) { return (await getBase().getUserByEmail!(email)) as AdapterUser | null; },
+    async updateUser(user) { return (await getBase().updateUser!(user)) as AdapterUser; },
+    async deleteUser(userId) { return getBase().deleteUser!(userId); },
+    async linkAccount(account) { return getBase().linkAccount!(account); },
+    async unlinkAccount(params) { return getBase().unlinkAccount!(params); },
+    async createSession(session) { return getBase().createSession!(session); },
+    async getSessionAndUser(sessionToken) { return getBase().getSessionAndUser!(sessionToken); },
+    async updateSession(session) { return getBase().updateSession!(session); },
+    async deleteSession(sessionToken) { return getBase().deleteSession!(sessionToken); },
+    async createVerificationToken(token) { return getBase().createVerificationToken!(token); },
+    async useVerificationToken(params) { return getBase().useVerificationToken!(params); },
+  } as Adapter;
 }
