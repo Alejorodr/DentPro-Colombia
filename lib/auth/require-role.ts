@@ -12,6 +12,10 @@ export async function requireRole(allowedRoles: UserRole | UserRole[]) {
     redirect("/auth/login");
   }
 
+  if (session?.user?.mustChangePassword) {
+    redirect("/portal/change-password");
+  }
+
   if (!normalizedRoles.includes(role)) {
     redirect(getDefaultDashboardPath(role));
   }
