@@ -17,6 +17,7 @@ type AuthenticatedUser = {
   role?: UserRole;
   professionalId?: string | null;
   patientId?: string | null;
+  mustChangePassword?: boolean;
 };
 
 export type AuthSession = { user?: AuthenticatedUser | null } | null;
@@ -62,6 +63,7 @@ export async function auth(): Promise<AuthSession> {
               role: role as UserRole,
               professionalId: (token["professionalId"] as string | null) ?? null,
               patientId: (token["patientId"] as string | null) ?? null,
+              mustChangePassword: (token["mustChangePassword"] as boolean | null) ?? false,
             },
           };
         }

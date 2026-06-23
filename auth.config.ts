@@ -39,6 +39,7 @@ type SessionToken = JWT & {
   defaultDashboardPath?: string;
   passwordChangedAt?: string | null;
   invalidated?: boolean;
+  mustChangePassword?: boolean;
 };
 
 function resolveTokenRole(value: unknown): UserRole {
@@ -197,6 +198,7 @@ export const authConfig = {
         sessionToken.patientId = dbUser.patientId ?? null;
         sessionToken.passwordChangedAt = dbUser.passwordChangedAt ? dbUser.passwordChangedAt.toISOString() : null;
         sessionToken.defaultDashboardPath = getDefaultDashboardPath(dbUser.role);
+        sessionToken.mustChangePassword = dbUser.mustChangePassword ?? false;
       } else if (authUser) {
         sessionToken.role = resolveTokenRole(authUser.role);
         sessionToken.professionalId = authUser.professionalId ?? sessionToken.professionalId;

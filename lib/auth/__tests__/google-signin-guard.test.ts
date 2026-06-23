@@ -8,6 +8,7 @@ const activeUser: DatabaseUser = {
   email: "ana@gmail.com",
   role: "PACIENTE",
   active: true,
+  mustChangePassword: false,
   professionalId: null,
   patientId: null,
 };

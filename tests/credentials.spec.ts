@@ -28,6 +28,7 @@ describe("authorizeCredentials", () => {
       email: "admin@dentpro.test",
       role: "ADMINISTRADOR",
       active: true,
+      mustChangePassword: false,
       professionalId: null,
       patientId: null,
     });
@@ -48,6 +49,7 @@ describe("authorizeCredentials", () => {
       email: "admin@dentpro.test",
       role: "ADMINISTRADOR",
       active: true,
+      mustChangePassword: false,
       professionalId: null,
       patientId: null,
     });
@@ -67,6 +69,7 @@ describe("authorizeCredentials", () => {
       email: "real@dentpro.co",
       role: "ADMINISTRADOR",
       active: true,
+      mustChangePassword: false,
       professionalId: null,
       patientId: null,
     });
@@ -97,6 +100,7 @@ describe("authorizeCredentials", () => {
       email: "admin@dentpro.test",
       role: "ADMINISTRADOR",
       active: true,
+      mustChangePassword: false,
       professionalId: null,
       patientId: null,
     });

@@ -25,6 +25,7 @@ describe("google signIn callback", () => {
       email: "admin@test.com",
       role: "ADMINISTRADOR",
       active: true,
+      mustChangePassword: false,
       professionalId: null,
       patientId: null,
     });
