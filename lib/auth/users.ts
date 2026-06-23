@@ -8,6 +8,7 @@ type UserRecord = {
   email: string;
   role: string;
   active: boolean;
+  mustChangePassword?: boolean;
   passwordChangedAt?: Date | null;
   mfaEnabled?: boolean;
   professional?: { id: string } | null;
@@ -20,6 +21,7 @@ export interface DatabaseUser {
   email: string;
   role: UserRole;
   active: boolean;
+  mustChangePassword: boolean;
   professionalId?: string | null;
   patientId?: string | null;
   passwordChangedAt?: Date | null;
@@ -27,20 +29,15 @@ export interface DatabaseUser {
 }
 
 function mapUser(user: UserRecord | null): DatabaseUser | null {
-  if (!user) {
-    return null;
-  }
-
-  if (!isUserRole(user.role)) {
-    return null;
-  }
-
+  if (!user) return null;
+  if (!isUserRole(user.role)) return null;
   return {
     id: user.id,
     name: user.name,
     email: user.email,
     role: user.role,
     active: user.active,
+    mustChangePassword: user.mustChangePassword ?? false,
     professionalId: user.professional?.id ?? null,
     patientId: user.patient?.id ?? null,
     passwordChangedAt: user.passwordChangedAt ?? null,
@@ -61,6 +58,7 @@ export async function authenticateUser(email: string, password: string): Promise
       passwordHash: true,
       role: true,
       active: true,
+      mustChangePassword: true,
       passwordChangedAt: true,
       mfaEnabled: true,
       professional: { select: { id: true } },
@@ -68,21 +66,12 @@ export async function authenticateUser(email: string, password: string): Promise
     },
   });
 
-  if (!user) {
-    return null;
-  }
-
-  if (!user.passwordHash) {
-    return null;
-  }
+  if (!user || !user.passwordHash) return null;
 
   const passwordsMatch = await bcrypt.compare(password, user.passwordHash);
-  if (!passwordsMatch) {
-    return null;
-  }
+  if (!passwordsMatch) return null;
 
   const { passwordHash: _passwordHash, ...safeUser } = user;
-
   return mapUser(safeUser as UserRecord);
 }
 
@@ -96,13 +85,13 @@ export async function findUserById(id: string): Promise<DatabaseUser | null> {
       email: true,
       role: true,
       active: true,
+      mustChangePassword: true,
       passwordChangedAt: true,
       mfaEnabled: true,
       professional: { select: { id: true } },
       patient: { select: { id: true } },
     },
   });
-
   return mapUser(user as UserRecord | null);
 }
 
@@ -117,12 +106,12 @@ export async function findUserByEmail(email: string): Promise<DatabaseUser | nul
       email: true,
       role: true,
       active: true,
+      mustChangePassword: true,
       passwordChangedAt: true,
       mfaEnabled: true,
       professional: { select: { id: true } },
       patient: { select: { id: true } },
     },
   });
-
   return mapUser(user as UserRecord | null);
 }

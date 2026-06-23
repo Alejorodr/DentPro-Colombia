@@ -138,6 +138,7 @@ model User {
   mfaEnabled                   Boolean                          @default(false)
   createdAt                    DateTime                         @default(now())
   passwordChangedAt            DateTime?
+  mustChangePassword           Boolean                          @default(false)
   updatedAt                    DateTime                         @updatedAt
   professional                 ProfessionalProfile?
   patient                      PatientProfile?
