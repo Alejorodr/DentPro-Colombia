@@ -39,19 +39,51 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const { page, pageSize, skip, take } = getPaginationParams(searchParams);
 
+  const search = searchParams.get("search")?.trim() || undefined;
+  const roleParam = searchParams.get("role")?.trim() || undefined;
+  const activeParam = searchParams.get("active");
+
+  const isUserRoleValue = (v: string): v is import("@prisma/client").Role =>
+    ["PACIENTE", "PROFESIONAL", "RECEPCIONISTA", "ADMINISTRADOR"].includes(v);
+
+  const where = {
+    ...(search
+      ? {
+          OR: [
+            { name: { contains: search, mode: "insensitive" as const } },
+            { lastName: { contains: search, mode: "insensitive" as const } },
+            { email: { contains: search, mode: "insensitive" as const } },
+          ],
+        }
+      : {}),
+    ...(roleParam && isUserRoleValue(roleParam) ? { role: roleParam } : {}),
+    ...(activeParam === "true" ? { active: true } : activeParam === "false" ? { active: false } : {}),
+  };
+
   try {
     const prisma = getPrismaClient();
     const [users, total] = await Promise.all([
       prisma.user.findMany({
+        where,
         orderBy: { createdAt: "desc" },
-        include: { patient: true, professional: { include: { specialty: true } } },
+        include: {
+          patient: true,
+          professional: { include: { specialty: true } },
+          accounts: { select: { provider: true } },
+        },
         skip,
         take,
       }),
-      prisma.user.count(),
+      prisma.user.count({ where }),
     ]);
 
-    return NextResponse.json(redactSensitiveAuthFields(buildPaginatedResponse(users, page, pageSize, total)));
+    const mapped = users.map(({ passwordHash, accounts, ...user }) => ({
+      ...user,
+      hasLocalPassword: passwordHash !== null,
+      _isGoogleUser: accounts.some((a) => a.provider === "google"),
+    }));
+
+    return NextResponse.json(buildPaginatedResponse(mapped, page, pageSize, total));
   } catch (error) {
     logApiError(
       {
