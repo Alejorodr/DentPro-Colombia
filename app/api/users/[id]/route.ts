@@ -54,6 +54,30 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     return errorResponse("Rol inválido.");
   }
 
+  // Guard: no self-role-change
+  if (id === sessionResult.user.id && payload.role && payload.role !== existing.role) {
+    return errorResponse("No puedes cambiar tu propio rol.", 403);
+  }
+
+  // Guard: no self-deactivation
+  if (id === sessionResult.user.id && payload.active === false) {
+    return errorResponse("No puedes desactivarte a ti mismo.", 403);
+  }
+
+  // Guard: no demoting or deactivating the last active ADMINISTRADOR
+  if (existing.role === "ADMINISTRADOR") {
+    const isDemoting = payload.role !== undefined && payload.role !== "ADMINISTRADOR";
+    const isDeactivating = payload.active === false;
+    if (isDemoting || isDeactivating) {
+      const otherActiveAdminCount = await prisma.user.count({
+        where: { role: "ADMINISTRADOR", active: true, id: { not: id } },
+      });
+      if (otherActiveAdminCount === 0) {
+        return errorResponse("No puedes degradar o desactivar al único administrador activo.", 400);
+      }
+    }
+  }
+
   const passwordHash = payload.password ? await bcrypt.hash(payload.password, 10) : undefined;
 
   let updated;
@@ -66,6 +90,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
         lastName: payload.lastName?.trim() ?? undefined,
         role: requestedRole ?? undefined,
         passwordHash: passwordHash ?? undefined,
+        active: typeof payload.active === "boolean" ? payload.active : undefined,
       },
     });
   } catch (error) {
@@ -165,6 +190,21 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
   }
 
   const prisma = getPrismaClient();
+  const existing = await prisma.user.findUnique({ where: { id }, select: { role: true, active: true } });
+
+  if (!existing) {
+    return errorResponse("Usuario no encontrado.", 404);
+  }
+
+  if (existing.role === "ADMINISTRADOR") {
+    const otherActiveAdminCount = await prisma.user.count({
+      where: { role: "ADMINISTRADOR", active: true, id: { not: id } },
+    });
+    if (otherActiveAdminCount === 0) {
+      return errorResponse("No puedes eliminar al único administrador activo.", 400);
+    }
+  }
+
   await prisma.user.delete({ where: { id } });
   logger.info({
     event: "user.deleted",
