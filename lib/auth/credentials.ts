@@ -96,5 +96,6 @@ export async function authorizeCredentials(credentials?: CredentialsInput) {
     patientId: user.patientId ?? null,
     passwordChangedAt: user.passwordChangedAt ?? null,
     defaultDashboardPath: getDefaultDashboardPath(user.role),
+    mustChangePassword: user.mustChangePassword ?? false,
   } as const;
 }

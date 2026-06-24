@@ -29,6 +29,7 @@ type AuthenticatedUser = {
   patientId?: string | null;
   defaultDashboardPath?: string;
   passwordChangedAt?: Date | null;
+  mustChangePassword?: boolean;
 };
 
 type SessionToken = JWT & {
@@ -206,6 +207,7 @@ export const authConfig = {
         sessionToken.passwordChangedAt =
           authUser.passwordChangedAt instanceof Date ? authUser.passwordChangedAt.toISOString() : sessionToken.passwordChangedAt;
         sessionToken.defaultDashboardPath = authUser.defaultDashboardPath ?? sessionToken.defaultDashboardPath;
+        sessionToken.mustChangePassword = authUser.mustChangePassword ?? false;
       }
 
       if (!sessionToken.userId && sessionToken.sub) sessionToken.userId = sessionToken.sub;
