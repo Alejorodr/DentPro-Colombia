@@ -131,6 +131,12 @@ export default async function proxy(request: NextRequest) {
     return withRequestId(NextResponse.redirect(redirectUrl), requestId);
   }
 
+  const PORTAL_SHARED_PATHS = ["/portal/change-password"];
+  if (PORTAL_SHARED_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/"))) {
+    const response = NextResponse.next({ request: { headers: requestHeaders } });
+    return withRequestId(response, requestId);
+  }
+
   const segments = pathname.split("/").filter(Boolean);
   const slug = segments[1] ?? "";
   const requestedRole = slug ? roleFromSlug(slug) : null;
