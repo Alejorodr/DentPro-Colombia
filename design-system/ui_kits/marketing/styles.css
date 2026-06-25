@@ -1,0 +1,265 @@
+/* DentPro Marketing UI Kit — local styles
+ * Pairs with ../../colors_and_type.css for tokens.
+ * Recreates the @utility classes from app/globals.css: card, btn-primary, etc.
+ */
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  font-family: var(--font-sans);
+  color: var(--fg-1);
+  background: #ffffff;
+  line-height: 1.5;
+}
+
+/* Hero wash */
+.dp-hero-bg { background: var(--gradient-hero-light); }
+.dp-section { padding: 80px 0; }
+.dp-container { width: min(1200px, calc(100% - 48px)); margin: 0 auto; }
+
+/* Topbar */
+.dp-topbar {
+  position: sticky; top: 0; z-index: 40;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.7);
+  transition: background 0.3s;
+}
+.dp-info-bar {
+  background: rgba(255, 255, 255, 0.85);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.6);
+  font-size: 13px;
+  color: var(--fg-2);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* Buttons */
+.dp-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  border-radius: 9999px;
+  padding: 12px 24px;
+  font-size: 14px; font-weight: 600;
+  font-family: var(--font-sans);
+  border: 1px solid transparent;
+  cursor: pointer; text-decoration: none;
+  transition: transform 0.2s, box-shadow 0.2s, background 0.2s, color 0.2s;
+  white-space: nowrap;
+}
+.dp-btn-primary {
+  background: var(--color-brand-teal);
+  color: #fff;
+  box-shadow: 0 12px 28px -10px rgba(10, 61, 145, 0.45);
+}
+.dp-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-glow);
+}
+.dp-btn-secondary {
+  background: rgba(255, 255, 255, 0.8);
+  color: var(--color-brand-teal);
+  border-color: rgba(31, 108, 211, 0.35);
+}
+.dp-btn-secondary:hover {
+  transform: translateY(-2px);
+  background: rgba(230, 244, 255, 0.6);
+  color: var(--color-brand-indigo);
+}
+.dp-btn-ghost { background: transparent; color: var(--fg-2); }
+
+/* Badges, eyebrow */
+.dp-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(230, 244, 255, 0.8);
+  color: var(--color-brand-indigo);
+  border: 1px solid rgba(31, 108, 211, 0.25);
+  padding: 8px 16px;
+  border-radius: 9999px;
+  font-size: 12px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  box-shadow: 0 1px 2px rgba(31, 108, 211, 0.10);
+}
+
+/* Card — the signature rounded-[1.75rem] surface */
+.dp-card {
+  position: relative; overflow: hidden;
+  border-radius: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.9);
+  padding: 24px;
+  box-shadow: 0 24px 50px -20px rgba(15, 23, 42, 0.22);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.dp-card:hover { transform: translateY(-4px); box-shadow: 0 28px 70px -25px rgba(10, 61, 145, 0.28); }
+
+/* Icon containers */
+.dp-icon-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 40px; height: 40px;
+  border-radius: 16px;
+  background: rgba(230, 244, 255, 0.85);
+  color: var(--color-brand-teal);
+  border: 1px solid rgba(31, 108, 211, 0.20);
+  box-shadow: inset 0 0 8px rgba(10, 61, 145, 0.10);
+  flex-shrink: 0;
+}
+.dp-icon-circle {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 56px; height: 56px;
+  border-radius: 16px;
+  background: rgba(230, 244, 255, 0.95);
+  color: var(--color-brand-teal);
+  border: 1px solid rgba(31, 108, 211, 0.25);
+  box-shadow: inset 0 0 14px rgba(10, 61, 145, 0.15);
+}
+
+/* Inputs */
+.dp-input {
+  width: 100%;
+  border-radius: 16px;
+  border: 1px solid rgba(226, 232, 240, 0.7);
+  background: rgba(255, 255, 255, 0.9);
+  padding: 12px 16px;
+  font-size: 14px;
+  color: var(--fg-1);
+  font-family: var(--font-sans);
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.dp-input:focus {
+  border-color: var(--color-brand-teal);
+  box-shadow: 0 0 0 3px rgba(10, 61, 145, 0.18);
+}
+.dp-input.dp-input-on-gradient {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.3);
+  color: #fff;
+}
+.dp-input.dp-input-on-gradient::placeholder { color: rgba(255, 255, 255, 0.6); }
+.dp-input.dp-input-on-gradient:focus { background: rgba(255, 255, 255, 0.18); border-color: #fff; box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2); }
+
+/* Modal */
+.dp-modal-backdrop {
+  position: fixed; inset: 0; z-index: 90;
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 32px 16px;
+}
+.dp-modal {
+  width: 100%; max-width: 880px;
+  background: rgba(255, 255, 255, 0.97);
+  border-radius: 36px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow: 0 40px 120px -45px rgba(15, 23, 42, 0.55);
+  display: grid; grid-template-columns: 1.1fr 0.9fr;
+}
+.dp-modal-close {
+  position: absolute; top: 18px; right: 18px;
+  width: 40px; height: 40px; border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.85);
+  border: none; cursor: pointer;
+  color: var(--fg-2);
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.08);
+  display: inline-flex; align-items: center; justify-content: center;
+}
+
+/* Floating actions */
+.dp-floating {
+  position: fixed; bottom: 24px; right: 24px; z-index: 40;
+  display: flex; flex-direction: column; gap: 12px;
+}
+.dp-floating-btn {
+  width: 56px; height: 56px; border-radius: 9999px;
+  background: var(--color-brand-teal); color: #fff;
+  border: none; cursor: pointer;
+  box-shadow: 0 16px 36px -10px rgba(10, 61, 145, 0.45);
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+.dp-floating-btn:hover { transform: translateY(-4px); box-shadow: var(--shadow-glow); }
+.dp-floating-btn.dp-floating-whatsapp { background: #25d366; }
+.dp-floating-btn.dp-floating-whatsapp:hover { box-shadow: 0 28px 70px -25px rgba(37, 211, 102, 0.5); }
+
+/* Booking gradient panel */
+.dp-booking-panel {
+  background: var(--gradient-brand);
+  color: #fff;
+  border-radius: 36px;
+  padding: 40px;
+  box-shadow: 0 32px 80px -30px rgba(10, 61, 145, 0.55);
+}
+
+/* Specialists slider */
+.dp-slider {
+  margin-top: 32px;
+  border-radius: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.7);
+  padding: 16px;
+  box-shadow: 0 24px 50px -20px rgba(15, 23, 42, 0.18);
+  overflow: hidden;
+}
+.dp-slider-track {
+  display: flex; gap: 24px;
+  transition: transform 0.5s ease-out;
+  will-change: transform;
+}
+.dp-slider-btn {
+  width: 48px; height: 48px; border-radius: 9999px;
+  background: #fff; color: var(--color-brand-teal);
+  border: 1px solid rgba(31, 108, 211, 0.4);
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(10, 61, 145, 0.12);
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: transform 0.2s, background 0.2s, color 0.2s;
+}
+.dp-slider-btn:hover { transform: translateY(-2px); background: var(--color-brand-teal); color: #fff; }
+.dp-slider-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.dp-specialist {
+  flex-shrink: 0;
+  width: min(320px, 80vw);
+  text-align: left;
+}
+.dp-specialist-photo {
+  width: 100%; aspect-ratio: 4/5;
+  object-fit: cover;
+  border-radius: 20px;
+  box-shadow: inset 0 0 30px rgba(15, 23, 42, 0.1);
+}
+
+/* Service highlights */
+.dp-checklist { list-style: none; padding: 0; margin: 16px 0 0; display: flex; flex-direction: column; gap: 8px; }
+.dp-checklist li { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; color: var(--fg-3); line-height: 1.45; }
+.dp-checklist li svg { flex-shrink: 0; margin-top: 1px; color: var(--color-brand-teal); }
+
+/* Stat grid (hero) */
+.dp-stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 16px; }
+.dp-stat dt { font-size: 14px; font-weight: 700; color: var(--fg-1); }
+.dp-stat dd { margin: 4px 0 0; font-size: 13px; color: var(--fg-3); line-height: 1.45; }
+
+/* Footer */
+.dp-footer {
+  background: var(--color-brand-midnight);
+  color: rgba(255, 255, 255, 0.85);
+  padding: 64px 0 32px;
+}
+.dp-footer a { color: rgba(255, 255, 255, 0.85); text-decoration: none; }
+.dp-footer a:hover { color: var(--color-accent-cyan); }
+
+/* Misc */
+.dp-link { color: var(--color-brand-teal); font-weight: 600; text-decoration: none; transition: color 0.2s; }
+.dp-link:hover { color: var(--color-brand-indigo); }
+.dp-divider { border: none; border-top: 1px solid var(--border-1); margin: 24px 0; }
+
+/* Pill avatar (DP monogram, used in navbar + sidebar) */
+.dp-monogram {
+  width: 40px; height: 40px; border-radius: 9999px;
+  background: var(--color-brand-teal);
+  color: #fff;
+  font-size: 14px; font-weight: 700; letter-spacing: 0.04em;
+  display: inline-flex; align-items: center; justify-content: center;
+}

@@ -1,0 +1,35 @@
+<!-- @dsCard group="Brand" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  html, body { margin: 0; }
+  body { font-family: var(--font-sans); background: #fff; padding: 24px; }
+  .wrap { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 22px; }
+  .photo {
+    position: relative; border-radius: var(--radius-xl); overflow: hidden;
+    box-shadow: var(--shadow-card);
+  }
+  .photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .meta { padding: 8px 4px; display: flex; flex-direction: column; gap: 10px; justify-content: center;}
+  .eyebrow { color: var(--color-brand-indigo); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; }
+  h3 { font-family: var(--font-sans); font-size: 19px; font-weight: 700; color: var(--fg-1); margin: 0; line-height: 1.25; }
+  p { margin: 0; font-size: 13px; color: var(--fg-2); line-height: 1.5; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="photo">
+      <img src="../assets/storefront-team.png" alt="DentPro Chía storefront with team in scrubs">
+    </div>
+    <div class="meta">
+      <div class="eyebrow">Brand photography</div>
+      <h3>Editorial, warm, clinically blue</h3>
+      <p>Team in scrubs, white tile, signage prominent. The reference image for any "about us" or team module. Color graded slightly cool — all blues, no green wash.</p>
+      <p style="color: var(--fg-3); font-size:12px;"><b>Don't:</b> b&w, grain filters, dramatic lighting, or stock photos with warm tints.</p>
+    </div>
+  </div>
+</body>
+</html>

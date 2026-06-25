@@ -1,0 +1,28 @@
+<!-- @dsCard group="Spacing" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  html, body { margin: 0; }
+  body { font-family: var(--font-sans); background: #fff; padding: 22px; }
+  .grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; }
+  .tile { display: flex; flex-direction: column; gap: 6px; align-items: center; }
+  .shape { width: 88px; height: 88px; background: linear-gradient(135deg, #0a3d91, #4cc3f1); box-shadow: 0 8px 22px -10px rgba(10, 61, 145, 0.45); }
+  .name { font-size: 11px; font-weight: 600; color: var(--fg-1); font-family: var(--font-mono); }
+  .px { font-size: 10px; color: var(--fg-3); font-family: var(--font-mono); }
+</style>
+</head>
+<body>
+  <div class="grid">
+    <div class="tile"><div class="shape" style="border-radius: 6px"></div><div class="name">xs</div><div class="px">6 px</div></div>
+    <div class="tile"><div class="shape" style="border-radius: 10px"></div><div class="name">sm</div><div class="px">10 px</div></div>
+    <div class="tile"><div class="shape" style="border-radius: 16px"></div><div class="name">md</div><div class="px">16 px · inputs</div></div>
+    <div class="tile"><div class="shape" style="border-radius: 24px"></div><div class="name">lg</div><div class="px">24 px</div></div>
+    <div class="tile"><div class="shape" style="border-radius: 28px"></div><div class="name">xl · card</div><div class="px">28 px ★</div></div>
+    <div class="tile"><div class="shape" style="border-radius: 9999px"></div><div class="name">pill</div><div class="px">full · btns</div></div>
+  </div>
+  <p style="font-size:11px; color: var(--fg-3); margin-top: 18px;">★ <b>28px</b> (rounded-[1.75rem]) is the signature card radius — appears more than any other.</p>
+</body>
+</html>

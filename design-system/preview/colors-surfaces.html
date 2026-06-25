@@ -1,0 +1,40 @@
+<!-- @dsCard group="Colors" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  html, body { margin: 0; }
+  body { font-family: var(--font-sans); background: #fff; padding: 22px; }
+  .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .sw { display: flex; flex-direction: column; gap: 6px; }
+  .chip { aspect-ratio: 1.2 / 1; border-radius: 14px; box-shadow: inset 0 0 0 1px rgba(15,23,42,0.10); }
+  .name { font-size: 11px; font-weight: 600; color: var(--fg-1); line-height: 1.2; }
+  .hex { font-size: 10px; color: var(--fg-3); font-family: var(--font-mono); }
+  h4 { margin: 0 0 10px; font-size: 12px; color: var(--fg-3); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+  .dark-block { background: #0f172a; padding: 16px; border-radius: 18px; margin-top: 18px; }
+  .dark-block h4 { color: #94a3b8; }
+  .dark-block .name { color: #fff; }
+  .dark-block .hex { color: #94a3b8; }
+</style>
+</head>
+<body>
+  <h4>Light surfaces</h4>
+  <div class="grid">
+    <div class="sw"><div class="chip" style="background:#f8fafc"></div><div class="name">surface-base</div><div class="hex">#f8fafc</div></div>
+    <div class="sw"><div class="chip" style="background:#e2e8f0"></div><div class="name">surface-muted</div><div class="hex">#e2e8f0</div></div>
+    <div class="sw"><div class="chip" style="background:#ffffff"></div><div class="name">surface-elevated</div><div class="hex">#ffffff</div></div>
+    <div class="sw"><div class="chip" style="background:#10243d"></div><div class="name">card-dark</div><div class="hex">#10243d</div></div>
+  </div>
+  <div class="dark-block">
+    <h4>Dark theme surfaces (.dark)</h4>
+    <div class="grid">
+      <div class="sw"><div class="chip" style="background:#0f172a"></div><div class="name">surface-base</div><div class="hex">#0f172a</div></div>
+      <div class="sw"><div class="chip" style="background:#1e293b"></div><div class="name">surface-muted</div><div class="hex">#1e293b</div></div>
+      <div class="sw"><div class="chip" style="background:#111b2d"></div><div class="name">surface-elevated</div><div class="hex">#111b2d</div></div>
+      <div class="sw"><div class="chip" style="background:#10243d"></div><div class="name">card-dark</div><div class="hex">#10243d</div></div>
+    </div>
+  </div>
+</body>
+</html>

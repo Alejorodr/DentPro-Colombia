@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="es" data-screen-label="Clinical portal">
+<head>
+<meta charset="utf-8">
+<title>DentPro Colombia · Portal UI Kit</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="../../colors_and_type.css">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="root"></div>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <script type="text/babel" src="../_shared/Icons.jsx"></script>
+  <script type="text/babel" src="PortalShell.jsx"></script>
+  <script type="text/babel" src="AdminDashboard.jsx"></script>
+  <script type="text/babel" src="RoleViews.jsx"></script>
+
+  <script type="text/babel">
+    function ComingSoonView({ pageLabel }) {
+      const I = window.DPIcons;
+      return (
+        <div className="pp-card" style={{ textAlign: "center", padding: 64 }}>
+          <div style={{
+            width: 72, height: 72, borderRadius: 9999,
+            background: "var(--color-brand-light)", color: "var(--color-brand-teal)",
+            display: "inline-flex", alignItems: "center", justifyContent: "center",
+            marginBottom: 16,
+          }}>
+            <I.SquaresFour size={36} />
+          </div>
+          <h2 style={{ fontSize: 22, fontWeight: 700, color: "var(--fg-1)", margin: "0 0 8px" }}>
+            {pageLabel}
+          </h2>
+          <p style={{ fontSize: 14, color: "var(--fg-3)", margin: 0, maxWidth: 460, marginInline: "auto", lineHeight: 1.55 }}>
+            Esta sección del portal existe en el producto real (<code>app/portal/.../{pageLabel.toLowerCase().split(" ")[0]}</code>) pero todavía no está recreada en el UI kit. Pídeme que la diseñe con detalle si la necesitas.
+          </p>
+        </div>
+      );
+    }
+
+    function PortalKit() {
+      const [role, setRole] = React.useState("ADMINISTRADOR");
+      const [page, setPage] = React.useState("dashboard");
+
+      // when switching role, jump back to default landing page
+      const switchRole = (next) => {
+        if (next === null) {
+          // sign-out → just go back to admin dashboard
+          setRole("ADMINISTRADOR");
+          setPage("dashboard");
+          return;
+        }
+        setRole(next);
+        const defaults = { ADMINISTRADOR: "dashboard", PROFESIONAL: "agenda", PACIENTE: "dashboard", RECEPCIONISTA: "dashboard" };
+        setPage(defaults[next]);
+      };
+
+      const userByRole = {
+        ADMINISTRADOR: "Kevin Rodríguez",
+        PROFESIONAL: "Dra. Laura López",
+        PACIENTE: "Mariana López",
+        RECEPCIONISTA: "Daniela Castro",
+      };
+      const titleByRole = {
+        ADMINISTRADOR: "Administrator Portal",
+        PROFESIONAL: "Agenda profesional",
+        PACIENTE: "Portal Paciente",
+        RECEPCIONISTA: "Recepción · Chía",
+      };
+      const subByRole = {
+        ADMINISTRADOR: "Dashboard overview",
+        PROFESIONAL: "DentPro Chía",
+        PACIENTE: "DentPro Chía",
+        RECEPCIONISTA: "Panel del día",
+      };
+
+      // resolve content by role + page
+      let content = null;
+      if (role === "ADMINISTRADOR") {
+        content = page === "dashboard" ? <window.DPAdminDashboard /> : <ComingSoonView pageLabel={window.DP_NAV_BY_ROLE.ADMINISTRADOR.nav.concat(window.DP_NAV_BY_ROLE.ADMINISTRADOR.settings).find(n => n.key === page)?.label || page} />;
+      } else if (role === "PROFESIONAL") {
+        content = page === "agenda" ? <window.DPProfessionalAgenda /> : <ComingSoonView pageLabel={window.DP_NAV_BY_ROLE.PROFESIONAL.nav.concat(window.DP_NAV_BY_ROLE.PROFESIONAL.settings).find(n => n.key === page)?.label || page} />;
+      } else if (role === "PACIENTE") {
+        content = page === "dashboard" ? <window.DPPatientDashboard /> : <ComingSoonView pageLabel={window.DP_NAV_BY_ROLE.PACIENTE.nav.concat(window.DP_NAV_BY_ROLE.PACIENTE.settings).find(n => n.key === page)?.label || page} />;
+      } else if (role === "RECEPCIONISTA") {
+        content = page === "dashboard" ? <window.DPReceptionistDashboard /> : <ComingSoonView pageLabel={window.DP_NAV_BY_ROLE.RECEPCIONISTA.nav.concat(window.DP_NAV_BY_ROLE.RECEPCIONISTA.settings).find(n => n.key === page)?.label || page} />;
+      }
+
+      return (
+        <window.DPPortalShell
+          role={role}
+          activePage={page}
+          onNavigate={setPage}
+          onSwitchRole={switchRole}
+          userName={userByRole[role]}
+          title={titleByRole[role]}
+          subtitle={subByRole[role]}
+        >
+          {content}
+        </window.DPPortalShell>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<PortalKit />);
+  </script>
+</body>
+</html>

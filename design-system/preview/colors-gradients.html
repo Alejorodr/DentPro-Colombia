@@ -1,0 +1,31 @@
+<!-- @dsCard group="Colors" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  html, body { margin: 0; }
+  body { font-family: var(--font-sans); background: #fff; padding: 20px; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .grad { height: 110px; border-radius: 18px; padding: 14px; display: flex; flex-direction: column; justify-content: flex-end; color: #fff; }
+  .grad.hero-light { background: var(--gradient-hero-light); color: var(--fg-1); }
+  .grad.hero-dark { background: var(--gradient-hero-dark); }
+  .grad.brand { background: var(--gradient-brand); }
+  .grad.tooth { background: var(--gradient-tooth-photo); }
+  .name { font-size: 12px; font-weight: 700; line-height: 1.2; }
+  .desc { font-size: 11px; opacity: 0.85; line-height: 1.4; margin-top: 2px; }
+  .row + .row { margin-top: 12px; }
+</style>
+</head>
+<body>
+  <div class="row">
+    <div class="grad hero-light"><div class="name">--gradient-hero-light</div><div class="desc" style="color: var(--fg-2);">Page wash · radial + vertical fade</div></div>
+    <div class="grad hero-dark"><div class="name">--gradient-hero-dark</div><div class="desc">Dark-mode hero · navy radials</div></div>
+  </div>
+  <div class="row">
+    <div class="grad brand"><div class="name">--gradient-brand</div><div class="desc">Booking panel · the only full-saturation fill</div></div>
+    <div class="grad tooth"><div class="name">--gradient-tooth-photo</div><div class="desc">Behind hero specialist photo</div></div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,47 @@
+<!-- @dsCard group="Type" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  html, body { margin: 0; }
+  body { font-family: var(--font-sans); background: #fff; padding: 22px; }
+  .stack { display: flex; flex-direction: column; gap: 16px; }
+  .group { display: flex; align-items: center; gap: 14px; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 8px 16px; border-radius: 9999px;
+    font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em;
+  }
+  .chip.badge {
+    background: rgba(230, 244, 255, 0.8);
+    color: var(--color-brand-indigo);
+    box-shadow: inset 0 0 0 1px rgba(31, 108, 211, 0.25),
+                0 1px 2px rgba(31,108,211,0.06);
+  }
+  .chip.indigo { background: transparent; color: var(--color-brand-indigo); }
+  .chip.muted { color: var(--fg-3); }
+  .meta { font-size: 10px; color: var(--fg-4); font-family: var(--font-mono); }
+</style>
+</head>
+<body>
+  <div class="stack">
+    <div class="group">
+      <span class="chip badge">EQUIPO CLÍNICO</span>
+      <span class="meta">.badge · pale fill, indigo text, ring border</span>
+    </div>
+    <div class="group">
+      <span class="chip indigo">ODONTOLOGÍA GENERAL Y ESPECIALIZADA</span>
+      <span class="meta">bare uppercase eyebrow</span>
+    </div>
+    <div class="group">
+      <span class="chip muted">INDICADORES CLÍNICOS</span>
+      <span class="meta">slate eyebrow (over photo)</span>
+    </div>
+  </div>
+  <p style="font-size: 11px; color: var(--fg-3); margin-top: 22px; line-height: 1.5;">
+    Uppercase eyebrows are the <b>only</b> uppercase text in the system. 12px, 600 weight, 0.08em tracking. Never use Title Case for section titles.
+  </p>
+</body>
+</html>

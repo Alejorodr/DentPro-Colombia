@@ -1,0 +1,53 @@
+<!-- @dsCard group="Components" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  html, body { margin: 0; }
+  body { font-family: var(--font-sans); background: #fff; padding: 24px; }
+  .group { display: flex; align-items: center; gap: 24px; flex-wrap: wrap; }
+  .item { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .badge {
+    width: 40px; height: 40px; border-radius: 16px;
+    background: rgba(230, 244, 255, 0.85);
+    color: var(--color-brand-teal);
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 1px solid rgba(31, 108, 211, 0.20);
+    box-shadow: inset 0 0 8px rgba(10, 61, 145, 0.10);
+  }
+  .circle {
+    width: 56px; height: 56px; border-radius: 16px;
+    background: rgba(230, 244, 255, 0.95);
+    color: var(--color-brand-teal);
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 1px solid rgba(31, 108, 211, 0.25);
+    box-shadow: inset 0 0 14px rgba(10, 61, 145, 0.15);
+  }
+  .float {
+    width: 56px; height: 56px; border-radius: 9999px;
+    background: var(--color-brand-teal); color: #fff;
+    display: inline-flex; align-items: center; justify-content: center;
+    box-shadow: 0 16px 36px -10px rgba(10, 61, 145, 0.45);
+  }
+  .social {
+    width: 40px; height: 40px; border-radius: 9999px;
+    border: 1px solid var(--border-1); color: var(--fg-3);
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .lbl { font-size: 10px; color: var(--fg-3); font-family: var(--font-mono); }
+  svg.s { width: 18px; height: 18px; }
+  svg.m { width: 22px; height: 22px; }
+  svg.l { width: 24px; height: 24px; }
+</style>
+</head>
+<body>
+  <div class="group">
+    <div class="item"><span class="badge"><svg class="s" viewBox="0 0 256 256" fill="currentColor"><path d="M208 32H184V24a8 8 0 0 0-16 0v8H88V24a8 8 0 0 0-16 0v8H48a16 16 0 0 0-16 16V208a16 16 0 0 0 16 16H208a16 16 0 0 0 16-16V48A16 16 0 0 0 208 32M48 96H208V208H48Z"/></svg></span><div class="lbl">icon-badge · 40</div></div>
+    <div class="item"><span class="circle"><svg class="m" viewBox="0 0 256 256" fill="currentColor"><path d="M128 24a104 104 0 1 0 104 104A104.12 104.12 0 0 0 128 24"/></svg></span><div class="lbl">icon-circle · 56</div></div>
+    <div class="item"><span class="float"><svg class="l" viewBox="0 0 256 256" fill="currentColor"><path d="M187.58 144.84l-32-16a8 8 0 0 0-8 .5l-14.69 9.8a40.55 40.55 0 0 1-16-16l9.8-14.69a8 8 0 0 0 .5-8l-16-32A8 8 0 0 0 104 64a40 40 0 0 0-40 40c0 70.58 57.42 128 128 128a40 40 0 0 0 40-40a8 8 0 0 0-4.42-7.16"/></svg></span><div class="lbl">floating-action · 56</div></div>
+    <div class="item"><span class="social"><svg class="s" viewBox="0 0 256 256" fill="currentColor"><path d="M128 80a48 48 0 1 0 48 48a48.05 48.05 0 0 0-48-48m0 80a32 32 0 1 1 32-32a32 32 0 0 1-32 32"/></svg></span><div class="lbl">social-link · 40</div></div>
+  </div>
+</body>
+</html>

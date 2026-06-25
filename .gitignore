@@ -7,6 +7,7 @@ out/
 !.env.example
 *.db
 prisma/.cache/
+prisma/migrations.test-backup/
 tests/prisma-client/
 tests/.tmp/
 playwright-report/
@@ -15,3 +16,15 @@ e2e-results/
 traces/
 screenshots/
 videos/
+
+# Build artifacts
+tsconfig.tsbuildinfo
+
+# Lock files — project uses pnpm
+package-lock.json
+
+# Claude Code internals
+.agents/
+.claude/
+skills-lock.json
+graphify-out/

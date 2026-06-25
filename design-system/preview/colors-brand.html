@@ -1,0 +1,38 @@
+<!-- @dsCard group="Colors" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  html, body { margin: 0; }
+  body { font-family: var(--font-sans); background: #fff; padding: 22px; }
+  .grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; }
+  .sw { display: flex; flex-direction: column; gap: 6px; }
+  .chip { aspect-ratio: 1.2 / 1; border-radius: 14px; box-shadow: inset 0 0 0 1px rgba(15,23,42,0.06); }
+  .name { font-size: 11px; font-weight: 600; color: var(--fg-1); line-height: 1.2; }
+  .hex { font-size: 10px; color: var(--fg-3); font-family: var(--font-mono); }
+</style>
+</head>
+<body>
+  <h4 style="margin: 0 0 8px; font-size: 11px; color: var(--fg-3); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600;">Blues — primary</h4>
+  <div class="grid">
+    <div class="sw"><div class="chip" style="background:#031536"></div><div class="name">brand-midnight</div><div class="hex">#031536</div></div>
+    <div class="sw"><div class="chip" style="background:#0a3d91"></div><div class="name">brand-teal*</div><div class="hex">#0a3d91</div></div>
+    <div class="sw"><div class="chip" style="background:#1f6cd3"></div><div class="name">brand-indigo</div><div class="hex">#1f6cd3</div></div>
+    <div class="sw"><div class="chip" style="background:#4cc3f1"></div><div class="name">brand-sky</div><div class="hex">#4cc3f1</div></div>
+    <div class="sw"><div class="chip" style="background:#5bd0ff"></div><div class="name">accent-cyan</div><div class="hex">#5bd0ff</div></div>
+    <div class="sw"><div class="chip" style="background:#e6f4ff; box-shadow: inset 0 0 0 1px rgba(15,23,42,0.10)"></div><div class="name">brand-light</div><div class="hex">#e6f4ff</div></div>
+  </div>
+  <h4 style="margin: 18px 0 8px; font-size: 11px; color: var(--fg-3); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600;">Gold — del logotipo canónico</h4>
+  <div class="grid">
+    <div class="sw"><div class="chip" style="background:#7a5417"></div><div class="name">gold-deep</div><div class="hex">#7a5417</div></div>
+    <div class="sw"><div class="chip" style="background:#c8901f"></div><div class="name">gold</div><div class="hex">#c8901f</div></div>
+    <div class="sw"><div class="chip" style="background:#e6b450"></div><div class="name">gold-bright</div><div class="hex">#e6b450</div></div>
+    <div class="sw"><div class="chip" style="background:#f5d27a"></div><div class="name">gold-soft</div><div class="hex">#f5d27a</div></div>
+    <div class="sw"><div class="chip" style="background:#fbeec0"></div><div class="name">gold-pale</div><div class="hex">#fbeec0</div></div>
+    <div class="sw"><div class="chip" style="background: linear-gradient(135deg,#c8901f,#f5d27a 50%,#c8901f);"></div><div class="name">gold-swoosh</div><div class="hex">gradient</div></div>
+  </div>
+  <p style="font-size:11px; color: var(--fg-3); margin: 14px 0 0; line-height: 1.5;">*brand-teal is named "teal" but is a deep navy-indigo — historical name; do not rename. Gold pulls from the canonical logo's swoosh — use sparingly: brand accents, premium/print, ortodoncia campaign callouts. Not for body text or default UI.</p>
+</body>
+</html>
