@@ -9,16 +9,17 @@ import { logAuditEvent } from "@/lib/audit";
 import { getPrismaClient } from "@/lib/prisma";
 import {
   optionalAbsoluteHttpUrl,
+  optionalImageUrl,
   optionalText,
   requireAdmin,
-  requiredAbsoluteHttpUrl,
+  requiredImageUrl,
   requiredText,
 } from "@/app/api/admin/homepage/_lib";
 
 const campaignSchema = z.object({
   title: requiredText(1, 120),
   description: optionalText(500).optional(),
-  imageUrl: requiredAbsoluteHttpUrl(500),
+  imageUrl: requiredImageUrl(),
   ctaText: optionalText(80).optional(),
   ctaUrl: optionalAbsoluteHttpUrl(500).optional(),
   startAt: z.string().trim().min(1),

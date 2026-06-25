@@ -70,9 +70,24 @@ function optionalAbsoluteUrl(max: number) {
   return optionalText(max).refine((value) => value === null || parseAbsoluteUrl(value), "URL inválida.");
 }
 
+// Accepts https:// URLs and base64 data URLs from local uploads.
+const IMAGE_MAX_CHARS = 524288;
+function optionalImageUrl() {
+  return z
+    .string()
+    .trim()
+    .max(IMAGE_MAX_CHARS)
+    .refine((v) => !htmlTagPattern.test(v), "No se permite HTML.")
+    .transform((v) => (v === "" ? null : v))
+    .refine(
+      (v) => v === null || v.startsWith("data:image/") || parseAbsoluteUrl(v),
+      "URL inválida o formato no permitido.",
+    );
+}
+
 const homepageSettingsSchema = z.object({
   siteName: requiredText(1, 120),
-  logoUrl: optionalAbsoluteUrl(500),
+  logoUrl: optionalImageUrl(),
 
   infoBarLocation: requiredText(1, 180),
   infoBarHours: optionalText(180),
@@ -88,12 +103,12 @@ const homepageSettingsSchema = z.object({
   heroPrimaryButtonHref: optionalHref(500),
   heroSecondaryButtonText: optionalText(80),
   heroSecondaryButtonHref: optionalHref(500),
-  heroImageUrl: optionalAbsoluteUrl(500),
+  heroImageUrl: optionalImageUrl(),
   heroImageAlt: optionalText(180),
   heroTestimonialQuote: optionalText(600),
   heroTestimonialAuthor: optionalText(120),
   heroTestimonialRole: optionalText(120),
-  heroTestimonialAvatarUrl: optionalAbsoluteUrl(500),
+  heroTestimonialAvatarUrl: optionalImageUrl(),
   heroHighlightTitle: optionalText(180),
   heroHighlightDescription: optionalText(600),
 

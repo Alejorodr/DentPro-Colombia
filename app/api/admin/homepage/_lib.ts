@@ -66,6 +66,43 @@ export function optionalAbsoluteHttpUrl(max: number) {
   );
 }
 
+// Accepts https:// URLs or base64 data URLs from local uploads.
+// Max is generous (512KB as text) to accommodate compressed base64 images.
+const IMAGE_MAX_CHARS = 524288;
+
+export function optionalImageUrl() {
+  return z
+    .string()
+    .trim()
+    .max(IMAGE_MAX_CHARS)
+    .refine(noHtml, "No se permite HTML.")
+    .transform((value) => (value === "" ? null : value))
+    .refine(
+      (value) => {
+        if (value === null) return true;
+        if (value.startsWith("data:image/")) return true;
+        return hasValidAbsoluteHttpUrl(value);
+      },
+      { message: "URL inválida o formato de imagen no permitido." },
+    );
+}
+
+export function requiredImageUrl() {
+  return z
+    .string()
+    .trim()
+    .min(1)
+    .max(IMAGE_MAX_CHARS)
+    .refine(noHtml, "No se permite HTML.")
+    .refine(
+      (value) => {
+        if (value.startsWith("data:image/")) return true;
+        return hasValidAbsoluteHttpUrl(value);
+      },
+      { message: "URL inválida o formato de imagen no permitido." },
+    );
+}
+
 const marketingIconSchema = z.enum(MARKETING_ICON_KEYS);
 
 export function normalizeMarketingIconKey(iconKey: string, fallback: MarketingIconKey): MarketingIconKey {

@@ -11,14 +11,14 @@ import {
   optionalAbsoluteHttpUrl,
   optionalText,
   requireAdmin,
-  requiredAbsoluteHttpUrl,
+  requiredImageUrl,
   requiredText,
 } from "@/app/api/admin/homepage/_lib";
 
 const updateCampaignSchema = z.object({
   title: requiredText(1, 120).optional(),
   description: optionalText(500).optional(),
-  imageUrl: requiredAbsoluteHttpUrl(500).optional(),
+  imageUrl: requiredImageUrl().optional(),
   ctaText: optionalText(80).optional(),
   ctaUrl: optionalAbsoluteHttpUrl(500).optional(),
   startAt: z.string().trim().min(1).optional(),

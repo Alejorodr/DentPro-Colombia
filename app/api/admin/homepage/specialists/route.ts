@@ -4,13 +4,13 @@ import { z } from "zod";
 import { parseJson } from "@/app/api/_utils/validation";
 import { getPrismaClient } from "@/lib/prisma";
 
-import { optionalAbsoluteHttpUrl, optionalText, requireAdmin, requiredText } from "../_lib";
+import { optionalImageUrl, optionalText, requireAdmin, requiredText } from "../_lib";
 
 const specialistCreateSchema = z.object({
   fullName: requiredText(1, 120),
   specialty: requiredText(1, 120),
   bioShort: requiredText(1, 600),
-  imageUrl: optionalAbsoluteHttpUrl(500),
+  imageUrl: optionalImageUrl(),
   altText: optionalText(180),
   isActive: z.boolean().optional(),
 });

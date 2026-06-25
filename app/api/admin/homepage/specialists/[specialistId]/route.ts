@@ -5,14 +5,14 @@ import { errorResponse } from "@/app/api/_utils/response";
 import { parseJson } from "@/app/api/_utils/validation";
 import { getPrismaClient } from "@/lib/prisma";
 
-import { optionalAbsoluteHttpUrl, optionalText, requireAdmin, requiredText } from "../../_lib";
+import { optionalImageUrl, optionalText, requireAdmin, requiredText } from "../../_lib";
 
 const specialistUpdateSchema = z
   .object({
     fullName: requiredText(1, 120).optional(),
     specialty: requiredText(1, 120).optional(),
     bioShort: requiredText(1, 600).optional(),
-    imageUrl: optionalAbsoluteHttpUrl(500).optional(),
+    imageUrl: optionalImageUrl().optional(),
     altText: optionalText(180).optional(),
     isActive: z.boolean().optional(),
   })
