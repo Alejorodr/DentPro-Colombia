@@ -47,6 +47,21 @@ const listMigrationDirectories = async () => {
 
 const isP3005Error = ({ stderr }) => /P3005/i.test(stderr || '');
 
+const isP3009Error = ({ stderr }) => /P3009/i.test(stderr || '');
+
+const extractFailedMigrationName = ({ stderr }) => {
+  const match = (stderr || '').match(/`([^`]+)`\s+migration started at .+ failed/);
+  return match ? match[1] : null;
+};
+
+const resolveRolledBack = async (migrationName, databaseUrl) => {
+  logStep(`Marcando migración fallida como rolled-back: ${migrationName}`);
+  return runPrisma(
+    ['migrate', 'resolve', '--rolled-back', migrationName, '--schema', 'prisma/schema.prisma'],
+    { DATABASE_URL: databaseUrl },
+  );
+};
+
 const deployMigrations = async (databaseUrl) =>
   runPrisma(['migrate', 'deploy', '--schema', 'prisma/schema.prisma'], { DATABASE_URL: databaseUrl });
 
@@ -142,6 +157,30 @@ const run = async () => {
   const deployResult = await deployWithRetry(databaseUrl);
 
   if (deployResult.code === 0) {
+    logStep('Migraciones aplicadas o ya al día');
+    return;
+  }
+
+  if (isP3009Error(deployResult)) {
+    const failedMigration = extractFailedMigrationName(deployResult);
+    if (!failedMigration) {
+      if (deployResult.stderr) console.error(deployResult.stderr);
+      throw new Error('P3009 detectado pero no se pudo extraer el nombre de la migración fallida.');
+    }
+
+    logStep(`P3009 detectado. Resolviendo migración fallida: ${failedMigration}`);
+    const resolveResult = await resolveRolledBack(failedMigration, databaseUrl);
+    if (resolveResult.code !== 0) {
+      if (resolveResult.stderr) console.error(resolveResult.stderr);
+      throw new Error(`Falló prisma migrate resolve --rolled-back para ${failedMigration}.`);
+    }
+
+    const retryResult = await deployWithRetry(databaseUrl);
+    if (retryResult.code !== 0) {
+      if (retryResult.stderr) console.error(retryResult.stderr);
+      throw new Error('Falló prisma migrate deploy luego de resolver P3009.');
+    }
+
     logStep('Migraciones aplicadas o ya al día');
     return;
   }
