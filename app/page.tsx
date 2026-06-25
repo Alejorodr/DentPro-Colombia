@@ -58,7 +58,7 @@ export default async function Home() {
     {
       question: "¿Cómo agendo una cita en DentPro?",
       answer:
-        "Podés reservar tu turno directamente en línea desde el botón "Reservar turno" de esta página — el sistema confirma disponibilidad en tiempo real y te envía un correo de confirmación. También podés escribirnos por WhatsApp al 323 796 8435 o llamarnos al mismo número.",
+        "Podés reservar tu turno directamente en línea desde el botón 'Reservar turno' de esta página — el sistema confirma disponibilidad en tiempo real y te envía un correo de confirmación. También podés escribirnos por WhatsApp al 323 796 8435 o llamarnos al mismo número.",
     },
     {
       question: "¿Cuánto cuesta la primera consulta?",
