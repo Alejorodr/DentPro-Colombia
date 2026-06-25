@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Card } from "@/app/portal/components/ui/Card";
+import { CollapsibleCard } from "@/app/portal/admin/content/components/CollapsibleCard";
 import { AdminImageField } from "@/app/portal/admin/content/components/AdminImageField";
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
 import type { MarketingUploadFolder } from "@/lib/marketing/images";
@@ -241,18 +242,18 @@ const SECTIONS: SectionConfig[] = [
 
 const IMAGE_FIELD_CONFIG: Partial<Record<keyof HomepageSettingsForm, { uploadFolder: MarketingUploadFolder; recommendation: string; aspectRatio: string }>> = {
   logoUrl: {
-    uploadFolder: "marketing/homepage/hero",
-    recommendation: "200x200 px",
+    uploadFolder: "marketing/homepage/testimonial", // 1:1 folder
+    recommendation: "200×200 px mínimo",
     aspectRatio: "1:1",
   },
   heroImageUrl: {
-    uploadFolder: "marketing/homepage/hero",
-    recommendation: "1200x1500 px",
-    aspectRatio: "4:5",
+    uploadFolder: "marketing/homepage/hero", // 4:3 folder → 1200×900
+    recommendation: "1200×900 px",
+    aspectRatio: "4:3",
   },
   heroTestimonialAvatarUrl: {
-    uploadFolder: "marketing/homepage/testimonial",
-    recommendation: "400x400 px",
+    uploadFolder: "marketing/homepage/testimonial", // 1:1 folder
+    recommendation: "400×400 px",
     aspectRatio: "1:1",
   },
 };
@@ -331,21 +332,40 @@ export function AdminHomepageSettingsPanel() {
 
   return (
     <div className="space-y-4">
-      <section>
-        <p className="text-xs font-semibold uppercase tracking-wide text-brand-teal dark:text-accent-cyan">Homepage CMS</p>
-        <h2 className="text-xl font-semibold text-slate-900 dark:text-white">Configuración singleton del homepage</h2>
-        <p className="text-sm text-slate-600 dark:text-slate-300">Edición de bloques singleton (InfoBar, Hero, Agenda, Contacto y acciones flotantes).</p>
-      </section>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <section>
+          <p className="text-xs font-semibold uppercase tracking-wide text-brand-teal dark:text-accent-cyan">Homepage CMS</p>
+          <h2 className="text-xl font-semibold text-slate-900 dark:text-white">Configuración del homepage</h2>
+          <p className="text-sm text-slate-600 dark:text-slate-300">
+            Edita cada bloque del homepage. Haz clic en el encabezado para expandir o colapsar una sección.
+          </p>
+        </section>
+        <button
+          type="button"
+          className="rounded-full bg-brand-teal px-5 py-2 text-sm font-semibold text-white shadow transition hover:-translate-y-0.5 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
+          onClick={onSave}
+          disabled={loading || saving}
+        >
+          {saving ? "Guardando..." : "Guardar cambios"}
+        </button>
+      </div>
+
+      {(validationMessage || success) && (
+        <div className={`rounded-xl px-4 py-3 text-sm font-medium ${success ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300" : "bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-300"}`}>
+          {success ?? validationMessage}
+        </div>
+      )}
 
       {loading ? <Card><p className="text-sm text-slate-600 dark:text-slate-300">Cargando configuración...</p></Card> : null}
 
       {!loading
-        ? SECTIONS.map((section) => (
-            <Card key={section.title} className="space-y-4">
-              <div>
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-white">{section.title}</h3>
-                <p className="text-sm text-slate-600 dark:text-slate-300">{section.description}</p>
-              </div>
+        ? SECTIONS.map((section, i) => (
+            <CollapsibleCard
+              key={section.title}
+              title={section.title}
+              description={section.description}
+              defaultOpen={i === 0}
+            >
               <div className="grid gap-4 md:grid-cols-2">
                 {section.fields.map((field) => {
                   const imageField = IMAGE_FIELD_CONFIG[field.key];
@@ -394,22 +414,22 @@ export function AdminHomepageSettingsPanel() {
                   );
                 })}
               </div>
-            </Card>
+            </CollapsibleCard>
           ))
         : null}
 
-      <Card className="space-y-3">
-        <button
-          type="button"
-          className="rounded-full bg-brand-teal px-4 py-2 text-xs font-semibold uppercase text-white disabled:cursor-not-allowed disabled:opacity-60"
-          onClick={onSave}
-          disabled={loading || saving}
-        >
-          {saving ? "Guardando..." : "Guardar homepage"}
-        </button>
-        {validationMessage ? <p className="text-sm text-red-600">{validationMessage}</p> : null}
-        {success ? <p className="text-sm text-emerald-600">{success}</p> : null}
-      </Card>
+      {!loading && (
+        <div className="flex justify-end">
+          <button
+            type="button"
+            className="rounded-full bg-brand-teal px-5 py-2 text-sm font-semibold text-white shadow transition hover:-translate-y-0.5 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
+            onClick={onSave}
+            disabled={saving}
+          >
+            {saving ? "Guardando..." : "Guardar cambios"}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
