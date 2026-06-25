@@ -47,17 +47,31 @@ const listMigrationDirectories = async () => {
 
 const isP3005Error = ({ stderr }) => /P3005/i.test(stderr || '');
 
+// P3009: pre-existing failed migration blocking new migrations
 const isP3009Error = ({ stderr }) => /P3009/i.test(stderr || '');
 
-const extractFailedMigrationName = ({ stderr }) => {
+// P3018: migration failed to apply during this deploy attempt
+const isP3018Error = ({ stderr }) => /P3018/i.test(stderr || '');
+
+const isAdvisoryLockTimeoutError = ({ stderr }) => {
+  const output = stderr || '';
+  return /P1002/i.test(output) || /advisory lock/i.test(output) || /pg_advisory_lock/i.test(output);
+};
+
+// Extract migration name from P3009 error: `migration_name` migration started at ... failed
+const extractP3009MigrationName = ({ stderr }) => {
   const match = (stderr || '').match(/`([^`]+)`\s+migration started at .+ failed/);
   return match ? match[1] : null;
 };
 
-// Mark as --applied: migration failed with SQLite-specific syntax (PRAGMA) on PostgreSQL.
-// The schema changes are already present via db push or later migrations, so we skip it.
+// Extract migration name from P3018 error: Migration name: migration_name
+const extractP3018MigrationName = ({ stderr }) => {
+  const match = (stderr || '').match(/Migration name:\s*(\S+)/);
+  return match ? match[1] : null;
+};
+
 const resolveApplied = async (migrationName, databaseUrl) => {
-  logStep(`Marcando migración fallida como applied (schema ya presente): ${migrationName}`);
+  logStep(`Marcando migración como applied: ${migrationName}`);
   return runPrisma(
     ['migrate', 'resolve', '--applied', migrationName, '--schema', 'prisma/schema.prisma'],
     { DATABASE_URL: databaseUrl },
@@ -66,12 +80,6 @@ const resolveApplied = async (migrationName, databaseUrl) => {
 
 const deployMigrations = async (databaseUrl) =>
   runPrisma(['migrate', 'deploy', '--schema', 'prisma/schema.prisma'], { DATABASE_URL: databaseUrl });
-
-
-const isAdvisoryLockTimeoutError = ({ stderr }) => {
-  const output = stderr || '';
-  return /P1002/i.test(output) || /advisory lock/i.test(output) || /pg_advisory_lock/i.test(output);
-};
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -126,6 +134,47 @@ const baselineMigrations = async () => {
   }
 };
 
+// Resolve failed migrations (P3009/P3018) one by one, marking each as --applied.
+// These are legacy SQLite-format migrations that cannot run on PostgreSQL;
+// the schema is already present via db push or later migrations.
+const deployResolvingFailedMigrations = async (databaseUrl) => {
+  const maxResolveAttempts = 30;
+
+  for (let i = 0; i < maxResolveAttempts; i += 1) {
+    const result = await deployWithRetry(databaseUrl);
+
+    if (result.code === 0) {
+      return result;
+    }
+
+    let failedMigration = null;
+
+    if (isP3009Error(result)) {
+      failedMigration = extractP3009MigrationName(result);
+      if (!failedMigration) {
+        return result;
+      }
+      logStep(`P3009 — resolviendo migración pre-fallida: ${failedMigration}`);
+    } else if (isP3018Error(result)) {
+      failedMigration = extractP3018MigrationName(result);
+      if (!failedMigration) {
+        return result;
+      }
+      logStep(`P3018 — resolviendo migración que falló al aplicar: ${failedMigration}`);
+    } else {
+      return result;
+    }
+
+    const resolveResult = await resolveApplied(failedMigration, databaseUrl);
+    if (resolveResult.code !== 0) {
+      if (resolveResult.stderr) console.error(resolveResult.stderr);
+      return { code: 1, stderr: `Falló resolve --applied para ${failedMigration}.\n${resolveResult.stderr}` };
+    }
+  }
+
+  return { code: 1, stderr: `Superado límite de ${maxResolveAttempts} resoluciones de migración.` };
+};
+
 const isInvalidDatabaseUrl = (value) => {
   if (!value || value.trim() === '') {
     return true;
@@ -156,33 +205,9 @@ const run = async () => {
   }
 
   logStep('Ejecutando migraciones Prisma');
-  const deployResult = await deployWithRetry(databaseUrl);
+  const deployResult = await deployResolvingFailedMigrations(databaseUrl);
 
   if (deployResult.code === 0) {
-    logStep('Migraciones aplicadas o ya al día');
-    return;
-  }
-
-  if (isP3009Error(deployResult)) {
-    const failedMigration = extractFailedMigrationName(deployResult);
-    if (!failedMigration) {
-      if (deployResult.stderr) console.error(deployResult.stderr);
-      throw new Error('P3009 detectado pero no se pudo extraer el nombre de la migración fallida.');
-    }
-
-    logStep(`P3009 detectado. Resolviendo migración fallida: ${failedMigration}`);
-    const resolveResult = await resolveApplied(failedMigration, databaseUrl);
-    if (resolveResult.code !== 0) {
-      if (resolveResult.stderr) console.error(resolveResult.stderr);
-      throw new Error(`Falló prisma migrate resolve --applied para ${failedMigration}.`);
-    }
-
-    const retryResult = await deployWithRetry(databaseUrl);
-    if (retryResult.code !== 0) {
-      if (retryResult.stderr) console.error(retryResult.stderr);
-      throw new Error('Falló prisma migrate deploy luego de resolver P3009.');
-    }
-
     logStep('Migraciones aplicadas o ya al día');
     return;
   }
