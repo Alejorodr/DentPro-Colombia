@@ -4,7 +4,7 @@ import { requireRole, requireSession } from "@/lib/authz";
 import { getPrismaClient } from "@/lib/prisma";
 import { errorResponse } from "@/app/api/_utils/response";
 import type { AppointmentStatus } from "@/lib/api/types";
-import { buildError, isValidAppointmentStatus, toAppointmentSummary } from "../../utils";
+import { buildError, fromPrismaStatus, isValidAppointmentStatus, toAppointmentSummary, toPrismaStatus } from "../../utils";
 
 const transitionRules: Record<AppointmentStatus, AppointmentStatus[]> = {
   pending: ["confirmed", "cancelled"],
@@ -58,7 +58,7 @@ export async function PATCH(request: Request, context: any) {
     return buildError("La cita no existe.", 404);
   }
 
-  const currentStatus = appointment.status as AppointmentStatus;
+  const currentStatus = fromPrismaStatus(appointment.status ?? "");
   const allowedTransitions = transitionRules[currentStatus];
 
   if (!allowedTransitions.includes(nextStatus)) {
@@ -71,7 +71,7 @@ export async function PATCH(request: Request, context: any) {
   try {
     const updated = await prisma.appointment.update({
       where: { id: appointmentId },
-      data: { status: nextStatus },
+      data: { status: toPrismaStatus(nextStatus) },
       include: {
         patient: true,
         schedule: { include: { specialist: true } },
