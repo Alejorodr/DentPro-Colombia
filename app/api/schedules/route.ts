@@ -7,26 +7,27 @@ export async function GET() {
   const prisma = getPrismaClient();
 
   try {
-    const schedules = await prisma.schedule.findMany({
-      orderBy: { start: "asc" },
-      include: { specialist: true },
+    const slots = await prisma.timeSlot.findMany({
+      orderBy: { startAt: "asc" },
+      include: {
+        professional: { include: { user: { select: { name: true, lastName: true } } } },
+      },
     });
 
-    const payload: ScheduleSlot[] = schedules.map((slot: {
-      id: string;
-      specialistId: string;
-      specialist: { name: string | null } | null;
-      start: Date;
-      end: Date;
-      available: boolean;
-    }) => ({
-      id: slot.id,
-      specialistId: slot.specialistId,
-      specialistName: slot.specialist?.name ?? undefined,
-      start: slot.start.toISOString(),
-      end: slot.end.toISOString(),
-      available: slot.available,
-    }));
+    const payload: ScheduleSlot[] = slots.map((slot) => {
+      const user = slot.professional?.user;
+      const specialistName = user
+        ? `${user.name} ${user.lastName}`.trim() || undefined
+        : undefined;
+      return {
+        id: slot.id,
+        specialistId: slot.professionalId,
+        specialistName,
+        start: slot.startAt.toISOString(),
+        end: slot.endAt.toISOString(),
+        available: slot.status === "AVAILABLE",
+      };
+    });
 
     return NextResponse.json(payload);
   } catch (error) {
