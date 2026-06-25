@@ -1,4 +1,4 @@
-export const revalidate = process.env.NODE_ENV === "production" ? 300 : false;
+export const revalidate = 300;
 
 import type { Metadata } from "next";
 import { InfoBar } from "./(marketing)/components/InfoBar";
