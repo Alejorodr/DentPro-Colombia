@@ -1,9 +1,20 @@
 "use client";
 
+import Link from "next/link";
+
 import { CheckCircle } from "@/components/ui/Icon";
 
 import type { MarketingIconName } from "./icon-types";
 import { resolveMarketingIcon } from "./icon-registry";
+
+const SERVICE_HREFS: Record<string, string> = {
+  "Limpieza y profilaxis": "/servicios/limpieza-dental",
+  "Ortodoncia digital": "/servicios/ortodoncia",
+  "Implantes y cirugía": "/servicios/implantes",
+  "Estética dental": "/servicios/estetica-dental",
+  "Endodoncia avanzada": "/servicios/endodoncia",
+  "Odontopediatría": "/servicios/odontopediatria",
+};
 
 interface ServiceItem {
   title: string;
@@ -31,6 +42,7 @@ export function ServicesSection({ badge, title, description, services }: Service
         <div className="mt-12 grid gap-8 sm:grid-cols-2 xl:grid-cols-3">
           {services.map((service) => {
             const ServiceIcon = resolveMarketingIcon(service.icon);
+            const href = SERVICE_HREFS[service.title];
 
             return (
               <article key={service.title} className="card flex flex-col gap-4">
@@ -38,7 +50,16 @@ export function ServicesSection({ badge, title, description, services }: Service
                   <ServiceIcon className="h-6 w-6" weight="bold" aria-hidden="true" />
                 </div>
                 <div className="flex flex-1 flex-col">
-                  <h3 className="text-xl font-semibold text-slate-900 dark:text-white">{service.title}</h3>
+                  {href ? (
+                    <Link
+                      href={href}
+                      className="text-xl font-semibold text-slate-900 hover:text-brand-indigo dark:text-white dark:hover:text-accent-cyan"
+                    >
+                      {service.title}
+                    </Link>
+                  ) : (
+                    <h3 className="text-xl font-semibold text-slate-900 dark:text-white">{service.title}</h3>
+                  )}
                   <p className="mt-4 text-sm text-slate-600 dark:text-slate-200">{service.description}</p>
                   <ul className="mt-6 space-y-2 text-sm text-slate-500 dark:text-slate-300">
                     {service.highlights.map((item) => (

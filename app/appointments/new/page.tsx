@@ -1,7 +1,15 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
 import { NewAppointmentForm } from "@/app/appointments/new/NewAppointmentForm";
+
+export const metadata: Metadata = {
+  title: "Reservar turno",
+  description:
+    "Agenda tu cita en DentPro Colombia. Elegí especialidad, profesional y horario disponible — confirmación inmediata.",
+  robots: { index: false, follow: false },
+};
 
 export default async function NewAppointmentPage() {
   const session = await auth();

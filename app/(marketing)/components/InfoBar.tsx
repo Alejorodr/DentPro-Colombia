@@ -20,15 +20,22 @@ type SocialLink = {
   icon: MarketingIconName;
 };
 
+interface GoogleRatingBadge {
+  rating: number;
+  count: number;
+  url?: string;
+}
+
 interface InfoBarProps {
   location: IconText;
   schedule: IconText;
   whatsapp: IconLink;
   email: IconLink;
   socials: SocialLink[];
+  googleRating?: GoogleRatingBadge;
 }
 
-export function InfoBar({ location, schedule, whatsapp, email, socials }: InfoBarProps) {
+export function InfoBar({ location, schedule, whatsapp, email, socials, googleRating }: InfoBarProps) {
   const LocationIcon = resolveMarketingIcon(location.icon);
   const ScheduleIcon = resolveMarketingIcon(schedule.icon);
   const WhatsappIcon = resolveMarketingIcon(whatsapp.icon);
@@ -46,6 +53,29 @@ export function InfoBar({ location, schedule, whatsapp, email, socials }: InfoBa
             <ScheduleIcon className="h-4 w-4" weight="fill" aria-hidden="true" />
             {schedule.text}
           </span>
+          {googleRating ? (
+            googleRating.url ? (
+              <a
+                href={googleRating.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700 transition hover:bg-amber-100 dark:bg-amber-900/20 dark:text-amber-400 dark:hover:bg-amber-900/30"
+                aria-label={`${googleRating.rating.toFixed(1)} de 5 en Google — ${googleRating.count} reseñas`}
+              >
+                <span aria-hidden="true">★</span>
+                {googleRating.rating.toFixed(1)}
+                <span className="text-amber-500/70 dark:text-amber-500/50">·</span>
+                {googleRating.count.toLocaleString("es-CO")} en Google
+              </a>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700 dark:bg-amber-900/20 dark:text-amber-400">
+                <span aria-hidden="true">★</span>
+                {googleRating.rating.toFixed(1)}
+                <span className="text-amber-500/70 dark:text-amber-500/50">·</span>
+                {googleRating.count.toLocaleString("es-CO")} en Google
+              </span>
+            )
+          ) : null}
           <a
             href={whatsapp.href}
             className="inline-flex items-center gap-2 font-semibold text-brand-teal transition hover:text-brand-indigo dark:text-accent-cyan dark:hover:text-accent-cyan/80"
