@@ -54,10 +54,12 @@ const extractFailedMigrationName = ({ stderr }) => {
   return match ? match[1] : null;
 };
 
-const resolveRolledBack = async (migrationName, databaseUrl) => {
-  logStep(`Marcando migración fallida como rolled-back: ${migrationName}`);
+// Mark as --applied: migration failed with SQLite-specific syntax (PRAGMA) on PostgreSQL.
+// The schema changes are already present via db push or later migrations, so we skip it.
+const resolveApplied = async (migrationName, databaseUrl) => {
+  logStep(`Marcando migración fallida como applied (schema ya presente): ${migrationName}`);
   return runPrisma(
-    ['migrate', 'resolve', '--rolled-back', migrationName, '--schema', 'prisma/schema.prisma'],
+    ['migrate', 'resolve', '--applied', migrationName, '--schema', 'prisma/schema.prisma'],
     { DATABASE_URL: databaseUrl },
   );
 };
@@ -169,10 +171,10 @@ const run = async () => {
     }
 
     logStep(`P3009 detectado. Resolviendo migración fallida: ${failedMigration}`);
-    const resolveResult = await resolveRolledBack(failedMigration, databaseUrl);
+    const resolveResult = await resolveApplied(failedMigration, databaseUrl);
     if (resolveResult.code !== 0) {
       if (resolveResult.stderr) console.error(resolveResult.stderr);
-      throw new Error(`Falló prisma migrate resolve --rolled-back para ${failedMigration}.`);
+      throw new Error(`Falló prisma migrate resolve --applied para ${failedMigration}.`);
     }
 
     const retryResult = await deployWithRetry(databaseUrl);
