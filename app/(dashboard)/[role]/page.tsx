@@ -19,7 +19,7 @@ interface DashboardSection {
 }
 
 const sectionsByRole: Record<UserRole, DashboardSection[]> = {
-  patient: [
+  PACIENTE: [
     {
       id: "agenda",
       title: "Mi agenda",
@@ -29,11 +29,11 @@ const sectionsByRole: Record<UserRole, DashboardSection[]> = {
         "Confirma o reprograma directamente desde el tablero",
         "Añade notas previas para tu especialista",
       ],
-      routes: [{ label: "Citas", path: "/patient/appointments" }],
+      routes: [{ label: "Citas", path: "/portal/paciente" }],
       icon: "agenda",
     },
     {
-      id: "pacientes",
+      id: "datos",
       title: "Mis datos",
       description:
         "Mantén tu información de contacto y consentimientos actualizados.",
@@ -41,11 +41,11 @@ const sectionsByRole: Record<UserRole, DashboardSection[]> = {
         "Descarga tus documentos y resultados",
         "Actualiza teléfono y datos de contacto",
       ],
-      routes: [{ label: "Pacientes", path: "/patient/patients" }],
+      routes: [{ label: "Perfil", path: "/portal/paciente/profile" }],
       icon: "patients",
     },
   ],
-  professional: [
+  PROFESIONAL: [
     {
       id: "agenda",
       title: "Agenda clínica",
@@ -56,8 +56,7 @@ const sectionsByRole: Record<UserRole, DashboardSection[]> = {
         "Accede al detalle clínico antes de la cita",
       ],
       routes: [
-        { label: "Citas", path: "/professional/appointments" },
-        { label: "Horarios", path: "/professional/schedules" },
+        { label: "Agenda", path: "/portal/profesional" },
       ],
       icon: "agenda",
     },
@@ -70,11 +69,11 @@ const sectionsByRole: Record<UserRole, DashboardSection[]> = {
         "Filtra por urgencia o especialidad",
         "Comparte indicaciones postoperatorias",
       ],
-      routes: [{ label: "Pacientes", path: "/professional/patients" }],
+      routes: [{ label: "Pacientes", path: "/portal/profesional/patients" }],
       icon: "patients",
     },
   ],
-  reception: [
+  RECEPCIONISTA: [
     {
       id: "agenda",
       title: "Agenda en tiempo real",
@@ -85,8 +84,8 @@ const sectionsByRole: Record<UserRole, DashboardSection[]> = {
         "Envía recordatorios por WhatsApp o correo",
       ],
       routes: [
-        { label: "Citas", path: "/reception/appointments" },
-        { label: "Horarios", path: "/reception/schedules" },
+        { label: "Dashboard", path: "/portal/recepcion" },
+        { label: "Horarios", path: "/portal/recepcion/schedule" },
       ],
       icon: "agenda",
     },
@@ -96,14 +95,14 @@ const sectionsByRole: Record<UserRole, DashboardSection[]> = {
       description:
         "Consulta datos de contacto, pólizas y saldos pendientes.",
       highlights: [
-        "Valida cobertura y asegurable antes de la cita",
-        "Actualiza datos de facturación y autorizaciones",
+        "Valida cobertura antes de la cita",
+        "Actualiza datos de facturación",
       ],
-      routes: [{ label: "Pacientes", path: "/reception/patients" }],
+      routes: [{ label: "Pacientes", path: "/portal/recepcion/patients" }],
       icon: "patients",
     },
   ],
-  admin: [
+  ADMINISTRADOR: [
     {
       id: "insights",
       title: "Indicadores",
@@ -113,7 +112,7 @@ const sectionsByRole: Record<UserRole, DashboardSection[]> = {
         "Exporta reportes para gerencia",
         "Configura metas semanales y mensuales",
       ],
-      routes: [{ label: "Citas", path: "/admin/appointments" }],
+      routes: [{ label: "Dashboard", path: "/portal/admin" }],
       icon: "insights",
     },
     {
@@ -126,8 +125,8 @@ const sectionsByRole: Record<UserRole, DashboardSection[]> = {
         "Define horarios y permisos para cada rol",
       ],
       routes: [
-        { label: "Pacientes", path: "/admin/patients" },
-        { label: "Horarios", path: "/admin/schedules" },
+        { label: "Staff", path: "/portal/admin/staff" },
+        { label: "Horarios", path: "/portal/admin/schedule" },
       ],
       icon: "tasks",
     },
