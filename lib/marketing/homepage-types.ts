@@ -79,6 +79,11 @@ export type HomepageLegalLinkContent = {
   label: string;
 };
 
+export type HomepageFaqContent = {
+  question: string;
+  answer: string;
+};
+
 export type HomepageNormalizedContent = {
   brand: {
     name: string;
@@ -146,5 +151,10 @@ export type HomepageNormalizedContent = {
   floatingActions: {
     whatsappNumber: string;
     phoneNumber: string;
+  };
+  faqs: HomepageFaqContent[];
+  seo: {
+    metaTitle: string | null;
+    metaDescription: string | null;
   };
 };

@@ -235,6 +235,42 @@ export const HOMEPAGE_DEFAULT_CONTENT: HomepageNormalizedContent = {
     whatsappNumber: "573237968435",
     phoneNumber: "+573237968435",
   },
+  faqs: [
+    {
+      question: "¿Cómo agendo una cita en DentPro?",
+      answer:
+        "Podés reservar tu turno directamente en línea desde el botón 'Reservar turno' de esta página — el sistema confirma disponibilidad en tiempo real y te envía un correo de confirmación. También podés escribirnos por WhatsApp al 323 796 8435 o llamarnos al mismo número.",
+    },
+    {
+      question: "¿Cuánto cuesta la primera consulta?",
+      answer:
+        "La valoración inicial incluye revisión clínica completa, diagnóstico y plan de tratamiento personalizado. Consultá el valor actualizado escribiéndonos por WhatsApp — los precios varían según el especialista y el tratamiento requerido.",
+    },
+    {
+      question: "¿Atienden urgencias dentales?",
+      answer:
+        "Sí. Reservamos cupos de urgencia todos los días de la semana. Si tenés dolor intenso, fractura o pérdida de una pieza, escribinos por WhatsApp y te damos turno el mismo día o al siguiente.",
+    },
+    {
+      question: "¿Tienen convenios con seguros o EPS?",
+      answer:
+        "Trabajamos principalmente como clínica particular. Para convenios empresariales o con aseguradoras, contactanos directamente a dentprocolombia@gmail.com y evaluamos opciones según tu caso.",
+    },
+    {
+      question: "¿Qué debo llevar a mi primera cita?",
+      answer:
+        "Documento de identidad, radiografías recientes (si tenés), y cualquier tratamiento o medicación que estés tomando actualmente. Si sos menor de edad, un acudiente debe acompañarte.",
+    },
+    {
+      question: "¿Ofrecen planes de pago o financiación?",
+      answer:
+        "Sí, manejamos planes de pago para tratamientos de mayor valor como ortodoncia, implantes y rehabilitación. Conversalo con nuestro equipo al momento de la valoración inicial.",
+    },
+  ],
+  seo: {
+    metaTitle: null,
+    metaDescription: null,
+  },
 };
 
 const VALID_ICON_SET = new Set<string>(MARKETING_ICON_KEYS);

@@ -11,6 +11,7 @@ import { AdminHomepageSocialLinksPanel } from "@/app/portal/admin/content/AdminH
 import { AdminHomepageContactSupportItemsPanel } from "@/app/portal/admin/content/AdminHomepageContactSupportItemsPanel";
 import { AdminHomepageLocationsPanel } from "@/app/portal/admin/content/AdminHomepageLocationsPanel";
 import { AdminHomepageLegalLinksPanel } from "@/app/portal/admin/content/AdminHomepageLegalLinksPanel";
+import { AdminHomepageFaqPanel } from "@/app/portal/admin/content/AdminHomepageFaqPanel";
 
 const NAV_ITEMS = [
   { label: "Textos y logo", href: "#settings" },
@@ -23,6 +24,7 @@ const NAV_ITEMS = [
   { label: "Soporte", href: "#support" },
   { label: "Sedes", href: "#locations" },
   { label: "Legales", href: "#legal" },
+  { label: "FAQ", href: "#faq" },
   { label: "Campañas", href: "#campaigns" },
 ];
 
@@ -199,6 +201,21 @@ export default async function AdminContentPage() {
           </p>
         </div>
         <AdminHomepageLegalLinksPanel />
+      </section>
+
+      <div className="border-t border-slate-200 dark:border-surface-muted" />
+
+      <section id="faq" aria-labelledby="faq-heading" className="scroll-mt-20 space-y-4">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">FAQ</p>
+          <h2 id="faq-heading" className="text-lg font-semibold text-slate-900 dark:text-white">
+            Preguntas frecuentes
+          </h2>
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Las preguntas y respuestas que aparecen en la sección FAQ del homepage. También se usan para el SEO estructurado (schema.org FAQPage).
+          </p>
+        </div>
+        <AdminHomepageFaqPanel />
       </section>
 
       <div className="border-t border-slate-200 dark:border-surface-muted" />

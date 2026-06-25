@@ -809,6 +809,8 @@ model HomepageSettings {
   contactMapEmbedUrl       String?
   floatingWhatsappNumber   String?
   floatingPhoneNumber      String?
+  metaTitle                String?
+  metaDescription          String?
   createdAt                DateTime @default(now())
   updatedAt                DateTime @updatedAt
 }
@@ -931,6 +933,18 @@ model HomepageLegalLink {
   id        String   @id @default(uuid())
   href      String
   label     String
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive, sortOrder])
+}
+
+model HomepageFaq {
+  id        String   @id @default(uuid())
+  question  String
+  answer    String
   sortOrder Int      @default(0)
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())

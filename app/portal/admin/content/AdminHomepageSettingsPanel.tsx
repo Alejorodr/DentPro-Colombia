@@ -56,6 +56,8 @@ type HomepageSettingsForm = {
   contactMapEmbedUrl: string;
   floatingWhatsappNumber: string;
   floatingPhoneNumber: string;
+  metaTitle: string;
+  metaDescription: string;
 };
 
 type ApiResponse = {
@@ -112,6 +114,8 @@ const EMPTY_FORM: HomepageSettingsForm = {
   contactMapEmbedUrl: "",
   floatingWhatsappNumber: "",
   floatingPhoneNumber: "",
+  metaTitle: "",
+  metaDescription: "",
 };
 
 type FieldConfig = {
@@ -235,6 +239,25 @@ const SECTIONS: SectionConfig[] = [
         helperText: "Este número impacta el botón flotante de WhatsApp.",
       },
       { key: "floatingPhoneNumber", label: "Número teléfono flotante" },
+    ],
+  },
+  {
+    title: "SEO y metadatos",
+    description: "Controla cómo aparece el sitio en Google y en los resultados de búsqueda.",
+    fields: [
+      {
+        key: "metaTitle",
+        label: "Título SEO (meta title)",
+        placeholder: "Odontología especializada en Chía | Agenda online",
+        helperText: "Máx. 120 caracteres. Si está vacío, se usa el título por defecto.",
+      },
+      {
+        key: "metaDescription",
+        label: "Descripción SEO (meta description)",
+        multiline: true,
+        placeholder: "DentPro Colombia — ortodoncia, implantes, estética dental...",
+        helperText: "Máx. 320 caracteres. Ideal: 140–160 para Google.",
+      },
     ],
   },
 ];

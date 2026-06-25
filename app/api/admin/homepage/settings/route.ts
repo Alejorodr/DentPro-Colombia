@@ -144,6 +144,9 @@ const homepageSettingsSchema = z.object({
 
   floatingWhatsappNumber: optionalText(30),
   floatingPhoneNumber: optionalText(30),
+
+  metaTitle: optionalText(120),
+  metaDescription: optionalText(320),
 });
 
 type HomepageSettingsPayload = z.infer<typeof homepageSettingsSchema>;
@@ -262,6 +265,9 @@ function serializeSettings(settings: Awaited<ReturnType<typeof ensureSettingsRec
 
     floatingWhatsappNumber: settings.floatingWhatsappNumber,
     floatingPhoneNumber: settings.floatingPhoneNumber,
+
+    metaTitle: settings.metaTitle,
+    metaDescription: settings.metaDescription,
   };
 }
 
@@ -316,6 +322,9 @@ function mapPayloadToUpdateData(payload: HomepageSettingsPayload) {
     contactMapEmbedUrl: payload.contactMapEmbedUrl,
     floatingWhatsappNumber: payload.floatingWhatsappNumber,
     floatingPhoneNumber: payload.floatingPhoneNumber,
+
+    metaTitle: payload.metaTitle,
+    metaDescription: payload.metaDescription,
   };
 }
 
@@ -397,6 +406,8 @@ export async function PATCH(request: Request) {
         contactMapEmbedUrl: true,
         floatingWhatsappNumber: true,
         floatingPhoneNumber: true,
+        metaTitle: true,
+        metaDescription: true,
       },
     });
     const { data: body, error } = await parseJson(request, homepageSettingsSchema);

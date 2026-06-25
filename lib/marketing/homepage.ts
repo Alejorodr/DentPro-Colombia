@@ -34,6 +34,7 @@ export async function getHomepageContent(prismaClient?: PrismaClient): Promise<H
     supportItems,
     locations,
     legalLinks,
+    faqs,
   ] = await prisma.$transaction([
     prisma.homepageSettings.findUnique({ where: { id: HOMEPAGE_SETTINGS_SINGLETON_ID } }),
     prisma.homepageService.findMany({
@@ -53,6 +54,7 @@ export async function getHomepageContent(prismaClient?: PrismaClient): Promise<H
     prisma.homepageContactSupportItem.findMany({ where: { isActive: true }, orderBy: { sortOrder: "asc" } }),
     prisma.homepageLocation.findMany({ where: { isActive: true }, orderBy: { sortOrder: "asc" } }),
     prisma.homepageLegalLink.findMany({ where: { isActive: true }, orderBy: { sortOrder: "asc" } }),
+    prisma.homepageFaq.findMany({ where: { isActive: true }, orderBy: { sortOrder: "asc" } }),
   ]);
 
   const fallback = HOMEPAGE_DEFAULT_CONTENT;
@@ -245,6 +247,14 @@ export async function getHomepageContent(prismaClient?: PrismaClient): Promise<H
       whatsappNumber: settings?.floatingWhatsappNumber ?? fallback.floatingActions.whatsappNumber,
       phoneNumber: settings?.floatingPhoneNumber ?? fallback.floatingActions.phoneNumber,
     },
+    faqs:
+      faqs.length > 0
+        ? faqs.map((faq) => ({ question: faq.question, answer: faq.answer }))
+        : fallback.faqs,
+    seo: {
+      metaTitle: settings?.metaTitle ?? null,
+      metaDescription: settings?.metaDescription ?? null,
+    },
   };
 }
 
@@ -413,6 +423,17 @@ export async function bootstrapHomepageContent(prismaClient?: PrismaClient) {
       data: source.contact.legalLinks.map((link, index) => ({
         href: link.href,
         label: link.label,
+        sortOrder: index,
+        isActive: true,
+      })),
+    });
+  }
+
+  if ((await prisma.homepageFaq.count()) === 0) {
+    await prisma.homepageFaq.createMany({
+      data: source.faqs.map((faq, index) => ({
+        question: faq.question,
+        answer: faq.answer,
         sortOrder: index,
         isActive: true,
       })),
