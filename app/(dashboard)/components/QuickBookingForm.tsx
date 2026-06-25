@@ -76,7 +76,7 @@ export function QuickBookingForm() {
         <p className="text-sm text-slate-500 dark:text-slate-300">
           Comparte tus datos de contacto y la recepción te confirmará disponibilidad.
         </p>
-        {role && role !== "patient" ? (
+        {role && role !== "PACIENTE" ? (
           <p className="mt-1 text-xs text-brand-teal dark:text-accent-cyan">
             Estás registrando una solicitud en nombre de un paciente.
           </p>

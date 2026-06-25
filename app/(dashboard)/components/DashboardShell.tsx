@@ -29,15 +29,32 @@ function getActiveRole(pathname: string, fallbackRole: UserRole): UserRole {
     return fallbackRole;
   }
 
-  return "reception";
+  return "RECEPCIONISTA";
 }
 
+const portalPaths: Record<UserRole, { label: string; href: string }[]> = {
+  PACIENTE: [
+    { label: "Citas", href: "/portal/paciente" },
+    { label: "Perfil", href: "/portal/paciente/profile" },
+  ],
+  PROFESIONAL: [
+    { label: "Agenda", href: "/portal/profesional" },
+    { label: "Pacientes", href: "/portal/profesional/patients" },
+  ],
+  RECEPCIONISTA: [
+    { label: "Dashboard", href: "/portal/recepcion" },
+    { label: "Horarios", href: "/portal/recepcion/schedule" },
+    { label: "Pacientes", href: "/portal/recepcion/patients" },
+  ],
+  ADMINISTRADOR: [
+    { label: "Dashboard", href: "/portal/admin" },
+    { label: "Staff", href: "/portal/admin/staff" },
+    { label: "Horarios", href: "/portal/admin/schedule" },
+  ],
+};
+
 function getNavItems(role: UserRole): NavItem[] {
-  return [
-    { label: "Citas", href: `/${role}/appointments` },
-    { label: "Pacientes", href: `/${role}/patients` },
-    { label: "Horarios", href: `/${role}/schedules` },
-  ];
+  return portalPaths[role] ?? [];
 }
 
 function NavLinks({ items, pathname }: { items: NavItem[]; pathname: string }) {
@@ -73,7 +90,7 @@ function NavLinks({ items, pathname }: { items: NavItem[]; pathname: string }) {
 
 export function DashboardShell({ children, session }: DashboardShellProps) {
   const pathname = usePathname();
-  const role = getActiveRole(pathname, (session?.user?.role as UserRole | undefined) ?? "reception");
+  const role = getActiveRole(pathname, (session?.user?.role as UserRole | undefined) ?? "RECEPCIONISTA");
   const navItems = useMemo(() => getNavItems(role), [role]);
   const userName = session?.user?.name ?? "Usuario";
   const roleLabel = roleLabels[role] ?? role;
