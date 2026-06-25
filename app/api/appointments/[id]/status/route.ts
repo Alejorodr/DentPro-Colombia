@@ -73,12 +73,32 @@ export async function PATCH(request: Request, context: any) {
       where: { id: appointmentId },
       data: { status: toPrismaStatus(nextStatus) },
       include: {
-        patient: true,
-        schedule: { include: { specialist: true } },
+        patient: { include: { user: { select: { name: true, lastName: true } } } },
+        professional: { include: { user: { select: { name: true, lastName: true } } } },
       },
     });
 
-    return NextResponse.json(toAppointmentSummary(updated));
+    const patientName = updated.patient?.user
+      ? `${updated.patient.user.name} ${updated.patient.user.lastName}`.trim()
+      : undefined;
+    const profName = updated.professional?.user
+      ? `${updated.professional.user.name} ${updated.professional.user.lastName}`.trim()
+      : undefined;
+
+    return NextResponse.json(
+      toAppointmentSummary({
+        id: updated.id,
+        patientId: updated.patientId,
+        specialistId: updated.professionalId,
+        scheduleId: updated.timeSlotId,
+        service: updated.serviceName ?? updated.serviceId,
+        scheduledAt: updated.createdAt,
+        status: updated.status,
+        preferredDate: null,
+        patient: patientName ? { name: patientName } : null,
+        specialist: { id: updated.professionalId, name: profName },
+      }),
+    );
   } catch (error) {
     console.error("Failed to update appointment status", error);
     return buildError("No se pudo actualizar el estado de la cita.", 500);
