@@ -784,6 +784,7 @@ model HomepageSettings {
   heroTestimonialAvatarUrl String?
   heroHighlightTitle       String?
   heroHighlightDescription String?
+  logoUrl                  String?
   servicesTitle            String
   servicesDescription      String
   specialistsBadge         String?

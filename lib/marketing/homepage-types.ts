@@ -80,6 +80,11 @@ export type HomepageLegalLinkContent = {
 };
 
 export type HomepageNormalizedContent = {
+  brand: {
+    name: string;
+    initials: string;
+    logoUrl: string | null;
+  };
   infoBar: {
     location: { text: string; icon: MarketingIconKey };
     schedule: { text: string; icon: MarketingIconKey };

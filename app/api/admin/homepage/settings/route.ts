@@ -71,6 +71,9 @@ function optionalAbsoluteUrl(max: number) {
 }
 
 const homepageSettingsSchema = z.object({
+  siteName: requiredText(1, 120),
+  logoUrl: optionalAbsoluteUrl(500),
+
   infoBarLocation: requiredText(1, 180),
   infoBarHours: optionalText(180),
   infoBarWhatsappHref: optionalHref(500),
@@ -93,6 +96,12 @@ const homepageSettingsSchema = z.object({
   heroTestimonialAvatarUrl: optionalAbsoluteUrl(500),
   heroHighlightTitle: optionalText(180),
   heroHighlightDescription: optionalText(600),
+
+  servicesTitle: requiredText(1, 180),
+  servicesDescription: requiredText(1, 600),
+  specialistsBadge: optionalText(120),
+  specialistsTitle: requiredText(1, 180),
+  specialistsDescription: requiredText(1, 600),
 
   bookingTitle: requiredText(1, 180),
   bookingDescription: requiredText(1, 1200),
@@ -186,6 +195,9 @@ async function ensureSettingsRecord() {
 
 function serializeSettings(settings: Awaited<ReturnType<typeof ensureSettingsRecord>>) {
   return {
+    siteName: settings.siteName,
+    logoUrl: settings.logoUrl,
+
     infoBarLocation: settings.infoBarLocation,
     infoBarHours: settings.infoBarHours,
     infoBarWhatsappHref: settings.infoBarWhatsappHref,
@@ -208,6 +220,12 @@ function serializeSettings(settings: Awaited<ReturnType<typeof ensureSettingsRec
     heroTestimonialAvatarUrl: settings.heroTestimonialAvatarUrl,
     heroHighlightTitle: settings.heroHighlightTitle,
     heroHighlightDescription: settings.heroHighlightDescription,
+
+    servicesTitle: settings.servicesTitle,
+    servicesDescription: settings.servicesDescription,
+    specialistsBadge: settings.specialistsBadge,
+    specialistsTitle: settings.specialistsTitle,
+    specialistsDescription: settings.specialistsDescription,
 
     bookingTitle: settings.bookingTitle,
     bookingDescription: settings.bookingDescription,
@@ -234,6 +252,9 @@ function serializeSettings(settings: Awaited<ReturnType<typeof ensureSettingsRec
 
 function mapPayloadToUpdateData(payload: HomepageSettingsPayload) {
   return {
+    siteName: payload.siteName,
+    logoUrl: payload.logoUrl,
+
     infoBarLocation: payload.infoBarLocation,
     infoBarHours: payload.infoBarHours,
     infoBarWhatsappHref: payload.infoBarWhatsappHref,
@@ -255,6 +276,13 @@ function mapPayloadToUpdateData(payload: HomepageSettingsPayload) {
     heroTestimonialAvatarUrl: payload.heroTestimonialAvatarUrl,
     heroHighlightTitle: payload.heroHighlightTitle,
     heroHighlightDescription: payload.heroHighlightDescription,
+
+    servicesTitle: payload.servicesTitle,
+    servicesDescription: payload.servicesDescription,
+    specialistsBadge: payload.specialistsBadge,
+    specialistsTitle: payload.specialistsTitle,
+    specialistsDescription: payload.specialistsDescription,
+
     bookingTitle: payload.bookingTitle,
     bookingDescription: payload.bookingDescription,
     bookingSelectLabel: payload.bookingSelectLabel,
@@ -305,6 +333,9 @@ export async function PATCH(request: Request) {
     const current = await getPrismaClient().homepageSettings.findUnique({
       where: { id: HOMEPAGE_SETTINGS_SINGLETON_ID },
       select: {
+        siteName: true,
+        logoUrl: true,
+
         infoBarLocation: true,
         infoBarHours: true,
         infoBarWhatsappHref: true,
@@ -326,6 +357,13 @@ export async function PATCH(request: Request) {
         heroTestimonialAvatarUrl: true,
         heroHighlightTitle: true,
         heroHighlightDescription: true,
+
+        servicesTitle: true,
+        servicesDescription: true,
+        specialistsBadge: true,
+        specialistsTitle: true,
+        specialistsDescription: true,
+
         bookingTitle: true,
         bookingDescription: true,
         bookingSelectLabel: true,

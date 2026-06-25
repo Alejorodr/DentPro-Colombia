@@ -1,5 +1,6 @@
 import { requireRole } from "@/lib/auth/require-role";
 import { SectionHeader } from "@/app/portal/components/ui/SectionHeader";
+import { AdminBootstrapButton } from "@/app/portal/admin/content/AdminBootstrapButton";
 import { AdminCampaignsPanel } from "@/app/portal/admin/content/AdminCampaignsPanel";
 import { AdminHomepageSettingsPanel } from "@/app/portal/admin/content/AdminHomepageSettingsPanel";
 import { AdminHomepageHeroStatsPanel } from "@/app/portal/admin/content/AdminHomepageHeroStatsPanel";
@@ -17,11 +18,14 @@ export default async function AdminContentPage() {
 
   return (
     <div className="space-y-6">
-      <SectionHeader
-        eyebrow="CMS"
-        title="Contenido del sitio"
-        description="Administra campañas y todo el CMS del homepage: settings, hero stats, servicios, especialistas, agenda, beneficios, enlaces, soporte, sedes y legales."
-      />
+      <div className="flex items-start justify-between gap-4">
+        <SectionHeader
+          eyebrow="CMS"
+          title="Contenido del sitio"
+          description="Administra campañas y todo el CMS del homepage: settings, hero stats, servicios, especialistas, agenda, beneficios, enlaces, soporte, sedes y legales."
+        />
+        <AdminBootstrapButton />
+      </div>
       <section className="space-y-6" aria-labelledby="admin-homepage-content-title">
         <h2 id="admin-homepage-content-title" className="text-base font-semibold text-slate-900 dark:text-white">
           Homepage público

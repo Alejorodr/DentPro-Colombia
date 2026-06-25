@@ -10,6 +10,11 @@ const DEFAULT_MAP_EMBED_URL =
 export const HOMEPAGE_SETTINGS_SINGLETON_ID = "homepage-main";
 
 export const HOMEPAGE_DEFAULT_CONTENT: HomepageNormalizedContent = {
+  brand: {
+    name: "DentPro Colombia",
+    initials: "DP",
+    logoUrl: null,
+  },
   infoBar: {
     location: { text: "Cra. 7 #13-180, Chía, Cundinamarca", icon: "MapPin" },
     schedule: { text: "Lun–Sáb 8:00-19:00 · Domingos y festivos con cita previa", icon: "Clock" },

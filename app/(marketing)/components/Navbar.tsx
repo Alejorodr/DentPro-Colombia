@@ -17,6 +17,7 @@ interface NavbarProps {
     href: string;
     name: string;
     initials: string;
+    logoUrl?: string;
   };
   links: NavLink[];
   cta: {
@@ -55,9 +56,14 @@ export function Navbar({ brand, links, cta, login }: NavbarProps) {
     <header className={`topbar transition-shadow duration-300 ${scrolled ? "shadow-lg shadow-slate-900/8 dark:shadow-surface-dark/60" : ""}`}>
       <div className="container mx-auto flex items-center justify-between px-6 py-4">
         <a href={brand.href} className="flex items-center gap-3 text-lg font-semibold text-brand-teal dark:text-accent-cyan">
-          <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-brand-teal text-white">
-            {brand.initials}
-          </span>
+          {brand.logoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={brand.logoUrl} alt={brand.name} className="h-10 w-10 rounded-full object-contain" />
+          ) : (
+            <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-brand-teal text-white">
+              {brand.initials}
+            </span>
+          )}
           {brand.name}
         </a>
         <nav className="hidden items-center gap-8 text-sm font-semibold text-slate-600 lg:flex dark:text-slate-200">

@@ -23,28 +23,16 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
 
-const navbarContent: Parameters<typeof Navbar>[0] = {
-  brand: {
-    href: "#inicio",
-    name: "DentPro Colombia",
-    initials: "DP",
-  },
-  links: [
-    { href: "#servicios", label: "Servicios" },
-    { href: "#especialistas", label: "Especialistas" },
-    { href: "#agenda", label: "Agenda" },
-    { href: "#preguntas-frecuentes", label: "FAQ" },
-    { href: "#contacto", label: "Contacto" },
-  ],
-  cta: {
-    href: "/appointments/new",
-    label: "Reservar turno",
-  },
-  login: {
-    href: "/auth/login",
-    label: "Iniciar sesión",
-  },
-};
+const NAV_LINKS = [
+  { href: "#servicios", label: "Servicios" },
+  { href: "#especialistas", label: "Especialistas" },
+  { href: "#agenda", label: "Agenda" },
+  { href: "#preguntas-frecuentes", label: "FAQ" },
+  { href: "#contacto", label: "Contacto" },
+];
+
+const NAV_CTA = { href: "/appointments/new", label: "Reservar turno" };
+const NAV_LOGIN = { href: "/auth/login", label: "Iniciar sesión" };
 
 export default async function Home() {
   const [homepageContent, googleReviews] = await Promise.all([
@@ -53,6 +41,18 @@ export default async function Home() {
   ]);
 
   const marketingContent = adaptHomepageContent(homepageContent);
+
+  const navbarContent: Parameters<typeof Navbar>[0] = {
+    brand: {
+      href: "#inicio",
+      name: marketingContent.brand.name,
+      initials: marketingContent.brand.initials,
+      logoUrl: marketingContent.brand.logoUrl ?? undefined,
+    },
+    links: NAV_LINKS,
+    cta: NAV_CTA,
+    login: NAV_LOGIN,
+  };
 
   const faqItems = [
     {
@@ -169,6 +169,7 @@ export default async function Home() {
         }
       />
       <Navbar {...navbarContent} />
+
       <main id="inicio" aria-label="Página principal DentPro Colombia">
         <Hero {...marketingContent.hero} googleReviews={googleReviews} />
         <CampaignCarousel />

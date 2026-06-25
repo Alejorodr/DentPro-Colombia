@@ -9,6 +9,7 @@ type FloatingAction = {
 };
 
 export type HomepageViewModel = {
+  brand: HomepageNormalizedContent["brand"];
   infoBar: HomepageNormalizedContent["infoBar"];
   hero: HomepageNormalizedContent["hero"];
   services: HomepageNormalizedContent["services"];
@@ -55,6 +56,7 @@ export function adaptHomepageContent(content: HomepageNormalizedContent): Homepa
     : undefined;
 
   return {
+    brand: content.brand,
     infoBar: content.infoBar,
     hero: content.hero,
     services: content.services,

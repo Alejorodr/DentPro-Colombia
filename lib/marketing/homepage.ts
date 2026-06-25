@@ -57,7 +57,20 @@ export async function getHomepageContent(prismaClient?: PrismaClient): Promise<H
 
   const fallback = HOMEPAGE_DEFAULT_CONTENT;
 
+  const rawSiteName = settings?.siteName ?? fallback.brand.name;
+  const initials = rawSiteName
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0].toUpperCase())
+    .join("");
+
   return {
+    brand: {
+      name: rawSiteName,
+      initials: initials || fallback.brand.initials,
+      logoUrl: settings?.logoUrl ?? fallback.brand.logoUrl,
+    },
     infoBar: {
       location: {
         text: settings?.infoBarLocation ?? fallback.infoBar.location.text,

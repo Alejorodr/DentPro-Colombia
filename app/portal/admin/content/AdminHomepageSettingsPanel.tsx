@@ -5,8 +5,12 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Card } from "@/app/portal/components/ui/Card";
 import { AdminImageField } from "@/app/portal/admin/content/components/AdminImageField";
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
+import type { MarketingUploadFolder } from "@/lib/marketing/images";
 
 type HomepageSettingsForm = {
+  siteName: string;
+  logoUrl: string;
+
   infoBarLocation: string;
   infoBarHours: string;
   infoBarWhatsappHref: string;
@@ -28,6 +32,11 @@ type HomepageSettingsForm = {
   heroTestimonialAvatarUrl: string;
   heroHighlightTitle: string;
   heroHighlightDescription: string;
+  servicesTitle: string;
+  servicesDescription: string;
+  specialistsBadge: string;
+  specialistsTitle: string;
+  specialistsDescription: string;
   bookingTitle: string;
   bookingDescription: string;
   bookingSelectLabel: string;
@@ -55,6 +64,9 @@ type ApiResponse = {
 };
 
 const EMPTY_FORM: HomepageSettingsForm = {
+  siteName: "",
+  logoUrl: "",
+
   infoBarLocation: "",
   infoBarHours: "",
   infoBarWhatsappHref: "",
@@ -76,6 +88,11 @@ const EMPTY_FORM: HomepageSettingsForm = {
   heroTestimonialAvatarUrl: "",
   heroHighlightTitle: "",
   heroHighlightDescription: "",
+  servicesTitle: "",
+  servicesDescription: "",
+  specialistsBadge: "",
+  specialistsTitle: "",
+  specialistsDescription: "",
   bookingTitle: "",
   bookingDescription: "",
   bookingSelectLabel: "",
@@ -113,6 +130,14 @@ type SectionConfig = {
 
 const SECTIONS: SectionConfig[] = [
   {
+    title: "Identidad de la empresa",
+    description: "Nombre y logo que aparecen en la barra de navegación del sitio.",
+    fields: [
+      { key: "siteName", label: "Nombre de la empresa", placeholder: "DentPro Colombia" },
+      { key: "logoUrl", label: "URL del logo", type: "url", placeholder: "https://..." },
+    ],
+  },
+  {
     title: "Información superior",
     description: "Contenido del InfoBar visible en la parte superior del homepage.",
     fields: [
@@ -143,6 +168,23 @@ const SECTIONS: SectionConfig[] = [
       { key: "heroTestimonialAvatarUrl", label: "URL avatar testimonio", type: "url" },
       { key: "heroHighlightTitle", label: "Highlight título" },
       { key: "heroHighlightDescription", label: "Highlight descripción", multiline: true },
+    ],
+  },
+  {
+    title: "Sección servicios",
+    description: "Encabezados del bloque de servicios del homepage.",
+    fields: [
+      { key: "servicesTitle", label: "Título" },
+      { key: "servicesDescription", label: "Descripción", multiline: true },
+    ],
+  },
+  {
+    title: "Sección especialistas",
+    description: "Encabezados del bloque del equipo clínico.",
+    fields: [
+      { key: "specialistsBadge", label: "Badge (eyebrow)", placeholder: "EQUIPO CLÍNICO" },
+      { key: "specialistsTitle", label: "Título" },
+      { key: "specialistsDescription", label: "Descripción", multiline: true },
     ],
   },
   {
@@ -197,7 +239,12 @@ const SECTIONS: SectionConfig[] = [
 ];
 
 
-const IMAGE_FIELD_CONFIG: Partial<Record<keyof HomepageSettingsForm, { uploadFolder: "marketing/homepage/hero" | "marketing/homepage/testimonial"; recommendation: string; aspectRatio: string }>> = {
+const IMAGE_FIELD_CONFIG: Partial<Record<keyof HomepageSettingsForm, { uploadFolder: MarketingUploadFolder; recommendation: string; aspectRatio: string }>> = {
+  logoUrl: {
+    uploadFolder: "marketing/homepage/hero",
+    recommendation: "200x200 px",
+    aspectRatio: "1:1",
+  },
   heroImageUrl: {
     uploadFolder: "marketing/homepage/hero",
     recommendation: "1200x1500 px",
