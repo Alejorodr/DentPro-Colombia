@@ -1,4 +1,4 @@
-import type { NextAuthConfig } from "next-auth";
+import type { AuthConfig } from "@auth/core";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import type { JWT } from "next-auth/jwt";
@@ -258,4 +258,4 @@ export const authConfig = {
     },
   },
   pages: { signIn: "/auth/login", error: "/auth/login" },
-} satisfies NextAuthConfig;
+} satisfies AuthConfig;
