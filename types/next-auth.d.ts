@@ -1,12 +1,18 @@
-import { type DefaultSession } from "next-auth";
+import "next-auth";
 import "next-auth/jwt";
 
 import type { UserRole } from "@/lib/auth/roles";
 
-declare module "next-auth" {
+// next-auth re-exports Session and User from @auth/core/types.
+// useSession() client hook resolves Session directly from @auth/core/types,
+// so we must augment that module — not the next-auth re-export namespace.
+declare module "@auth/core/types" {
   interface Session {
-    user: (DefaultSession["user"] & {
+    user: {
       id: string;
+      name?: string | null;
+      email?: string | null;
+      image?: string | null;
       userId?: string;
       role: UserRole;
       professionalId?: string | null;
@@ -14,7 +20,7 @@ declare module "next-auth" {
       defaultDashboardPath?: string;
       passwordChangedAt?: string | null;
       invalidated?: boolean;
-    });
+    };
   }
 
   interface User {
@@ -26,6 +32,7 @@ declare module "next-auth" {
     defaultDashboardPath?: string;
     passwordChangedAt?: Date | string | null;
     invalidated?: boolean;
+    mustChangePassword?: boolean;
   }
 }
 
