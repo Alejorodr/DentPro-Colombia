@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { logger } from "@/lib/logger";
 
 type GlobalErrorProps = {
   error: Error & { digest?: string };
@@ -10,7 +11,7 @@ export default function GlobalError({ error }: GlobalErrorProps) {
   const [requestId, setRequestId] = useState<string | null>(null);
 
   useEffect(() => {
-    console.error("Global error", error);
+    logger.error({ digest: error.digest, message: error.message }, "Global error");
     const id = globalThis?.document?.body?.dataset?.requestId ?? null;
     setRequestId(id);
   }, [error]);

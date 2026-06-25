@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { logger } from "@/lib/logger";
 
 type ErrorProps = {
   error: Error & { digest?: string };
@@ -12,7 +13,7 @@ export default function GlobalError({ error, reset }: ErrorProps) {
   const [requestId, setRequestId] = useState<string | null>(null);
 
   useEffect(() => {
-    console.error("Route error", error);
+    logger.error({ digest: error.digest, message: error.message }, "Route error");
     const id = globalThis?.document?.body?.dataset?.requestId ?? null;
     setRequestId(id);
   }, [error]);

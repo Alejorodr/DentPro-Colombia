@@ -1,4 +1,4 @@
-export const revalidate = 300;
+export const revalidate = process.env.NODE_ENV === "production" ? 300 : false;
 
 import type { Metadata } from "next";
 import { InfoBar } from "./(marketing)/components/InfoBar";
@@ -14,6 +14,7 @@ import { FAQSection } from "./(marketing)/components/FAQSection";
 import { getHomepageContent } from "@/lib/marketing/homepage";
 import { adaptHomepageContent } from "@/lib/marketing/homepage-adapter";
 import { getGoogleReviews } from "@/lib/google/google-reviews";
+import { HOMEPAGE_DEFAULT_CONTENT } from "@/lib/marketing/homepage-defaults";
 
 export const metadata: Metadata = {
   title: "Odontología especializada en Chía | Agenda online",
@@ -47,7 +48,7 @@ const navbarContent: Parameters<typeof Navbar>[0] = {
 
 export default async function Home() {
   const [homepageContent, googleReviews] = await Promise.all([
-    getHomepageContent(),
+    getHomepageContent().catch(() => HOMEPAGE_DEFAULT_CONTENT),
     getGoogleReviews(),
   ]);
 

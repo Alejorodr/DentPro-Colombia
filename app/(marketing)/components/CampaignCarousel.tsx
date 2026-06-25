@@ -13,6 +13,7 @@ type Campaign = {
 };
 
 export async function CampaignCarousel() {
+  if (!process.env.DATABASE_URL) return null;
   const now = new Date();
   const prisma = getPrismaClient();
 

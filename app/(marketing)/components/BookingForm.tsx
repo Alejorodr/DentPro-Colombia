@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+import { fetchWithRetry } from "@/lib/http";
 import type { MarketingIconName } from "./icon-types";
 import { resolveMarketingIcon } from "./icon-registry";
 
@@ -66,8 +67,8 @@ export function BookingFormSection({
       try {
         setSlotsLoading(true);
         setSlotsError(false);
-        const response = await fetch("/api/public/slots?limit=3");
-        if (!response.ok) throw new Error("slots_error");
+        const response = await fetchWithRetry("/api/public/slots?limit=3");
+        if (!response.ok) throw new Error(`slots_error: ${response.status}`);
 
         const payload = (await response.json()) as {
           slots?: Array<{ startsAt: string; professional: string; specialty: string }>;

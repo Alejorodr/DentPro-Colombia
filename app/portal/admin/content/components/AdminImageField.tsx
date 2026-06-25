@@ -134,8 +134,9 @@ export function AdminImageField({
       </div>
       <div className="overflow-hidden rounded-xl border border-slate-200 bg-slate-50 dark:border-surface-muted dark:bg-surface-base/70">
         {previewSrc ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={previewSrc} alt={`Preview ${label}`} className="h-40 w-full object-cover" />
+          {/* Preview de URL arbitraria: <img> nativo justificado, dominios externos no predecibles */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={previewSrc} alt={`Preview ${label}`} className="h-40 w-full object-cover" loading="lazy" />
         ) : value.trim() ? (
           <p className="p-3 text-xs text-amber-700 dark:text-amber-300">La URL actual no es válida para vista previa. Usa una URL http(s) completa.</p>
         ) : (

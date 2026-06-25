@@ -18,6 +18,9 @@ function normalizeMapEmbed(url: string | null | undefined) {
 }
 
 export async function getHomepageContent(prismaClient?: PrismaClient): Promise<HomepageNormalizedContent> {
+  if (!prismaClient && !process.env.DATABASE_URL) {
+    return HOMEPAGE_DEFAULT_CONTENT;
+  }
   const prisma = prismaClient ?? getPrismaClient();
 
   const [
