@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 
+import { requireRole, requireSession } from "@/lib/authz";
 import { getPrismaClient } from "@/lib/prisma";
+import { errorResponse } from "@/app/api/_utils/response";
 import type { AppointmentStatus } from "@/lib/api/types";
 import { buildError, isValidAppointmentStatus, toAppointmentSummary } from "../../utils";
 
@@ -11,6 +13,16 @@ const transitionRules: Record<AppointmentStatus, AppointmentStatus[]> = {
 };
 
 export async function PATCH(request: Request, context: any) {
+  const sessionResult = await requireSession();
+  if ("error" in sessionResult) {
+    return errorResponse(sessionResult.error.message, sessionResult.error.status);
+  }
+
+  const roleError = requireRole(sessionResult.user, ["ADMINISTRADOR", "RECEPCIONISTA"]);
+  if (roleError) {
+    return errorResponse("No autorizado.", roleError.status);
+  }
+
   const prisma = getPrismaClient();
 
   const { params } = context as { params?: { id?: string } };
