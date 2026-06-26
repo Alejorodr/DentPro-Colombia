@@ -28,3 +28,6 @@ package-lock.json
 .claude/
 skills-lock.json
 graphify-out/
+
+# AI local outputs
+.ai/codex/results/

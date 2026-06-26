@@ -187,7 +187,8 @@ export function AdminUsersPanel({ roleFilter, roleLock }: AdminUsersPanelProps) 
 
       const params = new URLSearchParams({ pageSize: "20", page: String(page) });
       if (debouncedSearch) params.set("search", debouncedSearch);
-      if (roleFilterState !== "ALL") params.set("role", roleFilterState);
+      const effectiveRoleFilter = roleFilter ?? (roleFilterState !== "ALL" ? roleFilterState : undefined);
+      if (effectiveRoleFilter) params.set("role", effectiveRoleFilter);
       if (activeFilter !== "ALL") params.set("active", activeFilter === "active" ? "true" : "false");
 
       const [usersResponse, specialtiesResponse] = await Promise.all([
@@ -336,7 +337,7 @@ export function AdminUsersPanel({ roleFilter, roleLock }: AdminUsersPanelProps) 
     setSaving(false);
   };
 
-  const displayedUsers = roleFilter ? users.filter((u) => u.role === roleFilter) : users;
+  const displayedUsers = users;
 
   return (
     <div className="space-y-8">
@@ -472,22 +473,24 @@ export function AdminUsersPanel({ roleFilter, roleLock }: AdminUsersPanelProps) 
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
           />
-          <div className="flex flex-wrap gap-2">
-            {(["ALL", "PACIENTE", "PROFESIONAL", "RECEPCIONISTA", "ADMINISTRADOR"] as const).map((r) => (
-              <button
-                key={r}
-                type="button"
-                onClick={() => { setRoleFilterState(r); setPage(1); }}
-                className={`rounded-full px-3 py-1 text-xs font-semibold uppercase ${
-                  roleFilterState === r
-                    ? "bg-brand-teal text-white"
-                    : "border border-slate-200 text-slate-600 dark:border-surface-muted/70 dark:text-slate-300"
-                }`}
-              >
-                {r === "ALL" ? "Todos" : roleLabels[r]}
-              </button>
-            ))}
-          </div>
+          {!roleFilter && (
+            <div className="flex flex-wrap gap-2">
+              {(["ALL", "PACIENTE", "PROFESIONAL", "RECEPCIONISTA", "ADMINISTRADOR"] as const).map((r) => (
+                <button
+                  key={r}
+                  type="button"
+                  onClick={() => { setRoleFilterState(r); setPage(1); }}
+                  className={`rounded-full px-3 py-1 text-xs font-semibold uppercase ${
+                    roleFilterState === r
+                      ? "bg-brand-teal text-white"
+                      : "border border-slate-200 text-slate-600 dark:border-surface-muted/70 dark:text-slate-300"
+                  }`}
+                >
+                  {r === "ALL" ? "Todos" : roleLabels[r]}
+                </button>
+              ))}
+            </div>
+          )}
           <div className="flex gap-2">
             {(["ALL", "active", "inactive"] as const).map((f) => (
               <button
