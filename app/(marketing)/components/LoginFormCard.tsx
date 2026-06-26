@@ -4,8 +4,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { getSession, signIn, useSession } from "next-auth/react";
-import { ArrowRight, EnvelopeSimple, Eye, EyeSlash, GoogleLogo, Lock, ShieldCheck, WarningCircle } from "@/components/ui/Icon";
+import { ArrowRight, EnvelopeSimple, Eye, EyeSlash, Lock, ShieldCheck, WarningCircle } from "@/components/ui/Icon";
 import { Button } from "@/components/ui/Button";
+import { GoogleColorLogo } from "@/components/ui/GoogleColorLogo";
 
 import { isUserRole, resolveRoleAwarePortalPath, type UserRole } from "@/lib/auth/roles";
 
@@ -285,10 +286,15 @@ export function LoginFormCard({
               <span className="h-px flex-1 bg-slate-200 dark:bg-surface-muted/60" />
             </div>
 
-            <Button type="button" className="h-12 w-full" disabled={isSubmitting} onClick={handleGoogleSignIn}>
-              <GoogleLogo className="h-5 w-5" aria-hidden="true" />
+            <button
+              type="button"
+              onClick={handleGoogleSignIn}
+              disabled={isSubmitting}
+              className="flex h-12 w-full cursor-pointer items-center justify-center gap-3 rounded-full border border-slate-200 bg-white text-sm font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md disabled:pointer-events-none disabled:opacity-50 dark:border-surface-muted dark:bg-surface-elevated dark:text-slate-100 dark:hover:border-slate-500"
+            >
+              <GoogleColorLogo className="h-5 w-5 shrink-0" />
               Continuar con Google
-            </Button>
+            </button>
           </>
         ) : null}
 

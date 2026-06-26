@@ -7,7 +7,8 @@ import { signIn } from "next-auth/react";
 import {
   ArrowRight,
   EnvelopeSimple,
-  GoogleLogo,
+  Eye,
+  EyeSlash,
   Lock,
   Phone,
   ShieldCheck,
@@ -15,6 +16,7 @@ import {
   WarningCircle,
 } from "@/components/ui/Icon";
 import { Button } from "@/components/ui/Button";
+import { GoogleColorLogo } from "@/components/ui/GoogleColorLogo";
 
 interface RegisterFormProps {
   googleEnabled?: boolean;
@@ -100,45 +102,60 @@ export function RegisterForm({ googleEnabled = false }: RegisterFormProps) {
   };
 
   return (
-    <div className="space-y-6 rounded-[1.75rem] border border-white/70 bg-white/90 p-8 shadow-xl shadow-slate-900/10 transition-colors duration-300 dark:border-surface-muted/60 dark:bg-surface-base/85 dark:shadow-surface-dark">
-      <div className="space-y-2 text-left">
-        <p className="inline-flex items-center gap-2 rounded-full bg-brand-light/60 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-brand-teal dark:bg-surface-muted/70 dark:text-accent-cyan">
-          <Lock className="h-4 w-4" weight="bold" aria-hidden="true" />
+    <div className="space-y-6 rounded-[1.75rem] border border-white/70 bg-white/95 p-8 shadow-xl shadow-slate-900/10 backdrop-blur-sm transition-colors duration-300 dark:border-surface-muted/60 dark:bg-surface-base/90 dark:shadow-surface-dark">
+
+      {/* Card header */}
+      <div className="space-y-3">
+        <span className="inline-flex items-center gap-2 rounded-full bg-brand-light/80 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-brand-teal dark:bg-surface-muted/70 dark:text-accent-cyan">
+          <Lock className="h-3.5 w-3.5" weight="bold" aria-hidden="true" />
           Registro seguro
-        </p>
-        <div className="space-y-1">
-          <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">Crea tu cuenta DentPro</h1>
-          <p className="text-sm text-slate-600 dark:text-slate-300">
-            Registrate para agendar citas y gestionar tu historial clínico en línea.
+        </span>
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Crea tu cuenta DentPro</h2>
+          <p className="mt-1 text-sm leading-relaxed text-slate-500 dark:text-slate-400">
+            Regístrate para agendar citas y gestionar tu historial clínico en línea.
           </p>
         </div>
       </div>
 
+      {/* Error alert */}
       {formError ? (
-        <div className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-500/40 dark:bg-red-500/10 dark:text-red-100" role="alert" aria-live="assertive">
-          <WarningCircle className="mt-0.5 h-5 w-5 shrink-0" weight="bold" aria-hidden="true" />
+        <div
+          className="flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3.5 text-sm text-red-800 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300"
+          role="alert"
+          aria-live="assertive"
+        >
+          <WarningCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-500" weight="fill" aria-hidden="true" />
           <div>
             <p className="font-semibold">No se pudo crear la cuenta</p>
-            <p className="text-red-700 dark:text-red-100/90">{formError}</p>
+            <p className="mt-0.5 text-red-600 dark:text-red-300/90">{formError}</p>
           </div>
         </div>
       ) : null}
 
       <form className="space-y-4" onSubmit={handleSubmit} noValidate>
+
+        {/* Google sign-up — primary shortcut at top */}
         {googleEnabled ? (
           <>
-            <Button type="button" className="h-12 w-full" disabled={isSubmitting} onClick={handleGoogleSignUp}>
-              <GoogleLogo className="h-5 w-5" aria-hidden="true" />
+            <button
+              type="button"
+              onClick={handleGoogleSignUp}
+              disabled={isSubmitting}
+              className="flex h-12 w-full cursor-pointer items-center justify-center gap-3 rounded-full border border-slate-200 bg-white text-sm font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md disabled:pointer-events-none disabled:opacity-50 dark:border-surface-muted dark:bg-surface-elevated dark:text-slate-100 dark:hover:border-slate-500"
+            >
+              <GoogleColorLogo className="h-5 w-5 shrink-0" />
               Continuar con Google
-            </Button>
+            </button>
             <div className="flex items-center gap-3" aria-hidden="true">
               <span className="h-px flex-1 bg-slate-200 dark:bg-surface-muted/60" />
-              <span className="text-xs uppercase tracking-wide text-slate-500">o completa el formulario</span>
+              <span className="text-xs uppercase tracking-wide text-slate-400">o completa el formulario</span>
               <span className="h-px flex-1 bg-slate-200 dark:bg-surface-muted/60" />
             </div>
           </>
         ) : null}
 
+        {/* Name + Last name */}
         <div className="grid grid-cols-2 gap-3">
           <FieldInput
             id="reg-name"
@@ -150,6 +167,7 @@ export function RegisterForm({ googleEnabled = false }: RegisterFormProps) {
             icon={<UserCircle className="h-4 w-4" aria-hidden="true" />}
             placeholder="Tu nombre"
             autoComplete="given-name"
+            autoFocus
           />
           <FieldInput
             id="reg-lastName"
@@ -201,6 +219,7 @@ export function RegisterForm({ googleEnabled = false }: RegisterFormProps) {
           placeholder="Mínimo 8 caracteres"
           autoComplete="new-password"
           hint="Debe incluir mayúscula, minúscula, número y símbolo."
+          showToggle
         />
 
         <FieldInput
@@ -214,6 +233,7 @@ export function RegisterForm({ googleEnabled = false }: RegisterFormProps) {
           icon={<ShieldCheck className="h-4 w-4" aria-hidden="true" />}
           placeholder="Repite tu contraseña"
           autoComplete="new-password"
+          showToggle
         />
 
         <Button
@@ -223,10 +243,10 @@ export function RegisterForm({ googleEnabled = false }: RegisterFormProps) {
           isLoading={isSubmitting}
         >
           {!isSubmitting && <ArrowRight className="h-4 w-4" weight="bold" aria-hidden="true" />}
-          {isSubmitting ? "Creando cuenta..." : "Crear cuenta"}
+          {isSubmitting ? "Creando cuenta..." : "Crear cuenta gratis"}
         </Button>
 
-        <p className="text-center text-sm text-slate-600 dark:text-slate-300">
+        <p className="text-center text-sm text-slate-500 dark:text-slate-400">
           ¿Ya tienes cuenta?{" "}
           <Link href="/auth/login" className="font-semibold text-brand-teal transition-colors hover:text-brand-indigo dark:text-accent-cyan">
             Inicia sesión
@@ -234,13 +254,14 @@ export function RegisterForm({ googleEnabled = false }: RegisterFormProps) {
         </p>
       </form>
 
-      <p className="text-center text-xs text-slate-500 dark:text-slate-400">
+      {/* Legal footer */}
+      <p className="text-center text-xs text-slate-400 dark:text-slate-500">
         Al registrarte aceptas nuestra{" "}
-        <Link href="/politica-de-tratamiento-de-datos" className="underline underline-offset-2 hover:text-slate-700 dark:hover:text-slate-200">
+        <Link href="/politica-de-tratamiento-de-datos" className="underline underline-offset-2 hover:text-slate-600 dark:hover:text-slate-300">
           política de datos
         </Link>{" "}
         y{" "}
-        <Link href="/terminos-y-condiciones" className="underline underline-offset-2 hover:text-slate-700 dark:hover:text-slate-200">
+        <Link href="/terminos-y-condiciones" className="underline underline-offset-2 hover:text-slate-600 dark:hover:text-slate-300">
           términos y condiciones
         </Link>
         .
@@ -261,34 +282,68 @@ interface FieldInputProps {
   type?: string;
   autoComplete?: string;
   hint?: string;
+  showToggle?: boolean;
+  autoFocus?: boolean;
 }
 
-function FieldInput({ id, label, value, onChange, disabled, error, icon, placeholder, type = "text", autoComplete, hint }: FieldInputProps) {
+function FieldInput({
+  id,
+  label,
+  value,
+  onChange,
+  disabled,
+  error,
+  icon,
+  placeholder,
+  type = "text",
+  autoComplete,
+  hint,
+  showToggle = false,
+  autoFocus = false,
+}: FieldInputProps) {
+  const [showValue, setShowValue] = useState(false);
+  const inputType = showToggle && type === "password" ? (showValue ? "text" : "password") : type;
+
   return (
-    <label className="block space-y-1.5 text-left" htmlFor={id}>
-      <span className="text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300">
+    <div className="space-y-1.5 text-left">
+      <label htmlFor={id} className="block text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300">
         {label}
-      </span>
+      </label>
       <div className="relative">
-        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">{icon}</span>
+        <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">{icon}</span>
         <input
           id={id}
-          type={type}
+          type={inputType}
           autoComplete={autoComplete}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           disabled={disabled}
           placeholder={placeholder}
-          className={`input h-11 pl-10 text-sm ${error ? "border-red-400 focus:border-red-500 focus:ring-red-300 dark:border-red-500/60" : ""}`}
+          autoFocus={autoFocus}
+          className={`input h-11 pl-10 text-sm ${showToggle ? "pr-11" : ""} ${error ? "border-red-400 focus:border-red-500 focus:ring-red-300 dark:border-red-500/60" : ""}`}
           aria-describedby={error ? `${id}-error` : hint ? `${id}-hint` : undefined}
           aria-invalid={error ? "true" : undefined}
         />
+        {showToggle ? (
+          <button
+            type="button"
+            className="absolute right-3.5 top-1/2 -translate-y-1/2 rounded-md p-0.5 text-slate-400 transition-colors hover:text-slate-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-teal dark:hover:text-slate-200"
+            onClick={() => setShowValue((p) => !p)}
+            aria-label={showValue ? "Ocultar contraseña" : "Mostrar contraseña"}
+            tabIndex={0}
+          >
+            {showValue
+              ? <EyeSlash className="h-4 w-4" weight="bold" aria-hidden="true" />
+              : <Eye className="h-4 w-4" weight="bold" aria-hidden="true" />
+            }
+          </button>
+        ) : null}
       </div>
       {error ? (
         <p id={`${id}-error`} className="text-xs text-red-600 dark:text-red-400" role="alert">{error}</p>
       ) : hint ? (
         <p id={`${id}-hint`} className="text-xs text-slate-500 dark:text-slate-400">{hint}</p>
       ) : null}
-    </label>
+    </div>
   );
 }
