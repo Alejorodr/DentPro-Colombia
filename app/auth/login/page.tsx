@@ -7,6 +7,7 @@ import { Alert } from "@/components/ui/Alert";
 import { ArrowLeft } from "@/components/ui/Icon";
 import { resolveRoleAwarePortalPath } from "@/lib/auth/roles";
 import { LoginForm } from "@/app/(marketing)/login/LoginForm";
+import PwaInstallButton from "@/components/PwaInstallButton";
 
 export const metadata: Metadata = {
   title: "Iniciar sesión",
@@ -81,6 +82,15 @@ export default async function AuthLoginPage(props: any) {
               </li>
             ))}
           </ul>
+          <div className="space-y-2">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+              Acceso rápido desde tu dispositivo
+            </p>
+            <p className="text-sm text-slate-600 dark:text-slate-300">
+              Instala DentPro como app y accede con un toque, sin buscar la página.
+            </p>
+            <PwaInstallButton />
+          </div>
           <p className="text-sm text-slate-600 dark:text-slate-300">
             ¿No tienes cuenta?{" "}
             <Link href="/auth/register" className="font-semibold text-brand-teal transition-colors hover:text-brand-indigo dark:text-accent-cyan">

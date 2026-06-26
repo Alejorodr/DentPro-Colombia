@@ -5,7 +5,6 @@ import { useEffect, useState } from "react";
 import { List, SignIn, UserCircle, X } from "@/components/ui/Icon";
 
 import { ThemeToggle } from "@/components/ThemeToggle";
-import PwaInstallButton from "@/components/PwaInstallButton";
 
 interface NavLink {
   href: string;
@@ -78,7 +77,6 @@ export function Navbar({ brand, links, cta, login }: NavbarProps) {
           ))}
         </nav>
         <div className="flex items-center gap-4">
-          <PwaInstallButton className="hidden lg:inline-flex" />
           <ThemeToggle />
           {login ? (
             <a
