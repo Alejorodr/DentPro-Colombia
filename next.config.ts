@@ -6,7 +6,7 @@ const csp = [
   "frame-ancestors 'none'",
   "form-action 'self'",
   "object-src 'none'",
-  "img-src 'self' data: https:",
+  "img-src 'self' data: blob: https:",
   `script-src 'self'${isProd ? " 'unsafe-inline'" : " 'unsafe-eval'"}`,
   "style-src 'self' 'unsafe-inline'",
   "font-src 'self' data:",
