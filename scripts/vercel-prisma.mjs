@@ -186,6 +186,21 @@ const isInvalidDatabaseUrl = (value) => {
   return normalized.includes('HOST:5432') || normalized.includes('USER:PASSWORD');
 };
 
+// Neon pooled URLs contain "-pooler" in the hostname; advisory locking requires a direct connection.
+// If DATABASE_URL_UNPOOLED is not set, strip "-pooler" from the hostname automatically.
+const deriveDirectUrl = (url) => {
+  try {
+    const parsed = new URL(url);
+    if (parsed.hostname.includes('-pooler.')) {
+      parsed.hostname = parsed.hostname.replace('-pooler.', '.');
+      return parsed.toString();
+    }
+  } catch {
+    // not a valid URL — fall through
+  }
+  return url;
+};
+
 const run = async () => {
   const isProduction = process.env.VERCEL_ENV === 'production';
 
@@ -196,8 +211,11 @@ const run = async () => {
 
   const unpooledUrl = process.env.DATABASE_URL_UNPOOLED;
   const pooledUrl = process.env.DATABASE_URL;
-  const databaseUrl = unpooledUrl || pooledUrl;
-  const selectedConnectionType = unpooledUrl ? 'unpooled' : 'pooled';
+
+  // Prefer an explicitly-set direct URL; otherwise auto-derive from the pooler URL.
+  // prisma migrate deploy uses pg_advisory_lock() which is not supported over pgbouncer.
+  const databaseUrl = unpooledUrl || deriveDirectUrl(pooledUrl);
+  const selectedConnectionType = unpooledUrl ? 'unpooled (env)' : (databaseUrl !== pooledUrl ? 'direct (auto-derived from pooler)' : 'pooled');
   logStep(`Conexión de migración: ${selectedConnectionType}`);
 
   if (isInvalidDatabaseUrl(databaseUrl)) {
