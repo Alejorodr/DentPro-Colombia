@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { getSession, signIn, useSession } from "next-auth/react";
-import { ArrowRight, EnvelopeSimple, GoogleLogo, Lock, ShieldCheck, WarningCircle } from "@/components/ui/Icon";
+import { ArrowRight, EnvelopeSimple, Eye, EyeSlash, GoogleLogo, Lock, ShieldCheck, WarningCircle } from "@/components/ui/Icon";
 import { Button } from "@/components/ui/Button";
 
 import { isUserRole, resolveRoleAwarePortalPath, type UserRole } from "@/lib/auth/roles";
@@ -42,6 +42,7 @@ export function LoginFormCard({
   const { data: session, status } = useSession();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
@@ -75,7 +76,6 @@ export function LoginFormCard({
     router.refresh();
   }, [resolveDestination, router, session?.user?.role, status]);
 
-
   const handleGoogleSignIn = async () => {
     if (isSubmitting) return;
 
@@ -86,7 +86,6 @@ export function LoginFormCard({
       await signIn("google", {
         redirectTo: callbackUrl ?? "/auth/login",
       });
-      // Reached only when signIn returns without redirecting (provider not configured server-side).
       setFormError(errorMessages.OAuthSignin);
     } catch {
       setFormError(errorMessages.OAuthSignin);
@@ -94,6 +93,7 @@ export function LoginFormCard({
       setIsSubmitting(false);
     }
   };
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -165,36 +165,45 @@ export function LoginFormCard({
   };
 
   return (
-    <div className="space-y-6 rounded-[1.75rem] border border-white/70 bg-white/90 p-8 shadow-xl shadow-slate-900/10 transition-colors duration-300 dark:border-surface-muted/60 dark:bg-surface-base/85 dark:shadow-surface-dark">
-      <div className="space-y-2 text-left">
-        <p className="inline-flex items-center gap-2 rounded-full bg-brand-light/60 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-brand-teal dark:bg-surface-muted/70 dark:text-accent-cyan">
-          <Lock className="h-4 w-4" weight="bold" aria-hidden="true" />
+    <div className="space-y-6 rounded-[1.75rem] border border-white/70 bg-white/95 p-8 shadow-xl shadow-slate-900/10 backdrop-blur-sm transition-colors duration-300 dark:border-surface-muted/60 dark:bg-surface-base/90 dark:shadow-surface-dark">
+      {/* Card header */}
+      <div className="space-y-3">
+        <span className="inline-flex items-center gap-2 rounded-full bg-brand-light/80 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-brand-teal dark:bg-surface-muted/70 dark:text-accent-cyan">
+          <Lock className="h-3.5 w-3.5" weight="bold" aria-hidden="true" />
           Acceso seguro
-        </p>
-        <div className="space-y-1">
-          <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">{heading}</h1>
-          <p className="text-sm text-slate-600 dark:text-slate-300">{description}</p>
+        </span>
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">{heading}</h2>
+          <p className="mt-1 text-sm leading-relaxed text-slate-500 dark:text-slate-400">{description}</p>
         </div>
       </div>
 
+      {/* Error alert */}
       {formError ? (
-        <div className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-500/40 dark:bg-red-500/10 dark:text-red-100" role="alert" aria-live="assertive">
-          <WarningCircle className="mt-0.5 h-5 w-5" weight="bold" aria-hidden="true" />
+        <div
+          className="flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3.5 text-sm text-red-800 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300"
+          role="alert"
+          aria-live="assertive"
+        >
+          <WarningCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-500" weight="fill" aria-hidden="true" />
           <div>
             <p className="font-semibold">No se pudo iniciar sesión</p>
-            <p className="text-red-700 dark:text-red-100/90">{formError}</p>
+            <p className="mt-0.5 text-red-600 dark:text-red-300/90">{formError}</p>
           </div>
         </div>
       ) : null}
 
-      <form className="space-y-4" onSubmit={handleSubmit} aria-busy={isSubmitting}>
+      {/* Form */}
+      <form className="space-y-5" onSubmit={handleSubmit} aria-busy={isSubmitting}>
         {isHydrated ? <span className="sr-only" data-testid="login-form-ready">ready</span> : null}
-        <label className="block space-y-1.5 text-left" htmlFor="login-email">
-          <span className="text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300">
+
+        {/* Email field */}
+        <div className="space-y-1.5">
+          <label htmlFor="login-email" className="block text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300">
             Correo electrónico
-          </span>
+          </label>
           <div className="relative">
-            <EnvelopeSimple className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
+            <EnvelopeSimple className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
             <input
               id="login-email"
               name="email"
@@ -210,47 +219,52 @@ export function LoginFormCard({
               data-testid="login-email"
             />
           </div>
-        </label>
+        </div>
 
-        <label className="block space-y-1.5 text-left" htmlFor="login-password">
-          <span className="text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300">
-            Contraseña
-          </span>
+        {/* Password field */}
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between">
+            <label htmlFor="login-password" className="block text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300">
+              Contraseña
+            </label>
+            <Link
+              href="/auth/forgot-password"
+              className="text-xs font-semibold text-brand-teal transition-colors hover:text-brand-indigo dark:text-accent-cyan"
+            >
+              ¿Olvidaste tu contraseña?
+            </Link>
+          </div>
           <div className="relative">
-            <ShieldCheck className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
+            <ShieldCheck className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
             <input
               id="login-password"
               name="password"
-              type="password"
+              type={showPassword ? "text" : "password"}
               autoComplete="current-password"
               required
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               disabled={isSubmitting}
-              className="input h-12 pl-10 text-sm"
-              placeholder="Ingresa tu contraseña"
+              className="input h-12 pl-10 pr-11 text-sm"
+              placeholder="Tu contraseña"
               data-testid="login-password"
             />
-          </div>
-        </label>
-
-        <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-slate-600 dark:text-slate-300">
-          <div className="space-x-2">
-            <span className="font-semibold uppercase tracking-wide">Recordatorio</span>
-            <span>Si tienes roles múltiples, te enviaremos al tablero correcto automáticamente.</span>
-          </div>
-          <div className="flex items-center gap-4">
-            <Link href="/auth/forgot-password" className="font-semibold text-brand-teal transition-colors hover:text-brand-indigo dark:text-accent-cyan">
-              ¿Olvidaste tu contraseña?
-            </Link>
-            {showBackLink ? (
-              <Link href="/" className="font-semibold text-brand-teal transition-colors hover:text-brand-indigo dark:text-accent-cyan">
-                Volver al inicio
-              </Link>
-            ) : null}
+            <button
+              type="button"
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 rounded-md p-0.5 text-slate-400 transition-colors hover:text-slate-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-teal dark:hover:text-slate-200"
+              onClick={() => setShowPassword((p) => !p)}
+              aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+              tabIndex={0}
+            >
+              {showPassword
+                ? <EyeSlash className="h-4 w-4" weight="bold" aria-hidden="true" />
+                : <Eye className="h-4 w-4" weight="bold" aria-hidden="true" />
+              }
+            </button>
           </div>
         </div>
 
+        {/* Submit */}
         <Button
           type="submit"
           className="h-12 w-full"
@@ -259,14 +273,15 @@ export function LoginFormCard({
           data-testid="login-submit"
         >
           {!isSubmitting && <ArrowRight className="h-4 w-4" weight="bold" aria-hidden="true" />}
-          {isSubmitting ? "Validando credenciales..." : "Ingresar"}
+          {isSubmitting ? "Validando credenciales..." : "Ingresar al portal"}
         </Button>
 
+        {/* Google sign in */}
         {googleEnabled ? (
           <>
             <div className="flex items-center gap-3" aria-hidden="true">
               <span className="h-px flex-1 bg-slate-200 dark:bg-surface-muted/60" />
-              <span className="text-xs uppercase tracking-wide text-slate-500">o</span>
+              <span className="text-xs uppercase tracking-wide text-slate-400">o</span>
               <span className="h-px flex-1 bg-slate-200 dark:bg-surface-muted/60" />
             </div>
 
@@ -277,17 +292,31 @@ export function LoginFormCard({
           </>
         ) : null}
 
-        <p className="text-center text-sm text-slate-600 dark:text-slate-300">
+        {/* Register link */}
+        <p className="text-center text-sm text-slate-500 dark:text-slate-400">
           ¿No tienes cuenta?{" "}
-          <Link href="/auth/register" className="font-semibold text-brand-teal transition-colors hover:text-brand-indigo dark:text-accent-cyan">
+          <Link
+            href="/auth/register"
+            className="font-semibold text-brand-teal transition-colors hover:text-brand-indigo dark:text-accent-cyan"
+          >
             Regístrate gratis
           </Link>
         </p>
       </form>
 
-      <p className="text-center text-xs text-slate-500 dark:text-slate-300">
-        ¿Necesitas ayuda? Escribe a soporte@dentpro.co indicando tu clínica y rol.
-      </p>
+      {/* Support footer */}
+      {showBackLink ? (
+        <p className="text-center text-xs text-slate-400 dark:text-slate-500">
+          ¿Necesitas ayuda?{" "}
+          <a href="mailto:soporte@dentpro.co" className="underline underline-offset-2 hover:text-slate-600 dark:hover:text-slate-300">
+            soporte@dentpro.co
+          </a>
+        </p>
+      ) : (
+        <p className="text-center text-xs text-slate-400 dark:text-slate-500">
+          ¿Necesitas ayuda? Escribe a soporte@dentpro.co indicando tu clínica y rol.
+        </p>
+      )}
     </div>
   );
 }
