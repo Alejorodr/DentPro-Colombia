@@ -124,7 +124,7 @@ export async function POST(request: Request) {
         where: { name: "Limpieza Dental" },
         update: {
           description: "Profilaxis y pulido dental.",
-          priceCents: 80000,
+          priceCents: 8000000,    // $80.000 COP
           durationMinutes: 30,
           active: true,
           specialtyId: specialties[0]?.id ?? null,
@@ -132,7 +132,7 @@ export async function POST(request: Request) {
         create: {
           name: "Limpieza Dental",
           description: "Profilaxis y pulido dental.",
-          priceCents: 80000,
+          priceCents: 8000000,    // $80.000 COP
           durationMinutes: 30,
           active: true,
           specialtyId: specialties[0]?.id ?? null,
@@ -142,7 +142,7 @@ export async function POST(request: Request) {
         where: { name: "Blanqueamiento" },
         update: {
           description: "Tratamiento estético para aclarar el esmalte.",
-          priceCents: 250000,
+          priceCents: 25000000,   // $250.000 COP
           durationMinutes: 60,
           active: true,
           specialtyId: specialties[0]?.id ?? null,
@@ -150,7 +150,7 @@ export async function POST(request: Request) {
         create: {
           name: "Blanqueamiento",
           description: "Tratamiento estético para aclarar el esmalte.",
-          priceCents: 250000,
+          priceCents: 25000000,   // $250.000 COP
           durationMinutes: 60,
           active: true,
           specialtyId: specialties[0]?.id ?? null,
@@ -160,7 +160,7 @@ export async function POST(request: Request) {
         where: { name: "Endodoncia Básica" },
         update: {
           description: "Tratamiento de conductos para aliviar dolor.",
-          priceCents: 180000,
+          priceCents: 18000000,   // $180.000 COP
           durationMinutes: 60,
           active: true,
           specialtyId: specialties[2]?.id ?? null,
@@ -168,7 +168,7 @@ export async function POST(request: Request) {
         create: {
           name: "Endodoncia Básica",
           description: "Tratamiento de conductos para aliviar dolor.",
-          priceCents: 180000,
+          priceCents: 18000000,   // $180.000 COP
           durationMinutes: 60,
           active: true,
           specialtyId: specialties[2]?.id ?? null,

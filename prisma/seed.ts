@@ -41,35 +41,35 @@ const DEFAULT_SERVICES = [
   {
     name: "Limpieza Dental",
     description: "Profilaxis y pulido dental.",
-    priceCents: 80000,
+    priceCents: 8000000,    // $80.000 COP
     durationMinutes: 30,
     specialtyName: "Odontología General",
   },
   {
     name: "Blanqueamiento",
     description: "Tratamiento estético para aclarar el esmalte.",
-    priceCents: 250000,
+    priceCents: 25000000,   // $250.000 COP
     durationMinutes: 60,
     specialtyName: "Odontología General",
   },
   {
     name: "Endodoncia Básica",
     description: "Tratamiento de conductos para aliviar dolor.",
-    priceCents: 180000,
+    priceCents: 18000000,   // $180.000 COP
     durationMinutes: 60,
     specialtyName: "Endodoncia",
   },
   {
     name: "Ortodoncia Inicial",
     description: "Evaluación y ajuste de brackets.",
-    priceCents: 140000,
+    priceCents: 14000000,   // $140.000 COP
     durationMinutes: 45,
     specialtyName: "Ortodoncia",
   },
   {
     name: "Implante Dental",
     description: "Colocación de implante dental.",
-    priceCents: 450000,
+    priceCents: 45000000,   // $450.000 COP
     durationMinutes: 90,
     specialtyName: "Odontología General",
   },

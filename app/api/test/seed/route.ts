@@ -71,7 +71,7 @@ export async function POST(request: Request) {
       where: { name: "Limpieza Dental" },
       update: {
         description: "Profilaxis y pulido dental.",
-        priceCents: 80000,
+        priceCents: 8000000,    // $80.000 COP
         durationMinutes: 30,
         active: true,
         specialtyId: specialty.id,
@@ -79,7 +79,7 @@ export async function POST(request: Request) {
       create: {
         name: "Limpieza Dental",
         description: "Profilaxis y pulido dental.",
-        priceCents: 80000,
+        priceCents: 8000000,    // $80.000 COP
         durationMinutes: 30,
         active: true,
         specialtyId: specialty.id,

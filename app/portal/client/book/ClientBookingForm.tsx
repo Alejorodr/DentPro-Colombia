@@ -303,7 +303,7 @@ export function ClientBookingForm() {
                     {service.description ? (
                       <p className="text-xs text-slate-500 dark:text-slate-300">{service.description}</p>
                     ) : null}
-                    <p className="mt-3 text-sm font-semibold text-brand-teal">{formatter.format(service.priceCents)}</p>
+                    <p className="mt-3 text-sm font-semibold text-brand-teal">{formatter.format(service.priceCents / 100)}</p>
                   </button>
                 );
               })
@@ -428,7 +428,7 @@ export function ClientBookingForm() {
                 {selectedService?.name ?? "Selecciona un servicio"}
               </p>
               {selectedService ? (
-                <p className="text-xs text-brand-teal">{formatter.format(selectedService.priceCents)}</p>
+                <p className="text-xs text-brand-teal">{formatter.format(selectedService.priceCents / 100)}</p>
               ) : null}
             </div>
             <div className="border-t border-dashed border-slate-200 pt-3 dark:border-surface-muted/70">
@@ -461,7 +461,7 @@ export function ClientBookingForm() {
 
           <div className="mt-4 flex items-center justify-between border-t border-slate-200 pt-4 text-sm font-semibold text-slate-900 dark:border-surface-muted/70 dark:text-white">
             <span>Total estimado</span>
-            <span>{selectedService ? formatter.format(selectedService.priceCents) : "--"}</span>
+            <span>{selectedService ? formatter.format(selectedService.priceCents / 100) : "--"}</span>
           </div>
 
           {status ? (
