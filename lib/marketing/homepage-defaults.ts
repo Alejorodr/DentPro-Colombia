@@ -271,6 +271,8 @@ export const HOMEPAGE_DEFAULT_CONTENT: HomepageNormalizedContent = {
     metaTitle: null,
     metaDescription: null,
   },
+  showSpecialists: true,
+  showCampaigns: true,
 };
 
 const VALID_ICON_SET = new Set<string>(MARKETING_ICON_KEYS);

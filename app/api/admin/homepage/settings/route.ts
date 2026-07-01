@@ -147,9 +147,13 @@ const homepageSettingsSchema = z.object({
 
   metaTitle: optionalText(120),
   metaDescription: optionalText(320),
+  showSpecialists: z.boolean().optional(),
+  showCampaigns: z.boolean().optional(),
 });
 
-type HomepageSettingsPayload = z.infer<typeof homepageSettingsSchema>;
+// Partial: PATCH accepts any subset of fields (e.g. visibility-only toggles)
+const homepageSettingsPatchSchema = homepageSettingsSchema.partial();
+type HomepageSettingsPayload = z.infer<typeof homepageSettingsPatchSchema>;
 
 async function ensureSettingsRecord() {
   const prisma = getPrismaClient();
@@ -268,6 +272,8 @@ function serializeSettings(settings: Awaited<ReturnType<typeof ensureSettingsRec
 
     metaTitle: settings.metaTitle,
     metaDescription: settings.metaDescription,
+    showSpecialists: settings.showSpecialists,
+    showCampaigns: settings.showCampaigns,
   };
 }
 
@@ -325,6 +331,8 @@ function mapPayloadToUpdateData(payload: HomepageSettingsPayload) {
 
     metaTitle: payload.metaTitle,
     metaDescription: payload.metaDescription,
+    ...(payload.showSpecialists !== undefined ? { showSpecialists: payload.showSpecialists } : {}),
+    ...(payload.showCampaigns !== undefined ? { showCampaigns: payload.showCampaigns } : {}),
   };
 }
 
@@ -408,9 +416,11 @@ export async function PATCH(request: Request) {
         floatingPhoneNumber: true,
         metaTitle: true,
         metaDescription: true,
+        showSpecialists: true,
+        showCampaigns: true,
       },
     });
-    const { data: body, error } = await parseJson(request, homepageSettingsSchema);
+    const { data: body, error } = await parseJson(request, homepageSettingsPatchSchema);
     if (error) {
       return error;
     }

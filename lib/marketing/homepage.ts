@@ -255,6 +255,8 @@ export async function getHomepageContent(prismaClient?: PrismaClient): Promise<H
       metaTitle: settings?.metaTitle ?? null,
       metaDescription: settings?.metaDescription ?? null,
     },
+    showSpecialists: settings?.showSpecialists ?? true,
+    showCampaigns: settings?.showCampaigns ?? true,
   };
 }
 

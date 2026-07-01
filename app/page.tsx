@@ -154,9 +154,9 @@ export default async function Home() {
 
       <main id="inicio" aria-label="Página principal DentPro Colombia">
         <Hero {...marketingContent.hero} googleReviews={googleReviews} />
-        <CampaignCarousel />
+        {homepageContent.showCampaigns && <CampaignCarousel />}
         <ServicesSection {...marketingContent.services} />
-        <SpecialistsSlider {...marketingContent.specialists} />
+        {homepageContent.showSpecialists && <SpecialistsSlider {...marketingContent.specialists} />}
         <BookingFormSection {...marketingContent.booking} />
         {faqItems.length > 0 && <FAQSection items={faqItems} />}
         <ContactSection {...marketingContent.contact} />

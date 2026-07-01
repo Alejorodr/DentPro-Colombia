@@ -8,6 +8,7 @@ import { Card } from "@/app/portal/components/ui/Card";
 import { Table } from "@/app/portal/components/ui/Table";
 import { AdminImageField } from "@/app/portal/admin/content/components/AdminImageField";
 import { fetchWithRetry, fetchWithTimeout, getApiErrorMessage } from "@/lib/http";
+import { SectionVisibilityToggle } from "@/app/portal/admin/content/components/SectionVisibilityToggle";
 
 type CampaignRecord = {
   id: string;
@@ -41,17 +42,23 @@ export function AdminCampaignsPanel() {
   const [editing, setEditing] = useState<CampaignRecord | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [showCampaigns, setShowCampaigns] = useState(true);
 
   const loadCampaigns = useCallback(async () => {
     setLoading(true);
-    const response = await fetchWithRetry("/api/campaigns");
-    const body = (await response.json().catch(() => null)) as { error?: string } | CampaignRecord[] | null;
-    if (!response.ok) {
+    const [campaignsRes, settingsRes] = await Promise.all([
+      fetchWithRetry("/api/campaigns"),
+      fetchWithRetry("/api/admin/homepage/settings"),
+    ]);
+    const body = (await campaignsRes.json().catch(() => null)) as { error?: string } | CampaignRecord[] | null;
+    const settingsBody = (await settingsRes.json().catch(() => null)) as { settings?: { showCampaigns?: boolean } } | null;
+    if (!campaignsRes.ok) {
       setError((body as { error?: string } | null)?.error ?? "No se pudieron cargar las campañas.");
       setLoading(false);
       return;
     }
     setCampaigns(Array.isArray(body) ? body : []);
+    setShowCampaigns(settingsBody?.settings?.showCampaigns ?? true);
     setLoading(false);
   }, []);
 
@@ -172,6 +179,14 @@ export function AdminCampaignsPanel() {
           />
         </div>
       </section>
+
+      {!loading && (
+        <SectionVisibilityToggle
+          label="Carrusel de campañas"
+          fieldKey="showCampaigns"
+          initialValue={showCampaigns}
+        />
+      )}
 
       <Card className="space-y-4">
         <div>

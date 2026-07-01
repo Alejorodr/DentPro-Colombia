@@ -3,8 +3,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Card } from "@/app/portal/components/ui/Card";
+import { CollapsibleCard } from "@/app/portal/admin/content/components/CollapsibleCard";
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
 import { MARKETING_ICON_KEYS } from "@/lib/marketing/homepage-types";
+
+type ClinicService = { id: string; name: string; description: string | null; priceCents: number };
+type ClinicServicesApiResponse = { items?: ClinicService[]; error?: string };
 
 type HighlightItem = { id: string; text: string; sortOrder: number };
 type ServiceItem = {
@@ -40,22 +44,58 @@ export function AdminHomepageServicesPanel() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [clinicServices, setClinicServices] = useState<ClinicService[]>([]);
+  const [importing, setImporting] = useState(false);
 
   const loadServices = useCallback(async () => {
     setLoading(true);
     setError(null);
-    const response = await fetchWithRetry("/api/admin/homepage/services");
-    const body = (await response.json().catch(() => null)) as ServicesApiResponse | null;
+    const [homepageRes, clinicRes] = await Promise.all([
+      fetchWithRetry("/api/admin/homepage/services"),
+      fetchWithRetry("/api/services?active=true&pageSize=50"),
+    ]);
+    const body = (await homepageRes.json().catch(() => null)) as ServicesApiResponse | null;
+    const clinicBody = (await clinicRes.json().catch(() => null)) as ClinicServicesApiResponse | null;
 
-    if (!response.ok || !body?.services) {
+    if (!homepageRes.ok || !body?.services) {
       setError(body?.error ?? "No se pudieron cargar los servicios del homepage.");
       setLoading(false);
       return;
     }
 
     setServices(body.services);
+    setClinicServices(clinicBody?.items ?? []);
     setLoading(false);
   }, []);
+
+  const importFromClinic = async (clinicService: ClinicService) => {
+    setImporting(true);
+    setError(null);
+    const response = await fetchWithTimeout("/api/admin/homepage/services", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title: clinicService.name,
+        description: clinicService.description ?? "",
+        iconKey: "Sparkle",
+        isActive: true,
+      }),
+    });
+    const body = (await response.json().catch(() => null)) as ServicesApiResponse | null;
+    if (!response.ok || !body?.service) {
+      setError(body?.details?.[0]?.message ?? body?.error ?? "No se pudo importar el servicio.");
+      setImporting(false);
+      return;
+    }
+    setServices((prev) => [...prev, body.service!].sort((a, b) => a.sortOrder - b.sortOrder));
+    setSuccess(`"${clinicService.name}" importado. Ajusta el ícono y agrega highlights manualmente.`);
+    setImporting(false);
+  };
+
+  const alreadyImported = useMemo(
+    () => new Set(services.map((s) => s.title.toLowerCase().trim())),
+    [services],
+  );
 
   useEffect(() => {
     void loadServices();
@@ -247,12 +287,48 @@ export function AdminHomepageServicesPanel() {
     <div className="space-y-4">
       <section>
         <p className="text-xs font-semibold uppercase tracking-wide text-brand-teal dark:text-accent-cyan">Homepage CMS</p>
-        <h2 className="text-xl font-semibold text-slate-900 dark:text-white">Servicios del homepage</h2>
-        <p className="text-sm text-slate-600 dark:text-slate-300">CRUD y orden para servicios y highlights.</p>
+        <h2 className="text-xl font-semibold text-slate-900 dark:text-white">Tarjetas de servicios del homepage</h2>
+        <p className="text-sm text-slate-600 dark:text-slate-300">
+          Estas son las tarjetas visuales de marketing que aparecen en la sección de servicios del sitio. Son diferentes al catálogo clínico (con precios) que se gestiona en <strong>admin/services</strong>.
+        </p>
       </section>
 
+      {!loading && clinicServices.length > 0 && (
+        <CollapsibleCard
+          title="Importar del catálogo clínico"
+          description="Crea una tarjeta de homepage a partir de un servicio clínico existente. Después puedes ajustar el ícono y agregar highlights."
+          defaultOpen={false}
+        >
+          <div className="space-y-2">
+            {clinicServices.map((cs) => {
+              const imported = alreadyImported.has(cs.name.toLowerCase().trim());
+              return (
+                <div key={cs.id} className="flex items-center justify-between rounded-xl border border-slate-100 bg-white p-3 dark:border-slate-700 dark:bg-slate-800">
+                  <div>
+                    <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">{cs.name}</p>
+                    {cs.description && <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1">{cs.description}</p>}
+                  </div>
+                  {imported ? (
+                    <span className="rounded-full bg-brand-light px-3 py-1 text-xs font-semibold text-brand-teal dark:bg-brand-teal/20 dark:text-accent-cyan">Ya importado</span>
+                  ) : (
+                    <button
+                      type="button"
+                      className="rounded-full bg-brand-teal px-3 py-1 text-xs font-semibold text-white disabled:opacity-60"
+                      onClick={() => importFromClinic(cs)}
+                      disabled={importing || saving}
+                    >
+                      Importar
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </CollapsibleCard>
+      )}
+
       <Card className="space-y-4">
-        <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Nuevo servicio</h3>
+        <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Nueva tarjeta de servicio</h3>
         <div className="grid gap-4 md:grid-cols-2">
           <input className="input h-11 text-sm" placeholder="Título" value={newService.title} onChange={(e) => setNewService((p) => ({ ...p, title: e.target.value }))} disabled={saving} />
           <select className="input h-11 text-sm" value={newService.iconKey} onChange={(e) => setNewService((p) => ({ ...p, iconKey: e.target.value as (typeof MARKETING_ICON_KEYS)[number] }))} disabled={saving}>

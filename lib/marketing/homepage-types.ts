@@ -157,4 +157,6 @@ export type HomepageNormalizedContent = {
     metaTitle: string | null;
     metaDescription: string | null;
   };
+  showSpecialists: boolean;
+  showCampaigns: boolean;
 };

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Card } from "@/app/portal/components/ui/Card";
 import { AdminImageField } from "@/app/portal/admin/content/components/AdminImageField";
+import { SectionVisibilityToggle } from "@/app/portal/admin/content/components/SectionVisibilityToggle";
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
 
 type SpecialistItem = {
@@ -41,21 +42,28 @@ export function AdminHomepageSpecialistsPanel() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [showSpecialists, setShowSpecialists] = useState(true);
 
   const loadSpecialists = useCallback(async () => {
     setLoading(true);
     setError(null);
 
-    const response = await fetchWithRetry("/api/admin/homepage/specialists");
-    const body = (await response.json().catch(() => null)) as SpecialistsApiResponse | null;
+    const [specialistsRes, settingsRes] = await Promise.all([
+      fetchWithRetry("/api/admin/homepage/specialists"),
+      fetchWithRetry("/api/admin/homepage/settings"),
+    ]);
 
-    if (!response.ok || !body?.specialists) {
-      setError(body?.error ?? "No se pudieron cargar los especialistas.");
+    const specialistsBody = (await specialistsRes.json().catch(() => null)) as SpecialistsApiResponse | null;
+    const settingsBody = (await settingsRes.json().catch(() => null)) as { settings?: { showSpecialists?: boolean } } | null;
+
+    if (!specialistsRes.ok || !specialistsBody?.specialists) {
+      setError(specialistsBody?.error ?? "No se pudieron cargar los especialistas.");
       setLoading(false);
       return;
     }
 
-    setSpecialists(body.specialists);
+    setSpecialists(specialistsBody.specialists);
+    setShowSpecialists(settingsBody?.settings?.showSpecialists ?? true);
     setLoading(false);
   }, []);
 
@@ -169,6 +177,14 @@ export function AdminHomepageSpecialistsPanel() {
         <p className="text-sm text-slate-600 dark:text-slate-300">CRUD, activación y orden manual de especialistas.</p>
       </section>
 
+      {!loading && (
+        <SectionVisibilityToggle
+          label="Sección de especialistas"
+          fieldKey="showSpecialists"
+          initialValue={showSpecialists}
+        />
+      )}
+
       <Card className="space-y-4">
         <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Nuevo especialista</h3>
         <div className="grid gap-4 md:grid-cols-2">
@@ -234,9 +250,29 @@ export function AdminHomepageSpecialistsPanel() {
               <button type="button" className="rounded-full bg-brand-teal px-4 py-2 text-xs font-semibold uppercase text-white disabled:opacity-60 md:justify-self-start" onClick={() => saveSpecialist(specialist)} disabled={saving}>Guardar especialista</button>
             </div>
           ) : (
-            <div className="space-y-1 text-sm text-slate-600 dark:text-slate-300">
-              <p><span className="font-semibold">Especialidad:</span> {specialist.specialty}</p>
-              <p>{specialist.bioShort}</p>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+              <div className="flex-1 space-y-1 text-sm text-slate-600 dark:text-slate-300">
+                <p><span className="font-semibold">Especialidad:</span> {specialist.specialty}</p>
+                <p>{specialist.bioShort}</p>
+              </div>
+              <div className="w-full max-w-[200px] shrink-0">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">Vista previa</p>
+                <div className="rounded-2xl border border-white/70 bg-white p-4 shadow-lg">
+                  {specialist.imageUrl ? (
+                    <img
+                      src={specialist.imageUrl}
+                      alt={specialist.altText ?? specialist.fullName}
+                      className="mb-3 h-24 w-full rounded-xl object-cover"
+                    />
+                  ) : (
+                    <div className="mb-3 flex h-24 w-full items-center justify-center rounded-xl bg-brand-light">
+                      <span className="text-xs text-slate-400">Sin foto</span>
+                    </div>
+                  )}
+                  <p className="text-sm font-semibold text-slate-900">{specialist.fullName}</p>
+                  <p className="text-xs text-brand-teal">{specialist.specialty}</p>
+                </div>
+              </div>
             </div>
           )}
         </Card>
