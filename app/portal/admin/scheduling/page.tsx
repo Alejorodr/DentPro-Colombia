@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
 
@@ -101,7 +101,7 @@ export default function AdminSchedulingPage() {
 
   const [editingScheduleId, setEditingScheduleId] = useState<string | null>(null);
 
-  const loadBaseData = async () => {
+  const loadBaseData = useCallback(async () => {
     const [profRes, servicesRes] = await Promise.all([
       fetchWithRetry("/api/professionals?pageSize=100"),
       fetchWithRetry("/api/services?pageSize=100"),
@@ -119,10 +119,10 @@ export default function AdminSchedulingPage() {
     setProfessionals(incomingProfessionals);
     setServices((servicesData.data ?? []).filter((service) => service.active));
 
-    if (!selectedProfessionalId && incomingProfessionals.length > 0) {
-      setSelectedProfessionalId(incomingProfessionals[0].id);
-    }
-  };
+    setSelectedProfessionalId((current) =>
+      !current && incomingProfessionals.length > 0 ? incomingProfessionals[0].id : current,
+    );
+  }, []);
 
   const loadProfessionalScheduling = async (professionalId: string) => {
     if (!professionalId) {
@@ -166,7 +166,7 @@ export default function AdminSchedulingPage() {
 
   useEffect(() => {
     void loadBaseData();
-  }, []);
+  }, [loadBaseData]);
 
   useEffect(() => {
     void loadProfessionalScheduling(selectedProfessionalId);

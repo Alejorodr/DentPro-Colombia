@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { AppointmentsList } from "@/app/portal/components/AppointmentsList";
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
@@ -60,7 +60,7 @@ export function ReceptionistPanel() {
     setAppointmentsLoading(false);
   };
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     void loadAppointments(1);
     const [specialtiesResponse, professionalsResponse] = await Promise.all([
       fetchWithRetry("/api/specialties"),
@@ -76,11 +76,11 @@ export function ReceptionistPanel() {
       const data = (await professionalsResponse.json()) as { data: Professional[] };
       setProfessionals(data.data ?? []);
     }
-  };
+  }, []);
 
   useEffect(() => {
     void loadData();
-  }, []);
+  }, [loadData]);
 
   const filteredAppointments = useMemo(() => {
     return appointments.filter((appointment) => {

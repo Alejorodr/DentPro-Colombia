@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Bell, CalendarCheck, CheckCircle, Clock, WarningCircle } from "@/components/ui/Icon";
 import { Skeleton } from "@/app/portal/components/ui/Skeleton";
@@ -42,7 +42,7 @@ export function ActivityFeed({
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const load = async (cursor?: string | null) => {
+  const load = useCallback(async (cursor?: string | null) => {
     const params = new URLSearchParams({ limit: String(limit) });
     if (cursor) params.set("cursor", cursor);
     if (typeFilter !== "all") params.set("type", typeFilter);
@@ -60,7 +60,7 @@ export function ActivityFeed({
     } catch {
       setError("No pudimos cargar la actividad clínica.");
     }
-  };
+  }, [limit, typeFilter]);
 
   useEffect(() => {
     let active = true;
@@ -74,7 +74,7 @@ export function ActivityFeed({
     return () => {
       active = false;
     };
-  }, [limit, typeFilter]);
+  }, [limit, typeFilter, load]);
 
   const content = useMemo(() => {
     if (loading) {
@@ -141,7 +141,7 @@ export function ActivityFeed({
         ) : null}
       </>
     );
-  }, [error, items, loading, loadingMore, nextCursor]);
+  }, [error, items, loading, loadingMore, nextCursor, load]);
 
   return (
     <section className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-surface-muted dark:bg-surface-base/60" aria-live="polite" aria-busy={loading || loadingMore} data-testid={testId}>

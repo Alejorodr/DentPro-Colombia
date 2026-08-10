@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
@@ -139,6 +139,20 @@ export function ProfessionalDashboard() {
     };
   }, [selectedAppointmentId]);
 
+  const persistNotes = useCallback(async () => {
+    if (!selectedAppointmentId) return;
+    try {
+      await fetchWithTimeout(`/api/professional/appointment/${selectedAppointmentId}/notes`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: notesContent }),
+      });
+      setLastSavedAt(new Date());
+    } catch (error) {
+      console.error(error);
+    }
+  }, [selectedAppointmentId, notesContent]);
+
   // Auto-save notes 2 s after the user stops typing
   useEffect(() => {
     if (!selectedAppointmentId || !notesContent) return;
@@ -149,7 +163,7 @@ export function ProfessionalDashboard() {
     return () => {
       if (autoSaveRef.current) clearTimeout(autoSaveRef.current);
     };
-  }, [notesContent, selectedAppointmentId]);
+  }, [notesContent, selectedAppointmentId, persistNotes]);
 
   const selectedPatientName = useMemo(() => {
     if (!appointmentDetail) return "";
@@ -194,20 +208,6 @@ export function ProfessionalDashboard() {
       setNotesContent((prev) => `${prev}${prev ? " " : ""}${transcript}`.trim());
     };
     recognition.start();
-  };
-
-  const persistNotes = async () => {
-    if (!selectedAppointmentId) return;
-    try {
-      await fetchWithTimeout(`/api/professional/appointment/${selectedAppointmentId}/notes`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content: notesContent }),
-      });
-      setLastSavedAt(new Date());
-    } catch (error) {
-      console.error(error);
-    }
   };
 
   const saveNotes = async () => {
