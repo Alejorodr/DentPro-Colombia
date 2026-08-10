@@ -4,17 +4,33 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { AppointmentStatus } from "@/lib/api/types";
 
-import { PATCH } from "../[id]/status/route";
+const { requireSessionMock } = vi.hoisted(() => ({
+  requireSessionMock: vi.fn(),
+}));
 
+vi.mock("@/lib/authz", async () => {
+  const actual = await vi.importActual<typeof import("@/lib/authz")>("@/lib/authz");
+  return {
+    ...actual,
+    requireSession: requireSessionMock,
+  };
+});
+
+import { PATCH } from "../[id]/status/route";
+import { fromPrismaStatus, toPrismaStatus } from "../utils";
+
+// Prisma always returns its own uppercase enum (SCHEDULED/CONFIRMED/CANCELLED…),
+// never the app-level lowercase AppointmentStatus — mirror that boundary here so
+// the mock round-trips through toPrismaStatus/fromPrismaStatus exactly like the
+// real client would.
 type AppointmentRecord = {
   id: string;
-  service: string;
-  scheduledAt: Date;
-  status: AppointmentStatus;
+  serviceName: string;
+  createdAt: Date;
+  status: string;
   patientId: string | null;
-  specialistId: string | null;
-  scheduleId: string | null;
-  preferredDate: Date | null;
+  professionalId: string | null;
+  timeSlotId: string | null;
 };
 
 const mockAppointments = new Map<string, AppointmentRecord>();
@@ -29,11 +45,10 @@ vi.mock("@/lib/prisma", () => {
         const record: AppointmentRecord = {
           id: data.id ?? randomUUID(),
           patientId: data.patientId ?? null,
-          specialistId: data.specialistId ?? null,
-          scheduleId: data.scheduleId ?? null,
-          preferredDate: data.preferredDate ?? null,
-          service: data.service,
-          scheduledAt: data.scheduledAt,
+          professionalId: data.professionalId ?? null,
+          timeSlotId: data.timeSlotId ?? null,
+          serviceName: data.serviceName,
+          createdAt: data.createdAt,
           status: data.status,
         };
 
@@ -63,12 +78,11 @@ async function createAppointment(initialStatus: AppointmentStatus) {
   const record: AppointmentRecord = {
     id: randomUUID(),
     patientId: null,
-    specialistId: null,
-    scheduleId: null,
-    preferredDate: null,
-    service: `test-status-${randomUUID()}`,
-    scheduledAt: new Date(),
-    status: initialStatus,
+    professionalId: null,
+    timeSlotId: null,
+    serviceName: `test-status-${randomUUID()}`,
+    createdAt: new Date(),
+    status: toPrismaStatus(initialStatus),
   };
 
   mockAppointments.set(record.id, record);
@@ -78,6 +92,9 @@ async function createAppointment(initialStatus: AppointmentStatus) {
 describe("PATCH /api/appointments/[id]/status", () => {
   beforeEach(() => {
     mockAppointments.clear();
+    requireSessionMock.mockResolvedValue({
+      user: { id: "receptionist-1", role: "RECEPCIONISTA" },
+    });
   });
 
   it("updates a pending appointment to confirmed", async () => {
@@ -96,7 +113,8 @@ describe("PATCH /api/appointments/[id]/status", () => {
     const payload = (await response.json()) as { status: string };
     expect(payload.status).toBe("confirmed");
 
-    expect(mockAppointments.get(appointment.id)?.status).toBe(CONFIRMED_STATUS);
+    const storedStatus = mockAppointments.get(appointment.id)?.status;
+    expect(storedStatus && fromPrismaStatus(storedStatus)).toBe(CONFIRMED_STATUS);
   });
 
   it("rejects transitions from cancelled to other states", async () => {
@@ -112,7 +130,8 @@ describe("PATCH /api/appointments/[id]/status", () => {
 
     expect(response.status).toBe(400);
 
-    expect(mockAppointments.get(appointment.id)?.status).toBe(CANCELLED_STATUS);
+    const storedStatus = mockAppointments.get(appointment.id)?.status;
+    expect(storedStatus && fromPrismaStatus(storedStatus)).toBe(CANCELLED_STATUS);
   });
 
   it("returns 404 when appointment does not exist", async () => {

@@ -1,4 +1,4 @@
-import { execSync } from "node:child_process";
+import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
@@ -20,11 +20,13 @@ function ensureClientGenerated(schemaPath: string, databaseUrl: string) {
     TEST_DATABASE_URL: databaseUrl,
     DATABASE_URL: databaseUrl,
   };
-  execSync(`npx prisma generate --schema ${schemaPath}`, { stdio: "ignore", env });
-  execSync(`npx prisma db push --schema ${schemaPath}`, {
-    stdio: "ignore",
-    env,
-  });
+  // Invoke the local Prisma CLI entrypoint directly via node, not `npx` through a
+  // shell: on Windows, execFileSync's shell:true mode joins argv into a raw command
+  // line without per-argument quoting, so a schema path containing spaces (this
+  // repo's absolute path does) gets split into multiple arguments and fails.
+  const prismaCli = path.join(process.cwd(), "node_modules", "prisma", "build", "index.js");
+  execFileSync(process.execPath, [prismaCli, "generate", "--schema", schemaPath], { stdio: "ignore", env });
+  execFileSync(process.execPath, [prismaCli, "db", "push", "--schema", schemaPath], { stdio: "ignore", env });
 }
 
 export async function getTestPrisma(): Promise<TestPrisma> {
