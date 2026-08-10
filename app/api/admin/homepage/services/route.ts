@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { parseJson } from "@/app/api/_utils/validation";
+import { logAuditEvent } from "@/lib/audit";
 import { MARKETING_ICON_KEYS } from "@/lib/marketing/homepage-types";
 import { getPrismaClient } from "@/lib/prisma";
 
@@ -69,6 +70,16 @@ export async function POST(request: Request) {
       isActive: body.isActive ?? true,
     },
     include: { highlights: { orderBy: { sortOrder: "asc" } } },
+  });
+
+  await logAuditEvent({
+    actor: { userId: auth.sessionUser.id, role: auth.sessionUser.role },
+    action: "homepage.services.created",
+    resourceType: "homepage_service",
+    resourceId: service.id,
+    targetLabel: service.title,
+    status: "success",
+    metadata: { iconKey: service.iconKey, isActive: service.isActive },
   });
 
   return NextResponse.json({ service: serializeService(service) }, { status: 201 });

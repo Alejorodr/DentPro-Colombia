@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { errorResponse } from "@/app/api/_utils/response";
 import { parseJson } from "@/app/api/_utils/validation";
+import { logAuditEvent } from "@/lib/audit";
 import { getPrismaClient } from "@/lib/prisma";
 
 import { requireAdmin, requiredText } from "../../../../_lib";
@@ -35,6 +36,16 @@ export async function PATCH(
   const updated = await prisma.homepageServiceHighlight.update({
     where: { id: highlightId },
     data: { text: body.text },
+  });
+
+  await logAuditEvent({
+    actor: { userId: auth.sessionUser.id, role: auth.sessionUser.role },
+    action: "homepage.service-highlights.updated",
+    resourceType: "homepage_service_highlight",
+    resourceId: updated.id,
+    targetLabel: updated.text,
+    status: "success",
+    metadata: { serviceId },
   });
 
   return NextResponse.json({ highlight: updated });
@@ -70,6 +81,16 @@ export async function DELETE(
       }),
     ),
   );
+
+  await logAuditEvent({
+    actor: { userId: auth.sessionUser.id, role: auth.sessionUser.role },
+    action: "homepage.service-highlights.deleted",
+    resourceType: "homepage_service_highlight",
+    resourceId: existing.id,
+    targetLabel: existing.text,
+    status: "success",
+    metadata: { serviceId },
+  });
 
   return NextResponse.json({ ok: true });
 }

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { parseJson } from "@/app/api/_utils/validation";
+import { logAuditEvent } from "@/lib/audit";
 import { getPrismaClient } from "@/lib/prisma";
 
 import { optionalImageUrl, optionalText, requireAdmin, requiredText } from "../_lib";
@@ -67,6 +68,16 @@ export async function POST(request: Request) {
       isActive: body.isActive ?? true,
       sortOrder: (maxSort._max.sortOrder ?? -1) + 1,
     },
+  });
+
+  await logAuditEvent({
+    actor: { userId: auth.sessionUser.id, role: auth.sessionUser.role },
+    action: "homepage.specialists.created",
+    resourceType: "homepage_specialist",
+    resourceId: specialist.id,
+    targetLabel: specialist.fullName,
+    status: "success",
+    metadata: { specialty: specialist.specialty, isActive: specialist.isActive },
   });
 
   return NextResponse.json({ specialist: serializeSpecialist(specialist) }, { status: 201 });

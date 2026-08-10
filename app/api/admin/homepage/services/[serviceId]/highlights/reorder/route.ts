@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { errorResponse } from "@/app/api/_utils/response";
 import { parseJson } from "@/app/api/_utils/validation";
+import { logAuditEvent } from "@/lib/audit";
 import { getPrismaClient } from "@/lib/prisma";
 
 import { requireAdmin } from "../../../../_lib";
@@ -47,6 +48,14 @@ export async function PATCH(request: Request, context: { params: Promise<{ servi
       }),
     ),
   );
+
+  await logAuditEvent({
+    actor: { userId: auth.sessionUser.id, role: auth.sessionUser.role },
+    action: "homepage.service-highlights.reordered",
+    resourceType: "homepage_service_highlight",
+    status: "success",
+    metadata: { serviceId, itemCount: body.orderedIds.length, order: body.orderedIds },
+  });
 
   return NextResponse.json({ ok: true });
 }

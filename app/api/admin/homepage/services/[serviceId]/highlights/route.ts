@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { errorResponse } from "@/app/api/_utils/response";
 import { parseJson } from "@/app/api/_utils/validation";
+import { logAuditEvent } from "@/lib/audit";
 import { getPrismaClient } from "@/lib/prisma";
 
 import { requireAdmin, requiredText } from "../../../_lib";
@@ -36,6 +37,16 @@ export async function POST(request: Request, context: { params: Promise<{ servic
       text: body.text,
       sortOrder: (maxSort._max.sortOrder ?? -1) + 1,
     },
+  });
+
+  await logAuditEvent({
+    actor: { userId: auth.sessionUser.id, role: auth.sessionUser.role },
+    action: "homepage.service-highlights.created",
+    resourceType: "homepage_service_highlight",
+    resourceId: highlight.id,
+    targetLabel: highlight.text,
+    status: "success",
+    metadata: { serviceId },
   });
 
   return NextResponse.json({ highlight }, { status: 201 });

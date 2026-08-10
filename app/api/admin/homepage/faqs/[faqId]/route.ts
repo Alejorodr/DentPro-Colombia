@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { errorResponse } from "@/app/api/_utils/response";
 import { parseJson } from "@/app/api/_utils/validation";
+import { logAuditEvent } from "@/lib/audit";
 import { getPrismaClient } from "@/lib/prisma";
 
 import { requireAdmin, requiredText } from "../../_lib";
@@ -47,6 +48,16 @@ export async function PATCH(request: Request, context: { params: Promise<{ faqId
 
   const updated = await prisma.homepageFaq.update({ where: { id: faqId }, data: body });
 
+  await logAuditEvent({
+    actor: { userId: auth.sessionUser.id, role: auth.sessionUser.role },
+    action: "homepage.faqs.updated",
+    resourceType: "homepage_faq",
+    resourceId: updated.id,
+    targetLabel: updated.question,
+    status: "success",
+    metadata: { changedFields: Object.keys(body) },
+  });
+
   return NextResponse.json({ faq: serializeFaq(updated) });
 }
 
@@ -72,6 +83,15 @@ export async function DELETE(_request: Request, context: { params: Promise<{ faq
       prisma.homepageFaq.update({ where: { id: item.id }, data: { sortOrder: index } }),
     ),
   );
+
+  await logAuditEvent({
+    actor: { userId: auth.sessionUser.id, role: auth.sessionUser.role },
+    action: "homepage.faqs.deleted",
+    resourceType: "homepage_faq",
+    resourceId: existing.id,
+    targetLabel: existing.question,
+    status: "success",
+  });
 
   return NextResponse.json({ ok: true });
 }
