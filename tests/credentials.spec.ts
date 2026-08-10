@@ -91,6 +91,25 @@ describe("authorizeCredentials", () => {
     expect(result).toBeNull();
   });
 
+  it("keeps bypass disabled in production even with TEST_AUTH_BYPASS=1 and no DATABASE_URL", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    process.env.TEST_AUTH_BYPASS = "1";
+    process.env.DATABASE_URL = "";
+    process.env.NEXTAUTH_URL = "http://127.0.0.1:3000";
+    mockedAuthenticateUser.mockResolvedValue(null);
+
+    const result = await authorizeCredentials({ email: "admin@dentpro.test", password: "Test1234!" });
+
+    // Bypass block must be skipped entirely — real authenticateUser() runs instead
+    // of the hardcoded bypass credential check, even though bypass conditions look
+    // satisfied (TEST_AUTH_BYPASS=1, no DATABASE_URL, localhost NEXTAUTH_URL).
+    expect(mockedAuthenticateUser).toHaveBeenCalledWith("admin@dentpro.test", "Test1234!");
+    expect(mockedFindUserByEmail).not.toHaveBeenCalled();
+    expect(result).toBeNull();
+
+    vi.unstubAllEnvs();
+  });
+
   it("uses persisted bypass user when bypass credentials are valid", async () => {
     process.env.TEST_AUTH_BYPASS = "1";
     process.env.DATABASE_URL = "postgresql://example";

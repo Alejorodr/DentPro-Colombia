@@ -20,8 +20,14 @@ export async function authorizeCredentials(credentials?: CredentialsInput) {
   const isLocalhost = baseUrl.includes("localhost") || baseUrl.includes("127.0.0.1");
   const databaseUrl = process.env.DATABASE_URL ?? "";
 
+  // A misconfigured environment that resolves NODE_ENV to anything other than
+  // "production" but still lacks DATABASE_URL must never be able to activate the
+  // bypass — otherwise a broken preview/staging deploy with a localhost-looking
+  // NEXTAUTH_URL could grant admin access via the hardcoded bypass credentials
+  // with zero explicit opt-in.
   const bypassEnabled =
-    process.env.TEST_AUTH_BYPASS === "1" || (!databaseUrl && isLocalhost);
+    process.env.NODE_ENV !== "production" &&
+    (process.env.TEST_AUTH_BYPASS === "1" || (!databaseUrl && isLocalhost));
 
   if (bypassEnabled) {
     const bypassEmail = process.env.TEST_AUTH_EMAIL ?? "admin@dentpro.test";
