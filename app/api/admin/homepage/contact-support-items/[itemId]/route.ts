@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { errorResponse } from "@/app/api/_utils/response";
 import { parseJson } from "@/app/api/_utils/validation";
+import { logAuditEvent } from "@/lib/audit";
 import { MARKETING_ICON_KEYS } from "@/lib/marketing/homepage-types";
 import { getPrismaClient } from "@/lib/prisma";
 
@@ -53,6 +54,16 @@ export async function PATCH(request: Request, context: { params: Promise<{ itemI
     data: body,
   });
 
+  await logAuditEvent({
+    actor: { userId: auth.sessionUser.id, role: auth.sessionUser.role },
+    action: "homepage.contact-support-items.updated",
+    resourceType: "homepage_contact_support_item",
+    resourceId: updated.id,
+    targetLabel: updated.text,
+    status: "success",
+    metadata: { changedFields: Object.keys(body) },
+  });
+
   return NextResponse.json({ contactSupportItem: serializeContactSupportItem(updated) });
 }
 
@@ -83,6 +94,15 @@ export async function DELETE(_request: Request, context: { params: Promise<{ ite
       }),
     ),
   );
+
+  await logAuditEvent({
+    actor: { userId: auth.sessionUser.id, role: auth.sessionUser.role },
+    action: "homepage.contact-support-items.deleted",
+    resourceType: "homepage_contact_support_item",
+    resourceId: existing.id,
+    targetLabel: existing.text,
+    status: "success",
+  });
 
   return NextResponse.json({ ok: true });
 }

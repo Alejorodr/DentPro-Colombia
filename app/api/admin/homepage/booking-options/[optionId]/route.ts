@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { errorResponse } from "@/app/api/_utils/response";
 import { parseJson } from "@/app/api/_utils/validation";
+import { logAuditEvent } from "@/lib/audit";
 import { getPrismaClient } from "@/lib/prisma";
 
 import { noHtml, requireAdmin, requiredText } from "../../_lib";
@@ -68,6 +69,16 @@ export async function PATCH(request: Request, context: { params: Promise<{ optio
     data: body,
   });
 
+  await logAuditEvent({
+    actor: { userId: auth.sessionUser.id, role: auth.sessionUser.role },
+    action: "homepage.booking-options.updated",
+    resourceType: "homepage_booking_option",
+    resourceId: updated.id,
+    targetLabel: updated.label,
+    status: "success",
+    metadata: { changedFields: Object.keys(body) },
+  });
+
   return NextResponse.json({ bookingOption: serializeBookingOption(updated) });
 }
 
@@ -98,6 +109,15 @@ export async function DELETE(_request: Request, context: { params: Promise<{ opt
       }),
     ),
   );
+
+  await logAuditEvent({
+    actor: { userId: auth.sessionUser.id, role: auth.sessionUser.role },
+    action: "homepage.booking-options.deleted",
+    resourceType: "homepage_booking_option",
+    resourceId: existing.id,
+    targetLabel: existing.label,
+    status: "success",
+  });
 
   return NextResponse.json({ ok: true });
 }

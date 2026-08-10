@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { errorResponse } from "@/app/api/_utils/response";
 import { parseJson } from "@/app/api/_utils/validation";
+import { logAuditEvent } from "@/lib/audit";
 import { MARKETING_ICON_KEYS } from "@/lib/marketing/homepage-types";
 import { getPrismaClient } from "@/lib/prisma";
 
@@ -53,6 +54,16 @@ export async function PATCH(request: Request, context: { params: Promise<{ benef
     data: body,
   });
 
+  await logAuditEvent({
+    actor: { userId: auth.sessionUser.id, role: auth.sessionUser.role },
+    action: "homepage.booking-benefits.updated",
+    resourceType: "homepage_booking_benefit",
+    resourceId: updated.id,
+    targetLabel: updated.text,
+    status: "success",
+    metadata: { changedFields: Object.keys(body) },
+  });
+
   return NextResponse.json({ bookingBenefit: serializeBookingBenefit(updated) });
 }
 
@@ -83,6 +94,15 @@ export async function DELETE(_request: Request, context: { params: Promise<{ ben
       }),
     ),
   );
+
+  await logAuditEvent({
+    actor: { userId: auth.sessionUser.id, role: auth.sessionUser.role },
+    action: "homepage.booking-benefits.deleted",
+    resourceType: "homepage_booking_benefit",
+    resourceId: existing.id,
+    targetLabel: existing.text,
+    status: "success",
+  });
 
   return NextResponse.json({ ok: true });
 }

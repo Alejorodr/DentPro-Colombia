@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { parseJson } from "@/app/api/_utils/validation";
+import { logAuditEvent } from "@/lib/audit";
 import { MARKETING_ICON_KEYS } from "@/lib/marketing/homepage-types";
 import { getPrismaClient } from "@/lib/prisma";
 
@@ -58,6 +59,16 @@ export async function POST(request: Request) {
       isActive: body.isActive ?? true,
       sortOrder: (maxSort._max.sortOrder ?? -1) + 1,
     },
+  });
+
+  await logAuditEvent({
+    actor: { userId: auth.sessionUser.id, role: auth.sessionUser.role },
+    action: "homepage.contact-support-items.created",
+    resourceType: "homepage_contact_support_item",
+    resourceId: contactSupportItem.id,
+    targetLabel: contactSupportItem.text,
+    status: "success",
+    metadata: { iconKey: contactSupportItem.iconKey, isActive: contactSupportItem.isActive },
   });
 
   return NextResponse.json({ contactSupportItem: serializeContactSupportItem(contactSupportItem) }, { status: 201 });

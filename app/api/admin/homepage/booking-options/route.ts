@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { errorResponse } from "@/app/api/_utils/response";
 import { parseJson } from "@/app/api/_utils/validation";
+import { logAuditEvent } from "@/lib/audit";
 import { getPrismaClient } from "@/lib/prisma";
 
 import { noHtml, requireAdmin, requiredText } from "../_lib";
@@ -72,6 +73,16 @@ export async function POST(request: Request) {
       isActive: body.isActive ?? true,
       sortOrder: (maxSort._max.sortOrder ?? -1) + 1,
     },
+  });
+
+  await logAuditEvent({
+    actor: { userId: auth.sessionUser.id, role: auth.sessionUser.role },
+    action: "homepage.booking-options.created",
+    resourceType: "homepage_booking_option",
+    resourceId: bookingOption.id,
+    targetLabel: bookingOption.label,
+    status: "success",
+    metadata: { value: bookingOption.value, isActive: bookingOption.isActive },
   });
 
   return NextResponse.json({ bookingOption: serializeBookingOption(bookingOption) }, { status: 201 });

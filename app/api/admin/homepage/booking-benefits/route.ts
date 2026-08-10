@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { parseJson } from "@/app/api/_utils/validation";
+import { logAuditEvent } from "@/lib/audit";
 import { MARKETING_ICON_KEYS } from "@/lib/marketing/homepage-types";
 import { getPrismaClient } from "@/lib/prisma";
 
@@ -58,6 +59,16 @@ export async function POST(request: Request) {
       isActive: body.isActive ?? true,
       sortOrder: (maxSort._max.sortOrder ?? -1) + 1,
     },
+  });
+
+  await logAuditEvent({
+    actor: { userId: auth.sessionUser.id, role: auth.sessionUser.role },
+    action: "homepage.booking-benefits.created",
+    resourceType: "homepage_booking_benefit",
+    resourceId: bookingBenefit.id,
+    targetLabel: bookingBenefit.text,
+    status: "success",
+    metadata: { iconKey: bookingBenefit.iconKey, isActive: bookingBenefit.isActive },
   });
 
   return NextResponse.json({ bookingBenefit: serializeBookingBenefit(bookingBenefit) }, { status: 201 });
