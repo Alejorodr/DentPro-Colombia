@@ -141,6 +141,9 @@ importers:
       eslint-config-next:
         specifier: ^16.3.0
         version: 16.3.0(@typescript-eslint/parser@8.66.0(eslint@10.8.1(jiti@2.7.0))(typescript@6.0.3))(eslint@10.8.1(jiti@2.7.0))(typescript@6.0.3)
+      eslint-plugin-react-hooks:
+        specifier: 7.1.1
+        version: 7.1.1(eslint@10.8.1(jiti@2.7.0))
       globals:
         specifier: ^17.9.0
         version: 17.9.0

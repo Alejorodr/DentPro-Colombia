@@ -9,7 +9,6 @@ import { logAuditEvent } from "@/lib/audit";
 import { getPrismaClient } from "@/lib/prisma";
 import {
   optionalAbsoluteHttpUrl,
-  optionalImageUrl,
   optionalText,
   requireAdmin,
   requiredImageUrl,

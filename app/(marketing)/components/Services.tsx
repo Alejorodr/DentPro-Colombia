@@ -70,9 +70,9 @@ export function ServicesSection({ badge, title, description, services }: Service
                     ))}
                   </ul>
                   <div className="mt-auto pt-6">
-                    <a href="/appointments/new" className="btn-secondary w-full justify-center text-sm">
+                    <Link href="/appointments/new" className="btn-secondary w-full justify-center text-sm">
                       Reservar cita
-                    </a>
+                    </Link>
                   </div>
                 </div>
               </article>

@@ -18,9 +18,6 @@ const PhIcon = ({ children, size = 20, className = "", style = {}, viewBox = "0 
   </svg>
 );
 
-// Generic helper to switch path by weight (bold vs fill)
-const wsel = (weight, byWeight) => byWeight[weight] || byWeight.bold;
-
 const I = {};
 
 // ─── Navigation / chrome ────────────────────────────────────────────

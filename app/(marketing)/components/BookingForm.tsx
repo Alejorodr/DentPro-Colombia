@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 
 import { fetchWithRetry } from "@/lib/http";
 import type { MarketingIconName } from "./icon-types";
@@ -119,7 +120,7 @@ export function BookingFormSection({
             </div>
 
             <div className="mt-8 grid gap-4 rounded-2xl border border-white/25 bg-white/10 p-5" data-testid="availability-block">
-              <a
+              <Link
                 href="/appointments/new"
                 className="flex items-center justify-center gap-3 rounded-2xl bg-white px-6 py-4 text-base font-bold text-brand-teal shadow-md transition hover:bg-brand-light dark:bg-accent-cyan dark:text-slate-900 dark:hover:bg-accent-cyan/90"
               >
@@ -127,7 +128,7 @@ export function BookingFormSection({
                 <span className="rounded-full border border-brand-teal/30 bg-brand-light px-2 py-0.5 text-xs font-semibold text-brand-teal">
                   Confirma en segundos
                 </span>
-              </a>
+              </Link>
 
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wide text-brand-light/90">

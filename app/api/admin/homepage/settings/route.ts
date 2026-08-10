@@ -66,10 +66,6 @@ function optionalHref(max: number) {
   return optionalText(max).refine((value) => value === null || parseHrefUrl(value), "URL inválida.");
 }
 
-function optionalAbsoluteUrl(max: number) {
-  return optionalText(max).refine((value) => value === null || parseAbsoluteUrl(value), "URL inválida.");
-}
-
 // Accepts https:// URLs and base64 data URLs from local uploads.
 const IMAGE_MAX_CHARS = 524288;
 function optionalImageUrl() {

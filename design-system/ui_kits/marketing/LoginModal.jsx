@@ -1,5 +1,5 @@
 // DentPro Marketing — Login modal + floating actions
-const { X: LX, UserCircle: LUC, Phone: FPhone, WhatsappLogo: FWa, CalendarCheck: LCal, Tooth: LTooth, ShieldCheck: LShield } = window.DPIcons;
+const { X: LX, Phone: FPhone, WhatsappLogo: FWa, CalendarCheck: LCal, Tooth: LTooth, ShieldCheck: LShield } = window.DPIcons;
 const lFeat = { display: "flex", gap: 10, alignItems: "center" };
 
 function DPLoginModal({ open, onClose }) {

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 
 import type { ComponentType, SVGProps } from "react";
@@ -63,7 +64,7 @@ export function Sidebar({
         <div className="flex items-center justify-between px-6 py-6">
           <Link href="/" className="flex items-center gap-2">
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-glow overflow-hidden">
-              <img src="/icon.svg" alt="" aria-hidden="true" className="h-10 w-10" />
+              <Image src="/icon.svg" alt="" aria-hidden="true" width={40} height={40} className="h-10 w-10" />
             </span>
             <div>
               <p className="text-sm font-semibold text-slate-900 dark:text-white">{brandTitle}</p>

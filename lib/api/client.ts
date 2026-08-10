@@ -13,7 +13,7 @@ async function handleResponse<T>(response: Response): Promise<T> {
       } else if (typeof payload?.message === "string" && payload.message.trim().length > 0) {
         message = payload.message;
       }
-    } catch (error) {
+    } catch (_error) {
       // No-op: use default message
     }
 

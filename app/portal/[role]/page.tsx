@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import { auth } from "@/auth";
@@ -54,12 +55,12 @@ export default async function PortalRolePage({ params }: { params: Promise<{ rol
             <p className="text-sm text-slate-600">Últimos 20 turnos según tu rol.</p>
           </div>
           {requestedRole === "PACIENTE" ? (
-            <a
+            <Link
               href="/appointments/new"
               className="rounded-full bg-brand-teal px-4 py-2 text-xs font-semibold uppercase tracking-wide text-white"
             >
               Crear turno
-            </a>
+            </Link>
           ) : null}
         </div>
         <div className="mt-6">

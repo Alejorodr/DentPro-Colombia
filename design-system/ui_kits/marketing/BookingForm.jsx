@@ -1,5 +1,5 @@
 // DentPro Marketing — Booking form (the gradient panel)
-const { CalendarCheck: BCal, ShieldCheck: BShield, UsersThree: BUsers, CreditCard: BCard, CheckCircle: BCheck } = window.DPIcons;
+const { CalendarCheck: BCal, ShieldCheck: BShield, UsersThree: BUsers, CreditCard: BCard } = window.DPIcons;
 
 const BENEFITS = [
   { Icon: BCal, text: "Horarios extendidos y recordatorios automáticos" },

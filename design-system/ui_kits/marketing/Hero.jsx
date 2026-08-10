@@ -1,6 +1,6 @@
 // DentPro Marketing — Hero
 // Mirrors app/(marketing)/components/Hero.tsx
-const { Sparkle: HSparkle, CheckCircle: HCheck } = window.DPIcons;
+const { Sparkle: HSparkle } = window.DPIcons;
 
 function DPHero() {
   return (

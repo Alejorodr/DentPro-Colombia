@@ -1,6 +1,6 @@
 // DentPro Marketing — Navbar
 // Mirrors app/(marketing)/components/Navbar.tsx
-const { UserCircle, SignIn, List, Sun, Moon } = window.DPIcons;
+const { UserCircle, SignIn, Sun, Moon } = window.DPIcons;
 
 function DPNavbar({ onLogin, onTheme, theme }) {
   const links = [

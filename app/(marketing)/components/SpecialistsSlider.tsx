@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 
 import { CaretLeft, CaretRight } from "@/components/ui/Icon";
 
@@ -82,9 +83,9 @@ export function SpecialistsSlider({ badge, title, description, specialists }: Sp
                   </span>
                   <p className="mt-3 flex-1 text-sm text-slate-600 dark:text-slate-200">{specialist.description}</p>
                   <div className="mt-5 border-t border-slate-100/70 pt-4 dark:border-surface-muted/50">
-                    <a href="/appointments/new" className="btn-secondary w-full justify-center text-sm">
+                    <Link href="/appointments/new" className="btn-secondary w-full justify-center text-sm">
                       Reservar cita
-                    </a>
+                    </Link>
                   </div>
                 </div>
               </article>
