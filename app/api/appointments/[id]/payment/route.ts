@@ -5,6 +5,7 @@ import { getPrismaClient } from "@/lib/prisma";
 import { errorResponse } from "@/app/api/_utils/response";
 import { parseJson } from "@/app/api/_utils/validation";
 import { requireRole, requireSession } from "@/lib/authz";
+import { logAuditEvent } from "@/lib/audit";
 import { AppointmentStatus, PaymentMethod, PaymentStatus } from "@prisma/client";
 
 const paymentSchema = z.object({
@@ -60,6 +61,20 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       paymentMethod: true,
       paidAmountCents: true,
       paidAt: true,
+    },
+  });
+
+  await logAuditEvent({
+    actor: { userId: sessionResult.user.id, role: sessionResult.user.role },
+    action: "appointment.payment.recorded",
+    resourceType: "appointment",
+    resourceId: updated.id,
+    targetLabel: updated.id,
+    status: "success",
+    metadata: {
+      paymentStatus: updated.paymentStatus,
+      paymentMethod: updated.paymentMethod,
+      paidAmountCents: updated.paidAmountCents,
     },
   });
 

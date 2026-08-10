@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { requireRole, requireSession } from "@/lib/authz";
 import { getPrismaClient } from "@/lib/prisma";
 import { errorResponse } from "@/app/api/_utils/response";
+import { logAuditEvent } from "@/lib/audit";
 import type { AppointmentStatus } from "@/lib/api/types";
 import { buildError, fromPrismaStatus, isValidAppointmentStatus, toAppointmentSummary, toPrismaStatus } from "../../utils";
 
@@ -85,6 +86,19 @@ export async function PATCH(request: Request, context: any) {
       ? `${updated.professional.user.name} ${updated.professional.user.lastName}`.trim()
       : undefined;
 
+    await logAuditEvent({
+      actor: { userId: sessionResult.user.id, role: sessionResult.user.role },
+      action: "appointment.status.changed",
+      resourceType: "appointment",
+      resourceId: updated.id,
+      targetLabel: patientName || updated.id,
+      status: "success",
+      metadata: {
+        previousStatus: currentStatus,
+        newStatus: nextStatus,
+      },
+    });
+
     return NextResponse.json(
       toAppointmentSummary({
         id: updated.id,
@@ -101,6 +115,13 @@ export async function PATCH(request: Request, context: any) {
     );
   } catch (error) {
     console.error("Failed to update appointment status", error);
+    await logAuditEvent({
+      actor: { userId: sessionResult.user.id, role: sessionResult.user.role },
+      action: "appointment.status.changed",
+      resourceType: "appointment",
+      resourceId: appointmentId,
+      status: "failure",
+    });
     return buildError("No se pudo actualizar el estado de la cita.", 500);
   }
 }

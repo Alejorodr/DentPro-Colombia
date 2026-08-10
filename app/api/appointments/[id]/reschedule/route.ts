@@ -8,6 +8,7 @@ import { createReceptionNotifications } from "@/lib/notifications";
 import { TimeSlotStatus } from "@prisma/client";
 import { getRequestId } from "@/app/api/_utils/request";
 import { logger } from "@/lib/logger";
+import { logAuditEvent } from "@/lib/audit";
 import { requireRole, requireSession } from "@/lib/authz";
 import { getAppointmentBufferMinutes, hasBufferConflict } from "@/lib/appointments/scheduling";
 import { sendAppointmentEmail } from "@/lib/notifications/email";
@@ -288,6 +289,24 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       timestamp: new Date().toISOString(),
     });
 
+    const updatedPatientName = updated.patient
+      ? `${updated.patient.user.name} ${updated.patient.user.lastName}`.trim()
+      : updated.id;
+    await logAuditEvent({
+      actor: { userId: sessionResult.user.id, role: sessionResult.user.role },
+      action: "appointment.rescheduled",
+      resourceType: "appointment",
+      resourceId: updated.id,
+      targetLabel: updatedPatientName,
+      status: "success",
+      metadata: {
+        previousSlotId: appointment.timeSlotId,
+        newSlotId: updated.timeSlotId,
+        previousProfessionalId: appointment.professionalId,
+        newProfessionalId: updated.professionalId,
+      },
+    });
+
     return NextResponse.json(serializeAppointmentMutationResponse(updated));
   } catch (error) {
     Sentry.captureException(error);
@@ -299,6 +318,13 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       status: 500,
       durationMs: Date.now() - startedAt,
       error,
+    });
+    await logAuditEvent({
+      actor: { userId: sessionResult.user.id, role: sessionResult.user.role },
+      action: "appointment.rescheduled",
+      resourceType: "appointment",
+      resourceId: id,
+      status: "failure",
     });
     return errorResponse("No se pudo reprogramar la cita.", 500);
   }

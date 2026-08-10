@@ -10,6 +10,7 @@ import { AppointmentStatus, TimeSlotStatus } from "@prisma/client";
 import { requireRole, requireSession } from "@/lib/authz";
 import { sendAppointmentEmail } from "@/lib/notifications/email";
 import { logger } from "@/lib/logger";
+import { logAuditEvent } from "@/lib/audit";
 import { recordAppointmentEvent } from "@/lib/appointments/events";
 import { buildAppointmentStatusNotification } from "@/lib/appointments/activity";
 import { appointmentMutationResponseSelect, serializeAppointmentMutationResponse } from "@/lib/appointments/response";
@@ -186,9 +187,36 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       newSlotId: updated.timeSlotId,
       timestamp: new Date().toISOString(),
     });
+
+    const updatedPatientName = updated.patient
+      ? `${updated.patient.user.name} ${updated.patient.user.lastName}`.trim()
+      : updated.id;
+    await logAuditEvent({
+      actor: { userId: sessionResult.user.id, role: sessionResult.user.role },
+      action: "appointment.status.changed",
+      resourceType: "appointment",
+      resourceId: updated.id,
+      targetLabel: updatedPatientName,
+      status: "success",
+      metadata: {
+        previousStatus,
+        newStatus: updated.status,
+        actionTaken: isNoShowAction ? "mark_no_show" : isCheckInAction ? "check_in" : "status_update",
+        previousSlotId,
+        newSlotId: updated.timeSlotId,
+      },
+    });
+
     return NextResponse.json(serializeAppointmentMutationResponse(updated));
   } catch (error) {
     logger.error({ event: "appointment.update.failed", requestId, error });
+    await logAuditEvent({
+      actor: { userId: sessionResult.user.id, role: sessionResult.user.role },
+      action: "appointment.status.changed",
+      resourceType: "appointment",
+      resourceId: id,
+      status: "failure",
+    });
     if (isDatabaseUnavailableError(error)) {
       return serviceUnavailableResponse("Base de datos temporalmente no disponible.", error.retryAfterMs);
     }
@@ -302,9 +330,30 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
       result: "success",
       timestamp: new Date().toISOString(),
     });
+
+    await logAuditEvent({
+      actor: { userId: sessionResult.user.id, role: sessionResult.user.role },
+      action: "appointment.cancelled",
+      resourceType: "appointment",
+      resourceId: updated.id,
+      targetLabel: patientName || updated.id,
+      status: "success",
+      metadata: {
+        previousStatus: appointment.status,
+        newStatus: AppointmentStatus.CANCELLED,
+      },
+    });
+
     return NextResponse.json(serializeAppointmentMutationResponse(updated));
   } catch (error) {
     logger.error({ event: "appointment.cancel.failed", requestId, error });
+    await logAuditEvent({
+      actor: { userId: sessionResult.user.id, role: sessionResult.user.role },
+      action: "appointment.cancelled",
+      resourceType: "appointment",
+      resourceId: id,
+      status: "failure",
+    });
     if (isDatabaseUnavailableError(error)) {
       return serviceUnavailableResponse("Base de datos temporalmente no disponible.", error.retryAfterMs);
     }

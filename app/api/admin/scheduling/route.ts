@@ -5,6 +5,7 @@ import { z } from "zod";
 import { errorResponse } from "@/app/api/_utils/response";
 import { parseJson } from "@/app/api/_utils/validation";
 import { requireRole, requireSession } from "@/lib/authz";
+import { logAuditEvent } from "@/lib/audit";
 import { getPrismaClient } from "@/lib/prisma";
 import { refreshFutureInventoryForProfessional } from "@/lib/scheduling/slot-inventory";
 
@@ -355,6 +356,20 @@ export async function POST(request: Request) {
         prisma,
       });
 
+      await logAuditEvent({
+        actor: { userId: sessionResult.user.id, role: sessionResult.user.role },
+        action: "scheduling.assignment.created",
+        resourceType: "professional_service",
+        resourceId: assignment.id,
+        targetLabel: `${payload.professionalId}:${payload.serviceId}`,
+        status: "success",
+        metadata: {
+          professionalId: payload.professionalId,
+          serviceId: payload.serviceId,
+          onlineBookable: assignment.onlineBookable,
+        },
+      });
+
       return NextResponse.json({ assignment }, { status: 201 });
     } catch (createError) {
       if ((createError instanceof Prisma.PrismaClientKnownRequestError && createError.code === "P2002") || (typeof createError === "object" && createError !== null && "code" in createError && (createError as { code?: string }).code === "P2002")) {
@@ -390,6 +405,19 @@ export async function POST(request: Request) {
       prisma,
     });
 
+    await logAuditEvent({
+      actor: { userId: sessionResult.user.id, role: sessionResult.user.role },
+      action: "scheduling.assignment.updated",
+      resourceType: "professional_service",
+      resourceId: updated.id,
+      targetLabel: `${updated.professionalId}:${updated.serviceId}`,
+      status: "success",
+      metadata: {
+        active: updated.active,
+        onlineBookable: updated.onlineBookable,
+      },
+    });
+
     return NextResponse.json({ assignment: updated });
   }
 
@@ -419,6 +447,19 @@ export async function POST(request: Request) {
       rangeStart,
       rangeEnd,
       prisma,
+    });
+
+    await logAuditEvent({
+      actor: { userId: sessionResult.user.id, role: sessionResult.user.role },
+      action: "scheduling.adjustment.reviewed",
+      resourceType: "professional_schedule_adjustment",
+      resourceId: updated.id,
+      targetLabel: adjustment.professionalId,
+      status: "success",
+      metadata: {
+        reviewAction: payload.action,
+        newStatus: status,
+      },
     });
 
     return NextResponse.json({ adjustment: updated });
@@ -458,6 +499,19 @@ export async function POST(request: Request) {
       prisma,
     });
 
+    await logAuditEvent({
+      actor: { userId: sessionResult.user.id, role: sessionResult.user.role },
+      action: "scheduling.unavailability.reviewed",
+      resourceType: "professional_unavailability",
+      resourceId: updated.id,
+      targetLabel: entry.professionalId,
+      status: "success",
+      metadata: {
+        reviewAction: payload.action,
+        newStatus: status,
+      },
+    });
+
     return NextResponse.json({ entry: updated });
   }
 
@@ -478,6 +532,15 @@ export async function POST(request: Request) {
       rangeStart,
       rangeEnd,
       prisma,
+    });
+
+    await logAuditEvent({
+      actor: { userId: sessionResult.user.id, role: sessionResult.user.role },
+      action: "scheduling.assignment.deactivated",
+      resourceType: "professional_service",
+      resourceId: updated.id,
+      targetLabel: `${updated.professionalId}:${updated.serviceId}`,
+      status: "success",
     });
 
     return NextResponse.json({ assignment: updated });
@@ -535,6 +598,20 @@ export async function POST(request: Request) {
       rangeStart,
       rangeEnd,
       prisma,
+    });
+
+    await logAuditEvent({
+      actor: { userId: sessionResult.user.id, role: sessionResult.user.role },
+      action: "scheduling.schedule.created",
+      resourceType: "professional_working_schedule",
+      resourceId: schedule.id,
+      targetLabel: payload.professionalId,
+      status: "success",
+      metadata: {
+        dayOfWeek: payload.dayOfWeek,
+        startTime: payload.startTime,
+        endTime: payload.endTime,
+      },
     });
 
     return NextResponse.json({ schedule }, { status: 201 });
@@ -597,6 +674,21 @@ export async function POST(request: Request) {
       prisma,
     });
 
+    await logAuditEvent({
+      actor: { userId: sessionResult.user.id, role: sessionResult.user.role },
+      action: "scheduling.schedule.updated",
+      resourceType: "professional_working_schedule",
+      resourceId: updated.id,
+      targetLabel: updated.professionalId,
+      status: "success",
+      metadata: {
+        dayOfWeek: updated.dayOfWeek,
+        startTime: updated.startTime,
+        endTime: updated.endTime,
+        active: updated.active,
+      },
+    });
+
     return NextResponse.json({ schedule: updated });
   }
 
@@ -616,6 +708,15 @@ export async function POST(request: Request) {
     rangeStart,
     rangeEnd,
     prisma,
+  });
+
+  await logAuditEvent({
+    actor: { userId: sessionResult.user.id, role: sessionResult.user.role },
+    action: "scheduling.schedule.deleted",
+    resourceType: "professional_working_schedule",
+    resourceId: updated.id,
+    targetLabel: updated.professionalId,
+    status: "success",
   });
 
   return NextResponse.json({ schedule: updated });

@@ -5,6 +5,7 @@ import { getPrismaClient } from "@/lib/prisma";
 import { getSessionUser, isAuthorized } from "@/app/api/_utils/auth";
 import { errorResponse } from "@/app/api/_utils/response";
 import { parseJson } from "@/app/api/_utils/validation";
+import { logAuditEvent } from "@/lib/audit";
 import { refreshFutureInventoryForProfessional } from "@/lib/scheduling/slot-inventory";
 
 const generateSlotsSchema = z.object({
@@ -58,6 +59,22 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     rangeStart: startAt,
     rangeEnd: endAt,
     prisma,
+  });
+
+  await logAuditEvent({
+    actor: { userId: sessionUser.id, role: sessionUser.role },
+    action: "professional.slots.generated",
+    resourceType: "professional",
+    resourceId: professional.id,
+    targetLabel: professional.id,
+    status: "success",
+    metadata: {
+      created: refreshed.created,
+      removed: refreshed.removed,
+      durationMinutes: duration,
+      rangeStart: startAt.toISOString(),
+      rangeEnd: endAt.toISOString(),
+    },
   });
 
   return NextResponse.json({

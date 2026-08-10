@@ -4,6 +4,7 @@ import { z } from "zod";
 import { errorResponse } from "@/app/api/_utils/response";
 import { parseJson } from "@/app/api/_utils/validation";
 import { requireRole, requireSession } from "@/lib/authz";
+import { logAuditEvent } from "@/lib/audit";
 import { getPrismaClient } from "@/lib/prisma";
 import { refreshFutureInventoryForAllProfessionals } from "@/lib/scheduling/slot-inventory";
 
@@ -70,6 +71,18 @@ export async function POST(request: Request) {
   const rangeEnd = new Date(rangeStart);
   rangeEnd.setDate(rangeEnd.getDate() + 45);
   await refreshFutureInventoryForAllProfessionals({ rangeStart, rangeEnd, prisma });
+
+  await logAuditEvent({
+    actor: { userId: sessionResult.user.id, role: sessionResult.user.role },
+    action: "admin.holiday.created",
+    resourceType: "clinic_holiday",
+    resourceId: holiday.id,
+    targetLabel: holiday.name,
+    status: "success",
+    metadata: {
+      date: holiday.date.toISOString(),
+    },
+  });
 
   return NextResponse.json({ holiday }, { status: 201 });
 }

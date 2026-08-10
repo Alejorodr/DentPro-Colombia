@@ -9,6 +9,7 @@ import { AppointmentStatus, TimeSlotStatus } from "@prisma/client";
 import { parseJson } from "@/app/api/_utils/validation";
 import { enforceRateLimit } from "@/app/api/_utils/ratelimit";
 import { logger } from "@/lib/logger";
+import { logAuditEvent } from "@/lib/audit";
 import { getRequestId } from "@/app/api/_utils/request";
 import { requireRole, requireSession } from "@/lib/authz";
 import { getAppointmentBufferMinutes, hasBufferConflict } from "@/lib/appointments/scheduling";
@@ -377,6 +378,23 @@ export async function POST(request: Request) {
       durationMs: Date.now() - startedAt,
     });
 
+    const appointmentPatientName = appointment.patient
+      ? `${appointment.patient.user.name} ${appointment.patient.user.lastName}`.trim()
+      : appointment.id;
+    await logAuditEvent({
+      actor: { userId: sessionResult.user.id, role: sessionResult.user.role },
+      action: "appointment.created",
+      resourceType: "appointment",
+      resourceId: appointment.id,
+      targetLabel: appointmentPatientName,
+      status: "success",
+      metadata: {
+        timeSlotId: appointment.timeSlotId,
+        serviceId: appointment.serviceId,
+        status: appointment.status,
+      },
+    });
+
     return NextResponse.json(appointment, { status: 201 });
   } catch (error) {
     if (isDatabaseUnavailableError(error)) {
@@ -395,6 +413,12 @@ export async function POST(request: Request) {
       },
       "No se pudo crear la cita",
     );
+    await logAuditEvent({
+      actor: { userId: sessionResult.user.id, role: sessionResult.user.role },
+      action: "appointment.created",
+      resourceType: "appointment",
+      status: "failure",
+    });
     return errorResponse("No se pudo crear la cita.", 409);
   }
 }
