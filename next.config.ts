@@ -38,6 +38,11 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   outputFileTracingRoot: __dirname,
+  typescript: {
+    // Test files aren't part of the shipped app; type-check them separately
+    // via `pnpm run typecheck`, not as part of the production build.
+    tsconfigPath: "./tsconfig.build.json",
+  },
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "images.unsplash.com" },
