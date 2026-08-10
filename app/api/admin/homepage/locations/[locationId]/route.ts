@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { errorResponse } from "@/app/api/_utils/response";
 import { parseJson } from "@/app/api/_utils/validation";
+import { logAuditEvent } from "@/lib/audit";
 import { getPrismaClient } from "@/lib/prisma";
 
 import { requireAdmin, requiredText } from "../../_lib";
@@ -52,6 +53,16 @@ export async function PATCH(request: Request, context: { params: Promise<{ locat
     data: body,
   });
 
+  await logAuditEvent({
+    actor: { userId: auth.sessionUser.id, role: auth.sessionUser.role },
+    action: "homepage.locations.updated",
+    resourceType: "homepage_location",
+    resourceId: updated.id,
+    targetLabel: updated.name,
+    status: "success",
+    metadata: { changedFields: Object.keys(body) },
+  });
+
   return NextResponse.json({ location: serializeLocation(updated) });
 }
 
@@ -82,6 +93,15 @@ export async function DELETE(_request: Request, context: { params: Promise<{ loc
       }),
     ),
   );
+
+  await logAuditEvent({
+    actor: { userId: auth.sessionUser.id, role: auth.sessionUser.role },
+    action: "homepage.locations.deleted",
+    resourceType: "homepage_location",
+    resourceId: existing.id,
+    targetLabel: existing.name,
+    status: "success",
+  });
 
   return NextResponse.json({ ok: true });
 }

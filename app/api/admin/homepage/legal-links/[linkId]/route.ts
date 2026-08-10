@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { errorResponse } from "@/app/api/_utils/response";
 import { parseJson } from "@/app/api/_utils/validation";
+import { logAuditEvent } from "@/lib/audit";
 import { getPrismaClient } from "@/lib/prisma";
 
 import { requireAdmin, requiredHref, requiredText } from "../../_lib";
@@ -52,6 +53,16 @@ export async function PATCH(request: Request, context: { params: Promise<{ linkI
     data: body,
   });
 
+  await logAuditEvent({
+    actor: { userId: auth.sessionUser.id, role: auth.sessionUser.role },
+    action: "homepage.legal-links.updated",
+    resourceType: "homepage_legal_link",
+    resourceId: updated.id,
+    targetLabel: updated.label,
+    status: "success",
+    metadata: { changedFields: Object.keys(body) },
+  });
+
   return NextResponse.json({ legalLink: serializeLegalLink(updated) });
 }
 
@@ -82,6 +93,15 @@ export async function DELETE(_request: Request, context: { params: Promise<{ lin
       }),
     ),
   );
+
+  await logAuditEvent({
+    actor: { userId: auth.sessionUser.id, role: auth.sessionUser.role },
+    action: "homepage.legal-links.deleted",
+    resourceType: "homepage_legal_link",
+    resourceId: existing.id,
+    targetLabel: existing.label,
+    status: "success",
+  });
 
   return NextResponse.json({ ok: true });
 }
