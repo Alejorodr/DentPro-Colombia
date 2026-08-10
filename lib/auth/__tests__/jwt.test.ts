@@ -8,11 +8,9 @@ import {
 const decoder = new TextDecoder();
 
 const ORIGINAL_ENV = { ...process.env };
-const ORIGINAL_NODE_ENV = process.env.NODE_ENV;
 
 function resetEnv() {
   process.env = { ...ORIGINAL_ENV };
-  process.env.NODE_ENV = ORIGINAL_NODE_ENV;
 }
 
 describe("getJwtSecretKey", () => {
@@ -24,6 +22,7 @@ describe("getJwtSecretKey", () => {
   afterEach(() => {
     resetEnv();
     __resetAuthJwtSecretForTests();
+    vi.unstubAllEnvs();
     vi.restoreAllMocks();
   });
 
@@ -54,7 +53,7 @@ describe("getJwtSecretKey", () => {
     delete process.env.AUTH_JWT_SECRET;
     delete process.env.NEXTAUTH_SECRET;
     delete process.env.AUTH_SECRET;
-    process.env.NODE_ENV = "development";
+    vi.stubEnv("NODE_ENV", "development");
 
     const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
 
@@ -70,7 +69,7 @@ describe("getJwtSecretKey", () => {
     delete process.env.AUTH_JWT_SECRET;
     delete process.env.NEXTAUTH_SECRET;
     delete process.env.AUTH_SECRET;
-    process.env.NODE_ENV = "production";
+    vi.stubEnv("NODE_ENV", "production");
 
     expect(() => getJwtSecretKey()).toThrowError("AUTH_JWT_SECRET is not configured");
   });
