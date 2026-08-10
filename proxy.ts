@@ -3,6 +3,7 @@ import { getToken } from "next-auth/jwt";
 
 import { getInferredAuthBaseUrl, getSessionCookieName, isLocalE2EAuthRuntime } from "@/lib/auth/runtime";
 import { getDefaultDashboardPath, isUserRole, roleFromSlug, type UserRole } from "@/lib/auth/roles";
+import { errorResponse } from "@/app/api/_utils/response";
 
 const RATE_LIMIT_WINDOW_SECONDS = 60;
 const RATE_LIMIT_MAX_REQUESTS = 10;
@@ -23,9 +24,25 @@ function withRequestId(response: NextResponse, requestId: string) {
   return response;
 }
 
-function resolveRole(token: { role?: string } | null): UserRole | null {
+function resolveRole(token: { role?: string; invalidated?: boolean } | null): UserRole | null {
+  if (token?.invalidated) return null;
   const roleCandidate = token?.role ?? "";
   return isUserRole(roleCandidate) ? roleCandidate : null;
+}
+
+// /api/admin/** and /api/clinical/** backstop below: every app/api/**/route.ts
+// under these prefixes already calls requireSession()/requireRole() itself.
+// This is a cheap early failsafe in case a route ever forgets that call — it
+// does not replace or duplicate per-route role nuance (especially for
+// /api/clinical/**, which has legitimate multi-role access controlled
+// per-route; only a session-exists check applies to it here).
+// Role exclusivity for /portal/admin, /portal/professional, /portal/client,
+// and /portal/receptionist is already enforced further down via
+// roleFromSlug()/getDefaultDashboardPath() redirect-on-mismatch logic.
+const CLINICAL_SESSION_ONLY_PREFIX = "/api/clinical";
+
+function matchesPrefix(pathname: string, prefix: string): boolean {
+  return pathname === prefix || pathname.startsWith(`${prefix}/`);
 }
 
 export async function applyAuthRateLimit(request: NextRequest): Promise<NextResponse | null> {
@@ -115,6 +132,24 @@ export default async function proxy(request: NextRequest) {
 
   const rateLimitResponse = await applyAuthRateLimit(request);
   if (rateLimitResponse) return withRequestId(rateLimitResponse, requestId);
+
+  // Backstop only — every app/api/**/route.ts under these prefixes already
+  // calls requireSession()/requireRole() itself. This just adds a cheap,
+  // early failsafe in case a route ever forgets that call. Do not replace
+  // or duplicate the per-route role nuance here, especially for
+  // /api/clinical/** which has legitimate multi-role access controlled
+  // per-route — only a session-exists check applies to it.
+  const isAdminApiRoute = matchesPrefix(pathname, "/api/admin");
+  const isClinicalApiRoute = matchesPrefix(pathname, CLINICAL_SESSION_ONLY_PREFIX);
+
+  if (isAdminApiRoute || isClinicalApiRoute) {
+    if (!role) {
+      return withRequestId(errorResponse("No autorizado.", 401), requestId);
+    }
+    if (isAdminApiRoute && role !== "ADMINISTRADOR") {
+      return withRequestId(errorResponse("No autorizado.", 403), requestId);
+    }
+  }
 
   if (!isPortalRoute) {
     const response = NextResponse.next({
