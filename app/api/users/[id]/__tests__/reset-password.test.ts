@@ -18,7 +18,7 @@ vi.mock("@/lib/authz", () => ({
   requireRole: requireRoleMock,
 }));
 vi.mock("@/lib/prisma", () => ({ getPrismaClient: () => prismaMock }));
-vi.mock("@/lib/logger", () => ({ logger: { info: vi.fn() } }));
+vi.mock("@/lib/logger", () => ({ logger: { info: vi.fn(), warn: vi.fn() } }));
 
 const ADMIN_SESSION = { user: { id: randomUUID(), role: "ADMINISTRADOR" as const } };
 

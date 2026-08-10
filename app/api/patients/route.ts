@@ -9,6 +9,7 @@ import { getPrismaClient } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import { requireRole, requireSession } from "@/lib/authz";
 import { PASSWORD_POLICY_MESSAGE, PASSWORD_POLICY_REGEX } from "@/lib/auth/password-policy";
+import { logAuditEvent } from "@/lib/audit";
 
 const createPatientSchema = z.object({
   email: z.string().trim().email().max(120),
@@ -135,6 +136,15 @@ export async function POST(request: Request) {
           },
         },
       },
+    });
+
+    await logAuditEvent({
+      actor: { userId: sessionResult.user.id, role: sessionResult.user.role },
+      action: "patient.created",
+      resourceType: "patient",
+      resourceId: user.patient?.id ?? user.id,
+      targetLabel: user.email,
+      status: "success",
     });
 
     return NextResponse.json(user, { status: 201 });

@@ -7,6 +7,7 @@ import { getPrismaClient } from "@/lib/prisma";
 import { errorResponse } from "@/app/api/_utils/response";
 import { requireRole, requireSession } from "@/lib/authz";
 import { logger } from "@/lib/logger";
+import { logAuditEvent } from "@/lib/audit";
 
 export async function POST(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const sessionResult = await requireSession();
@@ -52,6 +53,14 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
     userId: id,
     actorId: sessionResult.user.id,
     actorRole: sessionResult.user.role,
+  });
+  await logAuditEvent({
+    actor: { userId: sessionResult.user.id, role: sessionResult.user.role },
+    action: "user.password.reset_by_admin",
+    resourceType: "user",
+    resourceId: id,
+    targetLabel: existing.email,
+    status: "success",
   });
 
   return NextResponse.json({ tempPassword });

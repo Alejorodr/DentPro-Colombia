@@ -7,6 +7,7 @@ import { getPrismaClient } from "@/lib/prisma";
 import { requireSession, requireRole } from "@/lib/authz";
 import { ClinicDocumentTemplateType } from "@prisma/client";
 import { sanitizeConsentHtml } from "@/lib/security/sanitize-html";
+import { logAuditEvent } from "@/lib/audit";
 
 const templateUpdateSchema = z.object({
   type: z.nativeEnum(ClinicDocumentTemplateType).optional(),
@@ -42,6 +43,16 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       contentHtml: sanitizedContent,
       active: payload.active,
     },
+  });
+
+  await logAuditEvent({
+    actor: { userId: sessionResult.user.id, role: sessionResult.user.role },
+    action: "template.updated",
+    resourceType: "clinic_document_template",
+    resourceId: template.id,
+    targetLabel: template.title,
+    status: "success",
+    metadata: { fieldsChanged: Object.keys(payload) },
   });
 
   return NextResponse.json({ template });

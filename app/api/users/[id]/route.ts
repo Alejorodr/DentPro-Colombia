@@ -11,6 +11,7 @@ import { requireRole, requireSession } from "@/lib/authz";
 import { PASSWORD_POLICY_MESSAGE, PASSWORD_POLICY_REGEX } from "@/lib/auth/password-policy";
 import { Prisma } from "@prisma/client";
 import { redactSensitiveAuthFields } from "@/lib/security/redaction";
+import { logAuditEvent } from "@/lib/audit";
 
 const updateUserSchema = z.object({
   email: z.string().trim().email().max(120).optional(),
@@ -113,6 +114,38 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       actorId: sessionResult.user.id,
       actorRole: sessionResult.user.role,
     });
+    await logAuditEvent({
+      actor: { userId: sessionResult.user.id, role: sessionResult.user.role },
+      action: "user.role.updated",
+      resourceType: "user",
+      resourceId: id,
+      targetLabel: updated.email,
+      status: "success",
+      metadata: { previousRole: existing.role, newRole: targetRole },
+    });
+  }
+
+  if (payload.password) {
+    await logAuditEvent({
+      actor: { userId: sessionResult.user.id, role: sessionResult.user.role },
+      action: "user.password.reset_by_admin",
+      resourceType: "user",
+      resourceId: id,
+      targetLabel: updated.email,
+      status: "success",
+    });
+  }
+
+  if (typeof payload.active === "boolean" && payload.active !== existing.active) {
+    await logAuditEvent({
+      actor: { userId: sessionResult.user.id, role: sessionResult.user.role },
+      action: "user.activation.toggled",
+      resourceType: "user",
+      resourceId: id,
+      targetLabel: updated.email,
+      status: "success",
+      metadata: { previousActive: existing.active, newActive: payload.active },
+    });
   }
 
   if (targetRole === "PACIENTE") {
@@ -190,7 +223,7 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
   }
 
   const prisma = getPrismaClient();
-  const existing = await prisma.user.findUnique({ where: { id }, select: { role: true, active: true } });
+  const existing = await prisma.user.findUnique({ where: { id }, select: { role: true, active: true, email: true } });
 
   if (!existing) {
     return errorResponse("Usuario no encontrado.", 404);
@@ -211,6 +244,15 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
     userId: id,
     actorId: sessionResult.user.id,
     actorRole: sessionResult.user.role,
+  });
+  await logAuditEvent({
+    actor: { userId: sessionResult.user.id, role: sessionResult.user.role },
+    action: "user.deleted",
+    resourceType: "user",
+    resourceId: id,
+    targetLabel: existing.email,
+    status: "success",
+    metadata: { previousRole: existing.role },
   });
   return NextResponse.json({ ok: true });
 }

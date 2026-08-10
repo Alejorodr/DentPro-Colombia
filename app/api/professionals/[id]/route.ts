@@ -8,6 +8,7 @@ import { errorResponse } from "@/app/api/_utils/response";
 import { parseJson } from "@/app/api/_utils/validation";
 import { PASSWORD_POLICY_MESSAGE, PASSWORD_POLICY_REGEX } from "@/lib/auth/password-policy";
 import { Prisma } from "@prisma/client";
+import { logAuditEvent } from "@/lib/audit";
 
 const updateProfessionalSchema = z.object({
   name: z.string().trim().min(1).max(120).optional(),
@@ -39,7 +40,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   const prisma = getPrismaClient();
   const professional = await prisma.professionalProfile.findUnique({
     where: { id },
-    select: { id: true },
+    select: { id: true, active: true },
   });
 
   if (!professional) {
@@ -90,6 +91,31 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       },
     });
 
+    if (typeof payload.active === "boolean" && payload.active !== professional.active) {
+      await logAuditEvent({
+        actor: { userId: sessionUser.id, role: sessionUser.role },
+        action: "professional.activation.toggled",
+        resourceType: "professional",
+        resourceId: id,
+        targetLabel: updated.user.email,
+        status: "success",
+        metadata: { previousActive: professional.active, newActive: payload.active },
+      });
+    }
+
+    await logAuditEvent({
+      actor: { userId: sessionUser.id, role: sessionUser.role },
+      action: "professional.profile.updated",
+      resourceType: "professional",
+      resourceId: id,
+      targetLabel: updated.user.email,
+      status: "success",
+      metadata: {
+        specialtyId: updated.specialtyId,
+        slotDurationMinutes: updated.slotDurationMinutes,
+      },
+    });
+
     return NextResponse.json(updated);
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
@@ -115,12 +141,25 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
   }
 
   const prisma = getPrismaClient();
-  const professional = await prisma.professionalProfile.findUnique({ where: { id } });
+  const professional = await prisma.professionalProfile.findUnique({
+    where: { id },
+    include: { user: { select: { email: true } } },
+  });
 
   if (!professional) {
     return errorResponse("Profesional no encontrado.", 404);
   }
 
   await prisma.user.delete({ where: { id: professional.userId } });
+
+  await logAuditEvent({
+    actor: { userId: sessionUser.id, role: sessionUser.role },
+    action: "professional.deleted",
+    resourceType: "professional",
+    resourceId: id,
+    targetLabel: professional.user.email,
+    status: "success",
+  });
+
   return NextResponse.json({ ok: true });
 }

@@ -12,6 +12,7 @@ import { PASSWORD_POLICY_MESSAGE, PASSWORD_POLICY_REGEX } from "@/lib/auth/passw
 import { Prisma } from "@prisma/client";
 import { redactSensitiveAuthFields } from "@/lib/security/redaction";
 import { logApiError } from "@/app/api/_utils/observability";
+import { logAuditEvent } from "@/lib/audit";
 
 const createUserSchema = z.object({
   email: z.string().trim().email().max(120),
@@ -154,6 +155,16 @@ export async function POST(request: Request) {
             }
           : undefined,
       },
+    });
+
+    await logAuditEvent({
+      actor: { userId: sessionResult.user.id, role: sessionResult.user.role },
+      action: "user.created",
+      resourceType: "user",
+      resourceId: user.id,
+      targetLabel: user.email,
+      status: "success",
+      metadata: { role },
     });
 
     return NextResponse.json(redactSensitiveAuthFields(user), { status: 201 });

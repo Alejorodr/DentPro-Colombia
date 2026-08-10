@@ -7,6 +7,7 @@ import { errorResponse } from "@/app/api/_utils/response";
 import { parseJson } from "@/app/api/_utils/validation";
 import { requireSession } from "@/lib/authz";
 import { PASSWORD_POLICY_MESSAGE, PASSWORD_POLICY_REGEX } from "@/lib/auth/password-policy";
+import { logAuditEvent } from "@/lib/audit";
 
 const changePasswordSchema = z.object({
   currentPassword: z.string().min(1, "La contraseña actual es requerida."),
@@ -47,6 +48,14 @@ export async function POST(request: Request) {
       mustChangePassword: false,
       passwordChangedAt: new Date(),
     },
+  });
+
+  await logAuditEvent({
+    actor: { userId: sessionResult.user.id, role: sessionResult.user.role },
+    action: "user.password.changed_self",
+    resourceType: "user",
+    resourceId: sessionResult.user.id,
+    status: "success",
   });
 
   return NextResponse.json({ ok: true });
