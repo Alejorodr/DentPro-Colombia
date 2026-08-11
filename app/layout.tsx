@@ -2,11 +2,24 @@ import Script from "next/script";
 import { Suspense } from "react";
 import { headers } from "next/headers";
 import type { Metadata } from "next";
+import { Inter, Outfit } from "next/font/google";
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
 import { AppProviders } from "./providers";
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+});
+
+const outfit = Outfit({
+  subsets: ["latin"],
+  variable: "--font-outfit",
+  display: "swap",
+});
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://dentprocolombia.com";
 
@@ -61,7 +74,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const requestId = (await headers()).get("x-request-id") ?? undefined;
   const shouldLoadVercelInsights = process.env.VERCEL === "1" && process.env.RUN_E2E !== "1";
   return (
-    <html lang="es" className="h-full" suppressHydrationWarning>
+    <html lang="es" className={`h-full ${inter.variable} ${outfit.variable}`} suppressHydrationWarning>
       <head>
         <Script id="theme" strategy="beforeInteractive">
           {`
