@@ -8,6 +8,7 @@
   "scripts": {
     "dev": "next dev --turbo",
     "build": "node scripts/run-ci-command.mjs \"prisma generate && next build --webpack\"",
+    "analyze": "cross-env ANALYZE=true node scripts/run-ci-command.mjs \"prisma generate && next build --webpack\"",
     "vercel-build": "pnpm exec prisma generate --schema prisma/schema.prisma && node scripts/vercel-prisma.mjs && next build --webpack",
     "start": "next start",
     "lint": "eslint .",
@@ -49,6 +50,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@next/bundle-analyzer": "16.3.0",
     "@next/eslint-plugin-next": "^16.3.0",
     "@playwright/test": "^1.62.1",
     "@prisma/adapter-better-sqlite3": "^7.9.1",
@@ -67,6 +69,7 @@
     "ajv": "^8.20.0",
     "ajv-formats": "^3.0.1",
     "baseline-browser-mapping": "^2.11.13",
+    "cross-env": "10.1.0",
     "eslint": "^10.8.1",
     "eslint-config-next": "^16.3.0",
     "eslint-plugin-react-hooks": "7.1.1",

@@ -1,4 +1,9 @@
 import type { NextConfig } from "next";
+import withBundleAnalyzerInit from "@next/bundle-analyzer";
+
+const withBundleAnalyzer = withBundleAnalyzerInit({
+  enabled: process.env.ANALYZE === "true",
+});
 
 const isProd = process.env.NODE_ENV === "production";
 const csp = [
@@ -78,4 +83,4 @@ const nextConfig: NextConfig = {
     ];
   },
 };
-export default nextConfig;
+export default withBundleAnalyzer(nextConfig);
