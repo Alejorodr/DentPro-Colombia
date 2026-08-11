@@ -1,5 +1,3 @@
-"use client";
-
 import Link from "next/link";
 
 import { Table } from "@/app/portal/components/ui/Table";

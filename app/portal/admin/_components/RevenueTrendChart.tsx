@@ -1,5 +1,3 @@
-"use client";
-
 import { ChartSpark } from "@/app/portal/components/ui/ChartSpark";
 
 type RevenueTrendChartProps = {

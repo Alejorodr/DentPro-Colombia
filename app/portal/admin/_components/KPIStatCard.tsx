@@ -1,5 +1,3 @@
-"use client";
-
 import { TrendUp } from "@/components/ui/Icon";
 
 type KPIStatCardProps = {
