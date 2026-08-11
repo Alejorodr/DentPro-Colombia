@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useState } from "react";
 
 import { List, SignIn, UserCircle, X } from "@/components/ui/Icon";
@@ -56,8 +57,13 @@ export function Navbar({ brand, links, cta, login }: NavbarProps) {
       <div className="container mx-auto flex items-center justify-between px-6 py-4">
         <a href={brand.href} className="flex items-center gap-3 text-lg font-semibold text-brand-teal dark:text-accent-cyan">
           {brand.logoUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={brand.logoUrl} alt={brand.name} className="h-10 w-10 rounded-full object-contain" />
+            <Image
+              src={brand.logoUrl}
+              alt={brand.name}
+              width={40}
+              height={40}
+              className="h-10 w-10 rounded-full object-contain"
+            />
           ) : (
             <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-brand-teal text-white">
               {brand.initials}
