@@ -1,5 +1,3 @@
-"use client";
-
 import type { Icon } from "@/components/ui/Icon";
 import {
   Baby,
