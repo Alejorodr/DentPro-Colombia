@@ -1,5 +1,3 @@
-"use client";
-
 import type { MarketingIconName } from "./icon-types";
 import { resolveMarketingIcon } from "./icon-registry";
 
