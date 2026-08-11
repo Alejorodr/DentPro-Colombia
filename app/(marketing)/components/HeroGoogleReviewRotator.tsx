@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 
 import type { GoogleReviewsSummary } from "@/lib/google/google-reviews";
 
@@ -128,12 +129,13 @@ export function HeroGoogleReviewRotator({
         }}
       >
         {review.authorPhotoUri ? (
-          <img
+          <Image
             src={review.authorPhotoUri}
             alt={review.authorName}
+            width={48}
+            height={48}
             className="h-12 w-12 rounded-full object-cover"
             referrerPolicy="no-referrer"
-            loading="lazy"
           />
         ) : (
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-brand-teal/15 text-sm font-semibold text-brand-teal dark:bg-accent-cyan/15 dark:text-accent-cyan">
