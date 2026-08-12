@@ -51,10 +51,10 @@ export async function CampaignCarousel() {
         {campaigns.map((campaign) => (
           <article
             key={campaign.id}
-            className="min-w-[280px] max-w-xs rounded-3xl border border-slate-200 bg-white shadow-lg shadow-slate-200/60 dark:border-accent-cyan/10 dark:bg-surface-elevated dark:shadow-none"
+            className="relative min-w-[280px] max-w-xs overflow-hidden rounded-[1.75rem] border border-white/70 bg-white/90 shadow-xl shadow-slate-900/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl dark:border-surface-muted/60 dark:bg-surface-base/85 dark:shadow-surface-dark"
             role="listitem"
           >
-            <div className="relative h-40 w-full overflow-hidden rounded-t-3xl">
+            <div className="relative h-40 w-full overflow-hidden rounded-t-[1.75rem]">
               <Image
                 src={campaign.imageUrl}
                 alt={campaign.title}
