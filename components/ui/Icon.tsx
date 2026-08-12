@@ -49,6 +49,7 @@ export const {
   MoonStars,
   PencilSimple,
   Phone,
+  Plus,
   Printer,
   Question,
   ShieldCheck,

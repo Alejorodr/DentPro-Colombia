@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 
+import { Plus } from "@/components/ui/Icon";
+
 interface FAQItem {
   question: string;
   answer: string;
@@ -32,7 +34,7 @@ export function FAQSection({ items }: FAQSectionProps) {
           {items.map((item, i) => (
             <div
               key={item.question}
-              className="rounded-2xl border border-slate-200 bg-white transition-colors duration-200 dark:border-accent-cyan/10 dark:bg-surface-elevated"
+              className="relative overflow-hidden rounded-[1.75rem] border border-white/70 bg-white/90 transition-colors duration-300 dark:border-surface-muted/60 dark:bg-surface-base/85"
             >
               <dt>
                 <button
@@ -42,16 +44,13 @@ export function FAQSection({ items }: FAQSectionProps) {
                   onClick={() => toggle(i)}
                 >
                   <span>{item.question}</span>
-                  <span
-                    className={`flex-shrink-0 text-brand-teal transition-transform duration-200 dark:text-accent-cyan ${
+                  <Plus
+                    className={`h-5 w-5 flex-shrink-0 text-brand-teal transition-transform duration-200 dark:text-accent-cyan ${
                       openIndex === i ? "rotate-45" : ""
                     }`}
+                    weight="bold"
                     aria-hidden="true"
-                  >
-                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                      <path d="M10 4v12M4 10h12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                    </svg>
-                  </span>
+                  />
                 </button>
               </dt>
               {openIndex === i ? (
