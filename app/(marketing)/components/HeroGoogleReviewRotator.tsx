@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 
+import { Star } from "@/components/ui/Icon";
 import type { GoogleReviewsSummary } from "@/lib/google/google-reviews";
 
 type FallbackTestimonial = {
@@ -81,7 +82,11 @@ export function HeroGoogleReviewRotator({
           {globalRating ? (
             <span className="text-lg font-bold text-slate-900 dark:text-white">{globalRating}</span>
           ) : null}
-          <span className="text-base leading-none text-gold-bright" aria-hidden="true">★★★★★</span>
+          <span className="flex items-center gap-0.5 text-gold-bright" aria-hidden="true">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Star key={i} className="h-4 w-4" weight="fill" />
+            ))}
+          </span>
           {typeof googleReviews.userRatingCount === "number" ? (
             <span className="text-xs text-slate-500 dark:text-slate-400">
               {googleReviews.userRatingCount.toLocaleString("es-CO")} reseñas
@@ -111,11 +116,16 @@ export function HeroGoogleReviewRotator({
         }}
       >
         <div
-          className="mb-1 text-gold-bright"
+          className="mb-1 flex items-center gap-0.5"
           aria-label={`Calificación: ${review.rating} de 5 estrellas`}
         >
-          {"★".repeat(reviewStars)}
-          <span className="text-slate-300 dark:text-slate-600">{"★".repeat(5 - reviewStars)}</span>
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Star
+              key={i}
+              className={i < reviewStars ? "h-4 w-4 text-gold-bright" : "h-4 w-4 text-slate-300 dark:text-slate-600"}
+              weight="fill"
+            />
+          ))}
         </div>
         <p className="text-slate-600 dark:text-slate-200">"{review.text}"</p>
       </div>

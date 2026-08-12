@@ -1,5 +1,6 @@
 import type { MarketingIconName } from "./icon-types";
 import { resolveMarketingIcon } from "./icon-registry";
+import { Star } from "@/components/ui/Icon";
 
 type IconText = {
   text: string;
@@ -57,19 +58,19 @@ export function InfoBar({ location, schedule, whatsapp, email, socials, googleRa
                 href={googleRating.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700 transition hover:bg-amber-100 dark:bg-amber-900/20 dark:text-amber-400 dark:hover:bg-amber-900/30"
+                className="inline-flex items-center gap-1.5 rounded-full bg-brand-light/80 px-3 py-1 text-xs font-semibold text-slate-700 transition hover:bg-brand-light dark:bg-surface-muted/80 dark:text-slate-200 dark:hover:bg-surface-muted"
                 aria-label={`${googleRating.rating.toFixed(1)} de 5 en Google — ${googleRating.count} reseñas`}
               >
-                <span aria-hidden="true">★</span>
+                <Star className="h-3.5 w-3.5 text-gold-bright" weight="fill" aria-hidden="true" />
                 {googleRating.rating.toFixed(1)}
-                <span className="text-amber-500/70 dark:text-amber-500/50">·</span>
+                <span className="text-slate-400 dark:text-slate-500">·</span>
                 {googleRating.count.toLocaleString("es-CO")} en Google
               </a>
             ) : (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700 dark:bg-amber-900/20 dark:text-amber-400">
-                <span aria-hidden="true">★</span>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-light/80 px-3 py-1 text-xs font-semibold text-slate-700 dark:bg-surface-muted/80 dark:text-slate-200">
+                <Star className="h-3.5 w-3.5 text-gold-bright" weight="fill" aria-hidden="true" />
                 {googleRating.rating.toFixed(1)}
-                <span className="text-amber-500/70 dark:text-amber-500/50">·</span>
+                <span className="text-slate-400 dark:text-slate-500">·</span>
                 {googleRating.count.toLocaleString("es-CO")} en Google
               </span>
             )

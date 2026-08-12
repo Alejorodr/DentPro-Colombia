@@ -59,6 +59,7 @@ export const {
   Smiley,
   Sparkle,
   SquaresFour,
+  Star,
   Stethoscope,
   Sun,
   TiktokLogo,

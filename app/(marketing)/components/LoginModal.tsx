@@ -66,7 +66,7 @@ export function LoginModal({ open, onClose }: LoginModalProps) {
           id="loginModalDescription"
         >
           <div className="space-y-4">
-            <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15 shadow-lg shadow-brand-teal/30">
+            <div className="icon-circle inline-flex items-center justify-center bg-white/15 shadow-lg shadow-brand-teal/30">
               <ChartLineUp className="h-6 w-6" weight="bold" aria-hidden="true" />
             </div>
             <div className="space-y-2">

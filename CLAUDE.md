@@ -61,6 +61,7 @@ design-system/            # Sistema de diseño exportado desde Claude Design
 - Paleta azul-doble: `#031536` midnight → `#0a3d91` brand-teal → `#1f6cd3` brand-indigo → `#4cc3f1` brand-sky → `#5bd0ff` accent-cyan → `#e6f4ff` brand-light.
 - **Sin verdes, sin morados, sin cálidos**. Solo slate para neutros.
 - Dorado (`#c8901f`) solo en logos impresos, nunca en UI.
+- **Excepción aprobada**: rojo (`red-*`) para mensajes de error/validación (ej. login fallido) — no migrar a azul-marca, el rojo mantiene la urgencia visual del error.
 
 ### Componentes
 - **Tarjeta signature**: `rounded-[1.75rem] border border-white/70 bg-white/90 p-6 shadow-xl shadow-slate-900/10 hover:-translate-y-1 hover:shadow-2xl transition-all duration-300`
@@ -149,3 +150,13 @@ npm run lint
 1. Referencia `design-system/ui_kits/marketing/` para estructura.
 2. Mantén los datos por defecto en `lib/marketing/homepage-defaults.ts`.
 3. CTA principal siempre `Agenda tu cita` o `Ver disponibilidad`.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->
