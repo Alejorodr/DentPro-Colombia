@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { fetchWithRetry } from "@/lib/http";
+import { StatusBadge } from "@/app/portal/components/ui/StatusBadge";
 
 type AuditStatus = "success" | "failure";
 
@@ -26,19 +27,6 @@ type AuditLogsResponse = {
   items: AuditLogItem[];
   nextCursor: string | null;
 };
-
-function StatusBadge({ status }: { status: AuditStatus }) {
-  const classes =
-    status === "success"
-      ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"
-      : "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300";
-
-  return (
-    <span className={`inline-flex rounded-full px-2 py-1 text-[11px] font-semibold uppercase tracking-wide ${classes}`}>
-      {status}
-    </span>
-  );
-}
 
 export function AdminAuditPanel() {
   const [statusFilter, setStatusFilter] = useState<"all" | AuditStatus>("all");
