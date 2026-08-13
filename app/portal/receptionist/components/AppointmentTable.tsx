@@ -18,24 +18,11 @@ import { AppointmentStatus } from "@prisma/client";
 
 import { Table } from "@/app/portal/components/ui/Table";
 import { StatusBadge } from "@/app/portal/components/ui/StatusBadge";
+import { STATUS_COLORS, DEFAULT_STATUS_COLOR } from "@/app/portal/components/ui/statusColors";
 import { RescheduleModal } from "@/app/portal/components/RescheduleModal";
 import { AppointmentEventTimeline } from "@/app/portal/components/appointments/AppointmentEventTimeline";
 import { fetchWithTimeout } from "@/lib/http";
 import { toOperationalStatus } from "@/lib/appointments/status";
-
-/** Labels consistent with StatusBadge for timeline blocks */
-function timelineStatusLabel(status: string): string {
-  const labels: Record<string, string> = {
-    SCHEDULED:  "Programada",
-    CONFIRMED:  "Confirmada",
-    CHECKED_IN: "En consulta",
-    COMPLETED:  "Completada",
-    CANCELLED:  "Cancelada",
-    NO_SHOW:    "No asistió",
-  };
-  return labels[status] ?? status;
-}
-import { appointmentStatusBadge } from "@/lib/portal/appointment-status";
 
 type AppointmentSummary = {
   id: string;
@@ -168,7 +155,7 @@ export function AppointmentTable({ appointments, page, totalPages, onPageChange,
                             <span>
                               {new Date(appointment.startAt).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })} · {appointment.patient?.name ?? "Paciente"}
                             </span>
-                            <span className={`rounded-full border px-2 py-1 font-semibold ${appointmentStatusBadge(slot)}`}>{timelineStatusLabel(slot)}</span>
+                            <span className={`rounded-full border px-2 py-1 font-semibold ${(STATUS_COLORS[slot] ?? DEFAULT_STATUS_COLOR).badge}`}>{(STATUS_COLORS[slot] ?? DEFAULT_STATUS_COLOR).label}</span>
                           </div>
                         );
                       })}
@@ -185,7 +172,7 @@ export function AppointmentTable({ appointments, page, totalPages, onPageChange,
                       <span>
                         {new Date(appointment.startAt).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })} · {appointment.patient?.name ?? "Paciente"}
                       </span>
-                      <span className={`rounded-full border px-2 py-1 font-semibold ${appointmentStatusBadge(slot)}`}>{timelineStatusLabel(slot)}</span>
+                      <span className={`rounded-full border px-2 py-1 font-semibold ${(STATUS_COLORS[slot] ?? DEFAULT_STATUS_COLOR).badge}`}>{(STATUS_COLORS[slot] ?? DEFAULT_STATUS_COLOR).label}</span>
                     </div>
                   );
                 })}
@@ -239,19 +226,19 @@ export function AppointmentTable({ appointments, page, totalPages, onPageChange,
                         <button type="button" className="inline-flex items-center gap-1 rounded-full border border-brand-teal bg-brand-teal/10 px-3 py-1 text-xs font-semibold uppercase text-brand-teal ring-1 ring-brand-teal/20" onClick={() => setRescheduleId(appointment.id)} disabled={busyId === appointment.id}>
                           <PencilSimple size={14} />Reprogramar
                         </button>
-                        <button type="button" className="inline-flex items-center gap-1 rounded-full border border-emerald-200 px-3 py-1 text-xs font-semibold uppercase text-emerald-700 disabled:opacity-50" onClick={() => updateStatus(appointment.id, AppointmentStatus.CONFIRMED)} disabled={busyId === appointment.id || appointment.status !== AppointmentStatus.SCHEDULED}>
+                        <button type="button" className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-semibold uppercase disabled:opacity-50 ${STATUS_COLORS.CONFIRMED.border} ${STATUS_COLORS.CONFIRMED.text}`} onClick={() => updateStatus(appointment.id, AppointmentStatus.CONFIRMED)} disabled={busyId === appointment.id || appointment.status !== AppointmentStatus.SCHEDULED}>
                           <CheckCircle size={14} />Confirmar
                         </button>
-                        <button type="button" className="inline-flex items-center gap-1 rounded-full border border-blue-200 px-3 py-1 text-xs font-semibold uppercase text-blue-700 disabled:opacity-50" onClick={() => updateStatus(appointment.id, AppointmentStatus.CHECKED_IN, "check_in")} disabled={busyId === appointment.id || ([AppointmentStatus.CANCELLED, AppointmentStatus.COMPLETED, AppointmentStatus.NO_SHOW] as AppointmentStatus[]).includes(appointment.status)}>
+                        <button type="button" className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-semibold uppercase disabled:opacity-50 ${STATUS_COLORS.CHECKED_IN.border} ${STATUS_COLORS.CHECKED_IN.text}`} onClick={() => updateStatus(appointment.id, AppointmentStatus.CHECKED_IN, "check_in")} disabled={busyId === appointment.id || ([AppointmentStatus.CANCELLED, AppointmentStatus.COMPLETED, AppointmentStatus.NO_SHOW] as AppointmentStatus[]).includes(appointment.status)}>
                           <UserCheck size={14} />En sala
                         </button>
-                        <button type="button" className="inline-flex items-center gap-1 rounded-full border border-indigo-200 px-3 py-1 text-xs font-semibold uppercase text-indigo-700 disabled:opacity-50" onClick={() => updateStatus(appointment.id, AppointmentStatus.COMPLETED)} disabled={busyId === appointment.id || ([AppointmentStatus.CANCELLED, AppointmentStatus.COMPLETED, AppointmentStatus.NO_SHOW] as AppointmentStatus[]).includes(appointment.status)}>
+                        <button type="button" className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-semibold uppercase disabled:opacity-50 ${STATUS_COLORS.COMPLETED.border} ${STATUS_COLORS.COMPLETED.text}`} onClick={() => updateStatus(appointment.id, AppointmentStatus.COMPLETED)} disabled={busyId === appointment.id || ([AppointmentStatus.CANCELLED, AppointmentStatus.COMPLETED, AppointmentStatus.NO_SHOW] as AppointmentStatus[]).includes(appointment.status)}>
                           <CheckCircle size={14} />Atendida
                         </button>
-                        <button type="button" className="inline-flex items-center gap-1 rounded-full border border-fuchsia-200 px-3 py-1 text-xs font-semibold uppercase text-fuchsia-700 disabled:opacity-50" onClick={() => updateStatus(appointment.id, AppointmentStatus.NO_SHOW, "mark_no_show")} disabled={busyId === appointment.id || ([AppointmentStatus.CANCELLED, AppointmentStatus.COMPLETED, AppointmentStatus.NO_SHOW] as AppointmentStatus[]).includes(appointment.status)}>
+                        <button type="button" className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-semibold uppercase disabled:opacity-50 ${STATUS_COLORS.NO_SHOW.border} ${STATUS_COLORS.NO_SHOW.text}`} onClick={() => updateStatus(appointment.id, AppointmentStatus.NO_SHOW, "mark_no_show")} disabled={busyId === appointment.id || ([AppointmentStatus.CANCELLED, AppointmentStatus.COMPLETED, AppointmentStatus.NO_SHOW] as AppointmentStatus[]).includes(appointment.status)}>
                           <WarningCircle size={14} />No asistió
                         </button>
-                        <button type="button" className="inline-flex items-center gap-1 rounded-full border border-rose-200 px-3 py-1 text-xs font-semibold uppercase text-rose-700 disabled:opacity-50" onClick={() => setCancelTarget(appointment.id)} disabled={busyId === appointment.id || ([AppointmentStatus.CANCELLED, AppointmentStatus.NO_SHOW] as AppointmentStatus[]).includes(appointment.status)}>
+                        <button type="button" className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-semibold uppercase disabled:opacity-50 ${STATUS_COLORS.CANCELLED.border} ${STATUS_COLORS.CANCELLED.text}`} onClick={() => setCancelTarget(appointment.id)} disabled={busyId === appointment.id || ([AppointmentStatus.CANCELLED, AppointmentStatus.NO_SHOW] as AppointmentStatus[]).includes(appointment.status)}>
                           <XCircle size={14} />Cancelar
                         </button>
                       </div>

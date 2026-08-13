@@ -7,7 +7,7 @@ import { getClientDashboardData } from "@/lib/portal/client-dashboard";
 import { formatInTimeZone, getAnalyticsTimeZone } from "@/lib/dates/tz";
 import { NextVisitActions } from "@/app/portal/client/components/NextVisitActions";
 import { operationalStatusLabel, toOperationalStatus } from "@/lib/appointments/status";
-import { appointmentStatusBadge } from "@/lib/portal/appointment-status";
+import { STATUS_COLORS, DEFAULT_STATUS_COLOR } from "@/app/portal/components/ui/statusColors";
 import { ActivityFeed } from "@/app/portal/components/activity/ActivityFeed";
 
 
@@ -130,7 +130,7 @@ export default async function ClientPortalPage() {
             <div className="mt-4 rounded-3xl border border-slate-200 bg-white p-6 shadow-xs dark:border-surface-muted/70 dark:bg-surface-elevated">
               {nextAppointment ? (
                 <div className="space-y-4">
-                  <span className={`inline-flex w-fit rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wide ${appointmentStatusBadge(nextAppointment.status)}`}>
+                  <span className={`inline-flex w-fit rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wide ${(STATUS_COLORS[nextAppointment.status] ?? DEFAULT_STATUS_COLOR).badge}`}>
                     {operationalStatusLabel(toOperationalStatus(nextAppointment))}
                   </span>
                   <div>
@@ -170,7 +170,7 @@ export default async function ClientPortalPage() {
                   className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs dark:border-surface-muted/70 dark:bg-surface-elevated"
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <span className={`rounded-full border px-2.5 py-0.5 text-xs font-semibold ${appointmentStatusBadge(appointment.status)}`}>
+                    <span className={`rounded-full border px-2.5 py-0.5 text-xs font-semibold ${(STATUS_COLORS[appointment.status] ?? DEFAULT_STATUS_COLOR).badge}`}>
                       {operationalStatusLabel(toOperationalStatus(appointment))}
                     </span>
                     <span className="text-xs text-slate-400">{formatDate(appointment.timeSlot.startAt)}</span>
