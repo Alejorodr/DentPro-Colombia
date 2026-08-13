@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { Card } from "@/app/portal/components/ui/Card";
+import { StatusBadge } from "@/app/portal/components/ui/StatusBadge";
 import { fetchWithRetry } from "@/lib/http";
 
 const formatDateInput = (date: Date) => {
@@ -10,20 +11,6 @@ const formatDateInput = (date: Date) => {
   const month = `${date.getMonth() + 1}`.padStart(2, "0");
   const day = `${date.getDate()}`.padStart(2, "0");
   return `${year}-${month}-${day}`;
-};
-
-const staffStatusLabels: Record<string, string> = {
-  Free: "Disponible",
-  Busy: "Ocupado",
-  Break: "En pausa",
-  Offline: "Sin turno",
-};
-
-const staffStatusStyles: Record<string, string> = {
-  Free: "bg-emerald-100 text-emerald-700",
-  Busy: "bg-amber-100 text-amber-700",
-  Break: "bg-slate-100 text-slate-500",
-  Offline: "bg-slate-200 text-slate-600",
 };
 
 type StaffItem = {
@@ -88,13 +75,7 @@ export function ReceptionistStaff() {
                     <p className="text-base font-semibold text-slate-900 dark:text-white">{member.name}</p>
                     <p className="text-xs text-slate-500 dark:text-slate-400">{member.specialty ?? "Sin especialidad"}</p>
                   </div>
-                  <span
-                    className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                      staffStatusStyles[member.status] ?? "bg-slate-200 text-slate-600"
-                    }`}
-                  >
-                    {staffStatusLabels[member.status] ?? member.status}
-                  </span>
+                  <StatusBadge status={member.status} />
                 </div>
                 <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">Turnos del día: {member.slots}</p>
               </div>

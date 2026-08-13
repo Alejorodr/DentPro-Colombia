@@ -1,18 +1,13 @@
 import Link from "next/link";
 
 import { AvatarFallback } from "@/app/portal/components/ui/AvatarFallback";
+import { StatusDot } from "@/app/portal/components/ui/StatusDot";
 
 type StaffMember = {
   id: string;
   name: string;
   subtitle: string;
   status: "available" | "busy" | "off";
-};
-
-const statusStyles: Record<StaffMember["status"], string> = {
-  available: "bg-emerald-500",
-  busy: "bg-amber-500",
-  off: "bg-slate-300",
 };
 
 const statusLabels: Record<StaffMember["status"], string> = {
@@ -54,7 +49,7 @@ export function StaffOnDutyList({ staff }: { staff: StaffMember[] }) {
                 </div>
               </div>
               <div className="flex items-center gap-2 text-xs font-medium text-slate-500 dark:text-slate-400">
-                <span className={`h-2 w-2 rounded-full ${statusStyles[member.status]}`} />
+                <StatusDot status={member.status} />
                 {statusLabels[member.status]}
               </div>
             </div>
