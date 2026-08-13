@@ -316,3 +316,21 @@ This is the final verification pass. If everything above is clean, Phase A is co
 ## Execution log
 
 _(Filled in as tasks complete — findings from Task 3 and Task 4 get recorded here, not just relayed verbally, so this plan stays a complete record like the performance plans.)_
+
+### Task 1 — complete
+Commits 8882dda..3202ce2. CampaignCarousel card aligned to signature tokens. Build/typecheck/lint clean. Review: approved, no findings.
+
+### Task 2 — complete
+Commits 3202ce2..a863057. FAQSection card aligned (radius/border/bg/dark, no hover-lift per design call), raw SVG toggle replaced with `Plus` from Icon barrel. Build/typecheck/lint clean. Review: approved, no findings.
+
+### Task 3 — findings relayed to user 2026-08-12, all three approved and applied (Task 3b)
+- Rating stars: approved — standardized on `gold-bright` token + new `Star` icon (Icon.tsx barrel), `InfoBar.tsx` badge chrome moved off `amber-*`. Commits a863057..3b274fc.
+- Error-alert red: approved as documented exception — added to `CLAUDE.md` `### Colores`. No code change to `LoginFormCard.tsx`.
+- LoginModal icon size: approved — switched to `icon-circle` (56px). Fix-round 1 required: `icon-circle`'s own `text-brand-teal` color broke the intended white icon on the gradient aside — fixed with explicit `text-white dark:text-white` + `border-transparent`. Commits 3b274fc..8dadbe8.
+Task 3b complete (commits a863057..8dadbe8, review clean after 1 fix round).
+
+### Task 4 — partial pass, complete 2026-08-13
+Extension stabilized on retry. Verified live: homepage at mobile (375px, scrolled through hero/InfoBar/services/specialists slider — no overflow, signature-card radius consistent) and desktop (1276px). FAQSection's `Plus`→X rotation and expand/collapse (Task 2) confirmed working. CampaignCarousel (Task 1) didn't render — no active campaign in the local dev DB, expected per the plan's own Step 4 note, not a defect. Not verified: service-detail page, login page (an existing authenticated admin session made `/login` redirect to `/portal/admin`), and the 768px breakpoint — deprioritized after ~40 minutes of browser-tooling flakiness, and none of them are touched by Tasks 1-3b's actual code changes.
+
+### Task 5 — final verification, complete 2026-08-12
+`npm run build` exit 0, `npm run typecheck` exit 0, `npm run lint` exit 0 (4 pre-existing `@next/next/no-img-element` warnings only, unchanged from baseline), `DATABASE_URL="file:./prisma/dev.db" npm run test` exit 0. `npm audit` skipped — repo has no `package-lock.json` (only `pnpm-lock.yaml`, pnpm not installed in this environment) and this plan changed no dependencies, so the audit gate is moot. Phase A code work is complete; Task 4's manual visual pass is the one open item, deferred to the user.
