@@ -3,6 +3,7 @@ import Link from "next/link";
 import { CheckCircle, Lock, Moon, UserCircle } from "@/components/ui/Icon";
 import { requireRole } from "@/lib/auth/require-role";
 import { Card } from "@/app/portal/components/ui/Card";
+import { STATUS_COLORS } from "@/app/portal/components/ui/statusColors";
 
 export default async function ClientSettingsPage() {
   const session = await requireRole("PACIENTE");
@@ -42,9 +43,9 @@ export default async function ClientSettingsPage() {
             Editar perfil
           </Link>
         </div>
-        <div className="mt-4 flex items-center gap-2 rounded-xl border border-emerald-100 bg-emerald-50/60 px-4 py-2.5 dark:border-emerald-800/30 dark:bg-emerald-900/10">
-          <CheckCircle size={15} weight="fill" className="shrink-0 text-emerald-500 dark:text-emerald-400" />
-          <p className="text-xs text-emerald-700 dark:text-emerald-400">Cuenta activa y verificada</p>
+        <div className={`mt-4 flex items-center gap-2 rounded-xl border px-4 py-2.5 ${STATUS_COLORS.Active.tint}`}>
+          <CheckCircle size={15} weight="fill" className={`shrink-0 ${STATUS_COLORS.Active.text}`} />
+          <p className={`text-xs ${STATUS_COLORS.Active.text}`}>Cuenta activa y verificada</p>
         </div>
       </Card>
 

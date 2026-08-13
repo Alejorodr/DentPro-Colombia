@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { roleLabels, userRoles, type UserRole } from "@/lib/auth/roles";
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
+import { STATUS_COLORS } from "@/app/portal/components/ui/statusColors";
 
 type Specialty = {
   id: string;
@@ -535,7 +536,7 @@ export function AdminUsersPanel({ roleFilter, roleLock }: AdminUsersPanelProps) 
                       </p>
                       <div className="mt-0.5 flex flex-wrap items-center gap-1">
                         <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase ${
-                          user.active ? "bg-green-100 text-green-700" : "bg-red-100 text-red-600"
+                          STATUS_COLORS[user.active ? "Active" : "Inactive"].badge
                         }`}>
                           {user.active ? "Activo" : "Inactivo"}
                         </span>
@@ -595,10 +596,8 @@ export function AdminUsersPanel({ roleFilter, roleLock }: AdminUsersPanelProps) 
                       <button
                         type="button"
                         className={`rounded-full border px-3 py-1 text-xs font-semibold uppercase ${
-                          user.active
-                            ? "border-red-200 text-red-600"
-                            : "border-green-200 text-green-600"
-                        }`}
+                          STATUS_COLORS[user.active ? "Inactive" : "Active"].border
+                        } ${STATUS_COLORS[user.active ? "Inactive" : "Active"].text}`}
                         onClick={() => void toggleActive(user)}
                         disabled={saving}
                       >

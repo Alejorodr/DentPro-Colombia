@@ -8,6 +8,7 @@ import { Card } from "@/app/portal/components/ui/Card";
 import { Table } from "@/app/portal/components/ui/Table";
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
 import { PASSWORD_POLICY_MESSAGE, PASSWORD_POLICY_REGEX } from "@/lib/auth/password-policy";
+import { STATUS_COLORS } from "@/app/portal/components/ui/statusColors";
 
 const emptyForm = {
   name: "",
@@ -229,7 +230,7 @@ export function ReceptionistPatients() {
                 <td className="px-4 py-3">
                   <span
                     className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                      patient.active ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-500"
+                      STATUS_COLORS[patient.active ? "Active" : "Inactive"].badge
                     }`}
                   >
                     {patient.active ? "Activo" : "Inactivo"}

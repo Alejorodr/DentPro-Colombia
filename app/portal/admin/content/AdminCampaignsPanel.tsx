@@ -9,6 +9,7 @@ import { Table } from "@/app/portal/components/ui/Table";
 import { AdminImageField } from "@/app/portal/admin/content/components/AdminImageField";
 import { fetchWithRetry, fetchWithTimeout, getApiErrorMessage } from "@/lib/http";
 import { SectionVisibilityToggle } from "@/app/portal/admin/content/components/SectionVisibilityToggle";
+import { STATUS_COLORS } from "@/app/portal/components/ui/statusColors";
 
 type CampaignRecord = {
   id: string;
@@ -292,7 +293,7 @@ export function AdminCampaignsPanel() {
                 <td className="px-4 py-3">
                   <span
                     className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                      campaign.active ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-500"
+                      STATUS_COLORS[campaign.active ? "Active" : "Inactive"].badge
                     }`}
                   >
                     {campaign.active ? "Activa" : "Inactiva"}
