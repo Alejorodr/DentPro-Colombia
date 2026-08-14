@@ -1,39 +1,12 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import type { AppointmentStatus } from "@prisma/client";
 import type { ProfessionalDashboardAppointment } from "@/app/portal/professional/types";
+import { STATUS_COLORS, DEFAULT_STATUS_COLOR } from "@/app/portal/components/ui/statusColors";
 
 const GRID_START_HOUR = 7;
 const GRID_END_HOUR = 20;
 const PX_PER_MINUTE = 1.25;
-
-const statusBarColors: Record<AppointmentStatus, string> = {
-  SCHEDULED: "bg-amber-400",
-  CONFIRMED: "bg-emerald-500",
-  CHECKED_IN: "bg-cyan-500",
-  CANCELLED: "bg-rose-400",
-  COMPLETED: "bg-blue-500",
-  NO_SHOW: "bg-fuchsia-400",
-};
-
-const statusBgColors: Record<AppointmentStatus, string> = {
-  SCHEDULED: "bg-amber-50 border-amber-200 dark:bg-amber-950/30 dark:border-amber-800/50",
-  CONFIRMED: "bg-emerald-50 border-emerald-200 dark:bg-emerald-950/30 dark:border-emerald-800/50",
-  CHECKED_IN: "bg-cyan-50 border-cyan-200 dark:bg-cyan-950/30 dark:border-cyan-800/50",
-  CANCELLED: "bg-rose-50 border-rose-200 dark:bg-rose-950/30 dark:border-rose-800/50",
-  COMPLETED: "bg-blue-50 border-blue-200 dark:bg-blue-950/30 dark:border-blue-800/50",
-  NO_SHOW: "bg-fuchsia-50 border-fuchsia-200 dark:bg-fuchsia-950/30 dark:border-fuchsia-800/50",
-};
-
-const statusTextColors: Record<AppointmentStatus, string> = {
-  SCHEDULED: "text-amber-800 dark:text-amber-200",
-  CONFIRMED: "text-emerald-800 dark:text-emerald-200",
-  CHECKED_IN: "text-cyan-800 dark:text-cyan-200",
-  CANCELLED: "text-rose-800 dark:text-rose-200",
-  COMPLETED: "text-blue-800 dark:text-blue-200",
-  NO_SHOW: "text-fuchsia-800 dark:text-fuchsia-200",
-};
 
 function toMinutesFromStart(dateStr: string): number {
   const date = new Date(dateStr);
@@ -127,13 +100,13 @@ export function DayScheduleGrid({ appointments, selectedId, onSelect, privacyMod
                 style={{ top: `${top}px`, height: `${height}px` }}
                 className={cn(
                   "absolute left-1 right-1 flex cursor-pointer overflow-hidden rounded-xl border text-left transition-all",
-                  statusBgColors[appt.status],
+                  (STATUS_COLORS[appt.status] ?? DEFAULT_STATUS_COLOR).tint,
                   isSelected && "ring-2 ring-brand-indigo ring-offset-1",
                 )}
               >
-                <div className={cn("w-1 shrink-0 rounded-l-lg", statusBarColors[appt.status])} />
+                <div className={cn("w-1 shrink-0 rounded-l-lg", (STATUS_COLORS[appt.status] ?? DEFAULT_STATUS_COLOR).bar)} />
                 <div className="min-w-0 flex-1 px-2 py-1">
-                  <p className={cn("truncate text-[11px] font-semibold leading-tight", statusTextColors[appt.status])}>
+                  <p className={cn("truncate text-[11px] font-semibold leading-tight", (STATUS_COLORS[appt.status] ?? DEFAULT_STATUS_COLOR).text)}>
                     {patientLabel}
                   </p>
                   {height >= 28 ? (
