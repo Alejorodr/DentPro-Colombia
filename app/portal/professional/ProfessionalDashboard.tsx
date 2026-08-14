@@ -647,13 +647,13 @@ export function ProfessionalDashboard() {
                     type="button"
                     onClick={() => void changeStatus(AppointmentStatus.CHECKED_IN)}
                     disabled={isSaving}
-                    className="shrink-0 rounded-2xl border border-accent-cyan/40 bg-accent-cyan/10 px-4 py-2 text-xs font-semibold text-accent-cyan transition hover:bg-accent-cyan/20 disabled:opacity-50"
+                    className="shrink-0 rounded-2xl border border-brand-teal/40 bg-brand-light/40 px-4 py-2 text-xs font-semibold text-brand-teal transition hover:bg-brand-light/70 disabled:opacity-50 dark:border-accent-cyan/40 dark:bg-accent-cyan/10 dark:text-accent-cyan dark:hover:bg-accent-cyan/20"
                   >
                     Registrar llegada
                   </button>
                 ) : null}
                 {appointmentDetail.appointment.status === AppointmentStatus.CHECKED_IN ? (
-                  <span className="shrink-0 rounded-2xl border border-accent-cyan/40 bg-accent-cyan/10 px-4 py-2 text-xs font-semibold text-accent-cyan">
+                  <span className="shrink-0 rounded-2xl border border-brand-teal/40 bg-brand-light/40 px-4 py-2 text-xs font-semibold text-brand-teal dark:border-accent-cyan/40 dark:bg-accent-cyan/10 dark:text-accent-cyan">
                     Paciente presente ✓
                   </span>
                 ) : null}
