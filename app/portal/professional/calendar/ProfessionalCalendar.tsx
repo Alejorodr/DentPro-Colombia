@@ -43,9 +43,9 @@ const scheduleStatusLabels: Record<string, string> = {
 };
 
 const scheduleStatusStyles: Record<string, string> = {
-  PENDING_CONFIRMATION: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
-  CONFIRMED: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300",
-  CHANGES_REQUESTED: "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300",
+  PENDING_CONFIRMATION: "bg-slate-100 text-slate-700 dark:bg-surface-muted dark:text-slate-300",
+  CONFIRMED: "bg-brand-light text-brand-teal dark:bg-accent-cyan/15 dark:text-accent-cyan",
+  CHANGES_REQUESTED: "bg-brand-light/60 text-brand-indigo dark:bg-brand-teal/10 dark:text-accent-cyan",
 };
 
 const unavailabilityStatusLabels: Record<string, string> = {
