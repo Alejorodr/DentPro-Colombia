@@ -16,6 +16,7 @@ import {
 import { AppointmentStatus, AttachmentKind, PrescriptionItemType } from "@prisma/client";
 
 import { cn } from "@/lib/utils";
+import { STATUS_COLORS } from "@/app/portal/components/ui/statusColors";
 import { StatusBadge } from "@/app/portal/components/ui/StatusBadge";
 import { ActivityFeed } from "@/app/portal/components/activity/ActivityFeed";
 import { calculateAge, maskId, maskName } from "@/lib/professional";
@@ -488,7 +489,7 @@ export function ProfessionalDashboard() {
                     <span>ID: {selectedPatientCode || "—"}</span>
                   </div>
                 </div>
-                <span className="rounded-full border border-emerald-400/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-400">
+                <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${STATUS_COLORS.Active.border} ${STATUS_COLORS.Active.tint} ${STATUS_COLORS.Active.text}`}>
                   PACIENTE ACTIVO
                 </span>
               </div>
@@ -646,13 +647,13 @@ export function ProfessionalDashboard() {
                     type="button"
                     onClick={() => void changeStatus(AppointmentStatus.CHECKED_IN)}
                     disabled={isSaving}
-                    className="shrink-0 rounded-2xl border border-cyan-400/40 bg-cyan-500/10 px-4 py-2 text-xs font-semibold text-cyan-600 transition hover:bg-cyan-500/20 disabled:opacity-50 dark:text-cyan-400"
+                    className="shrink-0 rounded-2xl border border-accent-cyan/40 bg-accent-cyan/10 px-4 py-2 text-xs font-semibold text-accent-cyan transition hover:bg-accent-cyan/20 disabled:opacity-50"
                   >
                     Registrar llegada
                   </button>
                 ) : null}
                 {appointmentDetail.appointment.status === AppointmentStatus.CHECKED_IN ? (
-                  <span className="shrink-0 rounded-2xl border border-cyan-400/40 bg-cyan-500/10 px-4 py-2 text-xs font-semibold text-cyan-600 dark:text-cyan-400">
+                  <span className="shrink-0 rounded-2xl border border-accent-cyan/40 bg-accent-cyan/10 px-4 py-2 text-xs font-semibold text-accent-cyan">
                     Paciente presente ✓
                   </span>
                 ) : null}
