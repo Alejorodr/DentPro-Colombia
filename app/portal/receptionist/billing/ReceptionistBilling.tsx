@@ -17,9 +17,9 @@ const paymentStatusLabel: Record<PaymentStatus, string> = {
 };
 
 const paymentStatusStyle: Record<PaymentStatus, string> = {
-  PENDING: "border-amber-200 bg-amber-100 text-amber-800",
-  PAID: "border-emerald-200 bg-emerald-100 text-emerald-800",
-  WAIVED: "border-slate-200 bg-slate-100 text-slate-600",
+  PENDING: "border-slate-300 bg-slate-100 text-slate-700 dark:border-surface-muted dark:bg-surface-muted dark:text-slate-300",
+  PAID: "border-brand-teal/30 bg-brand-light text-brand-teal dark:border-accent-cyan/30 dark:bg-accent-cyan/15 dark:text-accent-cyan",
+  WAIVED: "border-slate-200 bg-slate-50 text-slate-500 dark:border-surface-muted dark:bg-surface-base/60 dark:text-slate-400",
 };
 
 const paymentMethodLabel: Record<PaymentMethod, string> = {
@@ -159,14 +159,14 @@ export function ReceptionistBilling() {
           <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <Card>
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Total cobrado</p>
-              <p className="mt-2 text-2xl font-semibold text-emerald-600 dark:text-emerald-400">
+              <p className="mt-2 text-2xl font-semibold text-brand-teal dark:text-accent-cyan">
                 {formatCurrency(data.summary.totalBilledCents)}
               </p>
               <p className="mt-1 text-xs text-slate-400">{data.summary.paidCount} citas</p>
             </Card>
             <Card>
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Pendiente por cobrar</p>
-              <p className="mt-2 text-2xl font-semibold text-amber-600 dark:text-amber-400">
+              <p className="mt-2 text-2xl font-semibold text-slate-600 dark:text-slate-300">
                 {formatCurrency(data.summary.totalPendingCents)}
               </p>
               <p className="mt-1 text-xs text-slate-400">{data.summary.pendingCount} citas</p>
