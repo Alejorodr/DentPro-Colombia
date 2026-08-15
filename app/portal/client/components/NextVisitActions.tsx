@@ -11,7 +11,7 @@ export function NextVisitActions({ detailsHref }: { detailsHref: string }) {
       </Link>
       <Link
         href={detailsHref}
-        className="rounded-xl bg-blue-600 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-white transition hover:bg-blue-700"
+        className="rounded-xl bg-brand-teal px-4 py-2 text-xs font-semibold uppercase tracking-wide text-white transition hover:bg-brand-indigo"
       >
         Gestionar cita
       </Link>
