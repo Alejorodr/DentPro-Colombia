@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
+import { Card } from "@/app/portal/components/ui/Card";
 
 type Specialty = {
   id: string;
@@ -98,7 +99,7 @@ export function AdminSpecialtiesPanel() {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs dark:border-surface-muted/80 dark:bg-surface-elevated/80">
+      <Card>
         <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Nueva especialidad</h2>
         <div className="mt-4 grid gap-4 md:grid-cols-3">
           <input
@@ -125,9 +126,9 @@ export function AdminSpecialtiesPanel() {
         </button>
       </div>
       {error ? <p className="mt-2 text-sm text-red-600 dark:text-red-400">{error}</p> : null}
-    </section>
+    </Card>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs dark:border-surface-muted/80 dark:bg-surface-elevated/80">
+      <Card>
         <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Especialidades</h2>
         <div className="mt-4 space-y-3">
           {specialties.map((specialty) => (
@@ -192,7 +193,7 @@ export function AdminSpecialtiesPanel() {
             </div>
           ))}
         </div>
-      </section>
+      </Card>
     </div>
   );
 }

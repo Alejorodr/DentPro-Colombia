@@ -257,6 +257,9 @@ export function AdminHomepageSpecialistsPanel() {
               </div>
               <div className="w-full max-w-[200px] shrink-0">
                 <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">Vista previa</p>
+                {/* Deliberately not <Card>: this box previews how the specialist card renders on the
+                    public marketing homepage, so it intentionally mirrors the marketing signature card
+                    (border-white/70 + shadow-lg) rather than the portal Card look. */}
                 <div className="rounded-2xl border border-white/70 bg-white p-4 shadow-lg">
                   {specialist.imageUrl ? (
                     <img

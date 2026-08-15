@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { roleLabels, userRoles, type UserRole } from "@/lib/auth/roles";
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
 import { STATUS_COLORS } from "@/app/portal/components/ui/statusColors";
+import { Card } from "@/app/portal/components/ui/Card";
 
 type Specialty = {
   id: string;
@@ -85,6 +86,8 @@ function ResetPasswordModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      {/* Deliberately not <Card>: this modal uses a heavier border-white/70 + shadow-xl treatment
+          for contrast against the dark backdrop overlay, not the standard portal Card look. */}
       <div className="w-full max-w-sm rounded-2xl border border-white/70 bg-white p-6 shadow-xl">
         <h3 className="text-base font-semibold text-slate-900">Resetear contraseña</h3>
         <p className="mt-1 text-sm text-slate-600">{userEmail}</p>
@@ -342,7 +345,7 @@ export function AdminUsersPanel({ roleFilter, roleLock }: AdminUsersPanelProps) 
 
   return (
     <div className="space-y-8">
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs dark:border-surface-muted/80 dark:bg-surface-elevated/80">
+      <Card>
         <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Crear usuario</h2>
         <p className="text-sm text-slate-600 dark:text-slate-300">Define el rol y las credenciales iniciales.</p>
 
@@ -447,9 +450,9 @@ export function AdminUsersPanel({ roleFilter, roleLock }: AdminUsersPanelProps) 
         >
           Crear usuario
         </button>
-      </section>
+      </Card>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs dark:border-surface-muted/80 dark:bg-surface-elevated/80">
+      <Card>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Usuarios</h2>
@@ -654,7 +657,7 @@ export function AdminUsersPanel({ roleFilter, roleLock }: AdminUsersPanelProps) 
             </div>
           </div>
         ) : null}
-      </section>
+      </Card>
 
       {resetModal ? (
         <ResetPasswordModal
