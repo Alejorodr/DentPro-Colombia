@@ -7,6 +7,7 @@ import { Bell, ShieldCheck } from "@/components/ui/Icon";
 import { Card } from "@/app/portal/components/ui/Card";
 import { Skeleton } from "@/app/portal/components/ui/Skeleton";
 import { fetchWithRetry } from "@/lib/http";
+import { STATUS_COLORS } from "@/app/portal/components/ui/statusColors";
 
 type UserProfile = {
   id: string;
@@ -87,11 +88,11 @@ export function ReceptionistSettings() {
           </div>
           <ul className="space-y-2 text-sm">
             <li className="flex items-center gap-3 rounded-xl border border-slate-100 px-4 py-3 dark:border-surface-muted/40">
-              <span className="h-2 w-2 shrink-0 rounded-full bg-emerald-400" />
+              <span className={`h-2 w-2 shrink-0 rounded-full ${STATUS_COLORS.Active.bar}`} />
               <span className="text-slate-600 dark:text-slate-300">Cambios de estado de citas</span>
             </li>
             <li className="flex items-center gap-3 rounded-xl border border-slate-100 px-4 py-3 dark:border-surface-muted/40">
-              <span className="h-2 w-2 shrink-0 rounded-full bg-emerald-400" />
+              <span className={`h-2 w-2 shrink-0 rounded-full ${STATUS_COLORS.Active.bar}`} />
               <span className="text-slate-600 dark:text-slate-300">Nuevas citas y cancelaciones</span>
             </li>
             <li className="flex items-center gap-3 rounded-xl border border-slate-100 px-4 py-3 dark:border-surface-muted/40">
@@ -123,7 +124,7 @@ export function ReceptionistSettings() {
             </div>
             <div className="flex items-center justify-between gap-4 rounded-xl border border-slate-100 px-4 py-3 dark:border-surface-muted/40">
               <span className="text-slate-600 dark:text-slate-300">Sesión activa</span>
-              <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:border-emerald-800/40 dark:bg-emerald-900/20 dark:text-emerald-400">
+              <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${STATUS_COLORS.Active.border} ${STATUS_COLORS.Active.tint} ${STATUS_COLORS.Active.text}`}>
                 Activa
               </span>
             </div>
