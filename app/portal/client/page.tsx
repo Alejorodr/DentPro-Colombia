@@ -9,6 +9,7 @@ import { NextVisitActions } from "@/app/portal/client/components/NextVisitAction
 import { operationalStatusLabel, toOperationalStatus } from "@/lib/appointments/status";
 import { STATUS_COLORS, DEFAULT_STATUS_COLOR } from "@/app/portal/components/ui/statusColors";
 import { ActivityFeed } from "@/app/portal/components/activity/ActivityFeed";
+import { Card } from "@/app/portal/components/ui/Card";
 
 
 function formatDate(date: Date) {
@@ -127,7 +128,7 @@ export default async function ClientPortalPage() {
         <div className="space-y-6">
           <div>
             <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Próxima visita</h2>
-            <div className="mt-4 rounded-3xl border border-slate-200 bg-white p-6 shadow-xs dark:border-surface-muted/70 dark:bg-surface-elevated">
+            <Card className="mt-4 rounded-3xl">
               {nextAppointment ? (
                 <div className="space-y-4">
                   <span className={`inline-flex w-fit rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wide ${(STATUS_COLORS[nextAppointment.status] ?? DEFAULT_STATUS_COLOR).badge}`}>
@@ -151,7 +152,7 @@ export default async function ClientPortalPage() {
                   Aún no tienes próxima cita. Te recomendamos reservar tu control para mantener el tratamiento al día.
                 </div>
               )}
-            </div>
+            </Card>
           </div>
         </div>
 

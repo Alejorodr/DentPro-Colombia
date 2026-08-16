@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
+import { Card } from "@/app/portal/components/ui/Card";
 
 type Service = {
   id: string;
@@ -220,16 +221,16 @@ export function ClientBookingForm() {
     <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
       <div className="space-y-6">
         {/* Header */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs dark:border-surface-muted/70 dark:bg-surface-elevated">
+        <Card>
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{clinic?.city ?? "DentPro"}</p>
           <h1 className="mt-2 text-3xl font-semibold text-slate-900 dark:text-white">Agenda tu visita</h1>
           <p className="mt-2 text-sm text-slate-500 dark:text-slate-300">
             Completa el formulario para reservar tu cita con nuestro equipo odontológico.
           </p>
-        </div>
+        </Card>
 
         {/* Step 1 - Datos del paciente */}
-        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs dark:border-surface-muted/70 dark:bg-surface-elevated">
+        <Card>
           <div className="mb-4 flex items-center gap-3">
             <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-teal/10 text-sm font-semibold text-brand-teal">
               1
@@ -270,10 +271,10 @@ export function ClientBookingForm() {
               />
             </label>
           </div>
-        </section>
+        </Card>
 
         {/* Step 2 - Servicio */}
-        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs dark:border-surface-muted/70 dark:bg-surface-elevated">
+        <Card>
           <div className="mb-4 flex items-center gap-3">
             <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-teal/10 text-sm font-semibold text-brand-teal">
               2
@@ -311,10 +312,10 @@ export function ClientBookingForm() {
               <p className="text-sm text-slate-500 dark:text-slate-300">No hay servicios disponibles.</p>
             )}
           </div>
-        </section>
+        </Card>
 
         {/* Step 3 - Fecha y hora */}
-        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs dark:border-surface-muted/70 dark:bg-surface-elevated">
+        <Card>
           <div className="mb-4 flex items-center gap-3">
             <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-teal/10 text-sm font-semibold text-brand-teal">
               3
@@ -414,12 +415,12 @@ export function ClientBookingForm() {
               </p>
             )}
           </div>
-        </section>
+        </Card>
       </div>
 
       {/* Sidebar summary */}
       <aside className="space-y-6">
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs dark:border-surface-muted/70 dark:bg-surface-elevated lg:sticky lg:top-6">
+        <Card className="lg:sticky lg:top-6">
           <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Resumen de tu reserva</h2>
           <div className="mt-4 space-y-3 text-sm text-slate-600 dark:text-slate-300">
             <div>
@@ -486,7 +487,7 @@ export function ClientBookingForm() {
             {submitting ? "Procesando…" : "Confirmar cita"}
           </button>
           <p className="mt-2 text-xs text-slate-400">El pago se realiza en la consulta.</p>
-        </div>
+        </Card>
       </aside>
     </div>
   );
