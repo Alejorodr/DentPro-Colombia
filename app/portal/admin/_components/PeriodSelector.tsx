@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import type { AnalyticsRangeKey } from "@/app/portal/admin/_data/analytics";
+import { Card } from "@/app/portal/components/ui/Card";
 
 const rangeOptions: { value: AnalyticsRangeKey; label: string }[] = [
   { value: "today", label: "Hoy" },
@@ -71,7 +72,7 @@ export function PeriodSelector({ rangeKey, fromInput, toInput }: PeriodSelectorP
   };
 
   return (
-    <div className="flex flex-wrap items-end gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-xs dark:border-surface-muted/70 dark:bg-surface-elevated/80">
+    <Card className="flex flex-wrap items-end gap-3 px-4 py-3">
       <div className="flex flex-col gap-1">
         <label className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
           Período
@@ -116,6 +117,6 @@ export function PeriodSelector({ rangeKey, fromInput, toInput }: PeriodSelectorP
       <div className="ml-auto rounded-full bg-brand-teal/10 px-3 py-1 text-xs font-semibold text-brand-teal dark:bg-accent-cyan/10 dark:text-accent-cyan">
         {rangeOptions.find((option) => option.value === rangeKey)?.label}
       </div>
-    </div>
+    </Card>
   );
 }
