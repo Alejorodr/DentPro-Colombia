@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/Icon";
 import { AppointmentStatus } from "@prisma/client";
 
+import { Card } from "@/app/portal/components/ui/Card";
 import { Table } from "@/app/portal/components/ui/Table";
 import { StatusBadge } from "@/app/portal/components/ui/StatusBadge";
 import { STATUS_COLORS, DEFAULT_STATUS_COLOR } from "@/app/portal/components/ui/statusColors";
@@ -135,9 +136,9 @@ export function AppointmentTable({ appointments, page, totalPages, onPageChange,
       {feedback ? <p aria-live="polite" className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs">{feedback}</p> : null}
 
       {appointments.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-6 text-sm text-slate-500 dark:border-surface-muted/70 dark:bg-surface-elevated/80 dark:text-slate-300">
+        <Card className="border-dashed text-sm text-slate-500 dark:text-slate-300">
           No hay turnos en este rango horario.
-        </div>
+        </Card>
       ) : (
         <>
           <div className="rounded-2xl border border-slate-200 p-4">
