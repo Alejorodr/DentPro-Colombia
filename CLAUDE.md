@@ -62,12 +62,15 @@ design-system/            # Sistema de diseño exportado desde Claude Design
 - **Sin verdes, sin morados, sin cálidos**. Solo slate para neutros.
 - Dorado (`#c8901f`) solo en logos impresos, nunca en UI.
 - **Excepción aprobada**: rojo (`red-*`) para mensajes de error/validación (ej. login fallido) — no migrar a azul-marca, el rojo mantiene la urgencia visual del error.
+- **Excepción aprobada**: verde/emerald (`emerald-*`/`green-*`) para mensajes de éxito en formularios — paralelo a la excepción de rojo-error, misma lógica (urgencia/confirmación visual, no decorativo).
+- **Excepción aprobada**: rojo/rose para alertas clínicas de seguridad del paciente (ej. alergias críticas en `ProfessionalDashboard.tsx`) — la urgencia visual es intencional y no debe migrarse a azul-marca.
 
 ### Componentes
 - **Tarjeta signature**: `rounded-[1.75rem] border border-white/70 bg-white/90 p-6 shadow-xl shadow-slate-900/10 hover:-translate-y-1 hover:shadow-2xl transition-all duration-300`
 - **Botón primario**: gradiente brand, sombra glow, hover lift `-translate-y-0.5`, sin cambio de color en hover.
 - **Único panel full-gradient**: el formulario de agendamiento. Todo lo demás es blanco o `bg-brand-light`.
 - **Navbar**: `bg-white/80 backdrop-blur-lg` — frosted glass.
+- **Tarjeta portal** (`app/portal/components/ui/Card.tsx`): `rounded-2xl border border-slate-200/80 bg-white p-6 shadow-xs shadow-slate-100/60` — sin hover-lift, patrón deliberadamente distinto a la tarjeta signature (dashboard denso/tabular vs. marketing orientado a conversión). No convertir a signature card.
 
 ### Iconos
 - **Siempre** desde `@/components/ui/Icon.tsx`, nunca import directo.
