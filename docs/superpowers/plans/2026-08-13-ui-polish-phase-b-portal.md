@@ -1445,9 +1445,13 @@ Verified live against the real (Neon) database using credentials supplied by the
 
 - **Admin** (`dentprocolombia@gmail.com`): dashboard, users, audit — desktop (1280px) and mobile (375px), both light and dark mode. Confirmed correct: Task 3's staff-status dot (slate "Fuera"), Task 4's Active/Inactive badge + inverted-ternary toggle button, Task 5's audit success/failure badge (brand-teal, no more emerald/rose name-collision bug), Card.tsx dedup screens (KPI tiles, staff panel) render pixel-identical to pre-change. No regressions found.
 - **Receptionist** (`LeidyA2222@hotmail.com`): dashboard, staff, billing — desktop and mobile, dark mode. Confirmed correct: Task 3's `StatusBadge` "Sin turno" pill, Task 9's brand-teal "Total cobrado" stat tile (no more emerald).
-- **Not verified — professional role:** the only professional account known (`camilogomez@hotmail.com`) is marked `INACTIVO` in the database; login was correctly rejected by the app (not a bug), and the user chose not to activate it or supply an alternate professional account. Task 6 (`DayScheduleGrid`), Task 7 (`ProfessionalCalendar`), and Task 8 (`ProfessionalDashboard` active badge + check-in button, including its fix round) remain code-reviewed only, not visually confirmed live.
-- **Not verified — client/paciente role:** no credentials were provided. Task 2's `client/page.tsx` migration and the client-role Card.tsx dedup (Task 13) remain code-reviewed only.
-- 768px tablet breakpoint not checked for either verified role (only 375px and desktop widths).
+- 768px tablet breakpoint not checked for admin/receptionist (only 375px and desktop widths).
+
+**Follow-up, closed 2026-08-18:** professional and client/paciente coverage completed once credentials became available.
+- **Professional** (`camilogomez@hotmail.com`, activated by the user via the admin Users panel — confirmed `ACTIVO` before login): dashboard, calendar — desktop, dark mode. Confirmed correct: Task 7's `scheduleStatusStyles` "Confirmado" badge renders `accent-cyan`/brand-teal (no amber/emerald), `DayScheduleGrid` and `ProfessionalDashboard` render with no console/visual errors (no appointments scheduled today, so the grid's per-status colors from Task 6/8 weren't directly observable — code-reviewed and independently verified in the task loop, not re-confirmed live here).
+- **Client/paciente** (`PacientePrueba@dentpro.co`): dashboard, settings, booking form — desktop, dark mode. Confirmed correct: the approved amber-warning exception ("Completa tu perfil" banner), Task 4's `client/settings/page.tsx` "Cuenta activa y verificada" badge (brand-teal, not emerald), Task 13's 5 `ClientBookingForm.tsx` Card conversions all render uniformly with no visual break.
+- Mobile/tablet breakpoints not checked for professional or client (browser-tooling resize was unreliable in this session; desktop-only confirmation accepted).
+- All 4 portal roles now have at least desktop live confirmation against the real database with zero regressions found.
 
 **Task 18 — final verification: complete 2026-08-17.**
 `npm run build` exit 0, `npm run typecheck` exit 0, `npm run lint` exit 0 (4 pre-existing `@next/next/no-img-element` warnings, unchanged from baseline), `npm run test` exit 0. `npm audit` skipped (no `package-lock.json`, same as Phase A's precedent).
