@@ -20,7 +20,7 @@ export function RevenueTrendChart({ series, labels, title, subtitle, totalLabel,
         </div>
         <div className="text-right">
           <p className="text-2xl font-semibold text-slate-900 dark:text-white">{totalLabel}</p>
-          {deltaLabel ? <p className="text-xs text-emerald-600 dark:text-emerald-400">{deltaLabel}</p> : null}
+          {deltaLabel ? <p className="text-xs text-brand-teal dark:text-accent-cyan">{deltaLabel}</p> : null}
         </div>
       </div>
       <ChartSpark series={series} labels={labels} ariaLabel={subtitle} />

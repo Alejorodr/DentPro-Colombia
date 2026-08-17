@@ -64,6 +64,8 @@ design-system/            # Sistema de diseño exportado desde Claude Design
 - **Excepción aprobada**: rojo (`red-*`) para mensajes de error/validación (ej. login fallido) — no migrar a azul-marca, el rojo mantiene la urgencia visual del error.
 - **Excepción aprobada**: verde/emerald (`emerald-*`/`green-*`) para mensajes de éxito en formularios — paralelo a la excepción de rojo-error, misma lógica (urgencia/confirmación visual, no decorativo).
 - **Excepción aprobada**: rojo/rose para alertas clínicas de seguridad del paciente (ej. alergias críticas en `ProfessionalDashboard.tsx`) — la urgencia visual es intencional y no debe migrarse a azul-marca.
+- **Excepción aprobada**: ámbar (`amber-*`) para banners informativos de advertencia (no error, no éxito — ej. "muéstrasela al usuario ahora", perfil incompleto, requisitos de contraseña, sin horarios disponibles) — categoría distinta de éxito/error, no migrar a azul-marca.
+- **Excepción aprobada**: rojo/rose (`rose-*`) para botones de acción destructiva (ej. "Eliminar" con borrado permanente) — distinto de transiciones de estado normales (esas sí van en la paleta de marca, ver `StatusBadge`/`STATUS_COLORS`), el rojo aquí es convención UX estándar para irreversibilidad.
 
 ### Componentes
 - **Tarjeta signature**: `rounded-[1.75rem] border border-white/70 bg-white/90 p-6 shadow-xl shadow-slate-900/10 hover:-translate-y-1 hover:shadow-2xl transition-all duration-300`

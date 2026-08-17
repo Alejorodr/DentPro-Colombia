@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Bell, CalendarCheck, CheckCircle, Clock, WarningCircle } from "@/components/ui/Icon";
 import { Skeleton } from "@/app/portal/components/ui/Skeleton";
+import { STATUS_COLORS } from "@/app/portal/components/ui/statusColors";
 import { fetchWithRetry } from "@/lib/http";
 
 type ActivityFeedItem = {
@@ -23,8 +24,8 @@ type ActivityFeedResponse = {
 };
 
 function iconForType(type: string) {
-  if (type.includes("cancel")) return <WarningCircle className="h-4 w-4 text-rose-600" weight="fill" />;
-  if (type.includes("status") || type.includes("completed")) return <CheckCircle className="h-4 w-4 text-emerald-600" weight="fill" />;
+  if (type.includes("cancel")) return <WarningCircle className={`h-4 w-4 ${STATUS_COLORS.CANCELLED.text}`} weight="fill" />;
+  if (type.includes("status") || type.includes("completed")) return <CheckCircle className={`h-4 w-4 ${STATUS_COLORS.COMPLETED.text}`} weight="fill" />;
   if (type.includes("rescheduled") || type.includes("created")) return <CalendarCheck className="h-4 w-4 text-brand-teal" weight="fill" />;
   if (type.includes("notification")) return <Bell className="h-4 w-4 text-slate-500" weight="fill" />;
   return <Clock className="h-4 w-4 text-slate-400" weight="fill" />;
