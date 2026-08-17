@@ -1438,4 +1438,24 @@ Final verification pass. If everything above is clean, Phase B is complete.
 
 ## Execution log
 
-_(Filled in as tasks complete.)_
+**Tasks 1-16:** all complete, each with a task-scoped review (Task 1 approved clean; Task 2, 3, 4, 5, 6, 7, 9, 10, 11, 16 approved clean; Task 8 needed one fix round for a light-mode contrast regression on the check-in button, caught and fixed; Task 12 needed one fix round after review found 1 of 15 skips used a factually-wrong padding excuse; Task 13 needed one fix round after review found 6 of 23 skips were wrongly excluded; Task 14 confirmed 0/22 targets convertible after independent verification; Task 15 approved clean, 1/5 converted). Full findings and rulings recorded in `.superpowers/sdd/2026-08-13-ui-polish-phase-b-portal/progress.md`.
+
+**Task 17 — manual visual verification, complete 2026-08-17 (partial coverage):**
+Verified live against the real (Neon) database using credentials supplied by the user mid-session (the plan's assumed `TEST_AUTH_BYPASS` dev-login path doesn't work against a connected remote DB — it requires an actual persisted user matching the bypass email, which doesn't exist in this environment).
+
+- **Admin** (`dentprocolombia@gmail.com`): dashboard, users, audit — desktop (1280px) and mobile (375px), both light and dark mode. Confirmed correct: Task 3's staff-status dot (slate "Fuera"), Task 4's Active/Inactive badge + inverted-ternary toggle button, Task 5's audit success/failure badge (brand-teal, no more emerald/rose name-collision bug), Card.tsx dedup screens (KPI tiles, staff panel) render pixel-identical to pre-change. No regressions found.
+- **Receptionist** (`LeidyA2222@hotmail.com`): dashboard, staff, billing — desktop and mobile, dark mode. Confirmed correct: Task 3's `StatusBadge` "Sin turno" pill, Task 9's brand-teal "Total cobrado" stat tile (no more emerald).
+- **Not verified — professional role:** the only professional account known (`camilogomez@hotmail.com`) is marked `INACTIVO` in the database; login was correctly rejected by the app (not a bug), and the user chose not to activate it or supply an alternate professional account. Task 6 (`DayScheduleGrid`), Task 7 (`ProfessionalCalendar`), and Task 8 (`ProfessionalDashboard` active badge + check-in button, including its fix round) remain code-reviewed only, not visually confirmed live.
+- **Not verified — client/paciente role:** no credentials were provided. Task 2's `client/page.tsx` migration and the client-role Card.tsx dedup (Task 13) remain code-reviewed only.
+- 768px tablet breakpoint not checked for either verified role (only 375px and desktop widths).
+
+**Task 18 — final verification: complete 2026-08-17.**
+`npm run build` exit 0, `npm run typecheck` exit 0, `npm run lint` exit 0 (4 pre-existing `@next/next/no-img-element` warnings, unchanged from baseline), `npm run test` exit 0. `npm audit` skipped (no `package-lock.json`, same as Phase A's precedent).
+
+Grep-verified remaining off-palette colors in `app/portal/**`. Two new findings surfaced, both pre-existing and out of this plan's scope (not touched by any task, not regressions introduced here):
+- `app/portal/components/ui/StatCard.tsx:21` — `text-emerald-600 dark:text-emerald-400` on a KPI trend/change indicator. A new pattern the original sweep didn't catch (this file wasn't in any task's target list).
+- `app/portal/components/activity/ActivityFeed.tsx:26-27` — `text-rose-600`/`text-emerald-600` icon colors for cancel/completed activity-feed entries — the same appointment-status semantic this plan spent 10+ tasks migrating to `STATUS_COLORS`, present in a file the sweep missed.
+
+Not auto-fixed, per the "report findings, don't guess" principle this plan followed throughout — flagged here as a candidate for a small follow-up task, not silently fixed or silently dropped. Every other grep hit falls inside the two CLAUDE.md exceptions approved in Task 16 (form-success green, error/clinical-alert red) or the already-flagged, already-low-priority `ProfessionalTopbar.tsx` notification dot (noted in the original sweep's §2c).
+
+Phase B code work is complete. Task 17's professional and client role coverage remains deferred pending credentials, per that task's log above.
