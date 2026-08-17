@@ -156,7 +156,7 @@ export function AppointmentTable({ appointments, page, totalPages, onPageChange,
                             <span>
                               {new Date(appointment.startAt).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })} · {appointment.patient?.name ?? "Paciente"}
                             </span>
-                            <span className={`rounded-full border px-2 py-1 font-semibold ${(STATUS_COLORS[slot] ?? DEFAULT_STATUS_COLOR).badge}`}>{(STATUS_COLORS[slot] ?? DEFAULT_STATUS_COLOR).label}</span>
+                            <span className={`rounded-full border px-2 py-1 font-semibold ${(STATUS_COLORS[slot] ?? DEFAULT_STATUS_COLOR).border} ${(STATUS_COLORS[slot] ?? DEFAULT_STATUS_COLOR).badge}`}>{(STATUS_COLORS[slot] ?? DEFAULT_STATUS_COLOR).label}</span>
                           </div>
                         );
                       })}
@@ -173,7 +173,7 @@ export function AppointmentTable({ appointments, page, totalPages, onPageChange,
                       <span>
                         {new Date(appointment.startAt).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })} · {appointment.patient?.name ?? "Paciente"}
                       </span>
-                      <span className={`rounded-full border px-2 py-1 font-semibold ${(STATUS_COLORS[slot] ?? DEFAULT_STATUS_COLOR).badge}`}>{(STATUS_COLORS[slot] ?? DEFAULT_STATUS_COLOR).label}</span>
+                      <span className={`rounded-full border px-2 py-1 font-semibold ${(STATUS_COLORS[slot] ?? DEFAULT_STATUS_COLOR).border} ${(STATUS_COLORS[slot] ?? DEFAULT_STATUS_COLOR).badge}`}>{(STATUS_COLORS[slot] ?? DEFAULT_STATUS_COLOR).label}</span>
                     </div>
                   );
                 })}

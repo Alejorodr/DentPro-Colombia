@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { MagnifyingGlass, PencilSimple, Trash, X } from "@/components/ui/Icon";
 import { Card } from "@/app/portal/components/ui/Card";
 import { Table } from "@/app/portal/components/ui/Table";
+import { STATUS_COLORS } from "@/app/portal/components/ui/statusColors";
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
 
 type ServiceRecord = {
@@ -259,9 +260,7 @@ export function AdminServicesPanel() {
                         onClick={() => void toggleActive(service)}
                         disabled={saving}
                         className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
-                          service.active
-                            ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300"
-                            : "bg-slate-100 text-slate-500 hover:bg-slate-200 dark:bg-surface-muted dark:text-slate-400"
+                          STATUS_COLORS[service.active ? "Active" : "Inactive"].badge
                         }`}
                       >
                         {service.active ? "Activo" : "Inactivo"}

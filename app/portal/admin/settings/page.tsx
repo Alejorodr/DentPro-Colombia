@@ -5,6 +5,7 @@ import { requireRole } from "@/lib/auth/require-role";
 import { getClinicInfo } from "@/lib/clinic";
 import { Card } from "@/app/portal/components/ui/Card";
 import { SectionHeader } from "@/app/portal/components/ui/SectionHeader";
+import { STATUS_COLORS } from "@/app/portal/components/ui/statusColors";
 
 export default async function AdminSettingsPage() {
   const session = await requireRole("ADMINISTRADOR");
@@ -129,7 +130,7 @@ export default async function AdminSettingsPage() {
               <p className="text-sm font-medium text-slate-800 dark:text-slate-200">Correo electrónico</p>
               <p className="text-xs text-slate-500 dark:text-slate-400">{user?.email ?? "—"}</p>
             </div>
-            <CheckCircle size={18} weight="fill" className="shrink-0 text-emerald-500 dark:text-emerald-400" />
+            <CheckCircle size={18} weight="fill" className={`shrink-0 ${STATUS_COLORS.Active.text}`} />
           </div>
         </div>
       </Card>
