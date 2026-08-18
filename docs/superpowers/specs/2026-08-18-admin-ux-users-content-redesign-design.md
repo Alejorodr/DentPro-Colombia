@@ -6,7 +6,7 @@ Following the performance (2 phases) and UI-polish (Phases A + B) workstreams, t
 
 Brainstorming with the user established that "visual redesign" isn't a whole-site restyle — it's two specific, badly-organized admin-portal subsystems the user (the clinic's actual admin) struggles to use day to day:
 
-1. **Users / Roles / Specialties management** — creating and editing user accounts, changing a user's role, and assigning/removing a professional's specialties.
+1. **Users / Roles / Specialties management** — creating and editing user accounts, changing a user's role, assigning a professional's specialty, and configuring which specific services that professional offers.
 2. **Content (homepage CMS)** — editing what's shown on the public marketing homepage from the admin portal.
 
 Both are **information-architecture and interaction-flow problems**, not brand/token problems — `CLAUDE.md` and `design-system/` remain the locked source of truth for color, typography, card patterns, and icon usage (per Phase A/B's own hard-won enforcement). This redesign works entirely within those existing tokens.
@@ -25,6 +25,8 @@ Investigation of `app/portal/admin/**` and `app/portal/components/PortalShell.ts
 A professional's specialty is assigned via a dropdown inside `AdminUsersPanel`'s per-row role editor, but that dropdown only lists *already-existing* specialties — if the one needed doesn't exist yet, there's no visible path from that dropdown to specialty creation.
 
 **Root cause of every symptom the user named:** two of the four pages are unlinked, and the one linked page is filtered without saying so. This is a navigation/discoverability failure first, an interaction-design failure second.
+
+**Data model correction (found during spec review with the user):** `ProfessionalProfile.specialtyId` is a single required field in `prisma/schema.prisma` — **one professional has exactly one specialty**, not several. The specialty itself carries no price or duration (`Specialty` = `name`, `defaultSlotDurationMinutes`, `active` only). Cost and duration live one level down, on `Service` (already has its own linked admin page, "Servicios y tarifas" → `AdminServicesPanel`), which belongs to a `Specialty`. A third model, **`ProfessionalService`** (professional ↔ specific service, with `active`, `onlineBookable`, and optional per-pair duration/buffer overrides), is the piece that actually answers "which professionals offer this service, and how" — it has a working API (`/api/admin/scheduling`, `GET`/`POST`/`PATCH` already handle `prisma.professionalService`) but **no admin UI anywhere** references it; it's currently only populated by `prisma/seed.ts`. This is a real, previously-undocumented functional gap, not just a discoverability one — folded into the redesign below.
 
 ### Content: one 12-section scrolling page, incomplete relative to the real homepage
 
@@ -48,13 +50,13 @@ Two independent sub-projects sharing one spec and one implementation plan (per e
 - Keep "Gestión de personal" (→ `/portal/admin/staff`) as a professionals-only quick view, but make the filter visible (e.g. a page subtitle: "Mostrando solo profesionales — ") and add a cross-link to the full Usuarios page.
 
 **Role-change flow redesign:**
-- Replace the inline role `<select>` + "Guardar rol" button + separate specialty `<select>` (three disconnected controls per row) with a single **"Cambiar rol" button per user row** that opens a modal:
-  - Shows current role as a `StatusBadge`-style pill.
-  - A role selector (Cliente / Profesional / Recepcionista / Administrador).
-  - **If the selected role is Profesional:** a specialty multi-select appears inline in the same modal, pre-populated with the user's current specialties (if any), sourced live from `/api/specialties`. An inline **"+ Crear especialidad"** affordance (a small add-row, not a page navigation) lets the admin create a missing specialty without leaving the modal — POSTs to the same endpoint `AdminSpecialtiesPanel.tsx` already uses, then adds the new specialty to the multi-select's options and selection.
-  - Confirm button shows loading → success/error state explicitly (per the ui-ux-pro-max "Submit Feedback" and "Confirmation Dialogs" guidelines — role change is a significant, semi-irreversible action; no silent inline swap).
-- The same modal (opened via the same "Cambiar rol" button, or a second "Gestionar especialidades" button when the user is already Profesional) is the **one place** specialties are added or removed for an existing professional — no separate flow.
-- Activate/deactivate, reset password, and delete stay as their own row-level actions (unchanged) — this redesign is scoped to role + specialty assignment, not the whole row's action set.
+- Replace the inline role `<select>` + "Guardar rol" button + separate specialty `<select>` (three disconnected controls per row) with a single **"Cambiar rol" button per user row** that opens a modal with up to 3 sections, revealed progressively:
+  1. **Rol** — shows current role as a `StatusBadge`-style pill, then a role selector (Cliente / Profesional / Recepcionista / Administrador).
+  2. **Especialidad** — appears only when the selected role is Profesional. **Single-select** (schema constraint: `ProfessionalProfile.specialtyId` is one required field, not a list), sourced live from `/api/specialties`, pre-populated with the professional's current specialty if already assigned. An inline **"+ Crear especialidad"** affordance (a small add-row, not a page navigation) lets the admin create a missing specialty without leaving the modal — POSTs to the same endpoint `AdminSpecialtiesPanel.tsx` already uses, then selects the new specialty.
+  3. **Servicios que ofrece** — appears once a specialty is selected (new or existing). Lists the `Service` rows belonging to that specialty (name, price, duration — read from the existing `/api/services` or equivalent used by `AdminServicesPanel.tsx`), each with a toggle for `active`/`onlineBookable`, backed by the already-working `professionalService` `GET`/`POST`/`PATCH` handlers in `/api/admin/scheduling`. This is the piece that closes the real gap found during spec review: today there is no admin UI to control which specific services a professional actually offers — only seed data populates it.
+  - Confirm/save on each section shows loading → success/error state explicitly (per the ui-ux-pro-max "Submit Feedback" and "Confirmation Dialogs" guidelines — these are significant, semi-irreversible actions; no silent inline swap).
+- The same modal (opened via the same "Cambiar rol" button, or relabeled "Gestionar profesional" when the user is already Profesional) is the **one place** specialty and service assignment happen for an existing professional — no separate flow.
+- Activate/deactivate, reset password, and delete stay as their own row-level actions (unchanged) — this redesign is scoped to role + specialty + service assignment, not the whole row's action set.
 
 ### Sub-project 2 — Content (homepage CMS)
 
@@ -71,8 +73,8 @@ Existing 12 panels keep their current implementation (`AdminHomepageSettingsPane
 
 Distilled from `/hallmark`'s cross-cutting disciplines (its page-macrostructure/theme-catalog machinery does not apply — this is internal CRUD UI on an already-locked design system, not a marketing page) and `/ui-ux-pro-max`'s UX-guideline domain:
 
-- Every new interactive element (modal, button, multi-select) ships explicit states: default, hover, focus-visible (visible ring, ≥3:1 contrast, appears instantly — never animated in), active, disabled, loading, error, success.
-- Confirm before destructive/significant actions (role change, specialty removal, delete) — no silent inline mutation.
+- Every new interactive element (modal, button, select, toggle) ships explicit states: default, hover, focus-visible (visible ring, ≥3:1 contrast, appears instantly — never animated in), active, disabled, loading, error, success.
+- Confirm before destructive/significant actions (role change, specialty reassignment, delete) — no silent inline mutation.
 - Explicit submit feedback: loading → success or error, never silent.
 - Inline form validation on blur, not submit-only.
 - No horizontal scroll; verified at 375px, 768px, 1280px (this project's established breakpoints from Phase A/B).
@@ -84,7 +86,8 @@ Distilled from `/hallmark`'s cross-cutting disciplines (its page-macrostructure/
 ## Out of scope
 
 - No changes to the *content* of the 12 existing Content panels' own internal forms (field lists, validation rules) beyond what's needed to close the 3 missing-section gap and any genuine overlap found during implementation.
-- No changes to the row-level actions already working correctly in Users (activate/deactivate, reset password, delete) beyond the role/specialty consolidation described above.
+- No changes to the row-level actions already working correctly in Users (activate/deactivate, reset password, delete) beyond the role/specialty/service consolidation described above.
+- No changes to `TimeSlot`/`AvailabilityRule` scheduling logic, or to the existing `/api/admin/scheduling` endpoints themselves — only a new UI surface consuming the `professionalService` portion of that already-working API.
 - No auth/permission model changes — this is UI/flow only.
 - No changes to `AdminProfessionalsPanel`'s underlying filter mechanism (`roleFilter`/`roleLock` props) — only to whether that filtering is visibly disclosed and cross-linked.
 - No new brand colors, fonts, or tokens — reuses everything Phase A/B already established.
@@ -96,4 +99,4 @@ Same gate as Phase A/B:
 ```
 npm run build && npm run typecheck && npm run lint && npm run test
 ```
-Plus a manual pass (live, against the real dev DB, admin role) at 375px/768px/1280px, both light and dark mode, covering: the new "Cambiar rol" modal (all 4 role transitions, specialty add/remove, inline specialty creation), the 2 new nav links, and the restructured Content sidebar+panel (including the 3 new sections).
+Plus a manual pass (live, against the real dev DB, admin role) at 375px/768px/1280px, both light and dark mode, covering: the new "Cambiar rol" modal (all 4 role transitions, specialty selection + inline specialty creation, service-offering toggles), the 2 new nav links, and the restructured Content sidebar+panel (including the 3 new sections).
