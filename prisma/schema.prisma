@@ -907,6 +907,18 @@ model HomepageSocialLink {
   @@index([isActive, sortOrder])
 }
 
+model HomepageNavLink {
+  id        String   @id @default(uuid())
+  label     String
+  href      String
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive, sortOrder])
+}
+
 model HomepageContactSupportItem {
   id        String   @id @default(uuid())
   iconKey   String
