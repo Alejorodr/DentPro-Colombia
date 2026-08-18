@@ -6,11 +6,7 @@ import { roleLabels, userRoles, type UserRole } from "@/lib/auth/roles";
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
 import { STATUS_COLORS } from "@/app/portal/components/ui/statusColors";
 import { Card } from "@/app/portal/components/ui/Card";
-
-type Specialty = {
-  id: string;
-  name: string;
-};
+import { RoleModal, type Specialty } from "./RoleModal";
 
 type UserRecord = {
   id: string;
@@ -23,11 +19,6 @@ type UserRecord = {
   _isGoogleUser: boolean;
   patient?: { phone?: string | null; documentId?: string | null } | null;
   professional?: { id: string; specialty?: { id: string; name: string } | null } | null;
-};
-
-type UserDraft = {
-  role?: UserRole;
-  specialtyId?: string;
 };
 
 const defaultFormState = {
@@ -152,10 +143,10 @@ export function AdminUsersPanel({ roleFilter, roleLock }: AdminUsersPanelProps) 
     ...defaultFormState,
     role: roleLock ?? defaultFormState.role,
   }));
-  const [drafts, setDrafts] = useState<Record<string, UserDraft>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [roleModalUserId, setRoleModalUserId] = useState<string | null>(null);
 
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -261,49 +252,6 @@ export function AdminUsersPanel({ roleFilter, roleLock }: AdminUsersPanelProps) 
     setSaving(false);
   };
 
-  const updateDraft = (id: string, next: UserDraft) => {
-    setDrafts((prev) => ({ ...prev, [id]: { ...prev[id], ...next } }));
-  };
-
-  const applyDraft = async (user: UserRecord) => {
-    const draft = drafts[user.id];
-    const resolvedRole = draft?.role ?? roleLock;
-    if (!draft || !resolvedRole) return;
-
-    if (resolvedRole === "PROFESIONAL" && !(draft.specialtyId ?? user.professional?.specialty?.id)) {
-      setError("Selecciona una especialidad para el profesional.");
-      return;
-    }
-
-    setSaving(true);
-    setError(null);
-
-    const response = await fetchWithTimeout(`/api/users/${user.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        role: resolvedRole,
-        specialtyId:
-          resolvedRole === "PROFESIONAL" ? draft.specialtyId ?? user.professional?.specialty?.id : undefined,
-      }),
-    });
-
-    if (response.ok) {
-      const updated = (await response.json()) as UserRecord;
-      setUsers((prev) => prev.map((item) => (item.id === user.id ? { ...item, ...updated } : item)));
-      setDrafts((prev) => {
-        const next = { ...prev };
-        delete next[user.id];
-        return next;
-      });
-    } else {
-      const body = (await response.json().catch(() => null)) as { error?: string } | null;
-      setError(body?.error ?? "No pudimos actualizar el usuario.");
-    }
-
-    setSaving(false);
-  };
-
   const toggleActive = async (user: UserRecord) => {
     setSaving(true);
     setError(null);
@@ -342,6 +290,7 @@ export function AdminUsersPanel({ roleFilter, roleLock }: AdminUsersPanelProps) 
   };
 
   const displayedUsers = users;
+  const roleModalUser = users.find((u) => u.id === roleModalUserId) ?? null;
 
   return (
     <div className="space-y-8">
@@ -520,8 +469,6 @@ export function AdminUsersPanel({ roleFilter, roleLock }: AdminUsersPanelProps) 
         ) : (
           <div className="mt-4 space-y-3">
             {displayedUsers.map((user) => {
-              const draft = drafts[user.id] ?? {};
-              const selectedRole = roleLock ?? draft.role ?? user.role;
               return (
                 <div
                   key={user.id}
@@ -551,50 +498,13 @@ export function AdminUsersPanel({ roleFilter, roleLock }: AdminUsersPanelProps) 
                       </div>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      {roleLock ? (
-                        <div className="input flex h-9 items-center text-xs text-slate-600 dark:text-slate-300">
-                          {roleLabels[roleLock]}
-                        </div>
-                      ) : (
-                        <select
-                          className="input h-9 text-xs"
-                          value={selectedRole}
-                          onChange={(event) =>
-                            updateDraft(user.id, { role: event.target.value as UserRole, specialtyId: "" })
-                          }
-                          disabled={saving}
-                        >
-                          {userRoles.map((role) => (
-                            <option key={role} value={role}>
-                              {roleLabels[role]}
-                            </option>
-                          ))}
-                        </select>
-                      )}
-                      {selectedRole === "PROFESIONAL" ? (
-                        <select
-                          className="input h-9 text-xs"
-                          value={draft.specialtyId ?? user.professional?.specialty?.id ?? ""}
-                          onChange={(event) =>
-                            updateDraft(user.id, { specialtyId: event.target.value, role: selectedRole })
-                          }
-                          disabled={saving}
-                        >
-                          <option value="">Especialidad</option>
-                          {specialties.map((specialty) => (
-                            <option key={specialty.id} value={specialty.id}>
-                              {specialty.name}
-                            </option>
-                          ))}
-                        </select>
-                      ) : null}
                       <button
                         type="button"
                         className="rounded-full border border-brand-teal px-3 py-1 text-xs font-semibold uppercase text-brand-teal"
-                        onClick={() => void applyDraft(user)}
-                        disabled={saving || (!draft.role && !roleLock)}
+                        onClick={() => setRoleModalUserId(user.id)}
+                        disabled={saving}
                       >
-                        Guardar rol
+                        Cambiar rol
                       </button>
                       <button
                         type="button"
@@ -664,6 +574,17 @@ export function AdminUsersPanel({ roleFilter, roleLock }: AdminUsersPanelProps) 
           userId={resetModal.userId}
           userEmail={resetModal.userEmail}
           onClose={() => setResetModal(null)}
+        />
+      ) : null}
+
+      {roleModalUser ? (
+        <RoleModal
+          user={roleModalUser}
+          specialties={specialties}
+          roleLock={roleLock}
+          onClose={() => setRoleModalUserId(null)}
+          onSaved={() => void loadData()}
+          onSpecialtyCreated={(specialty) => setSpecialties((prev) => [...prev, specialty])}
         />
       ) : null}
     </div>
