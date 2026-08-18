@@ -60,7 +60,9 @@ const navByRole: Record<UserRole, NavItem[]> = {
   ],
   ADMINISTRADOR: [
     { label: "Inicio", href: "/portal/admin", icon: House },
+    { label: "Usuarios", href: "/portal/admin/users", icon: Users },
     { label: "Gestión de personal", href: "/portal/admin/staff", icon: Users },
+    { label: "Especialidades", href: "/portal/admin/specialties", icon: ClipboardText },
     { label: "Registro de pacientes", href: "/portal/admin/patients", icon: Users },
     { label: "Servicios y tarifas", href: "/portal/admin/services", icon: ClipboardText },
     { label: "Gestión de agenda", href: "/portal/admin/scheduling", icon: CalendarCheck },
