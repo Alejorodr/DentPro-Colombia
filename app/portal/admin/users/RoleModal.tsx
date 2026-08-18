@@ -62,21 +62,26 @@ export function RoleModal({
     setStatus("loading");
     setErrorMsg(null);
 
-    const response = await fetchWithTimeout(`/api/users/${user.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        role,
-        specialtyId: role === "PROFESIONAL" ? specialtyId : undefined,
-      }),
-    });
+    try {
+      const response = await fetchWithTimeout(`/api/users/${user.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          role,
+          specialtyId: role === "PROFESIONAL" ? specialtyId : undefined,
+        }),
+      });
 
-    if (response.ok) {
-      setStatus("done");
-      onSaved();
-    } else {
-      const body = (await response.json().catch(() => null)) as { error?: string } | null;
-      setErrorMsg(body?.error ?? "No pudimos guardar el rol.");
+      if (response.ok) {
+        setStatus("done");
+        onSaved();
+      } else {
+        const body = (await response.json().catch(() => null)) as { error?: string } | null;
+        setErrorMsg(body?.error ?? "No pudimos guardar el rol.");
+        setStatus("error");
+      }
+    } catch {
+      setErrorMsg("No pudimos conectar con el servidor. Intenta de nuevo.");
       setStatus("error");
     }
   };
@@ -90,25 +95,29 @@ export function RoleModal({
     setCreatingSpecialty(true);
     setCreateSpecialtyError(null);
 
-    const response = await fetchWithTimeout("/api/specialties", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: newSpecialtyName.trim(),
-        defaultSlotDurationMinutes: Number(newSpecialtyDuration),
-      }),
-    });
+    try {
+      const response = await fetchWithTimeout("/api/specialties", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: newSpecialtyName.trim(),
+          defaultSlotDurationMinutes: Number(newSpecialtyDuration),
+        }),
+      });
 
-    if (response.ok) {
-      const created = (await response.json()) as Specialty;
-      onSpecialtyCreated(created);
-      setSpecialtyId(created.id);
-      setShowCreateSpecialty(false);
-      setNewSpecialtyName("");
-      setNewSpecialtyDuration("");
-    } else {
-      const body = (await response.json().catch(() => null)) as { error?: string } | null;
-      setCreateSpecialtyError(body?.error ?? "No pudimos crear la especialidad.");
+      if (response.ok) {
+        const created = (await response.json()) as Specialty;
+        onSpecialtyCreated(created);
+        setSpecialtyId(created.id);
+        setShowCreateSpecialty(false);
+        setNewSpecialtyName("");
+        setNewSpecialtyDuration("");
+      } else {
+        const body = (await response.json().catch(() => null)) as { error?: string } | null;
+        setCreateSpecialtyError(body?.error ?? "No pudimos crear la especialidad.");
+      }
+    } catch {
+      setCreateSpecialtyError("No pudimos conectar con el servidor. Intenta de nuevo.");
     }
 
     setCreatingSpecialty(false);
