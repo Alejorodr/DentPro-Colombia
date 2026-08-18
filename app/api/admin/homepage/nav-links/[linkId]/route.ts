@@ -1,0 +1,107 @@
+import { NextResponse } from "next/server";
+import { z } from "zod";
+
+import { errorResponse } from "@/app/api/_utils/response";
+import { parseJson } from "@/app/api/_utils/validation";
+import { logAuditEvent } from "@/lib/audit";
+import { getPrismaClient } from "@/lib/prisma";
+
+import { requireAdmin, requiredHref, requiredText } from "../../_lib";
+
+const navLinkUpdateSchema = z
+  .object({
+    href: requiredHref(500).optional(),
+    label: requiredText(1, 120).optional(),
+    isActive: z.boolean().optional(),
+  })
+  .refine((payload) => Object.keys(payload).length > 0, "Debes enviar al menos un campo para actualizar.");
+
+type NavLinkRecord = {
+  id: string;
+  href: string;
+  label: string;
+  sortOrder: number;
+  isActive: boolean;
+};
+
+function serializeNavLink(link: NavLinkRecord) {
+  return {
+    id: link.id,
+    href: link.href,
+    label: link.label,
+    sortOrder: link.sortOrder,
+    isActive: link.isActive,
+  };
+}
+
+export async function PATCH(request: Request, context: { params: Promise<{ linkId: string }> }) {
+  const auth = await requireAdmin();
+  if (!auth.ok) return auth.response;
+
+  const { linkId } = await context.params;
+  const { data: body, error } = await parseJson(request, navLinkUpdateSchema);
+  if (error) return error;
+
+  const prisma = getPrismaClient();
+  const existing = await prisma.homepageNavLink.findUnique({ where: { id: linkId } });
+  if (!existing) {
+    return errorResponse("Enlace de navegación no encontrado.", 404);
+  }
+
+  const updated = await prisma.homepageNavLink.update({
+    where: { id: linkId },
+    data: body,
+  });
+
+  await logAuditEvent({
+    actor: { userId: auth.sessionUser.id, role: auth.sessionUser.role },
+    action: "homepage.nav-links.updated",
+    resourceType: "homepage_nav_link",
+    resourceId: updated.id,
+    targetLabel: updated.label,
+    status: "success",
+    metadata: { changedFields: Object.keys(body) },
+  });
+
+  return NextResponse.json({ navLink: serializeNavLink(updated) });
+}
+
+export async function DELETE(_request: Request, context: { params: Promise<{ linkId: string }> }) {
+  const auth = await requireAdmin();
+  if (!auth.ok) return auth.response;
+
+  const { linkId } = await context.params;
+  const prisma = getPrismaClient();
+
+  const existing = await prisma.homepageNavLink.findUnique({ where: { id: linkId } });
+  if (!existing) {
+    return errorResponse("Enlace de navegación no encontrado.", 404);
+  }
+
+  await prisma.homepageNavLink.delete({ where: { id: linkId } });
+
+  const remaining = await prisma.homepageNavLink.findMany({
+    orderBy: { sortOrder: "asc" },
+    select: { id: true },
+  });
+
+  await prisma.$transaction(
+    remaining.map((item: { id: string }, index: number) =>
+      prisma.homepageNavLink.update({
+        where: { id: item.id },
+        data: { sortOrder: index },
+      }),
+    ),
+  );
+
+  await logAuditEvent({
+    actor: { userId: auth.sessionUser.id, role: auth.sessionUser.role },
+    action: "homepage.nav-links.deleted",
+    resourceType: "homepage_nav_link",
+    resourceId: existing.id,
+    targetLabel: existing.label,
+    status: "success",
+  });
+
+  return NextResponse.json({ ok: true });
+}
