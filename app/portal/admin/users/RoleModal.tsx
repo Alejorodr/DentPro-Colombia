@@ -97,6 +97,9 @@ export function RoleModal({
           const body = (await assignmentsResponse.json()) as { assignments: Assignment[] };
           setAssignments(body.assignments ?? []);
         }
+        if (!servicesResponse.ok || !assignmentsResponse.ok) {
+          setAssignmentError("No pudimos cargar los servicios de esta especialidad.");
+        }
       } catch {
         if (!cancelled) {
           setAssignmentError("No pudimos conectar con el servidor. Intenta de nuevo.");
