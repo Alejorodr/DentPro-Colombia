@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { roleLabels, userRoles, type UserRole } from "@/lib/auth/roles";
 import { fetchWithTimeout } from "@/lib/http";
@@ -11,6 +11,22 @@ export type Specialty = {
   name: string;
   defaultSlotDurationMinutes: number;
   active: boolean;
+};
+
+type Service = {
+  id: string;
+  name: string;
+  priceCents: number;
+  durationMinutes: number | null;
+  active: boolean;
+  specialtyId: string | null;
+};
+
+type Assignment = {
+  id: string;
+  serviceId: string;
+  active: boolean;
+  onlineBookable: boolean;
 };
 
 export type RoleModalUser = {
@@ -49,6 +65,53 @@ export function RoleModal({
   const [newSpecialtyDuration, setNewSpecialtyDuration] = useState("");
   const [creatingSpecialty, setCreatingSpecialty] = useState(false);
   const [createSpecialtyError, setCreateSpecialtyError] = useState<string | null>(null);
+
+  const [services, setServices] = useState<Service[]>([]);
+  const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [servicesLoading, setServicesLoading] = useState(false);
+  const [assignmentSaving, setAssignmentSaving] = useState<string | null>(null);
+  const [assignmentError, setAssignmentError] = useState<string | null>(null);
+
+  const professionalId = user.professional?.id;
+
+  useEffect(() => {
+    if (!professionalId || role !== "PROFESIONAL") return;
+
+    let cancelled = false;
+    setServicesLoading(true);
+
+    void (async () => {
+      try {
+        const [servicesResponse, assignmentsResponse] = await Promise.all([
+          fetchWithTimeout("/api/services?pageSize=100"),
+          fetchWithTimeout(`/api/admin/scheduling?professionalId=${professionalId}`),
+        ]);
+
+        if (cancelled) return;
+
+        if (servicesResponse.ok) {
+          const body = (await servicesResponse.json()) as { data: Service[] };
+          setServices(body.data ?? []);
+        }
+        if (assignmentsResponse.ok) {
+          const body = (await assignmentsResponse.json()) as { assignments: Assignment[] };
+          setAssignments(body.assignments ?? []);
+        }
+      } catch {
+        if (!cancelled) {
+          setAssignmentError("No pudimos conectar con el servidor. Intenta de nuevo.");
+        }
+      } finally {
+        if (!cancelled) {
+          setServicesLoading(false);
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [professionalId, role]);
 
   const requiresSpecialty = role === "PROFESIONAL";
   const canSave = !requiresSpecialty || specialtyId.length > 0;
@@ -121,6 +184,53 @@ export function RoleModal({
     }
 
     setCreatingSpecialty(false);
+  };
+
+  const toggleServiceAssignment = async (service: Service, field: "active" | "onlineBookable") => {
+    if (!professionalId) return;
+
+    const existing = assignments.find((a) => a.serviceId === service.id);
+    setAssignmentSaving(service.id);
+    setAssignmentError(null);
+
+    try {
+      const response = existing
+        ? await fetchWithTimeout("/api/admin/scheduling", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              type: "updateAssignment",
+              assignmentId: existing.id,
+              active: field === "active" ? !existing.active : existing.active,
+              onlineBookable: field === "onlineBookable" ? !existing.onlineBookable : existing.onlineBookable,
+            }),
+          })
+        : await fetchWithTimeout("/api/admin/scheduling", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              type: "createAssignment",
+              professionalId,
+              serviceId: service.id,
+              onlineBookable: field === "onlineBookable",
+            }),
+          });
+
+      if (response.ok) {
+        const body = (await response.json()) as { assignment: Assignment };
+        setAssignments((prev) => {
+          const withoutCurrent = prev.filter((a) => a.serviceId !== service.id);
+          return [...withoutCurrent, body.assignment];
+        });
+      } else {
+        const body = (await response.json().catch(() => null)) as { error?: string } | null;
+        setAssignmentError(body?.error ?? "No pudimos actualizar el servicio.");
+      }
+    } catch {
+      setAssignmentError("No pudimos conectar con el servidor. Intenta de nuevo.");
+    }
+
+    setAssignmentSaving(null);
   };
 
   return (
@@ -244,6 +354,74 @@ export function RoleModal({
                   + Crear especialidad
                 </button>
               )}
+            </section>
+          ) : null}
+
+          {role === "PROFESIONAL" && professionalId && specialtyId ? (
+            <section>
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                Servicios que ofrece
+              </p>
+              {servicesLoading ? (
+                <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Cargando servicios...</p>
+              ) : (
+                <div className="mt-2 space-y-2">
+                  {services
+                    .filter((service) => service.specialtyId === specialtyId)
+                    .map((service) => {
+                      const assignment = assignments.find((a) => a.serviceId === service.id);
+                      const isActive = assignment?.active ?? false;
+                      const isBookable = assignment?.onlineBookable ?? false;
+                      const isSaving = assignmentSaving === service.id;
+                      return (
+                        <div
+                          key={service.id}
+                          className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200 p-3 text-sm dark:border-surface-muted"
+                        >
+                          <div>
+                            <p className="font-semibold text-slate-900 dark:text-white">{service.name}</p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400">
+                              {new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(service.priceCents / 100)}
+                              {service.durationMinutes ? ` · ${service.durationMinutes} min` : ""}
+                            </p>
+                          </div>
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              disabled={isSaving}
+                              onClick={() => void toggleServiceAssignment(service, "active")}
+                              className={`rounded-full border px-3 py-1 text-xs font-semibold uppercase ${
+                                isActive
+                                  ? STATUS_COLORS.Active.border + " " + STATUS_COLORS.Active.text
+                                  : STATUS_COLORS.Inactive.border + " " + STATUS_COLORS.Inactive.text
+                              }`}
+                            >
+                              {isActive ? "Activo" : "Inactivo"}
+                            </button>
+                            <button
+                              type="button"
+                              disabled={isSaving || !isActive}
+                              onClick={() => void toggleServiceAssignment(service, "onlineBookable")}
+                              className={`rounded-full border px-3 py-1 text-xs font-semibold uppercase disabled:opacity-40 ${
+                                isBookable
+                                  ? "border-brand-teal text-brand-teal"
+                                  : "border-slate-200 text-slate-500 dark:border-surface-muted dark:text-slate-400"
+                              }`}
+                            >
+                              {isBookable ? "Reservable online" : "No reservable online"}
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  {services.filter((service) => service.specialtyId === specialtyId).length === 0 ? (
+                    <p className="text-sm text-slate-500 dark:text-slate-400">
+                      No hay servicios cargados para esta especialidad todavía.
+                    </p>
+                  ) : null}
+                </div>
+              )}
+              {assignmentError ? <p className="mt-2 text-sm text-red-600 dark:text-red-400">{assignmentError}</p> : null}
             </section>
           ) : null}
 
