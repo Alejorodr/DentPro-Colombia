@@ -1,20 +1,31 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 type Props = {
   title: string;
   description: string;
   badge?: string;
   defaultOpen?: boolean;
+  slug?: string;
+  forceOpenSlug?: string | null;
   children: ReactNode;
 };
 
-export function CollapsibleCard({ title, description, badge, defaultOpen = true, children }: Props) {
+export function CollapsibleCard({ title, description, badge, defaultOpen = true, slug, forceOpenSlug, children }: Props) {
   const [open, setOpen] = useState(defaultOpen);
 
+  useEffect(() => {
+    if (forceOpenSlug && slug && forceOpenSlug === slug) {
+      setOpen(true);
+    }
+  }, [forceOpenSlug, slug]);
+
   return (
-    <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-xs shadow-slate-100/60 transition-colors dark:border-surface-muted/80 dark:bg-surface-elevated/80 dark:shadow-surface-dark">
+    <div
+      id={slug ? `section-${slug}` : undefined}
+      className="scroll-mt-24 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-xs shadow-slate-100/60 transition-colors dark:border-surface-muted/80 dark:bg-surface-elevated/80 dark:shadow-surface-dark"
+    >
       <button
         type="button"
         onClick={() => setOpen((p) => !p)}

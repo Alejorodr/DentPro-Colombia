@@ -128,6 +128,7 @@ type FieldConfig = {
 };
 
 type SectionConfig = {
+  slug: string;
   title: string;
   description: string;
   fields: FieldConfig[];
@@ -135,6 +136,7 @@ type SectionConfig = {
 
 const SECTIONS: SectionConfig[] = [
   {
+    slug: "identidad",
     title: "Identidad de la empresa",
     description: "Nombre y logo que aparecen en la barra de navegación del sitio.",
     fields: [
@@ -143,6 +145,7 @@ const SECTIONS: SectionConfig[] = [
     ],
   },
   {
+    slug: "info-superior",
     title: "Información superior",
     description: "Contenido del InfoBar visible en la parte superior del homepage.",
     fields: [
@@ -155,6 +158,7 @@ const SECTIONS: SectionConfig[] = [
     ],
   },
   {
+    slug: "hero",
     title: "Hero principal",
     description: "Bloque principal de portada (badge, CTAs, imagen, testimonio y highlight).",
     fields: [
@@ -176,6 +180,7 @@ const SECTIONS: SectionConfig[] = [
     ],
   },
   {
+    slug: "servicios",
     title: "Sección servicios",
     description: "Encabezados del bloque de servicios del homepage.",
     fields: [
@@ -184,6 +189,7 @@ const SECTIONS: SectionConfig[] = [
     ],
   },
   {
+    slug: "especialistas",
     title: "Sección especialistas",
     description: "Encabezados del bloque del equipo clínico.",
     fields: [
@@ -193,6 +199,7 @@ const SECTIONS: SectionConfig[] = [
     ],
   },
   {
+    slug: "agenda",
     title: "Agenda",
     description: "Textos de apoyo del bloque de agendamiento.",
     fields: [
@@ -205,6 +212,7 @@ const SECTIONS: SectionConfig[] = [
     ],
   },
   {
+    slug: "contacto",
     title: "Contacto",
     description: "Canales y encabezados del bloque de contacto.",
     fields: [
@@ -230,6 +238,7 @@ const SECTIONS: SectionConfig[] = [
     ],
   },
   {
+    slug: "acciones-flotantes",
     title: "Acciones flotantes",
     description: "Datos usados por los botones flotantes del homepage.",
     fields: [
@@ -242,6 +251,7 @@ const SECTIONS: SectionConfig[] = [
     ],
   },
   {
+    slug: "seo",
     title: "SEO y metadatos",
     description: "Controla cómo aparece el sitio en Google y en los resultados de búsqueda.",
     fields: [
@@ -289,7 +299,7 @@ function normalizeForm(input: Partial<Record<keyof HomepageSettingsForm, string 
   return output;
 }
 
-export function AdminHomepageSettingsPanel() {
+export function AdminHomepageSettingsPanel({ openSlug }: { openSlug?: string | null } = {}) {
   const [form, setForm] = useState<HomepageSettingsForm>(EMPTY_FORM);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -384,10 +394,12 @@ export function AdminHomepageSettingsPanel() {
       {!loading
         ? SECTIONS.map((section, i) => (
             <CollapsibleCard
-              key={section.title}
+              key={section.slug}
+              slug={section.slug}
+              forceOpenSlug={openSlug}
               title={section.title}
               description={section.description}
-              defaultOpen={i === 0}
+              defaultOpen={openSlug ? section.slug === openSlug : i === 0}
             >
               <div className="grid gap-4 md:grid-cols-2">
                 {section.fields.map((field) => {
