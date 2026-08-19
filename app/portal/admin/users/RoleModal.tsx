@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { roleLabels, userRoles, type UserRole } from "@/lib/auth/roles";
 import { fetchWithTimeout } from "@/lib/http";
@@ -40,6 +40,12 @@ export type RoleModalUser = {
 };
 
 type SaveStatus = "idle" | "loading" | "done" | "error";
+
+const currencyFormatter = new Intl.NumberFormat("es-CO", {
+  style: "currency",
+  currency: "COP",
+  maximumFractionDigits: 0,
+});
 
 export function RoleModal({
   user,
@@ -120,6 +126,11 @@ export function RoleModal({
 
   const requiresSpecialty = role === "PROFESIONAL";
   const canSave = !requiresSpecialty || specialtyId.length > 0;
+
+  const specialtyServices = useMemo(
+    () => services.filter((service) => service.specialtyId === specialtyId),
+    [services, specialtyId],
+  );
 
   const handleSave = async () => {
     if (!canSave) {
@@ -377,9 +388,7 @@ export function RoleModal({
                 <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Cargando servicios...</p>
               ) : (
                 <div className="mt-2 space-y-2">
-                  {services
-                    .filter((service) => service.specialtyId === specialtyId)
-                    .map((service) => {
+                  {specialtyServices.map((service) => {
                       const assignment = assignments.find((a) => a.serviceId === service.id);
                       const isActive = assignment?.active ?? false;
                       const isBookable = assignment?.onlineBookable ?? false;
@@ -392,7 +401,7 @@ export function RoleModal({
                           <div>
                             <p className="font-semibold text-slate-900 dark:text-white">{service.name}</p>
                             <p className="text-xs text-slate-500 dark:text-slate-400">
-                              {new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(service.priceCents / 100)}
+                              {currencyFormatter.format(service.priceCents / 100)}
                               {service.durationMinutes ? ` · ${service.durationMinutes} min` : ""}
                             </p>
                           </div>
@@ -425,7 +434,7 @@ export function RoleModal({
                         </div>
                       );
                     })}
-                  {services.filter((service) => service.specialtyId === specialtyId).length === 0 ? (
+                  {specialtyServices.length === 0 ? (
                     <p className="text-sm text-slate-500 dark:text-slate-400">
                       No hay servicios cargados para esta especialidad todavía.
                     </p>

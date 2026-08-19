@@ -13,7 +13,7 @@ export default async function AdminStaffPage() {
         title="Equipo clínico"
         description="Administra profesionales, disponibilidad y perfiles en un solo lugar."
       />
-      <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+      <p className="text-sm text-slate-600 dark:text-slate-400">
         Mostrando solo profesionales.{" "}
         <Link href="/portal/admin/users" className="font-semibold text-brand-teal hover:underline dark:text-accent-cyan">
           Ver todos los usuarios
