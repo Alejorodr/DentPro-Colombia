@@ -89,7 +89,7 @@ function ContentShellInner() {
           <nav aria-label="Breadcrumb" className="text-xs font-semibold text-slate-400">
             Contenido <span aria-hidden>›</span> <span className="text-slate-600 dark:text-slate-300">{findSectionLabel(activeSection)}</span>
           </nav>
-          <SectionPanel section={activeSection} />
+          <SectionPanel key={activeSection} section={activeSection} />
         </div>
       </div>
     </div>
