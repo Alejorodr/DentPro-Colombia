@@ -27,6 +27,20 @@ function SectionPanel({ section }: { section: string }) {
       return <AdminHomepageSettingsPanel openSlug="info-superior" />;
     case "floating":
       return <AdminHomepageSettingsPanel openSlug="acciones-flotantes" />;
+    case "identidad":
+      return <AdminHomepageSettingsPanel openSlug="identidad" />;
+    case "seo":
+      return <AdminHomepageSettingsPanel openSlug="seo" />;
+    case "hero-copy":
+      return <AdminHomepageSettingsPanel openSlug="hero" />;
+    case "servicios-copy":
+      return <AdminHomepageSettingsPanel openSlug="servicios" />;
+    case "especialistas-copy":
+      return <AdminHomepageSettingsPanel openSlug="especialistas" />;
+    case "agenda-copy":
+      return <AdminHomepageSettingsPanel openSlug="agenda" />;
+    case "contacto-copy":
+      return <AdminHomepageSettingsPanel openSlug="contacto" />;
     case "navbar":
       return <AdminHomepageNavLinksPanel />;
     case "hero-stats":

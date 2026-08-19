@@ -9,7 +9,13 @@ const GROUPS: SidebarGroup[] = [
   {
     label: "Marca / Header",
     items: [
-      { slug: "settings", label: "Textos y logo", description: "Nombre de la empresa, logo y SEO." },
+      {
+        slug: "settings",
+        label: "Configuración completa",
+        description: "Vista completa: identidad, hero, textos de cada sección y SEO en un solo lugar.",
+      },
+      { slug: "identidad", label: "Identidad de marca", description: "Nombre de la empresa y logo." },
+      { slug: "seo", label: "SEO y metadatos", description: "Título y descripción para buscadores." },
       { slug: "navbar", label: "Navbar", description: "Enlaces del menú de navegación superior." },
       { slug: "infobar", label: "Barra superior", description: "Ubicación, horario, WhatsApp y email del InfoBar." },
     ],
@@ -18,18 +24,33 @@ const GROUPS: SidebarGroup[] = [
     label: "Hero",
     items: [
       { slug: "hero-stats", label: "Estadísticas hero", description: "Contadores debajo de los botones principales." },
+      {
+        slug: "hero-copy",
+        label: "Textos del hero",
+        description: "Título, descripción, botones, testimonio e imagen principal.",
+      },
     ],
   },
   {
     label: "Servicios",
     items: [
       { slug: "services", label: "Catálogo de servicios", description: "Tarjetas de la sección '¿Qué hacemos?'." },
+      {
+        slug: "servicios-copy",
+        label: "Encabezado de servicios",
+        description: "Título y descripción de la sección \"¿Qué hacemos?\".",
+      },
     ],
   },
   {
     label: "Equipo",
     items: [
       { slug: "specialists", label: "Especialistas", description: "Tarjetas del equipo clínico." },
+      {
+        slug: "especialistas-copy",
+        label: "Encabezado del equipo",
+        description: "Badge, título y descripción del bloque de especialistas.",
+      },
     ],
   },
   {
@@ -37,6 +58,11 @@ const GROUPS: SidebarGroup[] = [
     items: [
       { slug: "booking", label: "Opciones de agendamiento", description: "Métodos disponibles para agendar." },
       { slug: "benefits", label: "Beneficios de agendar", description: "Textos debajo del formulario de agenda." },
+      {
+        slug: "agenda-copy",
+        label: "Textos de agenda",
+        description: "Título, descripción y notas del formulario de agendamiento.",
+      },
     ],
   },
   {
@@ -52,6 +78,11 @@ const GROUPS: SidebarGroup[] = [
       { slug: "locations", label: "Sedes / ubicaciones", description: "Tarjetas de sede con dirección y horario." },
       { slug: "legal", label: "Enlaces legales", description: "Política de privacidad, términos, etc." },
       { slug: "floating", label: "Botones flotantes", description: "WhatsApp y teléfono flotantes." },
+      {
+        slug: "contacto-copy",
+        label: "Textos de contacto",
+        description: "Título y descripción del bloque de contacto.",
+      },
     ],
   },
   {
