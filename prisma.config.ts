@@ -29,5 +29,11 @@ export default defineConfig({
   datasource: {
     // Para deploy (migrate deploy) necesita SI o SI una url aquí:
     url: fallbackDatabaseUrl,
+    // Dedicated Neon branch used only as scratch space for `migrate dev`'s
+    // shadow-database diffing — never the real dev/prod database. Neon's
+    // pooled connection can't CREATE DATABASE, which is what a self-managed
+    // shadow DB would need; a real Postgres server would use its own scratch
+    // database instead of a separate branch.
+    shadowDatabaseUrl: process.env.SHADOW_DATABASE_URL || undefined,
   },
 });
