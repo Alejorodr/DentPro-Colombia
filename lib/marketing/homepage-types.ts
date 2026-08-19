@@ -79,6 +79,11 @@ export type HomepageLegalLinkContent = {
   label: string;
 };
 
+export type HomepageNavLinkContent = {
+  label: string;
+  href: string;
+};
+
 export type HomepageFaqContent = {
   question: string;
   answer: string;
@@ -97,6 +102,7 @@ export type HomepageNormalizedContent = {
     email: { href: string; label: string; icon: MarketingIconKey };
     socials: HomepageSocialLinkContent[];
   };
+  navLinks: HomepageNavLinkContent[];
   hero: {
     badge: string;
     title: string;

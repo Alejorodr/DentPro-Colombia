@@ -35,6 +35,7 @@ export async function getHomepageContent(prismaClient?: PrismaClient): Promise<H
     locations,
     legalLinks,
     faqs,
+    navLinks,
   ] = await prisma.$transaction([
     prisma.homepageSettings.findUnique({ where: { id: HOMEPAGE_SETTINGS_SINGLETON_ID } }),
     prisma.homepageService.findMany({
@@ -55,6 +56,7 @@ export async function getHomepageContent(prismaClient?: PrismaClient): Promise<H
     prisma.homepageLocation.findMany({ where: { isActive: true }, orderBy: { sortOrder: "asc" } }),
     prisma.homepageLegalLink.findMany({ where: { isActive: true }, orderBy: { sortOrder: "asc" } }),
     prisma.homepageFaq.findMany({ where: { isActive: true }, orderBy: { sortOrder: "asc" } }),
+    prisma.homepageNavLink.findMany({ where: { isActive: true }, orderBy: { sortOrder: "asc" } }),
   ]);
 
   const fallback = HOMEPAGE_DEFAULT_CONTENT;
@@ -101,6 +103,10 @@ export async function getHomepageContent(prismaClient?: PrismaClient): Promise<H
             }))
           : fallback.infoBar.socials,
     },
+    navLinks:
+      navLinks.length > 0
+        ? navLinks.map((link) => ({ href: link.href, label: link.label }))
+        : fallback.navLinks,
     hero: {
       badge: settings?.heroBadge ?? fallback.hero.badge,
       title: settings?.heroTitle ?? fallback.hero.title,
@@ -380,6 +386,17 @@ export async function bootstrapHomepageContent(prismaClient?: PrismaClient) {
       data: source.booking.benefits.map((benefit, index) => ({
         iconKey: benefit.icon,
         text: benefit.text,
+        sortOrder: index,
+        isActive: true,
+      })),
+    });
+  }
+
+  if ((await prisma.homepageNavLink.count()) === 0) {
+    await prisma.homepageNavLink.createMany({
+      data: source.navLinks.map((link, index) => ({
+        href: link.href,
+        label: link.label,
         sortOrder: index,
         isActive: true,
       })),

@@ -26,6 +26,13 @@ export const HOMEPAGE_DEFAULT_CONTENT: HomepageNormalizedContent = {
       { href: "https://www.tiktok.com/@dentprocol", label: "TikTok", icon: "TiktokLogo" },
     ],
   },
+  navLinks: [
+    { href: "#servicios", label: "Servicios" },
+    { href: "#especialistas", label: "Especialistas" },
+    { href: "#agenda", label: "Agenda" },
+    { href: "#preguntas-frecuentes", label: "FAQ" },
+    { href: "#contacto", label: "Contacto" },
+  ],
   hero: {
     badge: "Odontología general y especializada en Chía",
     title: "Cuidamos tu sonrisa con tecnología y calidez humana",
