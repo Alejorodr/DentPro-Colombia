@@ -6,6 +6,7 @@ import { roleLabels, userRoles, type UserRole } from "@/lib/auth/roles";
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
 import { STATUS_COLORS } from "@/app/portal/components/ui/statusColors";
 import { Card } from "@/app/portal/components/ui/Card";
+import { useModalDialog } from "@/app/portal/components/ui/useModalDialog";
 import { RoleModal, type Specialty } from "./RoleModal";
 
 type UserRecord = {
@@ -47,6 +48,7 @@ function ResetPasswordModal({
   userEmail: string;
   onClose: () => void;
 }) {
+  const containerRef = useModalDialog(onClose);
   const [status, setStatus] = useState<"idle" | "loading" | "done" | "error">("idle");
   const [password, setPassword] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -79,8 +81,14 @@ function ResetPasswordModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
       {/* Deliberately not <Card>: this modal uses a heavier border-white/70 + shadow-xl treatment
           for contrast against the dark backdrop overlay, not the standard portal Card look. */}
-      <div className="w-full max-w-sm rounded-2xl border border-white/70 bg-white p-6 shadow-xl">
-        <h3 className="text-base font-semibold text-slate-900">Resetear contraseña</h3>
+      <div
+        ref={containerRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="reset-password-modal-title"
+        className="w-full max-w-sm rounded-2xl border border-white/70 bg-white p-6 shadow-xl"
+      >
+        <h3 id="reset-password-modal-title" className="text-base font-semibold text-slate-900">Resetear contraseña</h3>
         <p className="mt-1 text-sm text-slate-600">{userEmail}</p>
 
         {status === "idle" && (

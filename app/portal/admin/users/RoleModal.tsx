@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { roleLabels, userRoles, type UserRole } from "@/lib/auth/roles";
 import { fetchWithTimeout } from "@/lib/http";
 import { STATUS_COLORS } from "@/app/portal/components/ui/statusColors";
+import { useModalDialog } from "@/app/portal/components/ui/useModalDialog";
 
 export type Specialty = {
   id: string;
@@ -55,6 +56,7 @@ export function RoleModal({
   onSaved: () => void;
   onSpecialtyCreated: (specialty: Specialty) => void;
 }) {
+  const containerRef = useModalDialog(onClose);
   const [role, setRole] = useState<UserRole>(roleLock ?? user.role);
   const [specialtyId, setSpecialtyId] = useState(user.professional?.specialty?.id ?? "");
   const [status, setStatus] = useState<SaveStatus>("idle");
@@ -238,11 +240,17 @@ export function RoleModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 px-4">
-      <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl dark:bg-surface-elevated">
+      <div
+        ref={containerRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="role-modal-title"
+        className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl dark:bg-surface-elevated"
+      >
         <div className="flex items-start justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Usuarios</p>
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+            <h3 id="role-modal-title" className="text-lg font-semibold text-slate-900 dark:text-white">
               Cambiar rol · {user.name} {user.lastName}
             </h3>
           </div>
