@@ -34,14 +34,6 @@ function safeJsonLd(data: unknown): string {
   return JSON.stringify(data).replace(/</g, "\\u003c");
 }
 
-const NAV_LINKS = [
-  { href: "#servicios", label: "Servicios" },
-  { href: "#especialistas", label: "Especialistas" },
-  { href: "#agenda", label: "Agenda" },
-  { href: "#preguntas-frecuentes", label: "FAQ" },
-  { href: "#contacto", label: "Contacto" },
-];
-
 const NAV_CTA = { href: "/appointments/new", label: "Reservar turno" };
 const NAV_LOGIN = { href: "/auth/login", label: "Iniciar sesión" };
 
@@ -61,7 +53,7 @@ export default async function Home() {
       initials: marketingContent.brand.initials,
       logoUrl: marketingContent.brand.logoUrl ?? undefined,
     },
-    links: NAV_LINKS,
+    links: homepageContent.navLinks,
     cta: NAV_CTA,
     login: NAV_LOGIN,
   };
