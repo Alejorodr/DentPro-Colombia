@@ -15,6 +15,7 @@ const socialLinkUpdateSchema = z
     label: requiredText(1, 120).optional(),
     iconKey: z.enum(MARKETING_ICON_KEYS).optional(),
     isActive: z.boolean().optional(),
+    placements: z.array(z.enum(["INFOBAR", "FLOATING", "FOOTER", "BOOKING"])).optional(),
   })
   .refine((payload) => Object.keys(payload).length > 0, "Debes enviar al menos un campo para actualizar.");
 
@@ -25,6 +26,7 @@ type SocialLinkRecord = {
   iconKey: string;
   sortOrder: number;
   isActive: boolean;
+  placements: string[];
 };
 
 function serializeSocialLink(link: SocialLinkRecord) {
@@ -35,6 +37,7 @@ function serializeSocialLink(link: SocialLinkRecord) {
     iconKey: normalizeMarketingIconKey(link.iconKey, "InstagramLogo"),
     sortOrder: link.sortOrder,
     isActive: link.isActive,
+    placements: link.placements,
   };
 }
 

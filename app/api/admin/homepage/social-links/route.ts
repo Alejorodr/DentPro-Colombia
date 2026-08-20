@@ -13,6 +13,7 @@ const socialLinkCreateSchema = z.object({
   label: requiredText(1, 120),
   iconKey: z.enum(MARKETING_ICON_KEYS),
   isActive: z.boolean().optional(),
+  placements: z.array(z.enum(["INFOBAR", "FLOATING", "FOOTER", "BOOKING"])).default([]),
 });
 
 type SocialLinkRecord = {
@@ -22,6 +23,7 @@ type SocialLinkRecord = {
   iconKey: string;
   sortOrder: number;
   isActive: boolean;
+  placements: string[];
 };
 
 function serializeSocialLink(link: SocialLinkRecord) {
@@ -32,6 +34,7 @@ function serializeSocialLink(link: SocialLinkRecord) {
     iconKey: normalizeMarketingIconKey(link.iconKey, "InstagramLogo"),
     sortOrder: link.sortOrder,
     isActive: link.isActive,
+    placements: link.placements,
   };
 }
 
@@ -61,6 +64,7 @@ export async function POST(request: Request) {
       label: body.label,
       iconKey: body.iconKey,
       isActive: body.isActive ?? true,
+      placements: body.placements,
       sortOrder: (maxSort._max.sortOrder ?? -1) + 1,
     },
   });
