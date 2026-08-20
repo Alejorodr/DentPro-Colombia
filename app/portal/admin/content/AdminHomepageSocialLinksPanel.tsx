@@ -6,6 +6,8 @@ import { Card } from "@/app/portal/components/ui/Card";
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
 import { MARKETING_ICON_KEYS } from "@/lib/marketing/homepage-types";
 
+import { PlacementCheckboxes } from "./components/PlacementCheckboxes";
+
 type SocialLinkItem = {
   id: string;
   href: string;
@@ -13,6 +15,7 @@ type SocialLinkItem = {
   iconKey: (typeof MARKETING_ICON_KEYS)[number];
   sortOrder: number;
   isActive: boolean;
+  placements: string[];
 };
 
 type SocialLinksApiResponse = {
@@ -27,6 +30,7 @@ const EMPTY_SOCIAL_LINK = {
   label: "",
   iconKey: "InstagramLogo" as (typeof MARKETING_ICON_KEYS)[number],
   isActive: true,
+  placements: [] as string[],
 };
 
 export function AdminHomepageSocialLinksPanel() {
@@ -99,6 +103,7 @@ export function AdminHomepageSocialLinksPanel() {
         label: socialLink.label,
         iconKey: socialLink.iconKey,
         isActive: socialLink.isActive,
+        placements: socialLink.placements,
       }),
     });
 
@@ -180,6 +185,14 @@ export function AdminHomepageSocialLinksPanel() {
           <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
             <input type="checkbox" checked={newSocialLink.isActive} onChange={(e) => setNewSocialLink((prev) => ({ ...prev, isActive: e.target.checked }))} disabled={saving} /> Activo
           </label>
+          <div className="md:col-span-2">
+            <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Ubicaciones</p>
+            <PlacementCheckboxes
+              value={newSocialLink.placements}
+              onChange={(next) => setNewSocialLink((prev) => ({ ...prev, placements: next }))}
+              disabled={saving}
+            />
+          </div>
         </div>
         <button type="button" className="rounded-full bg-brand-teal px-4 py-2 text-xs font-semibold uppercase text-white disabled:opacity-60" onClick={createSocialLink} disabled={saving}>
           Crear enlace
@@ -212,6 +225,14 @@ export function AdminHomepageSocialLinksPanel() {
               <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                 <input type="checkbox" checked={socialLink.isActive} onChange={(e) => setSocialLinks((prev) => prev.map((item) => (item.id === socialLink.id ? { ...item, isActive: e.target.checked } : item)))} disabled={saving} /> Activo
               </label>
+              <div className="md:col-span-2">
+                <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Ubicaciones</p>
+                <PlacementCheckboxes
+                  value={socialLink.placements}
+                  onChange={(next) => setSocialLinks((prev) => prev.map((item) => (item.id === socialLink.id ? { ...item, placements: next } : item)))}
+                  disabled={saving}
+                />
+              </div>
               <button type="button" className="rounded-full bg-brand-teal px-4 py-2 text-xs font-semibold uppercase text-white disabled:opacity-60 md:justify-self-start" onClick={() => saveSocialLink(socialLink)} disabled={saving}>
                 Guardar enlace
               </button>
