@@ -6,15 +6,7 @@ import { logAuditEvent } from "@/lib/audit";
 import { getPrismaClient } from "@/lib/prisma";
 
 import { requireAdmin, requiredText } from "../_lib";
-
-const PLACEMENTS = ["INFOBAR", "FLOATING", "FOOTER", "BOOKING"] as const;
-const CHANNEL_TYPES = ["WHATSAPP", "PHONE", "EMAIL"] as const;
-
-function validateValue(type: string, value: string) {
-  if (type === "EMAIL") return z.string().email().safeParse(value).success;
-  // WhatsApp/Phone: digits only, 7-15 chars (E.164-ish, no strict validation needed here)
-  return /^\d{7,15}$/.test(value);
-}
+import { CHANNEL_TYPES, PLACEMENTS, validateValue } from "./_types";
 
 const channelCreateSchema = z
   .object({

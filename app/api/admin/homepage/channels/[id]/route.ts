@@ -7,9 +7,7 @@ import { logAuditEvent } from "@/lib/audit";
 import { getPrismaClient } from "@/lib/prisma";
 
 import { requireAdmin, requiredText } from "../../_lib";
-
-const PLACEMENTS = ["INFOBAR", "FLOATING", "FOOTER", "BOOKING"] as const;
-const CHANNEL_TYPES = ["WHATSAPP", "PHONE", "EMAIL"] as const;
+import { CHANNEL_TYPES, PLACEMENTS, validateValue } from "../_types";
 
 const channelUpdateSchema = z
   .object({
@@ -55,6 +53,15 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   const existing = await prisma.homepageChannel.findUnique({ where: { id } });
   if (!existing) {
     return errorResponse("Canal no encontrado.", 404);
+  }
+
+  // Cross-field validation: if either type or value is being updated, validate the effective pair
+  if (body.type !== undefined || body.value !== undefined) {
+    const effectiveType = body.type ?? existing.type;
+    const effectiveValue = body.value ?? existing.value;
+    if (!validateValue(effectiveType, effectiveValue)) {
+      return errorResponse("Valor inválido para el tipo de canal seleccionado.", 400);
+    }
   }
 
   const updated = await prisma.homepageChannel.update({ where: { id }, data: body });

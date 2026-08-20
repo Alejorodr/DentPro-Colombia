@@ -42,7 +42,7 @@ export async function PATCH(request: Request) {
     action: "homepage.channels.reordered",
     resourceType: "homepage_channel",
     status: "success",
-    metadata: { itemCount: body.orderedIds.length },
+    metadata: { itemCount: body.orderedIds.length, order: body.orderedIds },
   });
 
   return NextResponse.json({ ok: true });
