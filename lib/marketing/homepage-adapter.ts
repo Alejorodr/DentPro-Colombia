@@ -1,16 +1,17 @@
-import type { HomepageNormalizedContent, MarketingIconKey } from "@/lib/marketing/homepage-types";
-
-type FloatingAction = {
-  href: string;
-  label: string;
-  icon: MarketingIconKey;
-  className?: string;
-  external?: boolean;
-};
+import type {
+  HomepageChannelContent,
+  HomepageNormalizedContent,
+  HomepageSocialLinkContent,
+} from "@/lib/marketing/homepage-types";
 
 export type HomepageViewModel = {
   brand: HomepageNormalizedContent["brand"];
-  infoBar: HomepageNormalizedContent["infoBar"];
+  infoBar: {
+    location: HomepageNormalizedContent["infoBar"]["location"];
+    schedule: HomepageNormalizedContent["infoBar"]["schedule"];
+    channels: HomepageChannelContent[];
+    socials: HomepageSocialLinkContent[];
+  };
   hero: HomepageNormalizedContent["hero"];
   services: HomepageNormalizedContent["services"];
   specialists: HomepageNormalizedContent["specialists"];
@@ -19,22 +20,10 @@ export type HomepageViewModel = {
     mapEmbedUrl?: string;
   };
   floatingActions: {
-    actions: FloatingAction[];
+    channels: HomepageChannelContent[];
+    socials: HomepageSocialLinkContent[];
   };
 };
-
-function normalizePhoneHref(phoneNumber: string): string {
-  if (phoneNumber.startsWith("tel:")) {
-    return phoneNumber;
-  }
-
-  return `tel:${phoneNumber}`;
-}
-
-function normalizeWhatsappHref(phoneNumber: string): string {
-  const digitsOnly = phoneNumber.replace(/\D/g, "");
-  return `https://wa.me/${digitsOnly}`;
-}
 
 export function filterByPlacement<T extends { placements: string[] }>(items: T[], placement: string): T[] {
   return items.filter((item) => item.placements.includes(placement));
@@ -73,7 +62,12 @@ export function adaptHomepageContent(content: HomepageNormalizedContent): Homepa
 
   return {
     brand: content.brand,
-    infoBar: content.infoBar,
+    infoBar: {
+      location: content.infoBar.location,
+      schedule: content.infoBar.schedule,
+      channels: filterByPlacement(content.channels, "INFOBAR"),
+      socials: filterByPlacement(content.infoBar.socials, "INFOBAR"),
+    },
     hero: content.hero,
     services: content.services,
     specialists: content.specialists,
@@ -83,26 +77,8 @@ export function adaptHomepageContent(content: HomepageNormalizedContent): Homepa
       mapEmbedUrl,
     },
     floatingActions: {
-      actions: [
-        {
-          href: normalizeWhatsappHref(content.floatingActions.whatsappNumber),
-          label: "Chat en WhatsApp",
-          icon: "WhatsappLogo",
-          className: "whatsapp",
-          external: true,
-        },
-        {
-          href: normalizePhoneHref(content.floatingActions.phoneNumber),
-          label: "Llamar a DentPro",
-          icon: "Phone",
-          className: "phone",
-        },
-        {
-          href: "#agenda",
-          label: "Ir a agenda",
-          icon: "CalendarCheck",
-        },
-      ],
+      channels: filterByPlacement(content.channels, "FLOATING"),
+      socials: filterByPlacement(content.infoBar.socials, "FLOATING"),
     },
   };
 }

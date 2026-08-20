@@ -1,16 +1,19 @@
 import type { MarketingIconName } from "./icon-types";
 import { resolveMarketingIcon } from "./icon-registry";
 import { Star } from "@/components/ui/Icon";
+import { buildEmailHref, buildPhoneHref, buildWhatsappHref } from "@/lib/marketing/homepage-adapter";
 
 type IconText = {
   text: string;
   icon: MarketingIconName;
 };
 
-type IconLink = {
-  href: string;
+type ChannelType = "WHATSAPP" | "PHONE" | "EMAIL";
+
+type Channel = {
+  type: ChannelType;
+  value: string;
   label: string;
-  icon: MarketingIconName;
 };
 
 type SocialLink = {
@@ -28,17 +31,31 @@ interface GoogleRatingBadge {
 interface InfoBarProps {
   location: IconText;
   schedule: IconText;
-  whatsapp: IconLink;
-  email: IconLink;
+  channels: Channel[];
   socials: SocialLink[];
   googleRating?: GoogleRatingBadge;
 }
 
-export function InfoBar({ location, schedule, whatsapp, email, socials, googleRating }: InfoBarProps) {
+const CHANNEL_ICON: Record<ChannelType, MarketingIconName> = {
+  WHATSAPP: "ChatCircleDots",
+  PHONE: "Phone",
+  EMAIL: "EnvelopeSimple",
+};
+
+function buildChannelHref(channel: Channel): string {
+  switch (channel.type) {
+    case "WHATSAPP":
+      return buildWhatsappHref(channel.value);
+    case "PHONE":
+      return buildPhoneHref(channel.value);
+    case "EMAIL":
+      return buildEmailHref(channel.value);
+  }
+}
+
+export function InfoBar({ location, schedule, channels, socials, googleRating }: InfoBarProps) {
   const LocationIcon = resolveMarketingIcon(location.icon);
   const ScheduleIcon = resolveMarketingIcon(schedule.icon);
-  const WhatsappIcon = resolveMarketingIcon(whatsapp.icon);
-  const EmailIcon = resolveMarketingIcon(email.icon);
 
   return (
     <div className="border-b border-white/60 bg-white/80 text-sm text-slate-600 backdrop-blur-xs transition-colors duration-300 dark:border-surface-muted/60 dark:bg-surface-base/90 dark:text-slate-200">
@@ -75,24 +92,27 @@ export function InfoBar({ location, schedule, whatsapp, email, socials, googleRa
               </span>
             )
           ) : null}
-          <a
-            href={whatsapp.href}
-            className="inline-flex items-center gap-2 font-semibold text-brand-teal transition hover:text-brand-indigo dark:text-accent-cyan dark:hover:text-accent-cyan/80"
-            target="_blank"
-            rel="noopener"
-          >
-            <WhatsappIcon className="h-5 w-5" weight="fill" aria-hidden="true" />
-            {whatsapp.label}
-          </a>
         </div>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-          <a
-            href={email.href}
-            className="inline-flex items-center gap-2 font-medium text-slate-500 transition hover:text-brand-teal dark:text-slate-300 dark:hover:text-accent-cyan"
-          >
-            <EmailIcon className="h-4 w-4" weight="fill" aria-hidden="true" />
-            {email.label}
-          </a>
+          <div className="flex items-center gap-2 text-slate-400">
+          {channels.map((channel) => {
+            const ChannelIcon = resolveMarketingIcon(CHANNEL_ICON[channel.type]);
+            const isWhatsapp = channel.type === "WHATSAPP";
+
+              return (
+                <a
+                  key={channel.type}
+                  href={buildChannelHref(channel)}
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200/70 text-lg transition hover:-translate-y-0.5 hover:border-brand-teal hover:text-brand-teal dark:border-surface-muted/80 dark:text-slate-200 dark:hover:border-accent-cyan dark:hover:text-accent-cyan"
+                  target={isWhatsapp ? "_blank" : undefined}
+                  rel={isWhatsapp ? "noopener" : undefined}
+                  aria-label={channel.label}
+                >
+                  <ChannelIcon className="h-5 w-5" weight="fill" aria-hidden="true" />
+                </a>
+              );
+            })}
+          </div>
           <div className="flex items-center gap-2 text-slate-400">
           {socials.map((social) => {
             const SocialIcon = resolveMarketingIcon(social.icon);
