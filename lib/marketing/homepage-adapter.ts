@@ -36,6 +36,22 @@ function normalizeWhatsappHref(phoneNumber: string): string {
   return `https://wa.me/${digitsOnly}`;
 }
 
+export function filterByPlacement<T extends { placements: string[] }>(items: T[], placement: string): T[] {
+  return items.filter((item) => item.placements.includes(placement));
+}
+
+export function buildWhatsappHref(value: string): string {
+  return `https://wa.me/${value}`;
+}
+
+export function buildPhoneHref(value: string): string {
+  return `tel:+${value}`;
+}
+
+export function buildEmailHref(value: string): string {
+  return `mailto:${value}`;
+}
+
 function isSafeMapEmbedUrl(rawUrl: string): boolean {
   try {
     const url = new URL(rawUrl);

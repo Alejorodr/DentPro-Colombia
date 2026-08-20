@@ -62,6 +62,14 @@ export type HomepageSocialLinkContent = {
   href: string;
   label: string;
   icon: MarketingIconKey;
+  placements: string[];
+};
+
+export type HomepageChannelContent = {
+  type: "WHATSAPP" | "PHONE" | "EMAIL";
+  value: string;
+  label: string;
+  placements: string[];
 };
 
 export type HomepageContactSupportItemContent = {
@@ -103,6 +111,7 @@ export type HomepageNormalizedContent = {
     socials: HomepageSocialLinkContent[];
   };
   navLinks: HomepageNavLinkContent[];
+  channels: HomepageChannelContent[];
   hero: {
     badge: string;
     title: string;

@@ -36,6 +36,7 @@ export async function getHomepageContent(prismaClient?: PrismaClient): Promise<H
     legalLinks,
     faqs,
     navLinks,
+    channels,
   ] = await prisma.$transaction([
     prisma.homepageSettings.findUnique({ where: { id: HOMEPAGE_SETTINGS_SINGLETON_ID } }),
     prisma.homepageService.findMany({
@@ -57,6 +58,7 @@ export async function getHomepageContent(prismaClient?: PrismaClient): Promise<H
     prisma.homepageLegalLink.findMany({ where: { isActive: true }, orderBy: { sortOrder: "asc" } }),
     prisma.homepageFaq.findMany({ where: { isActive: true }, orderBy: { sortOrder: "asc" } }),
     prisma.homepageNavLink.findMany({ where: { isActive: true }, orderBy: { sortOrder: "asc" } }),
+    prisma.homepageChannel.findMany({ where: { isActive: true }, orderBy: { sortOrder: "asc" } }),
   ]);
 
   const fallback = HOMEPAGE_DEFAULT_CONTENT;
@@ -100,6 +102,7 @@ export async function getHomepageContent(prismaClient?: PrismaClient): Promise<H
               href: social.href,
               label: social.label,
               icon: sanitizeMarketingIcon(social.iconKey, "InstagramLogo"),
+              placements: social.placements,
             }))
           : fallback.infoBar.socials,
     },
@@ -107,6 +110,7 @@ export async function getHomepageContent(prismaClient?: PrismaClient): Promise<H
       navLinks.length > 0
         ? navLinks.map((link) => ({ href: link.href, label: link.label }))
         : fallback.navLinks,
+    channels: channels.map((c) => ({ type: c.type, value: c.value, label: c.label, placements: c.placements })),
     hero: {
       badge: settings?.heroBadge ?? fallback.hero.badge,
       title: settings?.heroTitle ?? fallback.hero.title,
@@ -227,6 +231,7 @@ export async function getHomepageContent(prismaClient?: PrismaClient): Promise<H
               href: social.href,
               label: social.label,
               icon: sanitizeMarketingIcon(social.iconKey, "InstagramLogo"),
+              placements: social.placements,
             }))
           : fallback.contact.socials,
       supportTitle: settings?.contactSupportTitle ?? fallback.contact.supportTitle,

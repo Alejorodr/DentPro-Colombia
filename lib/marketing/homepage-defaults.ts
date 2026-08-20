@@ -21,9 +21,9 @@ export const HOMEPAGE_DEFAULT_CONTENT: HomepageNormalizedContent = {
     whatsapp: { href: "https://wa.me/573237968435", label: "Agenda por WhatsApp", icon: "ChatCircleDots" },
     email: { href: "mailto:dentprocolombia@gmail.com", label: "dentprocolombia@gmail.com", icon: "EnvelopeSimple" },
     socials: [
-      { href: "https://www.instagram.com/dentprocol", label: "Instagram", icon: "InstagramLogo" },
-      { href: "https://www.facebook.com/dentprocol", label: "Facebook", icon: "FacebookLogo" },
-      { href: "https://www.tiktok.com/@dentprocol", label: "TikTok", icon: "TiktokLogo" },
+      { href: "https://www.instagram.com/dentprocol", label: "Instagram", icon: "InstagramLogo", placements: ["INFOBAR", "FOOTER"] },
+      { href: "https://www.facebook.com/dentprocol", label: "Facebook", icon: "FacebookLogo", placements: ["INFOBAR", "FOOTER"] },
+      { href: "https://www.tiktok.com/@dentprocol", label: "TikTok", icon: "TiktokLogo", placements: ["INFOBAR", "FOOTER"] },
     ],
   },
   navLinks: [
@@ -33,6 +33,7 @@ export const HOMEPAGE_DEFAULT_CONTENT: HomepageNormalizedContent = {
     { href: "#preguntas-frecuentes", label: "FAQ" },
     { href: "#contacto", label: "Contacto" },
   ],
+  channels: [],
   hero: {
     badge: "Odontología general y especializada en Chía",
     title: "Cuidamos tu sonrisa con tecnología y calidez humana",
@@ -214,9 +215,9 @@ export const HOMEPAGE_DEFAULT_CONTENT: HomepageNormalizedContent = {
       { icon: "MapPin", label: "Ubicación", value: "Cra. 7 #13-180, Chía, Cundinamarca" },
     ],
     socials: [
-      { href: "https://www.instagram.com/dentprocol", label: "Instagram", icon: "InstagramLogo" },
-      { href: "https://www.facebook.com/dentprocol", label: "Facebook", icon: "FacebookLogo" },
-      { href: "https://www.tiktok.com/@dentprocol", label: "TikTok", icon: "TiktokLogo" },
+      { href: "https://www.instagram.com/dentprocol", label: "Instagram", icon: "InstagramLogo", placements: ["INFOBAR", "FOOTER"] },
+      { href: "https://www.facebook.com/dentprocol", label: "Facebook", icon: "FacebookLogo", placements: ["INFOBAR", "FOOTER"] },
+      { href: "https://www.tiktok.com/@dentprocol", label: "TikTok", icon: "TiktokLogo", placements: ["INFOBAR", "FOOTER"] },
     ],
     supportTitle: "Patient Care DentPro",
     supportItems: [
