@@ -115,6 +115,19 @@ enum PaymentMethod {
   TRANSFER
 }
 
+enum HomepageContentPlacement {
+  INFOBAR
+  FLOATING
+  FOOTER
+  BOOKING
+}
+
+enum HomepageChannelType {
+  WHATSAPP
+  PHONE
+  EMAIL
+}
+
 model Specialty {
   id                         String                @id @default(uuid())
   name                       String                @unique
@@ -895,14 +908,29 @@ model HomepageBookingBenefit {
 }
 
 model HomepageSocialLink {
-  id        String   @id @default(uuid())
+  id        String                     @id @default(uuid())
   href      String
   label     String
   iconKey   String
-  sortOrder Int      @default(0)
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  placements HomepageContentPlacement[]
+  sortOrder Int                        @default(0)
+  isActive  Boolean                    @default(true)
+  createdAt DateTime                   @default(now())
+  updatedAt DateTime                   @updatedAt
+
+  @@index([isActive, sortOrder])
+}
+
+model HomepageChannel {
+  id         String                     @id @default(uuid())
+  type       HomepageChannelType
+  value      String
+  label      String
+  placements HomepageContentPlacement[]
+  sortOrder  Int                        @default(0)
+  isActive   Boolean                    @default(true)
+  createdAt  DateTime                   @default(now())
+  updatedAt  DateTime                   @updatedAt
 
   @@index([isActive, sortOrder])
 }
