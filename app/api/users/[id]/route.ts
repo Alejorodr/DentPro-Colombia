@@ -24,6 +24,11 @@ const updateUserSchema = z.object({
   active: z.boolean().optional(),
   specialtyId: z.string().uuid().optional(),
   slotDurationMinutes: z.number().int().min(5).max(240).nullable().optional(),
+  homepageBioShort: z.string().trim().max(600).optional(),
+  homepageImageUrl: z.string().trim().max(524288).optional(),
+  homepageImageAlt: z.string().trim().max(180).optional(),
+  showOnHomepage: z.boolean().optional(),
+  homepageSortOrder: z.number().int().min(0).optional(),
 });
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -185,6 +190,11 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
           specialty: { connect: { id: payload.specialtyId } },
           slotDurationMinutes: payload.slotDurationMinutes ?? null,
           active: true,
+          homepageBioShort: payload.homepageBioShort?.trim() || undefined,
+          homepageImageUrl: payload.homepageImageUrl?.trim() || undefined,
+          homepageImageAlt: payload.homepageImageAlt?.trim() || undefined,
+          showOnHomepage: typeof payload.showOnHomepage === "boolean" ? payload.showOnHomepage : undefined,
+          homepageSortOrder: payload.homepageSortOrder ?? undefined,
         },
       });
     } else {
@@ -194,6 +204,11 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
           specialty: payload.specialtyId ? { connect: { id: payload.specialtyId } } : undefined,
           slotDurationMinutes: payload.slotDurationMinutes ?? undefined,
           active: true,
+          homepageBioShort: payload.homepageBioShort?.trim() || undefined,
+          homepageImageUrl: payload.homepageImageUrl?.trim() || undefined,
+          homepageImageAlt: payload.homepageImageAlt?.trim() || undefined,
+          showOnHomepage: typeof payload.showOnHomepage === "boolean" ? payload.showOnHomepage : undefined,
+          homepageSortOrder: payload.homepageSortOrder ?? undefined,
         },
       });
     }

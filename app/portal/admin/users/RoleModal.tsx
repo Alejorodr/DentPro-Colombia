@@ -6,6 +6,7 @@ import { roleLabels, userRoles, type UserRole } from "@/lib/auth/roles";
 import { fetchWithTimeout } from "@/lib/http";
 import { STATUS_COLORS } from "@/app/portal/components/ui/statusColors";
 import { useModalDialog } from "@/app/portal/components/ui/useModalDialog";
+import { AdminImageField } from "@/app/portal/admin/content/components/AdminImageField";
 
 export type Specialty = {
   id: string;
@@ -36,7 +37,15 @@ export type RoleModalUser = {
   name: string;
   lastName: string;
   role: UserRole;
-  professional?: { id: string; specialty?: { id: string; name: string } | null } | null;
+  professional?: {
+    id: string;
+    specialty?: { id: string; name: string } | null;
+    homepageBioShort?: string | null;
+    homepageImageUrl?: string | null;
+    homepageImageAlt?: string | null;
+    showOnHomepage?: boolean;
+    homepageSortOrder?: number;
+  } | null;
 };
 
 type SaveStatus = "idle" | "loading" | "done" | "error";
@@ -79,6 +88,14 @@ export function RoleModal({
   const [servicesLoading, setServicesLoading] = useState(false);
   const [assignmentSaving, setAssignmentSaving] = useState<string | null>(null);
   const [assignmentError, setAssignmentError] = useState<string | null>(null);
+
+  const [homepageBioShort, setHomepageBioShort] = useState(user.professional?.homepageBioShort ?? "");
+  const [homepageImageUrl, setHomepageImageUrl] = useState(user.professional?.homepageImageUrl ?? "");
+  const [homepageImageAlt, setHomepageImageAlt] = useState(user.professional?.homepageImageAlt ?? "");
+  const [showOnHomepage, setShowOnHomepage] = useState(user.professional?.showOnHomepage ?? false);
+  const [homepageSortOrder, setHomepageSortOrder] = useState(String(user.professional?.homepageSortOrder ?? 0));
+  const [homepageStatus, setHomepageStatus] = useState<SaveStatus>("idle");
+  const [homepageError, setHomepageError] = useState<string | null>(null);
 
   const professionalId = user.professional?.id;
 
@@ -162,6 +179,37 @@ export function RoleModal({
     } catch {
       setErrorMsg("No pudimos conectar con el servidor. Intenta de nuevo.");
       setStatus("error");
+    }
+  };
+
+  const handleSaveHomepage = async () => {
+    setHomepageStatus("loading");
+    setHomepageError(null);
+
+    try {
+      const response = await fetchWithTimeout(`/api/users/${user.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          homepageBioShort,
+          homepageImageUrl,
+          homepageImageAlt,
+          showOnHomepage,
+          homepageSortOrder: Number(homepageSortOrder) || 0,
+        }),
+      });
+
+      if (response.ok) {
+        setHomepageStatus("done");
+        onSaved();
+      } else {
+        const body = (await response.json().catch(() => null)) as { error?: string } | null;
+        setHomepageError(body?.error ?? "No pudimos guardar la presencia en el sitio público.");
+        setHomepageStatus("error");
+      }
+    } catch {
+      setHomepageError("No pudimos conectar con el servidor. Intenta de nuevo.");
+      setHomepageStatus("error");
     }
   };
 
@@ -442,6 +490,78 @@ export function RoleModal({
                 </div>
               )}
               {assignmentError ? <p className="mt-2 text-sm text-red-600 dark:text-red-400">{assignmentError}</p> : null}
+            </section>
+          ) : null}
+
+          {role === "PROFESIONAL" && professionalId ? (
+            <section>
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                Presencia en el sitio público
+              </p>
+              <div className="mt-2 space-y-3">
+                <textarea
+                  className="input min-h-24 text-sm"
+                  placeholder="Bio corta para el sitio público"
+                  value={homepageBioShort}
+                  onChange={(event) => setHomepageBioShort(event.target.value)}
+                  maxLength={600}
+                  disabled={homepageStatus === "loading"}
+                />
+                <AdminImageField
+                  label="Imagen para el sitio público"
+                  value={homepageImageUrl}
+                  onChange={setHomepageImageUrl}
+                  uploadFolder="marketing/specialists"
+                  recommendation="1200x1500 px"
+                  aspectRatio="4:5"
+                  placeholder="https://..."
+                  disabled={homepageStatus === "loading"}
+                />
+                <input
+                  className="input h-11 text-sm"
+                  placeholder="Texto alternativo de la imagen"
+                  value={homepageImageAlt}
+                  onChange={(event) => setHomepageImageAlt(event.target.value)}
+                  maxLength={180}
+                  disabled={homepageStatus === "loading"}
+                />
+                <div className="flex flex-wrap items-center gap-4">
+                  <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                    <input
+                      type="checkbox"
+                      checked={showOnHomepage}
+                      onChange={(event) => setShowOnHomepage(event.target.checked)}
+                      disabled={homepageStatus === "loading"}
+                    />
+                    Mostrar en el sitio público
+                  </label>
+                  <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                    Orden
+                    <input
+                      type="number"
+                      min={0}
+                      className="input h-9 w-20 text-sm"
+                      value={homepageSortOrder}
+                      onChange={(event) => setHomepageSortOrder(event.target.value)}
+                      disabled={homepageStatus === "loading"}
+                    />
+                  </label>
+                </div>
+                {homepageError ? <p className="text-sm text-red-600 dark:text-red-400">{homepageError}</p> : null}
+                {homepageStatus === "done" ? (
+                  <p className="text-sm text-emerald-600 dark:text-emerald-400">
+                    Presencia en el sitio público actualizada.
+                  </p>
+                ) : null}
+                <button
+                  type="button"
+                  className="rounded-full bg-brand-teal px-3 py-1.5 text-xs font-semibold uppercase text-white disabled:opacity-60"
+                  onClick={() => void handleSaveHomepage()}
+                  disabled={homepageStatus === "loading"}
+                >
+                  {homepageStatus === "loading" ? "Guardando..." : "Guardar"}
+                </button>
+              </div>
             </section>
           ) : null}
 

@@ -19,7 +19,15 @@ type UserRecord = {
   hasLocalPassword: boolean;
   _isGoogleUser: boolean;
   patient?: { phone?: string | null; documentId?: string | null } | null;
-  professional?: { id: string; specialty?: { id: string; name: string } | null } | null;
+  professional?: {
+    id: string;
+    specialty?: { id: string; name: string } | null;
+    homepageBioShort?: string | null;
+    homepageImageUrl?: string | null;
+    homepageImageAlt?: string | null;
+    showOnHomepage?: boolean;
+    homepageSortOrder?: number;
+  } | null;
 };
 
 const defaultFormState = {
