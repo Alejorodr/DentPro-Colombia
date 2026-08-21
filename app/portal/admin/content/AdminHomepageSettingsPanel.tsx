@@ -12,12 +12,6 @@ type HomepageSettingsForm = {
   siteName: string;
   logoUrl: string;
 
-  infoBarLocation: string;
-  infoBarHours: string;
-  infoBarWhatsappHref: string;
-  infoBarWhatsappLabel: string;
-  infoBarEmailHref: string;
-  infoBarEmailLabel: string;
   heroBadge: string;
   heroTitle: string;
   heroDescription: string;
@@ -54,8 +48,6 @@ type HomepageSettingsForm = {
   contactLocationsTitle: string;
   contactBrand: string;
   contactMapEmbedUrl: string;
-  floatingWhatsappNumber: string;
-  floatingPhoneNumber: string;
   metaTitle: string;
   metaDescription: string;
 };
@@ -70,12 +62,6 @@ const EMPTY_FORM: HomepageSettingsForm = {
   siteName: "",
   logoUrl: "",
 
-  infoBarLocation: "",
-  infoBarHours: "",
-  infoBarWhatsappHref: "",
-  infoBarWhatsappLabel: "",
-  infoBarEmailHref: "",
-  infoBarEmailLabel: "",
   heroBadge: "",
   heroTitle: "",
   heroDescription: "",
@@ -112,8 +98,6 @@ const EMPTY_FORM: HomepageSettingsForm = {
   contactLocationsTitle: "",
   contactBrand: "",
   contactMapEmbedUrl: "",
-  floatingWhatsappNumber: "",
-  floatingPhoneNumber: "",
   metaTitle: "",
   metaDescription: "",
 };
@@ -142,19 +126,6 @@ const SECTIONS: SectionConfig[] = [
     fields: [
       { key: "siteName", label: "Nombre de la empresa", placeholder: "DentPro Colombia" },
       { key: "logoUrl", label: "URL del logo", type: "url", placeholder: "https://..." },
-    ],
-  },
-  {
-    slug: "info-superior",
-    title: "Información superior",
-    description: "Contenido del InfoBar visible en la parte superior del homepage.",
-    fields: [
-      { key: "infoBarLocation", label: "Ubicación", placeholder: "Cra. 7 #13-180, Chía" },
-      { key: "infoBarHours", label: "Horario", placeholder: "Lun–Sáb 8:00-19:00" },
-      { key: "infoBarWhatsappHref", label: "WhatsApp href", type: "url", placeholder: "https://wa.me/573..." },
-      { key: "infoBarWhatsappLabel", label: "WhatsApp label", placeholder: "Agenda por WhatsApp" },
-      { key: "infoBarEmailHref", label: "Email href", type: "text", placeholder: "mailto:correo@dominio.com" },
-      { key: "infoBarEmailLabel", label: "Email label", placeholder: "correo@dominio.com" },
     ],
   },
   {
@@ -235,19 +206,6 @@ const SECTIONS: SectionConfig[] = [
         type: "url",
         helperText: "Se guarda como URL controlada; no se admite HTML embed.",
       },
-    ],
-  },
-  {
-    slug: "acciones-flotantes",
-    title: "Acciones flotantes",
-    description: "Datos usados por los botones flotantes del homepage.",
-    fields: [
-      {
-        key: "floatingWhatsappNumber",
-        label: "Número WhatsApp flotante",
-        helperText: "Este número impacta el botón flotante de WhatsApp.",
-      },
-      { key: "floatingPhoneNumber", label: "Número teléfono flotante" },
     ],
   },
   {
