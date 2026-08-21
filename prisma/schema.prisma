@@ -228,6 +228,11 @@ model ProfessionalProfile {
   specialtyId            String
   slotDurationMinutes    Int?
   active                 Boolean                          @default(true)
+  homepageBioShort      String?
+  homepageImageUrl      String?
+  homepageImageAlt      String?
+  showOnHomepage        Boolean                          @default(false)
+  homepageSortOrder     Int                              @default(0)
   user                   User                             @relation(fields: [userId], references: [id], onDelete: Cascade)
   specialty              Specialty                        @relation(fields: [specialtyId], references: [id], onDelete: Restrict)
   timeSlots              TimeSlot[]
