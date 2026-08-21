@@ -16,8 +16,10 @@ export type HomepageViewModel = {
   services: HomepageNormalizedContent["services"];
   specialists: HomepageNormalizedContent["specialists"];
   booking: HomepageNormalizedContent["booking"];
-  contact: Omit<HomepageNormalizedContent["contact"], "mapEmbedUrl"> & {
+  contact: Omit<HomepageNormalizedContent["contact"], "mapEmbedUrl" | "channels" | "socials"> & {
     mapEmbedUrl?: string;
+    channels: HomepageChannelContent[];
+    socials: HomepageSocialLinkContent[];
   };
   floatingActions: {
     channels: HomepageChannelContent[];
@@ -74,11 +76,20 @@ export function adaptHomepageContent(content: HomepageNormalizedContent): Homepa
     booking: content.booking,
     contact: {
       ...content.contact,
+      channels: filterByPlacement(content.channels, "FOOTER"),
+      socials: filterByPlacement(content.infoBar.socials, "FOOTER"),
       mapEmbedUrl,
     },
     floatingActions: {
       channels: filterByPlacement(content.channels, "FLOATING"),
       socials: filterByPlacement(content.infoBar.socials, "FLOATING"),
     },
+  };
+}
+
+export function buildBookingChannels(content: HomepageNormalizedContent) {
+  return {
+    channels: filterByPlacement(content.channels, "BOOKING"),
+    socials: filterByPlacement(content.infoBar.socials, "BOOKING"),
   };
 }

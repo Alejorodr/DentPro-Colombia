@@ -4,12 +4,31 @@ import { Copyright } from "@/components/ui/Icon";
 
 import type { MarketingIconName } from "./icon-types";
 import { resolveMarketingIcon } from "./icon-registry";
+import { buildEmailHref, buildPhoneHref, buildWhatsappHref } from "@/lib/marketing/homepage-adapter";
+
+type ChannelType = "WHATSAPP" | "PHONE" | "EMAIL";
 
 interface ContactChannel {
-  icon: MarketingIconName;
-  label: string;
+  type: ChannelType;
   value: string;
-  href?: string;
+  label: string;
+}
+
+const CHANNEL_ICON: Record<ChannelType, MarketingIconName> = {
+  WHATSAPP: "ChatCircleDots",
+  PHONE: "Phone",
+  EMAIL: "EnvelopeSimple",
+};
+
+function buildChannelHref(channel: ContactChannel): string {
+  switch (channel.type) {
+    case "WHATSAPP":
+      return buildWhatsappHref(channel.value);
+    case "PHONE":
+      return buildPhoneHref(channel.value);
+    case "EMAIL":
+      return buildEmailHref(channel.value);
+  }
 }
 
 interface SocialLink {
@@ -70,20 +89,22 @@ export function ContactSection({
           <p className="text-base text-slate-300">{description}</p>
           <div className="space-y-2 text-sm text-slate-300">
             {channels.map((channel) => {
-              const ChannelIcon = resolveMarketingIcon(channel.icon);
+              const ChannelIcon = resolveMarketingIcon(CHANNEL_ICON[channel.type]);
+              const isWhatsapp = channel.type === "WHATSAPP";
 
               return (
-                <p key={channel.label} className="flex items-center gap-3">
+                <p key={channel.type} className="flex items-center gap-3">
                   <span className="icon-badge text-brand-light dark:text-accent-cyan">
                     <ChannelIcon className="h-5 w-5" weight="bold" aria-hidden="true" />
                   </span>
-                  {channel.href ? (
-                    <a href={channel.href} className="hover:text-white dark:hover:text-accent-cyan">
-                      {channel.value}
-                    </a>
-                  ) : (
-                    channel.value
-                  )}
+                  <a
+                    href={buildChannelHref(channel)}
+                    className="hover:text-white dark:hover:text-accent-cyan"
+                    target={isWhatsapp ? "_blank" : undefined}
+                    rel={isWhatsapp ? "noopener" : undefined}
+                  >
+                    {channel.value}
+                  </a>
                 </p>
               );
             })}

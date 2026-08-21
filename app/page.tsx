@@ -12,7 +12,7 @@ import { ContactSection } from "./(marketing)/components/ContactSection";
 import { FloatingActions } from "./(marketing)/components/FloatingActions";
 import { FAQSection } from "./(marketing)/components/FAQSection";
 import { getHomepageContent } from "@/lib/marketing/homepage";
-import { adaptHomepageContent } from "@/lib/marketing/homepage-adapter";
+import { adaptHomepageContent, buildBookingChannels } from "@/lib/marketing/homepage-adapter";
 import { getGoogleReviews } from "@/lib/google/google-reviews";
 import { HOMEPAGE_DEFAULT_CONTENT } from "@/lib/marketing/homepage-defaults";
 
@@ -44,6 +44,7 @@ export default async function Home() {
   ]);
 
   const marketingContent = adaptHomepageContent(homepageContent);
+  const bookingChannels = buildBookingChannels(homepageContent);
   const faqItems = homepageContent.faqs;
 
   const navbarContent: Parameters<typeof Navbar>[0] = {
@@ -149,7 +150,7 @@ export default async function Home() {
         {homepageContent.showCampaigns && <CampaignCarousel />}
         <ServicesSection {...marketingContent.services} />
         {homepageContent.showSpecialists && <SpecialistsSlider {...marketingContent.specialists} />}
-        <BookingFormSection {...marketingContent.booking} />
+        <BookingFormSection {...marketingContent.booking} {...bookingChannels} />
         {faqItems.length > 0 && <FAQSection items={faqItems} />}
         <ContactSection {...marketingContent.contact} />
       </main>

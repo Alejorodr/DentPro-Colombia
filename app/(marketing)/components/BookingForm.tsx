@@ -6,6 +6,7 @@ import Link from "next/link";
 import { fetchWithRetry } from "@/lib/http";
 import type { MarketingIconName } from "./icon-types";
 import { resolveMarketingIcon } from "./icon-registry";
+import { buildEmailHref, buildPhoneHref, buildWhatsappHref } from "@/lib/marketing/homepage-adapter";
 
 interface SelectOption {
   value: string;
@@ -17,6 +18,37 @@ interface BenefitItem {
   text: string;
 }
 
+type ChannelType = "WHATSAPP" | "PHONE" | "EMAIL";
+
+interface Channel {
+  type: ChannelType;
+  value: string;
+  label: string;
+}
+
+interface SocialLink {
+  href: string;
+  label: string;
+  icon: MarketingIconName;
+}
+
+const CHANNEL_ICON: Record<ChannelType, MarketingIconName> = {
+  WHATSAPP: "ChatCircleDots",
+  PHONE: "Phone",
+  EMAIL: "EnvelopeSimple",
+};
+
+function buildChannelHref(channel: Channel): string {
+  switch (channel.type) {
+    case "WHATSAPP":
+      return buildWhatsappHref(channel.value);
+    case "PHONE":
+      return buildPhoneHref(channel.value);
+    case "EMAIL":
+      return buildEmailHref(channel.value);
+  }
+}
+
 interface BookingFormProps {
   title: string;
   description: string;
@@ -26,6 +58,8 @@ interface BookingFormProps {
   benefits: BenefitItem[];
   scheduleNote: string;
   consentNote: string;
+  channels?: Channel[];
+  socials?: SocialLink[];
 }
 
 export function BookingFormSection({
@@ -34,6 +68,7 @@ export function BookingFormSection({
   benefitsTitle,
   benefits,
   scheduleNote,
+  channels = [],
 }: BookingFormProps) {
   const [publicSlots, setPublicSlots] = useState<string[]>([]);
   const [slotsLoading, setSlotsLoading] = useState(true);
@@ -173,16 +208,29 @@ export function BookingFormSection({
             <div className="rounded-2xl bg-brand-light/70 p-5 transition-colors duration-300 dark:border dark:border-accent-cyan/15 dark:bg-surface-muted/80">
               <p className="text-sm font-semibold text-brand-indigo dark:text-accent-cyan">¿Tienes dudas?</p>
               <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-                Escríbenos por{" "}
-                <a href="https://wa.me/573237968435" className="font-semibold text-brand-teal hover:underline dark:text-accent-cyan" target="_blank" rel="noopener">
-                  WhatsApp
-                </a>{" "}
-                o llámanos al{" "}
-                <a href="tel:+573237968435" className="font-semibold text-brand-teal hover:underline dark:text-accent-cyan">
-                  +57 323 796 8435
-                </a>
-                . Te respondemos de inmediato.
+                Te respondemos de inmediato.
               </p>
+              {channels.length > 0 ? (
+                <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2">
+                  {channels.map((channel) => {
+                    const ChannelIcon = resolveMarketingIcon(CHANNEL_ICON[channel.type]);
+                    const isWhatsapp = channel.type === "WHATSAPP";
+
+                    return (
+                      <a
+                        key={channel.type}
+                        href={buildChannelHref(channel)}
+                        className="inline-flex items-center gap-2 text-sm font-semibold text-brand-teal hover:underline dark:text-accent-cyan"
+                        target={isWhatsapp ? "_blank" : undefined}
+                        rel={isWhatsapp ? "noopener" : undefined}
+                      >
+                        <ChannelIcon className="h-4 w-4" weight="bold" aria-hidden="true" />
+                        {isWhatsapp ? "WhatsApp" : channel.value}
+                      </a>
+                    );
+                  })}
+                </div>
+              ) : null}
             </div>
           </div>
         </div>
