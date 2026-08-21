@@ -64,8 +64,8 @@ export default async function Home() {
     "@type": "Dentist",
     name: homepageContent.brand.name,
     url: "https://dentprocolombia.com",
-    telephone: homepageContent.contact.channels[0]?.value ?? "+573237968435",
-    email: homepageContent.contact.channels[2]?.value ?? "dentprocolombia@gmail.com",
+    telephone: homepageContent.channels.find((c) => c.type === "PHONE")?.value ?? "573237968435",
+    email: homepageContent.channels.find((c) => c.type === "EMAIL")?.value ?? "dentprocolombia@gmail.com",
     description:
       homepageContent.seo.metaDescription ??
       "Clínica odontológica en Chía, Cundinamarca. Ortodoncia, implantes, estética dental, endodoncia y odontopediatría.",
@@ -89,11 +89,7 @@ export default async function Home() {
         closes: "19:00",
       },
     ],
-    sameAs: [
-      "https://www.instagram.com/dentprocol",
-      "https://www.facebook.com/dentprocol",
-      "https://www.tiktok.com/@dentprocol",
-    ],
+    sameAs: homepageContent.infoBar.socials.map((s) => s.href),
     priceRange: "$$",
     ...(googleReviews?.rating && googleReviews.userRatingCount
       ? {
