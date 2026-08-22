@@ -861,21 +861,6 @@ model HomepageServiceHighlight {
   @@index([homepageServiceId, sortOrder])
 }
 
-model HomepageSpecialist {
-  id        String   @id @default(uuid())
-  fullName  String
-  specialty String
-  bioShort  String
-  imageUrl  String?
-  altText   String?
-  sortOrder Int      @default(0)
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([isActive, sortOrder])
-}
-
 model HomepageHeroStat {
   id          String   @id @default(uuid())
   label       String

@@ -8,7 +8,6 @@ import { AdminCampaignsPanel } from "@/app/portal/admin/content/AdminCampaignsPa
 import { AdminHomepageSettingsPanel } from "@/app/portal/admin/content/AdminHomepageSettingsPanel";
 import { AdminHomepageHeroStatsPanel } from "@/app/portal/admin/content/AdminHomepageHeroStatsPanel";
 import { AdminHomepageServicesPanel } from "@/app/portal/admin/content/AdminHomepageServicesPanel";
-import { AdminHomepageSpecialistsPanel } from "@/app/portal/admin/content/AdminHomepageSpecialistsPanel";
 import { AdminHomepageBookingOptionsPanel } from "@/app/portal/admin/content/AdminHomepageBookingOptionsPanel";
 import { AdminHomepageBookingBenefitsPanel } from "@/app/portal/admin/content/AdminHomepageBookingBenefitsPanel";
 import { AdminHomepageSocialLinksPanel } from "@/app/portal/admin/content/AdminHomepageSocialLinksPanel";
@@ -47,8 +46,6 @@ function SectionPanel({ section }: { section: string }) {
       return <AdminHomepageHeroStatsPanel />;
     case "services":
       return <AdminHomepageServicesPanel />;
-    case "specialists":
-      return <AdminHomepageSpecialistsPanel />;
     case "booking":
       return <AdminHomepageBookingOptionsPanel />;
     case "benefits":

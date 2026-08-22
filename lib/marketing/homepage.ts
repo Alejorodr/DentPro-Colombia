@@ -26,7 +26,7 @@ export async function getHomepageContent(prismaClient?: PrismaClient): Promise<H
   const [
     settings,
     services,
-    specialists,
+    professionals,
     heroStats,
     bookingOptions,
     bookingBenefits,
@@ -48,7 +48,11 @@ export async function getHomepageContent(prismaClient?: PrismaClient): Promise<H
         },
       },
     }),
-    prisma.homepageSpecialist.findMany({ where: { isActive: true }, orderBy: { sortOrder: "asc" } }),
+    prisma.professionalProfile.findMany({
+      where: { showOnHomepage: true, active: true },
+      include: { user: true, specialty: true },
+      orderBy: { homepageSortOrder: "asc" },
+    }),
     prisma.homepageHeroStat.findMany({ where: { isActive: true }, orderBy: { sortOrder: "asc" } }),
     prisma.homepageBookingOption.findMany({ where: { isActive: true }, orderBy: { sortOrder: "asc" } }),
     prisma.homepageBookingBenefit.findMany({ where: { isActive: true }, orderBy: { sortOrder: "asc" } }),
@@ -162,18 +166,12 @@ export async function getHomepageContent(prismaClient?: PrismaClient): Promise<H
       badge: settings?.specialistsBadge ?? fallback.specialists.badge,
       title: settings?.specialistsTitle ?? fallback.specialists.title,
       description: settings?.specialistsDescription ?? fallback.specialists.description,
-      specialists:
-        specialists.length > 0
-          ? specialists.map((specialist) => ({
-              name: specialist.fullName,
-              specialty: specialist.specialty,
-              description: specialist.bioShort,
-              image: {
-                src: specialist.imageUrl ?? fallback.specialists.specialists[0]?.image.src ?? "",
-                alt: specialist.altText ?? specialist.fullName,
-              },
-            }))
-          : fallback.specialists.specialists,
+      specialists: professionals.map((p) => ({
+        name: `${p.user.name} ${p.user.lastName}`,
+        specialty: p.specialty.name,
+        description: p.homepageBioShort ?? "",
+        image: { src: p.homepageImageUrl ?? "", alt: p.homepageImageAlt ?? `${p.user.name} ${p.user.lastName}` },
+      })),
     },
     booking: {
       title: settings?.bookingTitle ?? fallback.booking.title,
@@ -348,20 +346,6 @@ export async function bootstrapHomepageContent(prismaClient?: PrismaClient) {
         },
       });
     }
-  }
-
-  if ((await prisma.homepageSpecialist.count()) === 0) {
-    await prisma.homepageSpecialist.createMany({
-      data: source.specialists.specialists.map((specialist, index) => ({
-        fullName: specialist.name,
-        specialty: specialist.specialty,
-        bioShort: specialist.description,
-        imageUrl: specialist.image.src,
-        altText: specialist.image.alt,
-        sortOrder: index,
-        isActive: true,
-      })),
-    });
   }
 
   if ((await prisma.homepageHeroStat.count()) === 0) {

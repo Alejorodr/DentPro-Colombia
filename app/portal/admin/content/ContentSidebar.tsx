@@ -45,7 +45,6 @@ const GROUPS: SidebarGroup[] = [
   {
     label: "Equipo",
     items: [
-      { slug: "specialists", label: "Especialistas", description: "Tarjetas del equipo clínico." },
       {
         slug: "especialistas-copy",
         label: "Encabezado del equipo",
