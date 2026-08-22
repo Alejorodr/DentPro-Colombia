@@ -849,32 +849,6 @@ model HomepageSettings {
   updatedAt                DateTime @updatedAt
 }
 
-model HomepageService {
-  id          String                     @id @default(uuid())
-  title       String
-  description String
-  iconKey     String
-  sortOrder   Int                        @default(0)
-  isActive    Boolean                    @default(true)
-  createdAt   DateTime                   @default(now())
-  updatedAt   DateTime                   @updatedAt
-  highlights  HomepageServiceHighlight[]
-
-  @@index([isActive, sortOrder])
-}
-
-model HomepageServiceHighlight {
-  id                String          @id @default(uuid())
-  homepageServiceId String
-  text              String
-  sortOrder         Int             @default(0)
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
-  service           HomepageService @relation(fields: [homepageServiceId], references: [id], onDelete: Cascade)
-
-  @@index([homepageServiceId, sortOrder])
-}
-
 model HomepageHeroStat {
   id          String   @id @default(uuid())
   label       String

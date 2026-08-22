@@ -27,6 +27,7 @@ export const MARKETING_ICON_KEYS = [
 export type MarketingIconKey = (typeof MARKETING_ICON_KEYS)[number];
 
 export type HomepageServiceContent = {
+  id: string;
   title: string;
   description: string;
   icon: MarketingIconKey;

@@ -7,7 +7,6 @@ import { AdminBootstrapButton } from "@/app/portal/admin/content/AdminBootstrapB
 import { AdminCampaignsPanel } from "@/app/portal/admin/content/AdminCampaignsPanel";
 import { AdminHomepageSettingsPanel } from "@/app/portal/admin/content/AdminHomepageSettingsPanel";
 import { AdminHomepageHeroStatsPanel } from "@/app/portal/admin/content/AdminHomepageHeroStatsPanel";
-import { AdminHomepageServicesPanel } from "@/app/portal/admin/content/AdminHomepageServicesPanel";
 import { AdminHomepageBookingOptionsPanel } from "@/app/portal/admin/content/AdminHomepageBookingOptionsPanel";
 import { AdminHomepageBookingBenefitsPanel } from "@/app/portal/admin/content/AdminHomepageBookingBenefitsPanel";
 import { AdminHomepageSocialLinksPanel } from "@/app/portal/admin/content/AdminHomepageSocialLinksPanel";
@@ -44,8 +43,6 @@ function SectionPanel({ section }: { section: string }) {
       return <AdminHomepageNavLinksPanel />;
     case "hero-stats":
       return <AdminHomepageHeroStatsPanel />;
-    case "services":
-      return <AdminHomepageServicesPanel />;
     case "booking":
       return <AdminHomepageBookingOptionsPanel />;
     case "benefits":

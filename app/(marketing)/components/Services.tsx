@@ -17,6 +17,7 @@ const SERVICE_HREFS: Record<string, string> = {
 };
 
 interface ServiceItem {
+  id: string;
   title: string;
   description: string;
   icon: MarketingIconName;
@@ -45,7 +46,7 @@ export function ServicesSection({ badge, title, description, services }: Service
             const href = SERVICE_HREFS[service.title];
 
             return (
-              <article key={service.title} className="card flex flex-col gap-4">
+              <article key={service.id} className="card flex flex-col gap-4">
                 <div className="icon-circle shrink-0 dark:bg-accent-cyan/15 dark:text-accent-cyan">
                   <ServiceIcon className="h-6 w-6" weight="bold" aria-hidden="true" />
                 </div>

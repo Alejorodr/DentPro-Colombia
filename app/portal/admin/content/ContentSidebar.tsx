@@ -34,7 +34,6 @@ const GROUPS: SidebarGroup[] = [
   {
     label: "Servicios",
     items: [
-      { slug: "services", label: "Catálogo de servicios", description: "Tarjetas de la sección '¿Qué hacemos?'." },
       {
         slug: "servicios-copy",
         label: "Encabezado de servicios",

@@ -69,6 +69,7 @@ export const HOMEPAGE_DEFAULT_CONTENT: HomepageNormalizedContent = {
       "Desde prevención hasta rehabilitación avanzada, diseñamos planes odontológicos a tu medida.",
     services: [
       {
+        id: "fallback-limpieza-profilaxis",
         title: "Limpieza y profilaxis",
         description: "Higiene profesional con ultrasonido y pulido remineralizante.",
         icon: "Sparkle",
@@ -79,6 +80,7 @@ export const HOMEPAGE_DEFAULT_CONTENT: HomepageNormalizedContent = {
         ],
       },
       {
+        id: "fallback-ortodoncia-digital",
         title: "Ortodoncia digital",
         description: "Alineadores invisibles y brackets autoligables según tus objetivos.",
         icon: "Smiley",
@@ -89,6 +91,7 @@ export const HOMEPAGE_DEFAULT_CONTENT: HomepageNormalizedContent = {
         ],
       },
       {
+        id: "fallback-implantes-cirugia",
         title: "Implantes y cirugía",
         description: "Rehabilitación fija con implantes guiados por computadora.",
         icon: "Stethoscope",
@@ -99,6 +102,7 @@ export const HOMEPAGE_DEFAULT_CONTENT: HomepageNormalizedContent = {
         ],
       },
       {
+        id: "fallback-estetica-dental",
         title: "Estética dental",
         description: "Carillas cerámicas, blanqueamiento y diseño de sonrisa armónico.",
         icon: "DiamondsFour",
@@ -109,6 +113,7 @@ export const HOMEPAGE_DEFAULT_CONTENT: HomepageNormalizedContent = {
         ],
       },
       {
+        id: "fallback-endodoncia-avanzada",
         title: "Endodoncia avanzada",
         description: "Tratamientos de conducto con microscopio y obturación termoplástica.",
         icon: "Tooth",
@@ -119,6 +124,7 @@ export const HOMEPAGE_DEFAULT_CONTENT: HomepageNormalizedContent = {
         ],
       },
       {
+        id: "fallback-odontopediatria",
         title: "Odontopediatría",
         description: "Prevención y tratamientos amigables para los más pequeños.",
         icon: "Baby",

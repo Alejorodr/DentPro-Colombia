@@ -39,14 +39,10 @@ export async function getHomepageContent(prismaClient?: PrismaClient): Promise<H
     channels,
   ] = await prisma.$transaction([
     prisma.homepageSettings.findUnique({ where: { id: HOMEPAGE_SETTINGS_SINGLETON_ID } }),
-    prisma.homepageService.findMany({
-      where: { isActive: true },
-      orderBy: { sortOrder: "asc" },
-      include: {
-        highlights: {
-          orderBy: { sortOrder: "asc" },
-        },
-      },
+    prisma.service.findMany({
+      where: { showOnHomepage: true, active: true },
+      include: { homepageHighlights: { orderBy: { sortOrder: "asc" } } },
+      orderBy: { homepageSortOrder: "asc" },
     }),
     prisma.professionalProfile.findMany({
       where: { showOnHomepage: true, active: true },
@@ -149,18 +145,13 @@ export async function getHomepageContent(prismaClient?: PrismaClient): Promise<H
     services: {
       title: settings?.servicesTitle ?? fallback.services.title,
       description: settings?.servicesDescription ?? fallback.services.description,
-      services:
-        services.length > 0
-          ? services.map((service) => ({
-              title: service.title,
-              description: service.description,
-              icon: sanitizeMarketingIcon(service.iconKey, "Sparkle"),
-              highlights:
-                service.highlights.length > 0
-                  ? service.highlights.map((highlight) => highlight.text)
-                  : fallback.services.services.find((item) => item.title === service.title)?.highlights ?? [],
-            }))
-          : fallback.services.services,
+      services: services.map((s) => ({
+        id: s.id,
+        title: s.name,
+        description: s.description ?? "",
+        icon: sanitizeMarketingIcon(s.iconKey ?? "", "Sparkle"),
+        highlights: s.homepageHighlights.map((h) => h.text),
+      })),
     },
     specialists: {
       badge: settings?.specialistsBadge ?? fallback.specialists.badge,
@@ -327,26 +318,6 @@ export async function bootstrapHomepageContent(prismaClient?: PrismaClient) {
       floatingPhoneNumber: source.floatingActions.phoneNumber,
     },
   });
-
-  if ((await prisma.homepageService.count()) === 0) {
-    for (const [index, service] of source.services.services.entries()) {
-      await prisma.homepageService.create({
-        data: {
-          title: service.title,
-          description: service.description,
-          iconKey: service.icon,
-          sortOrder: index,
-          isActive: true,
-          highlights: {
-            create: service.highlights.map((highlight, highlightIndex) => ({
-              text: highlight,
-              sortOrder: highlightIndex,
-            })),
-          },
-        },
-      });
-    }
-  }
 
   if ((await prisma.homepageHeroStat.count()) === 0) {
     await prisma.homepageHeroStat.createMany({
