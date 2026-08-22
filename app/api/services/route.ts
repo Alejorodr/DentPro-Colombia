@@ -5,13 +5,20 @@ import { getSessionUser, isAuthorized } from "@/app/api/_utils/auth";
 import { errorResponse } from "@/app/api/_utils/response";
 import { buildPaginatedResponse, getPaginationParams } from "@/app/api/_utils/pagination";
 import { parseJson } from "@/app/api/_utils/validation";
+import { noHtml, requiredText } from "@/app/api/admin/homepage/_lib";
 import { getPrismaClient } from "@/lib/prisma";
 import { MARKETING_ICON_KEYS } from "@/lib/marketing/homepage-types";
 import { Prisma } from "@prisma/client";
 
 const serviceSchema = z.object({
-  name: z.string().trim().min(1).max(120),
-  description: z.string().trim().max(500).nullable().optional(),
+  name: requiredText(1, 120),
+  description: z
+    .string()
+    .trim()
+    .max(500)
+    .nullable()
+    .optional()
+    .refine((value) => value == null || noHtml(value), "No se permite HTML."),
   priceCents: z.number().int().min(0),
   durationMinutes: z.number().int().min(0).nullable().optional(),
   active: z.boolean().optional(),
