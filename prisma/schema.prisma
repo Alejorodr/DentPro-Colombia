@@ -280,13 +280,27 @@ model Service {
   priceCents           Int
   durationMinutes      Int?
   active               Boolean               @default(true)
+  iconKey              String?
+  showOnHomepage       Boolean               @default(false)
+  homepageSortOrder    Int                   @default(0)
   specialtyId          String?
   specialty            Specialty?            @relation(fields: [specialtyId], references: [id], onDelete: SetNull)
   appointments         Appointment[]
   professionalServices ProfessionalService[]
+  homepageHighlights   ServiceHighlight[]
 
   @@index([active])
   @@index([specialtyId])
+}
+
+model ServiceHighlight {
+  id        String   @id @default(uuid())
+  serviceId String
+  service   Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  text      String
+  sortOrder Int      @default(0)
+
+  @@index([serviceId, sortOrder])
 }
 
 model TimeSlot {
