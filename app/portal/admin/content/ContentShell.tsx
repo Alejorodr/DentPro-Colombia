@@ -5,7 +5,14 @@ import { useRouter, useSearchParams } from "next/navigation";
 
 import { AdminBootstrapButton } from "@/app/portal/admin/content/AdminBootstrapButton";
 import { AdminCampaignsPanel } from "@/app/portal/admin/content/AdminCampaignsPanel";
-import { AdminHomepageSettingsPanel } from "@/app/portal/admin/content/AdminHomepageSettingsPanel";
+import { AdminCompanyInfoPanel } from "@/app/portal/admin/content/AdminCompanyInfoPanel";
+import { AdminHomepageChannelsPanel } from "@/app/portal/admin/content/AdminHomepageChannelsPanel";
+import { AdminHeroPanel } from "@/app/portal/admin/content/AdminHeroPanel";
+import { AdminServicesCopyPanel } from "@/app/portal/admin/content/AdminServicesCopyPanel";
+import { AdminSpecialistsCopyPanel } from "@/app/portal/admin/content/AdminSpecialistsCopyPanel";
+import { AdminAgendaCopyPanel } from "@/app/portal/admin/content/AdminAgendaCopyPanel";
+import { AdminContactCopyPanel } from "@/app/portal/admin/content/AdminContactCopyPanel";
+import { AdminSeoPanel } from "@/app/portal/admin/content/AdminSeoPanel";
 import { AdminHomepageHeroStatsPanel } from "@/app/portal/admin/content/AdminHomepageHeroStatsPanel";
 import { AdminHomepageBookingOptionsPanel } from "@/app/portal/admin/content/AdminHomepageBookingOptionsPanel";
 import { AdminHomepageBookingBenefitsPanel } from "@/app/portal/admin/content/AdminHomepageBookingBenefitsPanel";
@@ -17,28 +24,33 @@ import { AdminHomepageFaqPanel } from "@/app/portal/admin/content/AdminHomepageF
 import { AdminHomepageNavLinksPanel } from "@/app/portal/admin/content/AdminHomepageNavLinksPanel";
 import { ContentSidebar, DEFAULT_SECTION, findSectionLabel } from "@/app/portal/admin/content/ContentSidebar";
 
+// NOTE: this switch is an interim "unbreak" patch (same pattern as Tasks 16/20) after
+// AdminHomepageSettingsPanel was split into 5 dedicated panels (Task 21) + a 6th
+// (AdminSpecialistsCopyPanel) added to cover the "especialistas" gap. "identidad" now
+// routes to AdminCompanyInfoPanel and the old "infobar" sidebar entry was dropped as a
+// duplicate of it; "floating" now routes to AdminHomepageChannelsPanel, which already
+// manages WhatsApp/phone/email placement (incl. the floating buttons). The full sidebar
+// regrouping (new group labels, "company-info"/"channels" slugs, etc.) is still Task 22
+// — this patch only makes every slug point at a real, non-deleted component so the
+// build is green.
 function SectionPanel({ section }: { section: string }) {
   switch (section) {
-    case "settings":
-      return <AdminHomepageSettingsPanel />;
-    case "infobar":
-      return <AdminHomepageSettingsPanel openSlug="info-superior" />;
-    case "floating":
-      return <AdminHomepageSettingsPanel openSlug="acciones-flotantes" />;
     case "identidad":
-      return <AdminHomepageSettingsPanel openSlug="identidad" />;
+      return <AdminCompanyInfoPanel />;
+    case "floating":
+      return <AdminHomepageChannelsPanel />;
     case "seo":
-      return <AdminHomepageSettingsPanel openSlug="seo" />;
+      return <AdminSeoPanel />;
     case "hero-copy":
-      return <AdminHomepageSettingsPanel openSlug="hero" />;
+      return <AdminHeroPanel />;
     case "servicios-copy":
-      return <AdminHomepageSettingsPanel openSlug="servicios" />;
+      return <AdminServicesCopyPanel />;
     case "especialistas-copy":
-      return <AdminHomepageSettingsPanel openSlug="especialistas" />;
+      return <AdminSpecialistsCopyPanel />;
     case "agenda-copy":
-      return <AdminHomepageSettingsPanel openSlug="agenda" />;
+      return <AdminAgendaCopyPanel />;
     case "contacto-copy":
-      return <AdminHomepageSettingsPanel openSlug="contacto" />;
+      return <AdminContactCopyPanel />;
     case "navbar":
       return <AdminHomepageNavLinksPanel />;
     case "hero-stats":
@@ -60,7 +72,7 @@ function SectionPanel({ section }: { section: string }) {
     case "campaigns":
       return <AdminCampaignsPanel />;
     default:
-      return <AdminHomepageSettingsPanel />;
+      return <AdminCompanyInfoPanel />;
   }
 }
 

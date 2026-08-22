@@ -9,15 +9,9 @@ const GROUPS: SidebarGroup[] = [
   {
     label: "Marca / Header",
     items: [
-      {
-        slug: "settings",
-        label: "Configuración completa",
-        description: "Vista completa: identidad, hero, textos de cada sección y SEO en un solo lugar.",
-      },
-      { slug: "identidad", label: "Identidad de marca", description: "Nombre de la empresa y logo." },
+      { slug: "identidad", label: "Identidad de marca", description: "Nombre de la empresa, logo, dirección y horario." },
       { slug: "seo", label: "SEO y metadatos", description: "Título y descripción para buscadores." },
       { slug: "navbar", label: "Navbar", description: "Enlaces del menú de navegación superior." },
-      { slug: "infobar", label: "Barra superior", description: "Ubicación, horario, WhatsApp y email del InfoBar." },
     ],
   },
   {
@@ -146,4 +140,4 @@ export function findSectionLabel(slug: string): string {
   return slug;
 }
 
-export const DEFAULT_SECTION = "settings";
+export const DEFAULT_SECTION = "identidad";
