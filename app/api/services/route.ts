@@ -6,6 +6,7 @@ import { errorResponse } from "@/app/api/_utils/response";
 import { buildPaginatedResponse, getPaginationParams } from "@/app/api/_utils/pagination";
 import { parseJson } from "@/app/api/_utils/validation";
 import { getPrismaClient } from "@/lib/prisma";
+import { MARKETING_ICON_KEYS } from "@/lib/marketing/homepage-types";
 import { Prisma } from "@prisma/client";
 
 const serviceSchema = z.object({
@@ -15,6 +16,9 @@ const serviceSchema = z.object({
   durationMinutes: z.number().int().min(0).nullable().optional(),
   active: z.boolean().optional(),
   specialtyId: z.string().uuid().nullable().optional(),
+  iconKey: z.enum(MARKETING_ICON_KEYS).nullable().optional(),
+  showOnHomepage: z.boolean().optional(),
+  homepageSortOrder: z.number().int().min(0).optional(),
 });
 
 export async function GET(request: Request) {
@@ -68,6 +72,9 @@ export async function POST(request: Request) {
       durationMinutes: body.durationMinutes ?? null,
       active: body.active ?? true,
       specialtyId: body.specialtyId ?? null,
+      iconKey: body.iconKey ?? null,
+      showOnHomepage: body.showOnHomepage ?? false,
+      homepageSortOrder: body.homepageSortOrder ?? 0,
     },
   });
 

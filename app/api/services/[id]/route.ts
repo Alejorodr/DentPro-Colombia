@@ -5,6 +5,7 @@ import { getSessionUser, isAuthorized } from "@/app/api/_utils/auth";
 import { errorResponse } from "@/app/api/_utils/response";
 import { parseJson } from "@/app/api/_utils/validation";
 import { getPrismaClient } from "@/lib/prisma";
+import { MARKETING_ICON_KEYS } from "@/lib/marketing/homepage-types";
 
 const updateServiceSchema = z.object({
   name: z.string().trim().min(1).max(120).optional(),
@@ -13,6 +14,9 @@ const updateServiceSchema = z.object({
   durationMinutes: z.number().int().min(0).nullable().optional(),
   active: z.boolean().optional(),
   specialtyId: z.string().uuid().nullable().optional(),
+  iconKey: z.enum(MARKETING_ICON_KEYS).nullable().optional(),
+  showOnHomepage: z.boolean().optional(),
+  homepageSortOrder: z.number().int().min(0).optional(),
 });
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -37,6 +41,9 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       ...(body.durationMinutes !== undefined ? { durationMinutes: body.durationMinutes } : {}),
       ...(typeof body.active === "boolean" ? { active: body.active } : {}),
       ...(body.specialtyId !== undefined ? { specialtyId: body.specialtyId } : {}),
+      ...(body.iconKey !== undefined ? { iconKey: body.iconKey } : {}),
+      ...(typeof body.showOnHomepage === "boolean" ? { showOnHomepage: body.showOnHomepage } : {}),
+      ...(typeof body.homepageSortOrder === "number" ? { homepageSortOrder: body.homepageSortOrder } : {}),
     },
   });
 
