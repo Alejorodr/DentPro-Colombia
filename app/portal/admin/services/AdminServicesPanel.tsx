@@ -7,7 +7,9 @@ import { Card } from "@/app/portal/components/ui/Card";
 import { Table } from "@/app/portal/components/ui/Table";
 import { STATUS_COLORS } from "@/app/portal/components/ui/statusColors";
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
-import { MARKETING_ICON_KEYS } from "@/lib/marketing/homepage-types";
+import type { MarketingIconKey } from "@/lib/marketing/homepage-types";
+
+import { IconSelect } from "@/app/portal/admin/content/components/IconSelect";
 
 type ServiceRecord = {
   id: string;
@@ -643,17 +645,14 @@ function ServiceModal({
 
             <label className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
               Ícono
-              <select
-                className="input mt-2 h-10 w-full text-sm normal-case"
-                value={form.iconKey}
-                onChange={set("iconKey")}
-                disabled={saving}
-              >
-                <option value="">Sin ícono</option>
-                {MARKETING_ICON_KEYS.map((icon) => (
-                  <option key={icon} value={icon}>{icon}</option>
-                ))}
-              </select>
+              <div className="mt-2">
+                <IconSelect
+                  value={form.iconKey as MarketingIconKey | ""}
+                  onChange={(next) => onChange({ ...form, iconKey: next })}
+                  disabled={saving}
+                  allowEmpty
+                />
+              </div>
             </label>
 
             <label className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">

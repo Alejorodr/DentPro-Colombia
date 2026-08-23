@@ -6,6 +6,7 @@ import { Card } from "@/app/portal/components/ui/Card";
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
 import { MARKETING_ICON_KEYS } from "@/lib/marketing/homepage-types";
 
+import { IconSelect } from "./components/IconSelect";
 import { PlacementCheckboxes } from "./components/PlacementCheckboxes";
 
 type SocialLinkItem = {
@@ -178,9 +179,7 @@ export function AdminHomepageSocialLinksPanel() {
         <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Nuevo enlace social</h3>
         <div className="grid gap-4 md:grid-cols-2">
           <input className="input h-11 text-sm" placeholder="Etiqueta" value={newSocialLink.label} onChange={(e) => setNewSocialLink((prev) => ({ ...prev, label: e.target.value }))} disabled={saving} />
-          <select className="input h-11 text-sm" value={newSocialLink.iconKey} onChange={(e) => setNewSocialLink((prev) => ({ ...prev, iconKey: e.target.value as (typeof MARKETING_ICON_KEYS)[number] }))} disabled={saving}>
-            {MARKETING_ICON_KEYS.map((icon) => <option key={icon} value={icon}>{icon}</option>)}
-          </select>
+          <IconSelect value={newSocialLink.iconKey} onChange={(next) => setNewSocialLink((prev) => ({ ...prev, iconKey: next }))} disabled={saving} />
           <input className="input h-11 text-sm md:col-span-2" placeholder="https://..." value={newSocialLink.href} onChange={(e) => setNewSocialLink((prev) => ({ ...prev, href: e.target.value }))} disabled={saving} />
           <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
             <input type="checkbox" checked={newSocialLink.isActive} onChange={(e) => setNewSocialLink((prev) => ({ ...prev, isActive: e.target.checked }))} disabled={saving} /> Activo
@@ -218,9 +217,7 @@ export function AdminHomepageSocialLinksPanel() {
           {editingId === socialLink.id ? (
             <div className="grid gap-3 md:grid-cols-2">
               <input className="input h-11 text-sm" value={socialLink.label} onChange={(e) => setSocialLinks((prev) => prev.map((item) => (item.id === socialLink.id ? { ...item, label: e.target.value } : item)))} disabled={saving} />
-              <select className="input h-11 text-sm" value={socialLink.iconKey} onChange={(e) => setSocialLinks((prev) => prev.map((item) => (item.id === socialLink.id ? { ...item, iconKey: e.target.value as (typeof MARKETING_ICON_KEYS)[number] } : item)))} disabled={saving}>
-                {MARKETING_ICON_KEYS.map((icon) => <option key={icon} value={icon}>{icon}</option>)}
-              </select>
+              <IconSelect value={socialLink.iconKey} onChange={(next) => setSocialLinks((prev) => prev.map((item) => (item.id === socialLink.id ? { ...item, iconKey: next } : item)))} disabled={saving} />
               <input className="input h-11 text-sm md:col-span-2" value={socialLink.href} onChange={(e) => setSocialLinks((prev) => prev.map((item) => (item.id === socialLink.id ? { ...item, href: e.target.value } : item)))} disabled={saving} />
               <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                 <input type="checkbox" checked={socialLink.isActive} onChange={(e) => setSocialLinks((prev) => prev.map((item) => (item.id === socialLink.id ? { ...item, isActive: e.target.checked } : item)))} disabled={saving} /> Activo

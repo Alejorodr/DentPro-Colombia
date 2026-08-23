@@ -6,6 +6,8 @@ import { Card } from "@/app/portal/components/ui/Card";
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
 import { MARKETING_ICON_KEYS } from "@/lib/marketing/homepage-types";
 
+import { IconSelect } from "./components/IconSelect";
+
 type ContactSupportItem = {
   id: string;
   iconKey: (typeof MARKETING_ICON_KEYS)[number];
@@ -160,9 +162,7 @@ export function AdminHomepageContactSupportItemsPanel() {
       <Card className="space-y-4">
         <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Nuevo ítem de soporte</h3>
         <div className="grid gap-4 md:grid-cols-2">
-          <select className="input h-11 text-sm" value={newItem.iconKey} onChange={(e) => setNewItem((prev) => ({ ...prev, iconKey: e.target.value as (typeof MARKETING_ICON_KEYS)[number] }))} disabled={saving}>
-            {MARKETING_ICON_KEYS.map((icon) => <option key={icon} value={icon}>{icon}</option>)}
-          </select>
+          <IconSelect value={newItem.iconKey} onChange={(next) => setNewItem((prev) => ({ ...prev, iconKey: next }))} disabled={saving} />
           <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
             <input type="checkbox" checked={newItem.isActive} onChange={(e) => setNewItem((prev) => ({ ...prev, isActive: e.target.checked }))} disabled={saving} /> Activo
           </label>
@@ -188,9 +188,7 @@ export function AdminHomepageContactSupportItemsPanel() {
 
           {editingId === item.id ? (
             <div className="grid gap-3 md:grid-cols-2">
-              <select className="input h-11 text-sm" value={item.iconKey} onChange={(e) => setItems((prev) => prev.map((candidate) => (candidate.id === item.id ? { ...candidate, iconKey: e.target.value as (typeof MARKETING_ICON_KEYS)[number] } : candidate)))} disabled={saving}>
-                {MARKETING_ICON_KEYS.map((icon) => <option key={icon} value={icon}>{icon}</option>)}
-              </select>
+              <IconSelect value={item.iconKey} onChange={(next) => setItems((prev) => prev.map((candidate) => (candidate.id === item.id ? { ...candidate, iconKey: next } : candidate)))} disabled={saving} />
               <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                 <input type="checkbox" checked={item.isActive} onChange={(e) => setItems((prev) => prev.map((candidate) => (candidate.id === item.id ? { ...candidate, isActive: e.target.checked } : candidate)))} disabled={saving} /> Activo
               </label>

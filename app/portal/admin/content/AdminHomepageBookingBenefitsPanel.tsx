@@ -6,6 +6,8 @@ import { Card } from "@/app/portal/components/ui/Card";
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
 import { MARKETING_ICON_KEYS } from "@/lib/marketing/homepage-types";
 
+import { IconSelect } from "./components/IconSelect";
+
 type BookingBenefitItem = {
   id: string;
   iconKey: (typeof MARKETING_ICON_KEYS)[number];
@@ -169,9 +171,7 @@ export function AdminHomepageBookingBenefitsPanel() {
       <Card className="space-y-4">
         <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Nuevo beneficio de agenda</h3>
         <div className="grid gap-4 md:grid-cols-2">
-          <select className="input h-11 text-sm" value={newBookingBenefit.iconKey} onChange={(e) => setNewBookingBenefit((prev) => ({ ...prev, iconKey: e.target.value as (typeof MARKETING_ICON_KEYS)[number] }))} disabled={saving}>
-            {MARKETING_ICON_KEYS.map((icon) => <option key={icon} value={icon}>{icon}</option>)}
-          </select>
+          <IconSelect value={newBookingBenefit.iconKey} onChange={(next) => setNewBookingBenefit((prev) => ({ ...prev, iconKey: next }))} disabled={saving} />
           <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
             <input type="checkbox" checked={newBookingBenefit.isActive} onChange={(e) => setNewBookingBenefit((prev) => ({ ...prev, isActive: e.target.checked }))} disabled={saving} /> Activo
           </label>
@@ -200,9 +200,7 @@ export function AdminHomepageBookingBenefitsPanel() {
 
           {editingId === bookingBenefit.id ? (
             <div className="grid gap-3 md:grid-cols-2">
-              <select className="input h-11 text-sm" value={bookingBenefit.iconKey} onChange={(e) => setBookingBenefits((prev) => prev.map((item) => (item.id === bookingBenefit.id ? { ...item, iconKey: e.target.value as (typeof MARKETING_ICON_KEYS)[number] } : item)))} disabled={saving}>
-                {MARKETING_ICON_KEYS.map((icon) => <option key={icon} value={icon}>{icon}</option>)}
-              </select>
+              <IconSelect value={bookingBenefit.iconKey} onChange={(next) => setBookingBenefits((prev) => prev.map((item) => (item.id === bookingBenefit.id ? { ...item, iconKey: next } : item)))} disabled={saving} />
               <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                 <input type="checkbox" checked={bookingBenefit.isActive} onChange={(e) => setBookingBenefits((prev) => prev.map((item) => (item.id === bookingBenefit.id ? { ...item, isActive: e.target.checked } : item)))} disabled={saving} /> Activo
               </label>

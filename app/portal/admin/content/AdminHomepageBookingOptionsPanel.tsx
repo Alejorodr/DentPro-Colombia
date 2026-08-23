@@ -168,8 +168,8 @@ export function AdminHomepageBookingOptionsPanel() {
       <Card className="space-y-4">
         <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Nueva opción de agenda</h3>
         <div className="grid gap-4 md:grid-cols-2">
-          <input className="input h-11 text-sm" placeholder="Value" value={newBookingOption.value} onChange={(e) => setNewBookingOption((prev) => ({ ...prev, value: e.target.value }))} disabled={saving} />
-          <input className="input h-11 text-sm" placeholder="Label" value={newBookingOption.label} onChange={(e) => setNewBookingOption((prev) => ({ ...prev, label: e.target.value }))} disabled={saving} />
+          <input className="input h-11 text-sm" placeholder="Valor" value={newBookingOption.value} onChange={(e) => setNewBookingOption((prev) => ({ ...prev, value: e.target.value }))} disabled={saving} />
+          <input className="input h-11 text-sm" placeholder="Etiqueta" value={newBookingOption.label} onChange={(e) => setNewBookingOption((prev) => ({ ...prev, label: e.target.value }))} disabled={saving} />
           <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
             <input type="checkbox" checked={newBookingOption.isActive} onChange={(e) => setNewBookingOption((prev) => ({ ...prev, isActive: e.target.checked }))} disabled={saving} /> Activo
           </label>
