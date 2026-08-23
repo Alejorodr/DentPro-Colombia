@@ -178,4 +178,5 @@ export type HomepageNormalizedContent = {
   };
   showSpecialists: boolean;
   showCampaigns: boolean;
+  showHeroStats: boolean;
 };

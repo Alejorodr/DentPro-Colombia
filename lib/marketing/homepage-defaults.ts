@@ -287,6 +287,7 @@ export const HOMEPAGE_DEFAULT_CONTENT: HomepageNormalizedContent = {
   },
   showSpecialists: true,
   showCampaigns: true,
+  showHeroStats: true,
 };
 
 const VALID_ICON_SET = new Set<string>(MARKETING_ICON_KEYS);

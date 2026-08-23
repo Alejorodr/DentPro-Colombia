@@ -845,6 +845,7 @@ model HomepageSettings {
   metaDescription          String?
   showSpecialists          Boolean  @default(true)
   showCampaigns            Boolean  @default(true)
+  showHeroStats            Boolean  @default(true)
   createdAt                DateTime @default(now())
   updatedAt                DateTime @updatedAt
 }

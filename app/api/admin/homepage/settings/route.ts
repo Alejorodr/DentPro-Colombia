@@ -131,6 +131,7 @@ const homepageSettingsSchema = z.object({
   metaDescription: optionalText(320),
   showSpecialists: z.boolean().optional(),
   showCampaigns: z.boolean().optional(),
+  showHeroStats: z.boolean().optional(),
 });
 
 // Partial: PATCH accepts any subset of fields (e.g. visibility-only toggles)
@@ -246,6 +247,7 @@ function serializeSettings(settings: Awaited<ReturnType<typeof ensureSettingsRec
     metaDescription: settings.metaDescription,
     showSpecialists: settings.showSpecialists,
     showCampaigns: settings.showCampaigns,
+    showHeroStats: settings.showHeroStats,
   };
 }
 
@@ -296,6 +298,7 @@ function mapPayloadToUpdateData(payload: HomepageSettingsPayload) {
     metaDescription: payload.metaDescription,
     ...(payload.showSpecialists !== undefined ? { showSpecialists: payload.showSpecialists } : {}),
     ...(payload.showCampaigns !== undefined ? { showCampaigns: payload.showCampaigns } : {}),
+    ...(payload.showHeroStats !== undefined ? { showHeroStats: payload.showHeroStats } : {}),
   };
 }
 
@@ -372,6 +375,7 @@ export async function PATCH(request: Request) {
         metaDescription: true,
         showSpecialists: true,
         showCampaigns: true,
+        showHeroStats: true,
       },
     });
     const { data: body, error } = await parseJson(request, homepageSettingsPatchSchema);

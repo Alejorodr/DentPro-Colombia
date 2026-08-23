@@ -30,7 +30,7 @@ const GROUPS: SidebarGroup[] = [
         label: "Hero principal",
         description: "Título, descripción, botones, testimonio e imagen principal.",
       },
-      { slug: "hero-stats", label: "Estadísticas hero", description: "Contadores debajo de los botones principales." },
+      { slug: "hero-stats", label: "Estadísticas del hero", description: "Datos cortos (ej. \"500+ pacientes\") debajo del texto principal — podés mostrarlos u ocultarlos." },
     ],
   },
   {

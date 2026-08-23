@@ -123,8 +123,9 @@ export async function getHomepageContent(prismaClient?: PrismaClient): Promise<H
         href: settings?.heroSecondaryButtonHref ?? fallback.hero.secondaryCta.href,
         label: settings?.heroSecondaryButtonText ?? fallback.hero.secondaryCta.label,
       },
-      stats:
-        heroStats.length > 0
+      stats: settings?.showHeroStats === false
+        ? []
+        : heroStats.length > 0
           ? heroStats.map((item) => ({ label: item.label, description: item.description }))
           : fallback.hero.stats,
       image: {
@@ -257,6 +258,7 @@ export async function getHomepageContent(prismaClient?: PrismaClient): Promise<H
     },
     showSpecialists: settings?.showSpecialists ?? true,
     showCampaigns: settings?.showCampaigns ?? true,
+    showHeroStats: settings?.showHeroStats ?? true,
   };
 }
 

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Card } from "@/app/portal/components/ui/Card";
+import { SectionVisibilityToggle } from "@/app/portal/admin/content/components/SectionVisibilityToggle";
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
 
 type HeroStatItem = {
@@ -34,21 +35,29 @@ export function AdminHomepageHeroStatsPanel() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [showHeroStats, setShowHeroStats] = useState(true);
 
   const loadHeroStats = useCallback(async () => {
     setLoading(true);
     setError(null);
 
-    const response = await fetchWithRetry("/api/admin/homepage/hero-stats");
-    const body = (await response.json().catch(() => null)) as HeroStatsApiResponse | null;
+    const [heroStatsRes, settingsRes] = await Promise.all([
+      fetchWithRetry("/api/admin/homepage/hero-stats"),
+      fetchWithRetry("/api/admin/homepage/settings"),
+    ]);
+    const body = (await heroStatsRes.json().catch(() => null)) as HeroStatsApiResponse | null;
+    const settingsBody = (await settingsRes.json().catch(() => null)) as {
+      settings?: { showHeroStats?: boolean };
+    } | null;
 
-    if (!response.ok || !body?.heroStats) {
+    if (!heroStatsRes.ok || !body?.heroStats) {
       setError(body?.error ?? "No se pudieron cargar las estadísticas del hero.");
       setLoading(false);
       return;
     }
 
     setHeroStats(body.heroStats);
+    setShowHeroStats(settingsBody?.settings?.showHeroStats ?? true);
     setLoading(false);
   }, []);
 
@@ -161,18 +170,28 @@ export function AdminHomepageHeroStatsPanel() {
     <div className="space-y-4">
       <section>
         <p className="text-xs font-semibold uppercase tracking-wide text-brand-teal dark:text-accent-cyan">Homepage CMS</p>
-        <h2 className="text-xl font-semibold text-slate-900 dark:text-white">Hero stats del homepage</h2>
-        <p className="text-sm text-slate-600 dark:text-slate-300">CRUD, activación y orden manual de estadísticas del hero.</p>
+        <h2 className="text-xl font-semibold text-slate-900 dark:text-white">Estadísticas del hero</h2>
+        <p className="text-sm text-slate-600 dark:text-slate-300">
+          Son los datos cortos (ej. "500+ pacientes atendidos") que aparecen en una fila debajo del texto principal, en la
+          portada del sitio. Cada estadística tiene una etiqueta (el número o dato) y una descripción corta debajo. Si no
+          activás ninguna, se muestran 3 estadísticas por defecto.
+        </p>
       </section>
+
+      <SectionVisibilityToggle
+        label="Mostrar estadísticas en el hero"
+        fieldKey="showHeroStats"
+        initialValue={showHeroStats}
+      />
 
       <Card className="space-y-4">
         <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Nueva estadística</h3>
         <div className="grid gap-4 md:grid-cols-2">
-          <input className="input h-11 text-sm" placeholder="Etiqueta" value={newHeroStat.label} onChange={(e) => setNewHeroStat((prev) => ({ ...prev, label: e.target.value }))} disabled={saving} />
+          <input className="input h-11 text-sm" placeholder="Ej: 500+" value={newHeroStat.label} onChange={(e) => setNewHeroStat((prev) => ({ ...prev, label: e.target.value }))} disabled={saving} />
           <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
             <input type="checkbox" checked={newHeroStat.isActive} onChange={(e) => setNewHeroStat((prev) => ({ ...prev, isActive: e.target.checked }))} disabled={saving} /> Activo
           </label>
-          <textarea className="input min-h-24 text-sm md:col-span-2" placeholder="Descripción" value={newHeroStat.description} onChange={(e) => setNewHeroStat((prev) => ({ ...prev, description: e.target.value }))} disabled={saving} />
+          <textarea className="input min-h-24 text-sm md:col-span-2" placeholder="Ej: Pacientes atendidos" value={newHeroStat.description} onChange={(e) => setNewHeroStat((prev) => ({ ...prev, description: e.target.value }))} disabled={saving} />
         </div>
         <button type="button" className="rounded-full bg-brand-teal px-4 py-2 text-xs font-semibold uppercase text-white disabled:opacity-60" onClick={createHeroStat} disabled={saving}>
           Crear estadística

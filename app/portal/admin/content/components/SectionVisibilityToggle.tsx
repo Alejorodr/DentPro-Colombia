@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Eye, EyeSlash } from "@/components/ui/Icon";
 import { fetchWithTimeout } from "@/lib/http";
 
-type VisibilityKey = "showSpecialists" | "showCampaigns";
+type VisibilityKey = "showSpecialists" | "showCampaigns" | "showHeroStats";
 
 type Props = {
   label: string;
