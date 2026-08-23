@@ -11,6 +11,7 @@ type IconText = {
 type ChannelType = "WHATSAPP" | "PHONE" | "EMAIL";
 
 type Channel = {
+  id: string;
   type: ChannelType;
   value: string;
   label: string;
@@ -99,16 +100,29 @@ export function InfoBar({ location, schedule, channels, socials, googleRating }:
             const ChannelIcon = resolveMarketingIcon(CHANNEL_ICON[channel.type]);
             const isWhatsapp = channel.type === "WHATSAPP";
 
+              if (channel.type === "EMAIL") {
+                return (
+                  <a
+                    key={channel.id}
+                    href={buildChannelHref(channel)}
+                    className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200/70 text-lg transition hover:-translate-y-0.5 hover:border-brand-teal hover:text-brand-teal dark:border-surface-muted/80 dark:text-slate-200 dark:hover:border-accent-cyan dark:hover:text-accent-cyan"
+                    aria-label={channel.label}
+                  >
+                    <ChannelIcon className="h-5 w-5" weight="fill" aria-hidden="true" />
+                  </a>
+                );
+              }
+
               return (
                 <a
-                  key={channel.type}
+                  key={channel.id}
                   href={buildChannelHref(channel)}
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200/70 text-lg transition hover:-translate-y-0.5 hover:border-brand-teal hover:text-brand-teal dark:border-surface-muted/80 dark:text-slate-200 dark:hover:border-accent-cyan dark:hover:text-accent-cyan"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-slate-200/70 px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:-translate-y-0.5 hover:border-brand-teal hover:text-brand-teal dark:border-surface-muted/80 dark:text-slate-200 dark:hover:border-accent-cyan dark:hover:text-accent-cyan"
                   target={isWhatsapp ? "_blank" : undefined}
                   rel={isWhatsapp ? "noopener" : undefined}
-                  aria-label={channel.label}
                 >
-                  <ChannelIcon className="h-5 w-5" weight="fill" aria-hidden="true" />
+                  <ChannelIcon className="h-4 w-4" weight="fill" aria-hidden="true" />
+                  {channel.label}
                 </a>
               );
             })}

@@ -12,6 +12,7 @@ import { PASSWORD_POLICY_MESSAGE, PASSWORD_POLICY_REGEX } from "@/lib/auth/passw
 import { Prisma } from "@prisma/client";
 import { redactSensitiveAuthFields } from "@/lib/security/redaction";
 import { logAuditEvent } from "@/lib/audit";
+import { optionalImageUrl, optionalText } from "@/app/api/admin/homepage/_lib";
 
 const updateUserSchema = z.object({
   email: z.string().trim().email().max(120).optional(),
@@ -24,9 +25,9 @@ const updateUserSchema = z.object({
   active: z.boolean().optional(),
   specialtyId: z.string().uuid().optional(),
   slotDurationMinutes: z.number().int().min(5).max(240).nullable().optional(),
-  homepageBioShort: z.string().trim().max(600).optional(),
-  homepageImageUrl: z.string().trim().max(524288).optional(),
-  homepageImageAlt: z.string().trim().max(180).optional(),
+  homepageBioShort: optionalText(600).optional(),
+  homepageImageUrl: optionalImageUrl().optional(),
+  homepageImageAlt: optionalText(180).optional(),
   showOnHomepage: z.boolean().optional(),
   homepageSortOrder: z.number().int().min(0).optional(),
 });
@@ -180,6 +181,11 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       return errorResponse("La especialidad es obligatoria para profesionales.");
     }
 
+    // Only touch professionalProfile.active on genuine role/active-status requests.
+    // A save that only carries homepage-presence fields (see RoleModal's "Presencia en
+    // el sitio público" section) must not silently reactivate a deactivated professional.
+    const shouldSetActive = payload.role !== undefined || typeof payload.active === "boolean";
+
     if (!existing.professional) {
       if (!payload.specialtyId) {
         return errorResponse("La especialidad es obligatoria para profesionales.");
@@ -189,10 +195,10 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
           user: { connect: { id } },
           specialty: { connect: { id: payload.specialtyId } },
           slotDurationMinutes: payload.slotDurationMinutes ?? null,
-          active: true,
-          homepageBioShort: payload.homepageBioShort?.trim() || undefined,
-          homepageImageUrl: payload.homepageImageUrl?.trim() || undefined,
-          homepageImageAlt: payload.homepageImageAlt?.trim() || undefined,
+          active: shouldSetActive ? true : undefined,
+          homepageBioShort: payload.homepageBioShort,
+          homepageImageUrl: payload.homepageImageUrl,
+          homepageImageAlt: payload.homepageImageAlt,
           showOnHomepage: typeof payload.showOnHomepage === "boolean" ? payload.showOnHomepage : undefined,
           homepageSortOrder: payload.homepageSortOrder ?? undefined,
         },
@@ -203,10 +209,10 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
         data: {
           specialty: payload.specialtyId ? { connect: { id: payload.specialtyId } } : undefined,
           slotDurationMinutes: payload.slotDurationMinutes ?? undefined,
-          active: true,
-          homepageBioShort: payload.homepageBioShort?.trim() || undefined,
-          homepageImageUrl: payload.homepageImageUrl?.trim() || undefined,
-          homepageImageAlt: payload.homepageImageAlt?.trim() || undefined,
+          active: shouldSetActive ? true : undefined,
+          homepageBioShort: payload.homepageBioShort,
+          homepageImageUrl: payload.homepageImageUrl,
+          homepageImageAlt: payload.homepageImageAlt,
           showOnHomepage: typeof payload.showOnHomepage === "boolean" ? payload.showOnHomepage : undefined,
           homepageSortOrder: payload.homepageSortOrder ?? undefined,
         },

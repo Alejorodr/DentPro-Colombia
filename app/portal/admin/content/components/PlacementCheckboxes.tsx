@@ -1,6 +1,8 @@
 "use client";
 
-export const PLACEMENT_OPTIONS: { value: string; label: string }[] = [
+import type { HomepagePlacement } from "@/lib/marketing/homepage-types";
+
+export const PLACEMENT_OPTIONS: { value: HomepagePlacement; label: string }[] = [
   { value: "INFOBAR", label: "Barra superior" },
   { value: "FLOATING", label: "Botón flotante" },
   { value: "FOOTER", label: "Footer" },
@@ -12,8 +14,8 @@ export function PlacementCheckboxes({
   onChange,
   disabled,
 }: {
-  value: string[];
-  onChange: (next: string[]) => void;
+  value: HomepagePlacement[];
+  onChange: (next: HomepagePlacement[]) => void;
   disabled: boolean;
 }) {
   return (

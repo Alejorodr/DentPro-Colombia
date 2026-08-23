@@ -110,7 +110,7 @@ export async function getHomepageContent(prismaClient?: PrismaClient): Promise<H
       navLinks.length > 0
         ? navLinks.map((link) => ({ href: link.href, label: link.label }))
         : fallback.navLinks,
-    channels: channels.map((c) => ({ type: c.type, value: c.value, label: c.label, placements: c.placements })),
+    channels: channels.map((c) => ({ id: c.id, type: c.type, value: c.value, label: c.label, placements: c.placements })),
     hero: {
       badge: settings?.heroBadge ?? fallback.hero.badge,
       title: settings?.heroTitle ?? fallback.hero.title,

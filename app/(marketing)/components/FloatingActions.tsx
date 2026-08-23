@@ -7,6 +7,7 @@ import { buildEmailHref, buildPhoneHref, buildWhatsappHref } from "@/lib/marketi
 type ChannelType = "WHATSAPP" | "PHONE" | "EMAIL";
 
 interface Channel {
+  id: string;
   type: ChannelType;
   value: string;
   label: string;
@@ -27,12 +28,6 @@ const CHANNEL_ICON: Record<ChannelType, MarketingIconName> = {
   WHATSAPP: "ChatCircleDots",
   PHONE: "Phone",
   EMAIL: "EnvelopeSimple",
-};
-
-const CHANNEL_CLASS: Record<ChannelType, string> = {
-  WHATSAPP: "whatsapp",
-  PHONE: "phone",
-  EMAIL: "email",
 };
 
 const CHANNEL_LABEL_FALLBACK: Record<ChannelType, string> = {
@@ -63,9 +58,9 @@ export function FloatingActions({ channels, socials }: FloatingActionsProps) {
 
         return (
           <a
-            key={channel.type}
+            key={channel.id}
             href={buildChannelHref(channel)}
-            className={`group relative floating-action-btn ${CHANNEL_CLASS[channel.type]}`}
+            className="group relative floating-action-btn"
             aria-label={channel.label || CHANNEL_LABEL_FALLBACK[channel.type]}
             target={isWhatsapp ? "_blank" : undefined}
             rel={isWhatsapp ? "noopener noreferrer" : undefined}

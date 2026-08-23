@@ -59,12 +59,14 @@ export default async function Home() {
     login: NAV_LOGIN,
   };
 
+  const phoneChannel = homepageContent.channels.find((c) => c.type === "PHONE");
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Dentist",
     name: homepageContent.brand.name,
     url: "https://dentprocolombia.com",
-    telephone: homepageContent.channels.find((c) => c.type === "PHONE")?.value ?? "573237968435",
+    telephone: phoneChannel ? `+${phoneChannel.value}` : "+573237968435",
     email: homepageContent.channels.find((c) => c.type === "EMAIL")?.value ?? "dentprocolombia@gmail.com",
     description:
       homepageContent.seo.metaDescription ??

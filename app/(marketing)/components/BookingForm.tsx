@@ -21,6 +21,7 @@ interface BenefitItem {
 type ChannelType = "WHATSAPP" | "PHONE" | "EMAIL";
 
 interface Channel {
+  id: string;
   type: ChannelType;
   value: string;
   label: string;
@@ -218,14 +219,14 @@ export function BookingFormSection({
 
                     return (
                       <a
-                        key={channel.type}
+                        key={channel.id}
                         href={buildChannelHref(channel)}
                         className="inline-flex items-center gap-2 text-sm font-semibold text-brand-teal hover:underline dark:text-accent-cyan"
                         target={isWhatsapp ? "_blank" : undefined}
                         rel={isWhatsapp ? "noopener" : undefined}
                       >
                         <ChannelIcon className="h-4 w-4" weight="bold" aria-hidden="true" />
-                        {isWhatsapp ? "WhatsApp" : channel.value}
+                        {channel.label}
                       </a>
                     );
                   })}

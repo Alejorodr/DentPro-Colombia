@@ -9,6 +9,7 @@ import { buildEmailHref, buildPhoneHref, buildWhatsappHref } from "@/lib/marketi
 type ChannelType = "WHATSAPP" | "PHONE" | "EMAIL";
 
 interface ContactChannel {
+  id: string;
   type: ChannelType;
   value: string;
   label: string;
@@ -93,7 +94,7 @@ export function ContactSection({
               const isWhatsapp = channel.type === "WHATSAPP";
 
               return (
-                <p key={channel.type} className="flex items-center gap-3">
+                <p key={channel.id} className="flex items-center gap-3">
                   <span className="icon-badge text-brand-light dark:text-accent-cyan">
                     <ChannelIcon className="h-5 w-5" weight="bold" aria-hidden="true" />
                   </span>
@@ -103,7 +104,7 @@ export function ContactSection({
                     target={isWhatsapp ? "_blank" : undefined}
                     rel={isWhatsapp ? "noopener" : undefined}
                   >
-                    {channel.value}
+                    {channel.label}
                   </a>
                 </p>
               );

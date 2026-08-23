@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Card } from "@/app/portal/components/ui/Card";
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
-import { MARKETING_ICON_KEYS } from "@/lib/marketing/homepage-types";
+import { MARKETING_ICON_KEYS, type HomepagePlacement } from "@/lib/marketing/homepage-types";
 
 import { IconSelect } from "./components/IconSelect";
 import { PlacementCheckboxes } from "./components/PlacementCheckboxes";
@@ -16,7 +16,7 @@ type SocialLinkItem = {
   iconKey: (typeof MARKETING_ICON_KEYS)[number];
   sortOrder: number;
   isActive: boolean;
-  placements: string[];
+  placements: HomepagePlacement[];
 };
 
 type SocialLinksApiResponse = {
@@ -31,7 +31,7 @@ const EMPTY_SOCIAL_LINK = {
   label: "",
   iconKey: "InstagramLogo" as (typeof MARKETING_ICON_KEYS)[number],
   isActive: true,
-  placements: [] as string[],
+  placements: [] as HomepagePlacement[],
 };
 
 export function AdminHomepageSocialLinksPanel() {

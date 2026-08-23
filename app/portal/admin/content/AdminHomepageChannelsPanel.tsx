@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Card } from "@/app/portal/components/ui/Card";
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
+import type { HomepagePlacement } from "@/lib/marketing/homepage-types";
 
 import { PlacementCheckboxes } from "./components/PlacementCheckboxes";
 
@@ -26,7 +27,7 @@ type ChannelItem = {
   type: (typeof CHANNEL_TYPES)[number];
   value: string;
   label: string;
-  placements: string[];
+  placements: HomepagePlacement[];
   sortOrder: number;
   isActive: boolean;
 };
@@ -42,7 +43,7 @@ const EMPTY_CHANNEL = {
   type: "WHATSAPP" as (typeof CHANNEL_TYPES)[number],
   value: "",
   label: "",
-  placements: [] as string[],
+  placements: [] as HomepagePlacement[],
   isActive: true,
 };
 

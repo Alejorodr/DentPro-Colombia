@@ -59,18 +59,21 @@ export type HomepageBookingBenefitContent = {
   text: string;
 };
 
+export type HomepagePlacement = "INFOBAR" | "FLOATING" | "FOOTER" | "BOOKING";
+
 export type HomepageSocialLinkContent = {
   href: string;
   label: string;
   icon: MarketingIconKey;
-  placements: string[];
+  placements: HomepagePlacement[];
 };
 
 export type HomepageChannelContent = {
+  id: string;
   type: "WHATSAPP" | "PHONE" | "EMAIL";
   value: string;
   label: string;
-  placements: string[];
+  placements: HomepagePlacement[];
 };
 
 export type HomepageContactSupportItemContent = {
