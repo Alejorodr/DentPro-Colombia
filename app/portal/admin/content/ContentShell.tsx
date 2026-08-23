@@ -24,53 +24,44 @@ import { AdminHomepageFaqPanel } from "@/app/portal/admin/content/AdminHomepageF
 import { AdminHomepageNavLinksPanel } from "@/app/portal/admin/content/AdminHomepageNavLinksPanel";
 import { ContentSidebar, DEFAULT_SECTION, findSectionLabel } from "@/app/portal/admin/content/ContentSidebar";
 
-// NOTE: this switch is an interim "unbreak" patch (same pattern as Tasks 16/20) after
-// AdminHomepageSettingsPanel was split into 5 dedicated panels (Task 21) + a 6th
-// (AdminSpecialistsCopyPanel) added to cover the "especialistas" gap. "identidad" now
-// routes to AdminCompanyInfoPanel and the old "infobar" sidebar entry was dropped as a
-// duplicate of it; "floating" now routes to AdminHomepageChannelsPanel, which already
-// manages WhatsApp/phone/email placement (incl. the floating buttons). The full sidebar
-// regrouping (new group labels, "company-info"/"channels" slugs, etc.) is still Task 22
-// — this patch only makes every slug point at a real, non-deleted component so the
-// build is green.
 function SectionPanel({ section }: { section: string }) {
   switch (section) {
-    case "identidad":
+    case "company-info":
       return <AdminCompanyInfoPanel />;
-    case "floating":
+    case "channels":
       return <AdminHomepageChannelsPanel />;
-    case "seo":
-      return <AdminSeoPanel />;
-    case "hero-copy":
+    case "social":
+      return <AdminHomepageSocialLinksPanel />;
+    case "hero":
       return <AdminHeroPanel />;
-    case "servicios-copy":
+    case "hero-stats":
+      return <AdminHomepageHeroStatsPanel />;
+    case "services-copy":
       return <AdminServicesCopyPanel />;
     case "especialistas-copy":
       return <AdminSpecialistsCopyPanel />;
     case "agenda-copy":
       return <AdminAgendaCopyPanel />;
-    case "contacto-copy":
-      return <AdminContactCopyPanel />;
-    case "navbar":
-      return <AdminHomepageNavLinksPanel />;
-    case "hero-stats":
-      return <AdminHomepageHeroStatsPanel />;
     case "booking":
       return <AdminHomepageBookingOptionsPanel />;
     case "benefits":
       return <AdminHomepageBookingBenefitsPanel />;
-    case "social":
-      return <AdminHomepageSocialLinksPanel />;
+    case "faq":
+      return <AdminHomepageFaqPanel />;
+    case "contact-copy":
+      return <AdminContactCopyPanel />;
     case "support":
       return <AdminHomepageContactSupportItemsPanel />;
     case "locations":
       return <AdminHomepageLocationsPanel />;
     case "legal":
       return <AdminHomepageLegalLinksPanel />;
-    case "faq":
-      return <AdminHomepageFaqPanel />;
     case "campaigns":
       return <AdminCampaignsPanel />;
+    case "navbar":
+      return <AdminHomepageNavLinksPanel />;
+    case "seo":
+      return <AdminSeoPanel />;
     default:
       return <AdminCompanyInfoPanel />;
   }

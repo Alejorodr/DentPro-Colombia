@@ -7,29 +7,37 @@ type SidebarGroup = {
 
 const GROUPS: SidebarGroup[] = [
   {
-    label: "Marca / Header",
+    label: "Información de empresa",
     items: [
-      { slug: "identidad", label: "Identidad de marca", description: "Nombre de la empresa, logo, dirección y horario." },
-      { slug: "seo", label: "SEO y metadatos", description: "Título y descripción para buscadores." },
-      { slug: "navbar", label: "Navbar", description: "Enlaces del menú de navegación superior." },
+      { slug: "company-info", label: "Datos generales", description: "Nombre, logo, dirección y horario." },
+      {
+        slug: "channels",
+        label: "Canales de comunicación",
+        description: "WhatsApp, teléfono y email — decide en qué lugares del sitio aparece cada uno.",
+      },
+      {
+        slug: "social",
+        label: "Redes sociales",
+        description: "Instagram, Facebook, etc. — decide en qué lugares del sitio aparece cada una.",
+      },
     ],
   },
   {
     label: "Hero",
     items: [
-      { slug: "hero-stats", label: "Estadísticas hero", description: "Contadores debajo de los botones principales." },
       {
-        slug: "hero-copy",
-        label: "Textos del hero",
+        slug: "hero",
+        label: "Hero principal",
         description: "Título, descripción, botones, testimonio e imagen principal.",
       },
+      { slug: "hero-stats", label: "Estadísticas hero", description: "Contadores debajo de los botones principales." },
     ],
   },
   {
     label: "Servicios",
     items: [
       {
-        slug: "servicios-copy",
+        slug: "services-copy",
         label: "Encabezado de servicios",
         description: "Título y descripción de la sección \"¿Qué hacemos?\".",
       },
@@ -48,13 +56,13 @@ const GROUPS: SidebarGroup[] = [
   {
     label: "Agenda",
     items: [
-      { slug: "booking", label: "Opciones de agendamiento", description: "Métodos disponibles para agendar." },
-      { slug: "benefits", label: "Beneficios de agendar", description: "Textos debajo del formulario de agenda." },
       {
         slug: "agenda-copy",
-        label: "Textos de agenda",
-        description: "Título, descripción y notas del formulario de agendamiento.",
+        label: "Agenda",
+        description: "Textos de apoyo del bloque de agendamiento.",
       },
+      { slug: "booking", label: "Opciones de agendamiento", description: "Métodos disponibles para agendar." },
+      { slug: "benefits", label: "Beneficios de agendar", description: "Textos debajo del formulario de agenda." },
     ],
   },
   {
@@ -66,27 +74,27 @@ const GROUPS: SidebarGroup[] = [
   {
     label: "Contacto / Footer",
     items: [
-      { slug: "support", label: "Canales de soporte", description: "Íconos de contacto rápido." },
+      {
+        slug: "contact-copy",
+        label: "Contacto",
+        description: "Encabezados y textos del bloque de contacto.",
+      },
+      { slug: "support", label: "Íconos de contacto rápido", description: "Íconos de contacto rápido en la columna de soporte." },
       { slug: "locations", label: "Sedes / ubicaciones", description: "Tarjetas de sede con dirección y horario." },
       { slug: "legal", label: "Enlaces legales", description: "Política de privacidad, términos, etc." },
-      { slug: "floating", label: "Botones flotantes", description: "WhatsApp y teléfono flotantes." },
-      {
-        slug: "contacto-copy",
-        label: "Textos de contacto",
-        description: "Título y descripción del bloque de contacto.",
-      },
-    ],
-  },
-  {
-    label: "Redes",
-    items: [
-      { slug: "social", label: "Redes sociales", description: "Íconos que enlazan a Instagram, Facebook, etc." },
     ],
   },
   {
     label: "Marketing",
     items: [
       { slug: "campaigns", label: "Campañas", description: "Banners promocionales con fecha de inicio y fin." },
+    ],
+  },
+  {
+    label: "General",
+    items: [
+      { slug: "navbar", label: "Navbar", description: "Enlaces del menú de navegación superior." },
+      { slug: "seo", label: "SEO y metadatos", description: "Título y descripción para buscadores." },
     ],
   },
 ];
@@ -140,4 +148,4 @@ export function findSectionLabel(slug: string): string {
   return slug;
 }
 
-export const DEFAULT_SECTION = "identidad";
+export const DEFAULT_SECTION = "company-info";
