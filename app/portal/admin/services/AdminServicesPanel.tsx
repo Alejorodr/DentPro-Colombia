@@ -651,6 +651,7 @@ function ServiceModal({
                   onChange={(next) => onChange({ ...form, iconKey: next })}
                   disabled={saving}
                   allowEmpty
+                  className="h-10 normal-case"
                 />
               </div>
             </label>
