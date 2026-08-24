@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 import type { UserRole } from "@/lib/auth/roles";
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
@@ -28,10 +29,13 @@ interface NewAppointmentFormProps {
 }
 
 export function NewAppointmentForm({ role }: NewAppointmentFormProps) {
+  const searchParams = useSearchParams();
+  const preselectedProfessionalId = searchParams.get("professionalId") ?? "";
+
   const [allProfessionals, setAllProfessionals] = useState<Professional[]>([]);
   const [slots, setSlots] = useState<TimeSlot[]>([]);
   const [services, setServices] = useState<Service[]>([]);
-  const [professionalId, setProfessionalId] = useState("");
+  const [professionalId, setProfessionalId] = useState(preselectedProfessionalId);
   const [serviceId, setServiceId] = useState("");
   const [selectedDate, setSelectedDate] = useState("");
   const [timeSlotId, setTimeSlotId] = useState("");
@@ -54,7 +58,12 @@ export function NewAppointmentForm({ role }: NewAppointmentFormProps) {
       .catch(() => setServices([]));
   }, []);
 
+  const isFirstServiceRender = useRef(true);
   useEffect(() => {
+    if (isFirstServiceRender.current) {
+      isFirstServiceRender.current = false;
+      return;
+    }
     setProfessionalId("");
     setTimeSlotId("");
   }, [serviceId]);
