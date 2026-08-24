@@ -1,15 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { MagnifyingGlass, PencilSimple, Trash, X } from "@/components/ui/Icon";
 import { Card } from "@/app/portal/components/ui/Card";
 import { Table } from "@/app/portal/components/ui/Table";
 import { STATUS_COLORS } from "@/app/portal/components/ui/statusColors";
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
-import type { MarketingIconKey } from "@/lib/marketing/homepage-types";
-
-import { IconSelect } from "@/app/portal/admin/content/components/IconSelect";
 
 type ServiceRecord = {
   id: string;
@@ -33,12 +30,7 @@ type ServiceForm = {
   duration: string;
   active: boolean;
   specialtyId: string;
-  iconKey: string;
-  showOnHomepage: boolean;
-  homepageSortOrder: string;
 };
-
-type HighlightItem = { id: string; text: string; sortOrder: number };
 
 const emptyForm: ServiceForm = {
   name: "",
@@ -47,9 +39,6 @@ const emptyForm: ServiceForm = {
   duration: "",
   active: true,
   specialtyId: "",
-  iconKey: "",
-  showOnHomepage: false,
-  homepageSortOrder: "0",
 };
 
 const formatCurrency = (cents: number) =>
@@ -67,9 +56,6 @@ export function AdminServicesPanel() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
-  const [editHighlights, setEditHighlights] = useState<HighlightItem[]>([]);
-  const [highlightsLoading, setHighlightsLoading] = useState(false);
-  const [newHighlightText, setNewHighlightText] = useState("");
 
   const loadServices = useCallback(async (search: string) => {
     const params = new URLSearchParams({ pageSize: "100" });
@@ -98,16 +84,6 @@ export function AdminServicesPanel() {
     return () => window.clearTimeout(timer);
   }, [loadServices, query]);
 
-  const loadHighlights = useCallback(async (serviceId: string) => {
-    setHighlightsLoading(true);
-    const response = await fetchWithRetry(`/api/services/${serviceId}/highlights`);
-    if (response.ok) {
-      const data = (await response.json()) as { highlights: HighlightItem[] };
-      setEditHighlights(data.highlights ?? []);
-    }
-    setHighlightsLoading(false);
-  }, []);
-
   const openEdit = (service: ServiceRecord) => {
     setEditing(service);
     setEditForm({
@@ -117,14 +93,8 @@ export function AdminServicesPanel() {
       duration: service.durationMinutes != null ? String(service.durationMinutes) : "",
       active: service.active,
       specialtyId: service.specialtyId ?? "",
-      iconKey: service.iconKey ?? "",
-      showOnHomepage: service.showOnHomepage,
-      homepageSortOrder: String(service.homepageSortOrder ?? 0),
     });
     setError(null);
-    setNewHighlightText("");
-    setEditHighlights([]);
-    void loadHighlights(service.id);
   };
 
   const createService = async () => {
@@ -144,9 +114,6 @@ export function AdminServicesPanel() {
         durationMinutes: createForm.duration ? Number(createForm.duration) : null,
         active: createForm.active,
         specialtyId: createForm.specialtyId || null,
-        iconKey: createForm.iconKey || null,
-        showOnHomepage: createForm.showOnHomepage,
-        homepageSortOrder: createForm.homepageSortOrder ? Number(createForm.homepageSortOrder) : 0,
       }),
     });
     if (response.ok) {
@@ -175,9 +142,6 @@ export function AdminServicesPanel() {
         durationMinutes: editForm.duration ? Number(editForm.duration) : null,
         active: editForm.active,
         specialtyId: editForm.specialtyId || null,
-        iconKey: editForm.iconKey || null,
-        showOnHomepage: editForm.showOnHomepage,
-        homepageSortOrder: editForm.homepageSortOrder ? Number(editForm.homepageSortOrder) : 0,
       }),
     });
     if (response.ok) {
@@ -209,92 +173,6 @@ export function AdminServicesPanel() {
     setDeleteTarget(null);
     setFeedback("Servicio eliminado.");
     void loadServices(query);
-    setSaving(false);
-  };
-
-  const createHighlight = async () => {
-    if (!editing) return;
-    const text = newHighlightText.trim();
-    if (!text) {
-      setError("El texto del highlight es obligatorio.");
-      return;
-    }
-    setSaving(true);
-    setError(null);
-    const response = await fetchWithTimeout(`/api/services/${editing.id}/highlights`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text }),
-    });
-    if (response.ok) {
-      setNewHighlightText("");
-      await loadHighlights(editing.id);
-    } else {
-      const body = (await response.json().catch(() => null)) as { error?: string } | null;
-      setError(body?.error ?? "No se pudo crear el highlight.");
-    }
-    setSaving(false);
-  };
-
-  const editHighlightText = (highlightId: string, text: string) => {
-    setEditHighlights((prev) => prev.map((item) => (item.id === highlightId ? { ...item, text } : item)));
-  };
-
-  const updateHighlight = async (highlightId: string, text: string) => {
-    if (!editing) return;
-    setSaving(true);
-    setError(null);
-    const response = await fetchWithTimeout(`/api/services/${editing.id}/highlights/${highlightId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text }),
-    });
-    if (response.ok) {
-      await loadHighlights(editing.id);
-    } else {
-      const body = (await response.json().catch(() => null)) as { error?: string } | null;
-      setError(body?.error ?? "No se pudo editar el highlight.");
-    }
-    setSaving(false);
-  };
-
-  const deleteHighlight = async (highlightId: string) => {
-    if (!editing) return;
-    setSaving(true);
-    setError(null);
-    const response = await fetchWithTimeout(`/api/services/${editing.id}/highlights/${highlightId}`, {
-      method: "DELETE",
-    });
-    if (response.ok) {
-      await loadHighlights(editing.id);
-    } else {
-      const body = (await response.json().catch(() => null)) as { error?: string } | null;
-      setError(body?.error ?? "No se pudo eliminar el highlight.");
-    }
-    setSaving(false);
-  };
-
-  const reorderHighlights = async (sourceIndex: number, targetIndex: number) => {
-    if (!editing) return;
-    if (targetIndex < 0 || targetIndex >= editHighlights.length) return;
-
-    const ordered = [...editHighlights];
-    const [moved] = ordered.splice(sourceIndex, 1);
-    ordered.splice(targetIndex, 0, moved);
-
-    setSaving(true);
-    setError(null);
-    const response = await fetchWithTimeout(`/api/services/${editing.id}/highlights/reorder`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ orderedIds: ordered.map((item) => item.id) }),
-    });
-    if (response.ok) {
-      setEditHighlights(ordered.map((item, index) => ({ ...item, sortOrder: index })));
-    } else {
-      const body = (await response.json().catch(() => null)) as { error?: string } | null;
-      setError(body?.error ?? "No se pudo reordenar los highlights.");
-    }
     setSaving(false);
   };
 
@@ -454,22 +332,6 @@ export function AdminServicesPanel() {
           onSubmit={updateService}
           onClose={() => { setEditing(null); setError(null); }}
           submitLabel="Guardar cambios"
-          highlightsSection={
-            editForm.showOnHomepage ? (
-              <HighlightsSection
-                highlights={editHighlights}
-                loading={highlightsLoading}
-                saving={saving}
-                newHighlightText={newHighlightText}
-                onNewHighlightTextChange={setNewHighlightText}
-                onCreate={createHighlight}
-                onEditText={editHighlightText}
-                onUpdate={updateHighlight}
-                onDelete={deleteHighlight}
-                onReorder={reorderHighlights}
-              />
-            ) : null
-          }
         />
       ) : null}
 
@@ -516,7 +378,6 @@ function ServiceModal({
   onSubmit,
   onClose,
   submitLabel,
-  highlightsSection,
 }: {
   title: string;
   form: ServiceForm;
@@ -527,7 +388,6 @@ function ServiceModal({
   onSubmit: () => void;
   onClose: () => void;
   submitLabel: string;
-  highlightsSection?: ReactNode;
 }) {
   const set = (key: keyof ServiceForm) => (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
     onChange({ ...form, [key]: event.target.value });
@@ -627,53 +487,6 @@ function ServiceModal({
           </label>
         </div>
 
-        <div className="mt-4 space-y-4 rounded-2xl border border-slate-100 p-4 dark:border-surface-muted">
-          <p className="text-xs font-semibold uppercase tracking-wide text-brand-teal dark:text-accent-cyan">
-            Presencia en el sitio público
-          </p>
-          <div className="grid gap-4 md:grid-cols-2">
-            <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400 md:col-span-2">
-              <input
-                type="checkbox"
-                checked={form.showOnHomepage}
-                onChange={(event) => onChange({ ...form, showOnHomepage: event.target.checked })}
-                disabled={saving}
-                className="h-4 w-4 rounded border-slate-300 text-brand-teal"
-              />
-              Mostrar en el sitio público
-            </label>
-
-            <label className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-              Ícono
-              <div className="mt-2">
-                <IconSelect
-                  value={form.iconKey as MarketingIconKey | ""}
-                  onChange={(next) => onChange({ ...form, iconKey: next })}
-                  disabled={saving}
-                  allowEmpty
-                  className="h-10 normal-case"
-                />
-              </div>
-            </label>
-
-            <label className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-              Orden en el sitio público
-              <input
-                className="input mt-2 h-10 w-full text-sm normal-case"
-                type="number"
-                min={0}
-                step={1}
-                placeholder="Ej. 0"
-                value={form.homepageSortOrder}
-                onChange={set("homepageSortOrder")}
-                disabled={saving}
-              />
-            </label>
-          </div>
-
-          {highlightsSection}
-        </div>
-
         {error ? <p className="mt-3 text-sm text-rose-600">{error}</p> : null}
 
         <div className="mt-6 flex justify-end gap-2">
@@ -693,107 +506,6 @@ function ServiceModal({
             {saving ? "Guardando…" : submitLabel}
           </button>
         </div>
-      </div>
-    </div>
-  );
-}
-
-function HighlightsSection({
-  highlights,
-  loading,
-  saving,
-  newHighlightText,
-  onNewHighlightTextChange,
-  onCreate,
-  onEditText,
-  onUpdate,
-  onDelete,
-  onReorder,
-}: {
-  highlights: HighlightItem[];
-  loading: boolean;
-  saving: boolean;
-  newHighlightText: string;
-  onNewHighlightTextChange: (text: string) => void;
-  onCreate: () => void;
-  onEditText: (highlightId: string, text: string) => void;
-  onUpdate: (highlightId: string, text: string) => void;
-  onDelete: (highlightId: string) => void;
-  onReorder: (sourceIndex: number, targetIndex: number) => void;
-}) {
-  return (
-    <div className="space-y-2 border-t border-slate-200 pt-4 dark:border-surface-muted">
-      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-        Highlights del sitio público
-      </p>
-
-      {loading ? <p className="text-sm text-slate-500 dark:text-slate-400">Cargando highlights…</p> : null}
-
-      {!loading && highlights.length === 0 ? (
-        <p className="text-sm text-slate-500 dark:text-slate-400">Este servicio aún no tiene highlights.</p>
-      ) : null}
-
-      {highlights.map((highlight, index) => (
-        <div key={highlight.id} className="grid gap-2 md:grid-cols-[1fr_auto] md:items-center">
-          <input
-            className="input h-10 text-sm normal-case"
-            value={highlight.text}
-            onChange={(event) => onEditText(highlight.id, event.target.value)}
-            disabled={saving}
-          />
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600 disabled:opacity-50 dark:border-surface-muted dark:text-slate-200"
-              onClick={() => onReorder(index, index - 1)}
-              disabled={saving || index === 0}
-            >
-              Subir
-            </button>
-            <button
-              type="button"
-              className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600 disabled:opacity-50 dark:border-surface-muted dark:text-slate-200"
-              onClick={() => onReorder(index, index + 1)}
-              disabled={saving || index === highlights.length - 1}
-            >
-              Bajar
-            </button>
-            <button
-              type="button"
-              className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600 disabled:opacity-50 dark:border-surface-muted dark:text-slate-200"
-              onClick={() => onUpdate(highlight.id, highlight.text)}
-              disabled={saving}
-            >
-              Guardar
-            </button>
-            <button
-              type="button"
-              className="rounded-full border border-rose-200 px-3 py-1 text-xs font-semibold text-rose-600 disabled:opacity-50"
-              onClick={() => onDelete(highlight.id)}
-              disabled={saving}
-            >
-              Eliminar
-            </button>
-          </div>
-        </div>
-      ))}
-
-      <div className="grid gap-2 md:grid-cols-[1fr_auto] md:items-center">
-        <input
-          className="input h-10 text-sm normal-case"
-          placeholder="Nuevo highlight"
-          value={newHighlightText}
-          onChange={(event) => onNewHighlightTextChange(event.target.value)}
-          disabled={saving}
-        />
-        <button
-          type="button"
-          className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600 disabled:opacity-50 dark:border-surface-muted dark:text-slate-200"
-          onClick={onCreate}
-          disabled={saving}
-        >
-          Agregar highlight
-        </button>
       </div>
     </div>
   );
