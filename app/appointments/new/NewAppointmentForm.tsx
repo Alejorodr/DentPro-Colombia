@@ -58,12 +58,12 @@ export function NewAppointmentForm({ role }: NewAppointmentFormProps) {
       .catch(() => setServices([]));
   }, []);
 
-  const isFirstServiceRender = useRef(true);
+  const previousServiceId = useRef(serviceId);
   useEffect(() => {
-    if (isFirstServiceRender.current) {
-      isFirstServiceRender.current = false;
+    if (previousServiceId.current === serviceId) {
       return;
     }
+    previousServiceId.current = serviceId;
     setProfessionalId("");
     setTimeSlotId("");
   }, [serviceId]);
