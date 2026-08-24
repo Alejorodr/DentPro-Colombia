@@ -183,12 +183,18 @@ export function ContactSection({
               {currentYear} {brand}. Todos los derechos reservados.
             </span>
           </p>
-          <div className="flex gap-6">
+          <div className="flex flex-col items-start gap-2 md:flex-row md:items-center md:gap-6">
             {legalLinks.map((link) => (
               <a key={link.href} href={link.href} className="hover:text-white dark:hover:text-accent-cyan">
                 {link.label}
               </a>
             ))}
+            <span className="text-slate-500 dark:text-slate-600">
+              Desarrollado por{" "}
+              <span className="font-semibold text-slate-400 dark:text-slate-500">
+                DOGBYTE
+              </span>
+            </span>
           </div>
         </div>
       </div>
