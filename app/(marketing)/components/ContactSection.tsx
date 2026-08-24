@@ -1,10 +1,14 @@
 "use client";
 
+import { motion, useReducedMotion } from "motion/react";
+
 import { Copyright } from "@/components/ui/Icon";
 
 import type { MarketingIconName } from "./icon-types";
 import { resolveMarketingIcon } from "./icon-registry";
 import { buildEmailHref, buildPhoneHref, buildWhatsappHref } from "@/lib/marketing/homepage-adapter";
+
+import { fadeUpVariant, fadeUpVariantReduced } from "@/lib/motion/variants";
 
 type ChannelType = "WHATSAPP" | "PHONE" | "EMAIL";
 
@@ -81,11 +85,18 @@ export function ContactSection({
   mapEmbedUrl,
 }: ContactSectionProps) {
   const currentYear = new Date().getFullYear();
+  const prefersReducedMotion = useReducedMotion();
 
   return (
     <section id="contacto" className="bg-slate-900 py-20 text-white transition-colors duration-500 dark:bg-surface-base">
       <div className="container mx-auto grid gap-12 px-6 lg:grid-cols-3">
-        <div className="space-y-6">
+        <motion.div
+          className="space-y-6"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.3 }}
+          variants={prefersReducedMotion ? fadeUpVariantReduced : fadeUpVariant}
+        >
           <h2 className="text-3xl font-bold">{title}</h2>
           <p className="text-base text-slate-300">{description}</p>
           <div className="space-y-2 text-sm text-slate-300">
@@ -128,8 +139,14 @@ export function ContactSection({
               );
             })}
           </div>
-        </div>
-        <div className="rounded-3xl bg-white/15 p-8 transition-colors duration-300 dark:border dark:border-accent-cyan/10 dark:bg-surface-muted/80">
+        </motion.div>
+        <motion.div
+          className="rounded-3xl bg-white/15 p-8 transition-colors duration-300 dark:border dark:border-accent-cyan/10 dark:bg-surface-muted/80"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.3 }}
+          variants={prefersReducedMotion ? fadeUpVariantReduced : fadeUpVariant}
+        >
           <h3 className="text-xl font-semibold">{supportTitle}</h3>
           <p className="mt-2 text-sm text-slate-300">
             Nuestro equipo de Patient Care está listo para acompañarte antes, durante y después de cada visita.
@@ -148,8 +165,14 @@ export function ContactSection({
               );
             })}
           </ul>
-        </div>
-        <div className="rounded-3xl bg-white/15 p-8 transition-colors duration-300 dark:border dark:border-accent-cyan/10 dark:bg-surface-muted/80">
+        </motion.div>
+        <motion.div
+          className="rounded-3xl bg-white/15 p-8 transition-colors duration-300 dark:border dark:border-accent-cyan/10 dark:bg-surface-muted/80"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.3 }}
+          variants={prefersReducedMotion ? fadeUpVariantReduced : fadeUpVariant}
+        >
           <h3 className="text-xl font-semibold">{locationsTitle}</h3>
           <ul className="mt-6 space-y-4 text-sm text-slate-200">
             {locations.map((location) => (
@@ -171,7 +194,7 @@ export function ContactSection({
               />
             </div>
           ) : null}
-        </div>
+        </motion.div>
       </div>
       <div className="mt-20 border-t border-white/10 dark:border-surface-muted/80">
         <div className="container mx-auto flex flex-col gap-4 px-6 py-8 text-sm text-slate-400 transition-colors duration-300 dark:text-slate-500 md:flex-row md:items-center md:justify-between">

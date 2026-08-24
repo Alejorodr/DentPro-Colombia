@@ -2,11 +2,14 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { motion, useReducedMotion } from "motion/react";
 
 import { fetchWithRetry } from "@/lib/http";
 import type { MarketingIconName } from "./icon-types";
 import { resolveMarketingIcon } from "./icon-registry";
 import { buildEmailHref, buildPhoneHref, buildWhatsappHref } from "@/lib/marketing/homepage-adapter";
+
+import { fadeUpVariant, fadeUpVariantReduced } from "@/lib/motion/variants";
 
 interface SelectOption {
   value: string;
@@ -134,16 +137,23 @@ export function BookingFormSection({
   }, []);
 
   const renderedSlots = publicSlots.length > 0 ? publicSlots : quickSlots;
+  const prefersReducedMotion = useReducedMotion();
 
   return (
     <section id="agenda" className="py-24 transition-colors duration-300 dark:bg-surface-base">
       <div className="container mx-auto px-6">
         {/* Section header */}
-        <div className="mx-auto max-w-2xl text-center">
+        <motion.div
+          className="mx-auto max-w-2xl text-center"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.3 }}
+          variants={prefersReducedMotion ? fadeUpVariantReduced : fadeUpVariant}
+        >
           <p className="badge mx-auto mb-4">Agenda tu cita</p>
           <h2 className="text-3xl font-bold text-slate-900 dark:text-white">{title}</h2>
           <p className="mt-4 text-base text-slate-500 dark:text-slate-300">{description}</p>
-        </div>
+        </motion.div>
 
         <div className="mt-14 grid gap-8 lg:grid-cols-[1.2fr_1fr]">
           {/* Left — booking panel con gradiente */}

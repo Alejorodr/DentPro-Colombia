@@ -1,8 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { motion, useReducedMotion } from "motion/react";
 
 import { Plus } from "@/components/ui/Icon";
+
+import { fadeUpVariant, fadeUpVariantReduced, staggerContainerVariant, staggerItemVariant } from "@/lib/motion/variants";
 
 interface FAQItem {
   question: string;
@@ -15,13 +18,20 @@ interface FAQSectionProps {
 
 export function FAQSection({ items }: FAQSectionProps) {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const prefersReducedMotion = useReducedMotion();
 
   const toggle = (i: number) => setOpenIndex((prev) => (prev === i ? null : i));
 
   return (
     <section id="preguntas-frecuentes" className="py-20 transition-colors duration-300 dark:bg-surface-base">
       <div className="container mx-auto max-w-3xl px-6">
-        <div className="mb-10 text-center">
+        <motion.div
+          className="mb-10 text-center"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.3 }}
+          variants={prefersReducedMotion ? fadeUpVariantReduced : fadeUpVariant}
+        >
           <span className="badge">Preguntas frecuentes</span>
           <h2 className="mt-4 text-3xl font-bold text-slate-900 dark:text-white">
             Todo lo que necesitás saber
@@ -29,12 +39,19 @@ export function FAQSection({ items }: FAQSectionProps) {
           <p className="mt-3 text-lg text-slate-600 dark:text-slate-300">
             Respondemos las dudas más comunes antes de tu primera visita.
           </p>
-        </div>
-        <dl className="space-y-3">
+        </motion.div>
+        <motion.dl
+          className="space-y-3"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.15 }}
+          variants={staggerContainerVariant}
+        >
           {items.map((item, i) => (
-            <div
+            <motion.div
               key={item.question}
               className="relative overflow-hidden rounded-[1.75rem] border border-white/70 bg-white/90 transition-colors duration-300 dark:border-surface-muted/60 dark:bg-surface-base/85"
+              variants={prefersReducedMotion ? fadeUpVariantReduced : staggerItemVariant}
             >
               <dt>
                 <button
@@ -58,9 +75,9 @@ export function FAQSection({ items }: FAQSectionProps) {
                   {item.answer}
                 </dd>
               ) : null}
-            </div>
+            </motion.div>
           ))}
-        </dl>
+        </motion.dl>
       </div>
     </section>
   );
