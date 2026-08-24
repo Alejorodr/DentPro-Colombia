@@ -8,6 +8,7 @@ import { CaretLeft, CaretRight } from "@/components/ui/Icon";
 import { useSpecialistsCarousel } from "@/hooks/useSpecialistsCarousel";
 
 interface SpecialistCard {
+  id: string;
   name: string;
   specialty: string;
   description: string;
@@ -67,7 +68,7 @@ export function SpecialistsSlider({ badge, title, description, specialists }: Sp
             style={{ transform: `translateX(${translateX}px)` }}
           >
             {specialists.map((specialist) => (
-              <article key={specialist.name} className="specialist flex flex-col" data-slide>
+              <article key={specialist.id} className="specialist flex flex-col" data-slide>
                 <Image
                   src={specialist.image.src}
                   alt={specialist.image.alt}
@@ -83,7 +84,7 @@ export function SpecialistsSlider({ badge, title, description, specialists }: Sp
                   </span>
                   <p className="mt-3 flex-1 text-sm text-slate-600 dark:text-slate-200">{specialist.description}</p>
                   <div className="mt-5 border-t border-slate-100/70 pt-4 dark:border-surface-muted/50">
-                    <Link href="/appointments/new" className="btn-secondary w-full justify-center text-sm">
+                    <Link href={`/appointments/new?professionalId=${specialist.id}`} className="btn-secondary w-full justify-center text-sm">
                       Reservar cita
                     </Link>
                   </div>
@@ -98,7 +99,7 @@ export function SpecialistsSlider({ badge, title, description, specialists }: Sp
           <div className="mt-6 flex items-center justify-center gap-2" role="tablist" aria-label="Navegación de especialistas">
             {specialists.map((s, i) => (
               <button
-                key={s.name}
+                key={s.id}
                 role="tab"
                 aria-selected={i === currentIndex}
                 aria-label={`Ver ${s.name}`}
