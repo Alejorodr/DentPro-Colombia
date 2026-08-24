@@ -8,6 +8,7 @@ import { STATUS_COLORS } from "@/app/portal/components/ui/statusColors";
 import { Card } from "@/app/portal/components/ui/Card";
 import { useModalDialog } from "@/app/portal/components/ui/useModalDialog";
 import { RoleModal, type Specialty } from "./RoleModal";
+import { PatientDetailModal } from "./PatientDetailModal";
 
 type UserRecord = {
   id: string;
@@ -18,7 +19,7 @@ type UserRecord = {
   active: boolean;
   hasLocalPassword: boolean;
   _isGoogleUser: boolean;
-  patient?: { phone?: string | null; documentId?: string | null } | null;
+  patient?: { id?: string; phone?: string | null; documentId?: string | null } | null;
   professional?: {
     id: string;
     specialty?: { id: string; name: string } | null;
@@ -163,6 +164,7 @@ export function AdminUsersPanel({ roleFilter, roleLock }: AdminUsersPanelProps) 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [roleModalUserId, setRoleModalUserId] = useState<string | null>(null);
+  const [patientDetailUserId, setPatientDetailUserId] = useState<string | null>(null);
 
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -517,10 +519,16 @@ export function AdminUsersPanel({ roleFilter, roleLock }: AdminUsersPanelProps) 
                       <button
                         type="button"
                         className="rounded-full border border-brand-teal px-3 py-1 text-xs font-semibold uppercase text-brand-teal"
-                        onClick={() => setRoleModalUserId(user.id)}
+                        onClick={() => {
+                          if (user.role === "PACIENTE" && user.patient?.id) {
+                            setPatientDetailUserId(user.patient.id);
+                          } else {
+                            setRoleModalUserId(user.id);
+                          }
+                        }}
                         disabled={saving}
                       >
-                        Cambiar rol
+                        {user.role === "PACIENTE" ? "Ver ficha" : "Cambiar rol"}
                       </button>
                       <button
                         type="button"
@@ -602,6 +610,10 @@ export function AdminUsersPanel({ roleFilter, roleLock }: AdminUsersPanelProps) 
           onSaved={() => void loadData()}
           onSpecialtyCreated={(specialty) => setSpecialties((prev) => [...prev, specialty])}
         />
+      ) : null}
+
+      {patientDetailUserId ? (
+        <PatientDetailModal patientId={patientDetailUserId} onClose={() => setPatientDetailUserId(null)} />
       ) : null}
     </div>
   );
