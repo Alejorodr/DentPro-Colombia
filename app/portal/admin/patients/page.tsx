@@ -1,7 +1,5 @@
-import { requireRole } from "@/lib/auth/require-role";
-import { ReceptionistPatients } from "@/app/portal/receptionist/patients/ReceptionistPatients";
+import { redirect } from "next/navigation";
 
-export default async function AdminPatientsPage() {
-  await requireRole("ADMINISTRADOR");
-  return <ReceptionistPatients />;
+export default function AdminPatientsPage() {
+  redirect("/portal/admin/users?role=PACIENTE");
 }
