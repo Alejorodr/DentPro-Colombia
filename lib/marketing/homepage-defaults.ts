@@ -143,6 +143,7 @@ export const HOMEPAGE_DEFAULT_CONTENT: HomepageNormalizedContent = {
       "Conoce a nuestro equipo multidisciplinario, listo para acompañarte en cada fase del tratamiento.",
     specialists: [
       {
+        id: "fallback-laura-lopez",
         name: "Dra. Laura López",
         specialty: "Ortodoncia",
         description: "Máster en ortodoncia digital y certificada en alineadores invisibles.",
@@ -152,6 +153,7 @@ export const HOMEPAGE_DEFAULT_CONTENT: HomepageNormalizedContent = {
         },
       },
       {
+        id: "fallback-andres-perez",
         name: "Dr. Andrés Pérez",
         specialty: "Implantología",
         description: "Especialista en cirugía oral con más de 10 años de experiencia en rehabilitación fija.",
@@ -161,6 +163,7 @@ export const HOMEPAGE_DEFAULT_CONTENT: HomepageNormalizedContent = {
         },
       },
       {
+        id: "fallback-camila-ruiz",
         name: "Dra. Camila Ruiz",
         specialty: "Endodoncia",
         description: "Tratamientos mínimamente invasivos apoyados en microscopía clínica.",
@@ -170,6 +173,7 @@ export const HOMEPAGE_DEFAULT_CONTENT: HomepageNormalizedContent = {
         },
       },
       {
+        id: "fallback-daniel-kim",
         name: "Dr. Daniel Kim",
         specialty: "Estética dental",
         description: "Especialista en diseño de sonrisa integral y rehabilitación estética.",

@@ -35,6 +35,7 @@ export type HomepageServiceContent = {
 };
 
 export type HomepageSpecialistContent = {
+  id: string;
   name: string;
   specialty: string;
   description: string;

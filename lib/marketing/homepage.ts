@@ -159,6 +159,7 @@ export async function getHomepageContent(prismaClient?: PrismaClient): Promise<H
       title: settings?.specialistsTitle ?? fallback.specialists.title,
       description: settings?.specialistsDescription ?? fallback.specialists.description,
       specialists: professionals.map((p) => ({
+        id: p.id,
         name: `${p.user.name} ${p.user.lastName}`,
         specialty: p.specialty.name,
         description: p.homepageBioShort ?? "",
