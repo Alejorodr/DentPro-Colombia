@@ -1,4 +1,8 @@
+"use client";
+
+import { motion, useReducedMotion, useScroll, useTransform } from "motion/react";
 import Image from "next/image";
+import { useRef } from "react";
 
 import type { GoogleReviewsSummary } from "@/lib/google/google-reviews";
 
@@ -47,10 +51,27 @@ export function Hero({
   testimonial,
   googleReviews,
 }: HeroContent) {
+  const prefersReducedMotion = useReducedMotion();
+  const heroRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: heroRef,
+    offset: ["start start", "end start"],
+  });
+  const parallaxY = useTransform(scrollYProgress, [0, 1], [0, prefersReducedMotion ? 0 : 40]);
+
   return (
-    <section className="hero z-10 overflow-visible! bg-hero-light pt-12 pb-24 transition-colors duration-500 dark:bg-hero-dark sm:pt-12 sm:pb-24 md:pt-16 md:pb-28 lg:pt-20 lg:pb-32">
+    <section
+      ref={heroRef}
+      className="hero z-10 overflow-visible! bg-hero-light pt-12 pb-24 transition-colors duration-500 dark:bg-hero-dark sm:pt-12 sm:pb-24 md:pt-16 md:pb-28 lg:pt-20 lg:pb-32"
+    >
       <div className="container mx-auto grid items-center gap-12 px-6 md:gap-14 lg:grid-cols-2 lg:gap-16">
-        <div className="relative z-10 space-y-8" data-hero-text-panel>
+        <motion.div
+          className="relative z-10 space-y-8"
+          data-hero-text-panel
+          initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+        >
           <h1 className="max-w-2xl text-4xl font-bold leading-tight text-slate-900 dark:text-white md:text-5xl">
             {title}
           </h1>
@@ -74,8 +95,11 @@ export function Hero({
               </div>
             ))}
           </dl>
-        </div>
-        <div className="relative isolate mx-auto w-full max-w-[31rem] lg:max-h-[600px] lg:scale-95 xl:max-h-[640px] xl:scale-[0.98]">
+        </motion.div>
+        <motion.div
+          className="relative isolate mx-auto w-full max-w-[31rem] lg:max-h-[600px] lg:scale-95 xl:max-h-[640px] xl:scale-[0.98]"
+          style={{ y: parallaxY }}
+        >
           <div className="relative z-10">
             <div className="card relative z-10 border-white/40 bg-white/80 p-6 shadow-xl shadow-brand-teal/20 backdrop-blur-sm transition-colors duration-500 hover:translate-y-0! hover:shadow-xl! dark:border-accent-cyan/10! dark:bg-surface-elevated/70! dark:shadow-surface-dark lg:p-8">
               <div className="relative aspect-4/5 max-h-[32rem] overflow-hidden rounded-2xl bg-linear-to-br from-brand-teal via-brand-sky to-brand-indigo dark:from-accent-cyan dark:via-brand-teal dark:to-brand-midnight">
@@ -93,7 +117,7 @@ export function Hero({
               </div>
             </div>
           </div>
-        </div>
+        </motion.div>
       </div>
     </section>
   );
