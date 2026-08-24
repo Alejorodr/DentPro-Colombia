@@ -2,8 +2,11 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { motion, useReducedMotion } from "motion/react";
 
 import { CaretLeft, CaretRight } from "@/components/ui/Icon";
+
+import { fadeUpVariant, fadeUpVariantReduced } from "@/lib/motion/variants";
 
 import { useSpecialistsCarousel } from "@/hooks/useSpecialistsCarousel";
 
@@ -29,12 +32,19 @@ export function SpecialistsSlider({ badge, title, description, specialists }: Sp
   const { containerRef, trackRef, currentIndex, maxIndex, goNext, goPrev, goTo, translateX } = useSpecialistsCarousel(
     specialists.length,
   );
+  const prefersReducedMotion = useReducedMotion();
 
   return (
     <section id="especialistas" className="bg-brand-light py-20 transition-colors duration-300 dark:bg-surface-muted">
       <div className="container mx-auto px-6">
         {/* Header */}
-        <div className="flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
+        <motion.div
+          className="flex flex-col gap-8 md:flex-row md:items-end md:justify-between"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.3 }}
+          variants={prefersReducedMotion ? fadeUpVariantReduced : fadeUpVariant}
+        >
           <div>
             <span className="badge">{badge}</span>
             <h2 className="mt-4 text-3xl font-bold text-slate-900 dark:text-white">{title}</h2>
@@ -58,7 +68,7 @@ export function SpecialistsSlider({ badge, title, description, specialists }: Sp
               <CaretRight className="h-5 w-5" weight="bold" aria-hidden="true" />
             </button>
           </div>
-        </div>
+        </motion.div>
 
         {/* Slider */}
         <div className="slider mt-10" data-slider ref={containerRef}>
