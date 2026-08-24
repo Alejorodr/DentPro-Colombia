@@ -31,6 +31,51 @@ type ServiceRecord = {
 
 type HighlightItem = { id: string; text: string; sortOrder: number };
 
+// Local draft input for the homepage sort order: this field is bound to server state,
+// but each keystroke would otherwise trigger a PATCH round-trip that disables/reverts the
+// field mid-typing. Keep a local draft and only commit (PATCH) on blur or Enter.
+function OrderInput({
+  value,
+  onCommit,
+  disabled,
+}: {
+  value: number;
+  onCommit: (next: number) => void;
+  disabled?: boolean;
+}) {
+  const [draft, setDraft] = useState(String(value));
+
+  useEffect(() => {
+    setDraft(String(value));
+  }, [value]);
+
+  const commit = () => {
+    const parsed = Number(draft);
+    const next = Number.isFinite(parsed) ? Math.max(0, Math.trunc(parsed)) : value;
+    setDraft(String(next));
+    if (next !== value) {
+      onCommit(next);
+    }
+  };
+
+  return (
+    <input
+      className="input mt-2 h-11 text-sm"
+      type="number"
+      min={0}
+      value={draft}
+      onChange={(e) => setDraft(e.target.value)}
+      onBlur={commit}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          e.currentTarget.blur();
+        }
+      }}
+      disabled={disabled}
+    />
+  );
+}
+
 export function AdminServicesCopyPanel() {
   const [form, setForm] = useState<ServicesCopyForm>(EMPTY_FORM);
   const [loading, setLoading] = useState(true);
@@ -67,7 +112,9 @@ export function AdminServicesCopyPanel() {
 
   const loadServices = useCallback(async () => {
     setServicesLoading(true);
-    const response = await fetchWithRetry("/api/services?pageSize=100");
+    // NOTE: pageSize is capped at 50 by /api/services's MAX_PAGE_SIZE regardless of what
+    // we request here. The real catalog is ~6 services, so this won't bite for a long time.
+    const response = await fetchWithRetry("/api/services?pageSize=50");
     if (response.ok) {
       const data = (await response.json()) as { data: ServiceRecord[] };
       setServices(data.data ?? []);
@@ -257,7 +304,7 @@ export function AdminServicesCopyPanel() {
                         <div className="mt-2">
                           <IconSelect
                             value={(service.iconKey ?? "") as MarketingIconKey | ""}
-                            onChange={(next) => void patchService(service.id, { iconKey: next })}
+                            onChange={(next) => void patchService(service.id, { iconKey: next || null })}
                             disabled={rowSaving === service.id}
                             allowEmpty
                           />
@@ -265,12 +312,9 @@ export function AdminServicesCopyPanel() {
                       </label>
                       <label className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                         Orden en el sitio público
-                        <input
-                          className="input mt-2 h-11 text-sm"
-                          type="number"
-                          min={0}
+                        <OrderInput
                           value={service.homepageSortOrder}
-                          onChange={(e) => void patchService(service.id, { homepageSortOrder: Number(e.target.value) || 0 })}
+                          onCommit={(next) => void patchService(service.id, { homepageSortOrder: next })}
                           disabled={rowSaving === service.id}
                         />
                       </label>
