@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 
-import { List, SignIn, UserCircle, X } from "@/components/ui/Icon";
+import { List, UserCircle, X } from "@/components/ui/Icon";
 
 import { ThemeToggle } from "@/components/ThemeToggle";
 
@@ -87,12 +87,10 @@ export function Navbar({ brand, links, cta, login }: NavbarProps) {
           {login ? (
             <a
               href={login.href}
-              className="btn-secondary inline-flex h-11 items-center justify-center gap-2 rounded-full px-4"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition hover:border-brand-teal hover:text-brand-teal dark:border-surface-muted dark:text-slate-300 dark:hover:border-accent-cyan dark:hover:text-accent-cyan"
               aria-label={login.label}
             >
               <UserCircle className="h-5 w-5" weight="bold" aria-hidden="true" />
-              <span className="hidden text-sm font-semibold lg:inline">{login.label}</span>
-              <SignIn className="hidden h-4 w-4 lg:inline" weight="bold" aria-hidden="true" />
             </a>
           ) : null}
           <a href={cta.href} className="btn-primary hidden lg:inline-flex">
