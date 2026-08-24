@@ -17,6 +17,13 @@ export default async function AdminUsersPage({
   const roleValue = typeof roleParam === "string" ? roleParam : undefined;
   const roleFilter = roleValue && isUserRole(roleValue) ? roleValue : undefined;
 
+  // `lock=1` is only set by redirects from the old dedicated pages (e.g. /portal/admin/staff)
+  // to reproduce their old locked-role create form. The plain Users page never sets it, so its
+  // create form keeps the full role <select>.
+  const lockParam = resolvedSearchParams?.lock;
+  const lockValue = typeof lockParam === "string" ? lockParam : undefined;
+  const roleLock = lockValue === "1" && roleFilter ? roleFilter : undefined;
+
   return (
     <div className="space-y-6">
       <SectionHeader
@@ -24,7 +31,7 @@ export default async function AdminUsersPage({
         title="Gestión de usuarios"
         description="Crea cuentas y asigna roles desde un solo panel."
       />
-      <AdminUsersPanel roleFilter={roleFilter} />
+      <AdminUsersPanel roleFilter={roleFilter} roleLock={roleLock} />
     </div>
   );
 }
