@@ -70,12 +70,18 @@ export function AdminSpecialistsCopyPanel() {
 
   const loadProfessionals = useCallback(async () => {
     setProfessionalsLoading(true);
-    // NOTE: pageSize is capped at 50 by /api/professionals's MAX_PAGE_SIZE regardless of what
-    // we request here. The real team is a handful of specialists, so this won't bite for a long time.
-    const response = await fetchWithRetry("/api/professionals?pageSize=100");
+    setRowError(null);
+    // NOTE: 50 is /api/professionals's MAX_PAGE_SIZE. The real team is a handful of
+    // specialists, so a single page covers it for a long time.
+    const response = await fetchWithRetry("/api/professionals?pageSize=50");
     if (response.ok) {
       const data = (await response.json()) as { data: ProfessionalRecord[] };
       setProfessionals(data.data ?? []);
+    } else {
+      // Without this the empty-list branch renders and reads as "no professionals exist".
+      const body = (await response.json().catch(() => null)) as { error?: string } | null;
+      setRowError(body?.error ?? "No se pudo cargar el equipo. Intenta recargar la página.");
+      setProfessionals([]);
     }
     setProfessionalsLoading(false);
   }, []);
@@ -175,7 +181,7 @@ export function AdminSpecialistsCopyPanel() {
         <h2 className="text-xl font-semibold text-slate-900 dark:text-white">Equipo</h2>
         <p className="text-sm text-slate-600 dark:text-slate-300">
           Badge, título y descripción del bloque de especialistas, y quién se muestra en el sitio público. Rol y
-          especialidad se editan en Staff.
+          especialidad se editan en Usuarios.
         </p>
       </section>
 
@@ -225,7 +231,7 @@ export function AdminSpecialistsCopyPanel() {
           <p className="text-sm text-slate-500 dark:text-slate-400">Cargando equipo...</p>
         ) : professionals.length === 0 ? (
           <p className="rounded-2xl border border-dashed border-slate-200 p-6 text-center text-sm text-slate-500 dark:border-surface-muted">
-            No hay profesionales registrados. Creá uno desde Staff.
+            No hay profesionales registrados. Crea uno desde Usuarios.
           </p>
         ) : (
           <div className="space-y-3">

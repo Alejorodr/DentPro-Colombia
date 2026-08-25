@@ -182,8 +182,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     }
 
     // Only touch professionalProfile.active on genuine role/active-status requests.
-    // A save that only carries homepage-presence fields (see RoleModal's "Presencia en
-    // el sitio público" section) must not silently reactivate a deactivated professional.
+    // A save that only carries homepage-presence fields (see AdminSpecialistsCopyPanel,
+    // Contenido → Equipo) must not silently reactivate a deactivated professional.
     const shouldSetActive = payload.role !== undefined || typeof payload.active === "boolean";
 
     if (!existing.professional) {

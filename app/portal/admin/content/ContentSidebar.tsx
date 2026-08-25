@@ -38,8 +38,8 @@ const GROUPS: SidebarGroup[] = [
     items: [
       {
         slug: "services-copy",
-        label: "Encabezado de servicios",
-        description: "Título y descripción de la sección \"¿Qué hacemos?\".",
+        label: "Servicios",
+        description: "Encabezado de la sección y el listado completo: ícono, visibilidad y destacados de cada servicio.",
       },
     ],
   },
@@ -48,8 +48,8 @@ const GROUPS: SidebarGroup[] = [
     items: [
       {
         slug: "especialistas-copy",
-        label: "Encabezado del equipo",
-        description: "Badge, título y descripción del bloque de especialistas.",
+        label: "Equipo",
+        description: "Encabezado del bloque y el equipo completo: foto, bio, visibilidad y orden de cada especialista.",
       },
     ],
   },

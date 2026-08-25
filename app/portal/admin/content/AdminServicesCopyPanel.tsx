@@ -112,12 +112,18 @@ export function AdminServicesCopyPanel() {
 
   const loadServices = useCallback(async () => {
     setServicesLoading(true);
-    // NOTE: pageSize is capped at 50 by /api/services's MAX_PAGE_SIZE regardless of what
-    // we request here. The real catalog is ~6 services, so this won't bite for a long time.
+    setRowError(null);
+    // NOTE: 50 is /api/services's MAX_PAGE_SIZE. The real catalog is ~6 services, so a single
+    // page covers it for a long time.
     const response = await fetchWithRetry("/api/services?pageSize=50");
     if (response.ok) {
       const data = (await response.json()) as { data: ServiceRecord[] };
       setServices(data.data ?? []);
+    } else {
+      // Without this the empty-list branch renders and reads as "the catalog is empty".
+      const body = (await response.json().catch(() => null)) as { error?: string } | null;
+      setRowError(body?.error ?? "No se pudieron cargar los servicios. Intenta recargar la página.");
+      setServices([]);
     }
     setServicesLoading(false);
   }, []);
