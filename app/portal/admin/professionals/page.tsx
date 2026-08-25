@@ -4,5 +4,6 @@ import { requireRole } from "@/lib/auth/require-role";
 
 export default async function AdminProfessionalsPage() {
   await requireRole("ADMINISTRADOR");
-  redirect("/portal/admin/staff");
+  // Straight to the final destination — /portal/admin/staff is itself only a redirect here.
+  redirect("/portal/admin/users?role=PROFESIONAL&lock=1");
 }

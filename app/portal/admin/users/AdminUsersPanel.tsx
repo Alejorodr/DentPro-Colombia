@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 
 import { roleLabels, userRoles, type UserRole } from "@/lib/auth/roles";
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
@@ -164,7 +165,8 @@ export function AdminUsersPanel({ roleFilter, roleLock }: AdminUsersPanelProps) 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [roleModalUserId, setRoleModalUserId] = useState<string | null>(null);
-  const [patientDetailUserId, setPatientDetailUserId] = useState<string | null>(null);
+  // Holds a PatientProfile.id (not a User.id) — that is what PatientDetailModal fetches by.
+  const [patientProfileId, setPatientProfileId] = useState<string | null>(null);
 
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -444,7 +446,24 @@ export function AdminUsersPanel({ roleFilter, roleLock }: AdminUsersPanelProps) 
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
           />
-          {!roleFilter && (
+          {roleFilter ? (
+            // The tab strip is suppressed when the URL locks the role, so surface the active
+            // filter explicitly and give the admin a way back to the full list.
+            <div className="flex flex-wrap items-center gap-2 rounded-xl border border-brand-teal/30 bg-brand-light px-3 py-2 text-xs dark:border-accent-cyan/30 dark:bg-brand-teal/10">
+              <span className="font-semibold uppercase tracking-wide text-brand-teal dark:text-accent-cyan">
+                Filtro activo
+              </span>
+              <span className="text-slate-600 dark:text-slate-300">
+                Mostrando solo {roleLabels[roleFilter].toLowerCase()}.
+              </span>
+              <Link
+                href="/portal/admin/users"
+                className="font-semibold text-brand-teal underline underline-offset-2 transition hover:text-brand-indigo dark:text-accent-cyan"
+              >
+                Ver todos los usuarios
+              </Link>
+            </div>
+          ) : (
             <div className="flex flex-wrap gap-2">
               {(["ALL", "PACIENTE", "PROFESIONAL", "RECEPCIONISTA", "ADMINISTRADOR"] as const).map((r) => (
                 <button
@@ -516,19 +535,25 @@ export function AdminUsersPanel({ roleFilter, roleLock }: AdminUsersPanelProps) 
                       </div>
                     </div>
                     <div className="flex flex-wrap gap-2">
+                      {user.role === "PACIENTE" && user.patient?.id ? (
+                        <button
+                          type="button"
+                          className="rounded-full border border-brand-teal px-3 py-1 text-xs font-semibold uppercase text-brand-teal"
+                          onClick={() => setPatientProfileId(user.patient?.id ?? null)}
+                          disabled={saving}
+                        >
+                          Ver ficha
+                        </button>
+                      ) : null}
+                      {/* Kept alongside "Ver ficha": the patient detail modal is read-only, so
+                          without this a user mis-created as PACIENTE could never be promoted. */}
                       <button
                         type="button"
                         className="rounded-full border border-brand-teal px-3 py-1 text-xs font-semibold uppercase text-brand-teal"
-                        onClick={() => {
-                          if (user.role === "PACIENTE" && user.patient?.id) {
-                            setPatientDetailUserId(user.patient.id);
-                          } else {
-                            setRoleModalUserId(user.id);
-                          }
-                        }}
+                        onClick={() => setRoleModalUserId(user.id)}
                         disabled={saving}
                       >
-                        {user.role === "PACIENTE" ? "Ver ficha" : "Cambiar rol"}
+                        Cambiar rol
                       </button>
                       <button
                         type="button"
@@ -612,8 +637,8 @@ export function AdminUsersPanel({ roleFilter, roleLock }: AdminUsersPanelProps) 
         />
       ) : null}
 
-      {patientDetailUserId ? (
-        <PatientDetailModal patientId={patientDetailUserId} onClose={() => setPatientDetailUserId(null)} />
+      {patientProfileId ? (
+        <PatientDetailModal patientId={patientProfileId} onClose={() => setPatientProfileId(null)} />
       ) : null}
     </div>
   );

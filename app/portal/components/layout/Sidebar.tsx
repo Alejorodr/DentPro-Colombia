@@ -22,6 +22,8 @@ interface SidebarProps {
   items: NavItem[];
   settingsItems?: NavItem[];
   pathname: string;
+  /** Current query string (without `?`). Needed by entries whose href carries filters. */
+  search?: string;
   isOpen: boolean;
   onClose: () => void;
   onSignOut: () => void;
@@ -29,24 +31,52 @@ interface SidebarProps {
   brandSubtitle?: string;
 }
 
-function isItemActive(pathname: string, href: string) {
-  if (href === "/portal/admin") {
-    return pathname === href;
+function isItemActive(pathname: string, search: string, href: string) {
+  const [hrefPath, hrefQuery] = href.split("?");
+
+  if (hrefQuery) {
+    // Query-scoped entry (e.g. the unified Users page pre-filtered by role): active only when
+    // the current URL carries every param the entry declares.
+    if (pathname !== hrefPath) {
+      return false;
+    }
+    const current = new URLSearchParams(search);
+    return Array.from(new URLSearchParams(hrefQuery)).every(([key, value]) => current.get(key) === value);
   }
 
-  return pathname === href || pathname.startsWith(`${href}/`);
+  if (hrefPath === "/portal/admin") {
+    return pathname === hrefPath;
+  }
+
+  return pathname === hrefPath || pathname.startsWith(`${hrefPath}/`);
+}
+
+/**
+ * Resolves the single most specific matching entry, so a plain href does not stay lit while a
+ * query-scoped sibling owns the current URL (e.g. "Usuarios" vs "Gestión de personal").
+ */
+function resolveActiveHref(pathname: string, search: string, entries: NavItem[]): string | null {
+  return (
+    entries
+      .filter((entry) => isItemActive(pathname, search, entry.href))
+      .sort((a, b) => b.href.length - a.href.length)
+      .at(0)?.href ?? null
+  );
 }
 
 export function Sidebar({
   items,
   settingsItems = [],
   pathname,
+  search = "",
   isOpen,
   onClose,
   onSignOut,
   brandTitle = "DentPro",
   brandSubtitle = "Admin portal",
 }: SidebarProps) {
+  const activeHref = resolveActiveHref(pathname, search, [...items, ...settingsItems]);
+
   return (
     <>
       <div
@@ -87,7 +117,7 @@ export function Sidebar({
               Navegación
             </p>
             {items.map((item) => {
-              const active = isItemActive(pathname, item.href);
+              const active = item.href === activeHref;
               const ItemIcon = item.icon;
               return (
                 <Link
@@ -112,7 +142,7 @@ export function Sidebar({
                 Ajustes
               </p>
               {settingsItems.map((item) => {
-                const active = isItemActive(pathname, item.href);
+                const active = item.href === activeHref;
                 const ItemIcon = item.icon;
                 return (
                   <Link

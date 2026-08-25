@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { signOut } from "next-auth/react";
 
 import {
@@ -61,9 +61,12 @@ const navByRole: Record<UserRole, NavItem[]> = {
   ADMINISTRADOR: [
     { label: "Inicio", href: "/portal/admin", icon: House },
     { label: "Usuarios", href: "/portal/admin/users", icon: Users },
-    { label: "Gestión de personal", href: "/portal/admin/staff", icon: Users },
+    // /portal/admin/staff and /portal/admin/patients are now redirects into the unified Users
+    // page. Linking the final URL directly keeps the address bar in sync with the highlighted
+    // entry (and saves a redirect hop); the three entry points stay as admin shortcuts.
+    { label: "Gestión de personal", href: "/portal/admin/users?role=PROFESIONAL&lock=1", icon: Users },
     { label: "Especialidades", href: "/portal/admin/specialties", icon: ClipboardText },
-    { label: "Registro de pacientes", href: "/portal/admin/patients", icon: Users },
+    { label: "Registro de pacientes", href: "/portal/admin/users?role=PACIENTE&lock=1", icon: Users },
     { label: "Servicios y tarifas", href: "/portal/admin/services", icon: ClipboardText },
     { label: "Gestión de agenda", href: "/portal/admin/scheduling", icon: CalendarCheck },
     { label: "Contenido", href: "/portal/admin/content", icon: SquaresFour },
@@ -84,6 +87,7 @@ function resolveActiveRole(pathname: string, fallback?: UserRole): UserRole | nu
 
 export function PortalShell({ children, session, clinic }: PortalShellProps) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const fallbackRole = session?.user?.role ?? null;
   const activeRole = resolveActiveRole(pathname, fallbackRole ?? undefined);
   const navItems = activeRole ? navByRole[activeRole] : [];
@@ -127,6 +131,7 @@ export function PortalShell({ children, session, clinic }: PortalShellProps) {
         items={navItems}
         settingsItems={settingsItems}
         pathname={pathname}
+        search={searchParams.toString()}
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
         onSignOut={() => signOut({ callbackUrl: "/auth/login" })}
