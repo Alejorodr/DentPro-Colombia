@@ -553,7 +553,7 @@ export function AdminUsersPanel({ roleFilter, roleLock }: AdminUsersPanelProps) 
                         onClick={() => setRoleModalUserId(user.id)}
                         disabled={saving}
                       >
-                        Cambiar rol
+                        {user.role === "PACIENTE" ? "Cambiar rol" : "Ver ficha"}
                       </button>
                       <button
                         type="button"

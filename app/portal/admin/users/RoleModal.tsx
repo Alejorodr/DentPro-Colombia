@@ -72,6 +72,9 @@ export function RoleModal({
 }) {
   const containerRef = useModalDialog(onClose);
   const [role, setRole] = useState<UserRole>(roleLock ?? user.role);
+  const [name, setName] = useState(user.name);
+  const [lastName, setLastName] = useState(user.lastName);
+  const [email, setEmail] = useState(user.email);
   const [specialtyId, setSpecialtyId] = useState(user.professional?.specialty?.id ?? "");
   const [status, setStatus] = useState<SaveStatus>("idle");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -155,6 +158,9 @@ export function RoleModal({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           role,
+          name: name.trim(),
+          lastName: lastName.trim(),
+          email: email.trim(),
           specialtyId: role === "PROFESIONAL" ? specialtyId : undefined,
         }),
       });
@@ -270,7 +276,7 @@ export function RoleModal({
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Usuarios</p>
             <h3 id="role-modal-title" className="text-lg font-semibold text-slate-900 dark:text-white">
-              Cambiar rol · {user.name} {user.lastName}
+              Ficha de usuario · {user.name} {user.lastName}
             </h3>
           </div>
           <button
@@ -284,6 +290,42 @@ export function RoleModal({
         </div>
 
         <div className="mt-5 space-y-4">
+          <section className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <label className="text-sm">
+              <span className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                Nombre
+              </span>
+              <input
+                className="input mt-2 h-11 text-sm"
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                disabled={status === "loading"}
+              />
+            </label>
+            <label className="text-sm">
+              <span className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                Apellido
+              </span>
+              <input
+                className="input mt-2 h-11 text-sm"
+                value={lastName}
+                onChange={(event) => setLastName(event.target.value)}
+                disabled={status === "loading"}
+              />
+            </label>
+            <label className="text-sm sm:col-span-2">
+              <span className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                Correo
+              </span>
+              <input
+                type="email"
+                className="input mt-2 h-11 text-sm"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                disabled={status === "loading"}
+              />
+            </label>
+          </section>
           <section>
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Rol</p>
             <div className="mt-2 flex flex-wrap items-center gap-2">

@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { GET as getNotifications } from "@/app/api/notifications/route";
 import { PATCH as readAllNotifications } from "@/app/api/notifications/read-all/route";
-import { getSessionUser } from "@/app/api/_utils/auth";
+import { getSessionUser, isAuthorized } from "@/app/api/_utils/auth";
 import {
   apiErrorSchema,
   notificationsReadAllResponseSchema,
@@ -23,6 +23,7 @@ describe("notifications contract", () => {
 
   beforeEach(() => {
     vi.mocked(getSessionUser).mockReset();
+    vi.mocked(isAuthorized).mockReset().mockReturnValue(false);
     vi.mocked(getPrismaClient).mockReset();
     vi.mocked(markAllNotificationsRead).mockReset();
     findMany.mockReset();
@@ -70,19 +71,34 @@ describe("notifications contract", () => {
     vi.mocked(getSessionUser).mockResolvedValue({ id: "user-1", role: "RECEPCIONISTA" } as any);
     vi.mocked(markAllNotificationsRead).mockResolvedValue({ count: 4 } as any);
 
-    const response = await readAllNotifications();
+    const response = await readAllNotifications(new Request("http://localhost/api/notifications/read-all"));
     const payload = await response.json();
 
     expect(response.status).toBe(200);
     expect(validateContract(notificationsReadAllResponseSchema, payload).valid).toBe(true);
     expect(payload).toEqual({ updatedCount: 4 });
-    expect(markAllNotificationsRead).toHaveBeenCalledWith({ userId: "user-1" });
+    expect(markAllNotificationsRead).toHaveBeenCalledWith({ userId: "user-1", allUsers: false });
+  });
+
+  it("marks all users' notifications as read for admin scope", async () => {
+    vi.mocked(getSessionUser).mockResolvedValue({ id: "admin-1", role: "ADMINISTRADOR" } as any);
+    vi.mocked(isAuthorized).mockReturnValue(true);
+    vi.mocked(markAllNotificationsRead).mockResolvedValue({ count: 9 } as any);
+
+    const response = await readAllNotifications(
+      new Request("http://localhost/api/notifications/read-all?scope=admin"),
+    );
+    const payload = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(payload).toEqual({ updatedCount: 9 });
+    expect(markAllNotificationsRead).toHaveBeenCalledWith({ userId: "admin-1", allUsers: true });
   });
 
   it("returns 401 for read-all without auth", async () => {
     vi.mocked(getSessionUser).mockResolvedValue(null);
 
-    const response = await readAllNotifications();
+    const response = await readAllNotifications(new Request("http://localhost/api/notifications/read-all"));
     const payload = await response.json();
 
     expect(response.status).toBe(401);

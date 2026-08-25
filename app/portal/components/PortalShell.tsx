@@ -61,12 +61,7 @@ const navByRole: Record<UserRole, NavItem[]> = {
   ADMINISTRADOR: [
     { label: "Inicio", href: "/portal/admin", icon: House },
     { label: "Usuarios", href: "/portal/admin/users", icon: Users },
-    // /portal/admin/staff and /portal/admin/patients are now redirects into the unified Users
-    // page. Linking the final URL directly keeps the address bar in sync with the highlighted
-    // entry (and saves a redirect hop); the three entry points stay as admin shortcuts.
-    { label: "Gestión de personal", href: "/portal/admin/users?role=PROFESIONAL&lock=1", icon: Users },
     { label: "Especialidades", href: "/portal/admin/specialties", icon: ClipboardText },
-    { label: "Registro de pacientes", href: "/portal/admin/users?role=PACIENTE&lock=1", icon: Users },
     { label: "Servicios y tarifas", href: "/portal/admin/services", icon: ClipboardText },
     { label: "Gestión de agenda", href: "/portal/admin/scheduling", icon: CalendarCheck },
     { label: "Contenido", href: "/portal/admin/content", icon: SquaresFour },

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import { Bell } from "@/components/ui/Icon";
+import { Bell, Trash } from "@/components/ui/Icon";
 import { Skeleton } from "@/app/portal/components/ui/Skeleton";
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
 import { groupNotificationsByDate } from "@/lib/notifications/groupNotifications";
@@ -33,14 +33,16 @@ export function NotificationsBell() {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [unreadOnly, setUnreadOnly] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const panelId = "notifications-panel";
 
-  const loadNotifications = async (cursor?: string | null) => {
+  const loadNotifications = async (cursor?: string | null, unreadOnlyOverride?: boolean) => {
     setError(null);
     const params = new URLSearchParams({ limit: "8" });
     if (cursor) params.set("cursor", cursor);
+    if (unreadOnlyOverride ?? unreadOnly) params.set("unread", "true");
 
     try {
       const response = await fetchWithRetry(`/api/notifications?${params.toString()}`);
@@ -100,6 +102,27 @@ export function NotificationsBell() {
     setUnreadCount(0);
   };
 
+  const deleteNotification = async (id: string) => {
+    const response = await fetchWithTimeout(`/api/notifications/${id}`, { method: "DELETE" });
+    if (response.ok) {
+      setNotifications((prev) => {
+        const removed = prev.find((item) => item.id === id);
+        if (removed && !removed.readAt) {
+          setUnreadCount((count) => Math.max(count - 1, 0));
+        }
+        return prev.filter((item) => item.id !== id);
+      });
+    }
+  };
+
+  const toggleUnreadOnly = () => {
+    const next = !unreadOnly;
+    setUnreadOnly(next);
+    setNextCursor(null);
+    setIsLoading(true);
+    void loadNotifications(null, next).finally(() => setIsLoading(false));
+  };
+
   const groupedNotifications = useMemo(() => groupNotificationsByDate(notifications), [notifications]);
 
   return (
@@ -137,6 +160,13 @@ export function NotificationsBell() {
               </button>
             </div>
           </div>
+          <button
+            type="button"
+            className="mt-2 text-[11px] font-semibold text-slate-500 underline decoration-dotted dark:text-slate-400"
+            onClick={toggleUnreadOnly}
+          >
+            {unreadOnly ? "Ver todas" : "Ver solo no leídas"}
+          </button>
           <div className="mt-3 space-y-3" role="status" aria-live="polite" aria-busy={isLoading || isLoadingMore}>
             {isLoading ? (
               <div className="space-y-2">
@@ -190,15 +220,25 @@ export function NotificationsBell() {
                               </Link>
                             ) : null}
                           </div>
-                          {!notification.readAt ? (
+                          <div className="flex shrink-0 items-center gap-2">
+                            {!notification.readAt ? (
+                              <button
+                                type="button"
+                                className="text-xs font-semibold text-brand-teal dark:text-accent-cyan focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-teal/60"
+                                onClick={() => void markAsRead(notification.id)}
+                              >
+                                Marcar
+                              </button>
+                            ) : null}
                             <button
                               type="button"
-                              className="text-xs font-semibold text-brand-teal dark:text-accent-cyan focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-teal/60"
-                              onClick={() => void markAsRead(notification.id)}
+                              aria-label="Eliminar notificación"
+                              className="text-slate-400 hover:text-rose-600 dark:text-slate-500"
+                              onClick={() => void deleteNotification(notification.id)}
                             >
-                              Marcar
+                              <Trash aria-hidden="true" className="h-4 w-4" weight="bold" />
                             </button>
-                          ) : null}
+                          </div>
                         </div>
                       </div>
                     );

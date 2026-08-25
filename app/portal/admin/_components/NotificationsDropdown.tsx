@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 
-import { Bell } from "@/components/ui/Icon";
+import { Bell, Trash } from "@/components/ui/Icon";
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
 
 type NotificationItem = {
@@ -41,16 +41,19 @@ export function NotificationsDropdown({ scope = "user" }: NotificationsDropdownP
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [unreadOnly, setUnreadOnly] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const loadNotifications = useCallback(async () => {
-    const response = await fetchWithRetry(`/api/notifications?limit=6&scope=${scope}`);
+    const params = new URLSearchParams({ limit: "6", scope });
+    if (unreadOnly) params.set("unread", "true");
+    const response = await fetchWithRetry(`/api/notifications?${params.toString()}`);
     if (response.ok) {
       const data = (await response.json()) as { notifications: NotificationItem[]; unreadCount: number };
       setNotifications(data.notifications);
       setUnreadCount(data.unreadCount);
     }
-  }, [scope]);
+  }, [scope, unreadOnly]);
 
   useEffect(() => {
     void loadNotifications();
@@ -72,6 +75,26 @@ export function NotificationsDropdown({ scope = "user" }: NotificationsDropdownP
     if (response.ok) {
       setNotifications((prev) => prev.map((item) => (item.id === id ? { ...item, readAt: new Date().toISOString() } : item)));
       setUnreadCount((prev) => Math.max(prev - 1, 0));
+    }
+  };
+
+  const markAllAsRead = async () => {
+    const response = await fetchWithTimeout(`/api/notifications/read-all?scope=${scope}`, { method: "PATCH" });
+    if (!response.ok) return;
+    setNotifications((prev) => prev.map((item) => (item.readAt ? item : { ...item, readAt: new Date().toISOString() })));
+    setUnreadCount(0);
+  };
+
+  const deleteNotification = async (id: string) => {
+    const response = await fetchWithTimeout(`/api/notifications/${id}`, { method: "DELETE" });
+    if (response.ok) {
+      setNotifications((prev) => {
+        const removed = prev.find((item) => item.id === id);
+        if (removed && !removed.readAt) {
+          setUnreadCount((count) => Math.max(count - 1, 0));
+        }
+        return prev.filter((item) => item.id !== id);
+      });
     }
   };
 
@@ -108,12 +131,28 @@ export function NotificationsDropdown({ scope = "user" }: NotificationsDropdownP
       </button>
       {open ? (
         <div className="absolute right-0 z-40 mt-3 w-80 rounded-2xl border border-slate-200 bg-white p-4 text-sm shadow-lg shadow-slate-200/40 dark:border-surface-muted dark:bg-surface-elevated">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2">
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
               Notificaciones
             </p>
-            <span className="text-xs text-slate-500 dark:text-slate-400">{unreadCount} sin leer</span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-500 dark:text-slate-400">{unreadCount} sin leer</span>
+              <button
+                type="button"
+                className="text-[11px] font-semibold text-brand-teal dark:text-accent-cyan"
+                onClick={() => void markAllAsRead()}
+              >
+                Marcar todas
+              </button>
+            </div>
           </div>
+          <button
+            type="button"
+            className="mt-2 text-[11px] font-semibold text-slate-500 underline decoration-dotted dark:text-slate-400"
+            onClick={() => setUnreadOnly((prev) => !prev)}
+          >
+            {unreadOnly ? "Ver todas" : "Ver solo no leídas"}
+          </button>
           <div className="mt-3 space-y-3">
             {notificationItems.length === 0 ? (
               <p className="text-xs text-slate-500 dark:text-slate-400">Sin novedades.</p>
@@ -148,15 +187,25 @@ export function NotificationsDropdown({ scope = "user" }: NotificationsDropdownP
                         </Link>
                       ) : null}
                     </div>
-                    {!notification.readAt ? (
+                    <div className="flex shrink-0 items-center gap-2">
+                      {!notification.readAt ? (
+                        <button
+                          type="button"
+                          className="text-xs font-semibold text-brand-teal dark:text-accent-cyan"
+                          onClick={() => markAsRead(notification.id)}
+                        >
+                          Marcar
+                        </button>
+                      ) : null}
                       <button
                         type="button"
-                        className="text-xs font-semibold text-brand-teal dark:text-accent-cyan"
-                        onClick={() => markAsRead(notification.id)}
+                        aria-label="Eliminar notificación"
+                        className="text-slate-400 hover:text-rose-600 dark:text-slate-500"
+                        onClick={() => void deleteNotification(notification.id)}
                       >
-                        Marcar
+                        <Trash aria-hidden="true" className="h-4 w-4" weight="bold" />
                       </button>
-                    ) : null}
+                    </div>
                   </div>
                 </div>
               ))

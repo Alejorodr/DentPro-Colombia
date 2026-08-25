@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 
-import { getSessionUser } from "@/app/api/_utils/auth";
+import { getSessionUser, isAuthorized } from "@/app/api/_utils/auth";
 import { errorResponse } from "@/app/api/_utils/response";
 import { logger } from "@/lib/logger";
 import { markAllNotificationsRead } from "@/lib/notifications";
 import { startApiMetric } from "@/lib/observability/metrics";
 
-export async function PATCH() {
+export async function PATCH(request: Request) {
   const metric = startApiMetric("notifications_read_all");
   const sessionUser = await getSessionUser();
   if (!sessionUser) {
@@ -14,7 +14,10 @@ export async function PATCH() {
     return errorResponse("No autorizado.", 401);
   }
 
-  const result = await markAllNotificationsRead({ userId: sessionUser.id });
+  const scope = new URL(request.url).searchParams.get("scope");
+  const allUsers = scope === "admin" && isAuthorized(sessionUser.role, ["ADMINISTRADOR"]);
+
+  const result = await markAllNotificationsRead({ userId: sessionUser.id, allUsers });
   logger.info({
     event: "notifications_read_all",
     action: "notifications_read_all",

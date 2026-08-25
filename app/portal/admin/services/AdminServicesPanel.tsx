@@ -70,10 +70,10 @@ export function AdminServicesPanel() {
   // Initial load + specialties
   useEffect(() => {
     void loadServices("");
-    fetchWithRetry("/api/specialties?pageSize=50")
+    fetchWithRetry("/api/specialties")
       .then((r) => (r.ok ? r.json() : null))
-      .then((data: { data: SpecialtyOption[] } | null) => {
-        if (data?.data) setSpecialties(data.data);
+      .then((data: SpecialtyOption[] | null) => {
+        if (data) setSpecialties(data);
       })
       .catch(() => {});
   }, [loadServices]);

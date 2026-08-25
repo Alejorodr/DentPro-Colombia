@@ -37,3 +37,33 @@ export async function PATCH(_request: Request, { params }: { params: Promise<{ i
 
   return NextResponse.json(updated);
 }
+
+export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const sessionUser = await getSessionUser();
+
+  if (!sessionUser) {
+    return errorResponse("No autorizado.", 401);
+  }
+
+  const { id } = await params;
+  const prisma = getPrismaClient();
+  const notification = await prisma.notification.findUnique({ where: { id } });
+
+  const canDeleteAny = isAuthorized(sessionUser.role, ["ADMINISTRADOR"]);
+  if (!notification || (!canDeleteAny && notification.userId !== sessionUser.id)) {
+    return errorResponse("Notificación no encontrada.", 404);
+  }
+
+  await prisma.notification.delete({ where: { id } });
+
+  logger.info({
+    event: "notification_delete",
+    action: "notification_delete",
+    actor: sessionUser.role,
+    appointmentId: notification.entityType === "appointment" ? notification.entityId : null,
+    timestamp: new Date().toISOString(),
+    result: "ok",
+  });
+
+  return NextResponse.json({ status: "ok" });
+}
