@@ -46,6 +46,12 @@ export function getDefaultDashboardPath(role: UserRole): string {
   return `/portal/${roleSlugMap[role]}`;
 }
 
+// Authenticated destinations that live outside every role root but are still legitimate
+// post-login landing spots. `/appointments/new` is linked from the public homepage with
+// `?professionalId=…`; without this allowlist the callback is discarded and the visitor
+// lands on their dashboard with the preselection lost.
+const sharedPostLoginPaths = ["/appointments/new"];
+
 export function resolveRoleAwarePortalPath(role: UserRole, candidate?: string | null): string {
   const fallback = getDefaultDashboardPath(role);
 
@@ -70,6 +76,11 @@ export function resolveRoleAwarePortalPath(role: UserRole, candidate?: string | 
 
   if (!path.startsWith("/") || path === "/" || path.startsWith("/auth/login") || path.startsWith("/login")) {
     return fallback;
+  }
+
+  const pathnameOnly = path.split("?")[0];
+  if (sharedPostLoginPaths.includes(pathnameOnly)) {
+    return path;
   }
 
   const roleRoot = `/portal/${roleSlugMap[role]}`;

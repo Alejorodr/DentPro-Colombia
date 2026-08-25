@@ -11,11 +11,30 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default async function NewAppointmentPage() {
-  const session = await auth();
+type NewAppointmentPageProps = {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+};
+
+export default async function NewAppointmentPage({
+  searchParams = Promise.resolve({}),
+}: NewAppointmentPageProps) {
+  const [session, resolvedSearchParams] = await Promise.all([auth(), searchParams]);
 
   if (!session?.user?.role) {
-    redirect("/auth/login?callbackUrl=/appointments/new");
+    // Preserve the incoming query string (notably `?professionalId=…` from the public
+    // homepage cards) across the login round-trip — otherwise the preselection is lost
+    // for exactly the logged-out visitors the flow was built for.
+    const query = new URLSearchParams();
+    for (const [key, value] of Object.entries(resolvedSearchParams ?? {})) {
+      if (typeof value === "string") {
+        query.append(key, value);
+      } else if (Array.isArray(value)) {
+        for (const item of value) query.append(key, item);
+      }
+    }
+    const queryString = query.toString();
+    const callbackUrl = queryString ? `/appointments/new?${queryString}` : "/appointments/new";
+    redirect(`/auth/login?callbackUrl=${encodeURIComponent(callbackUrl)}`);
   }
 
   return (

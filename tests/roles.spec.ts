@@ -15,6 +15,16 @@ describe("role dashboard routing", () => {
     expect(resolveRoleAwarePortalPath("ADMINISTRADOR", "/portal/client")).toBe("/portal/admin");
   });
 
+  it("keeps the shared booking callback with its query string", () => {
+    expect(resolveRoleAwarePortalPath("PACIENTE", "/appointments/new?professionalId=abc-123")).toBe(
+      "/appointments/new?professionalId=abc-123",
+    );
+  });
+
+  it("still rejects non-allowlisted paths outside the role portal", () => {
+    expect(resolveRoleAwarePortalPath("PACIENTE", "/portal/admin/users")).toBe("/portal/client");
+  });
+
   it("normalizes absolute callback urls", () => {
     expect(resolveRoleAwarePortalPath("RECEPCIONISTA", "http://127.0.0.1:3000/portal/receptionist/schedule")).toBe(
       "/portal/receptionist/schedule",

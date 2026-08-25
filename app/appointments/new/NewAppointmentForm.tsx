@@ -58,15 +58,31 @@ export function NewAppointmentForm({ role }: NewAppointmentFormProps) {
       .catch(() => setServices([]));
   }, []);
 
+  // A service change always invalidates the chosen slot (slots are service-scoped), but it
+  // must NOT blindly drop the professional: picking a service is mandatory, so clearing here
+  // would wipe the `?professionalId=…` preselection on the user's very first interaction.
+  // The value-comparison ref also keeps React Strict Mode's double-effect from firing at mount.
   const previousServiceId = useRef(serviceId);
   useEffect(() => {
     if (previousServiceId.current === serviceId) {
       return;
     }
     previousServiceId.current = serviceId;
-    setProfessionalId("");
     setTimeSlotId("");
   }, [serviceId]);
+
+  // Drop the professional only once the freshly loaded slots prove they do not offer the
+  // selected service. While slots are still loading (or empty) the selection is kept.
+  useEffect(() => {
+    if (!professionalId || slots.length === 0) {
+      return;
+    }
+    if (slots.some((slot) => slot.professional.id === professionalId)) {
+      return;
+    }
+    setProfessionalId("");
+    setTimeSlotId("");
+  }, [slots, professionalId]);
 
   useEffect(() => {
     if (!serviceId || !selectedDate) {
