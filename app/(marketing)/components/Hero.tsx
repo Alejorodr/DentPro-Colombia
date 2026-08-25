@@ -65,13 +65,11 @@ export function Hero({
       className="hero z-10 overflow-visible! bg-hero-light pt-12 pb-24 transition-colors duration-500 dark:bg-hero-dark sm:pt-12 sm:pb-24 md:pt-16 md:pb-28 lg:pt-20 lg:pb-32"
     >
       <div className="container mx-auto grid items-center gap-12 px-6 md:gap-14 lg:grid-cols-2 lg:gap-16">
-        <motion.div
-          className="relative z-10 space-y-8"
-          data-hero-text-panel
-          initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: "easeOut" }}
-        >
+        {/* Deliberately un-animated: this block is the page's LCP element. Framer Motion bakes
+            `initial` into the inline style during SSR, so any entrance fade would ship the hero
+            copy at opacity:0 in the server HTML (blank hero until hydration, and permanently
+            blank without JS). Scroll-reveal rationale does not apply above the fold. */}
+        <div className="relative z-10 space-y-8" data-hero-text-panel>
           <h1 className="max-w-2xl text-4xl font-bold leading-tight text-slate-900 dark:text-white md:text-5xl">
             {title}
           </h1>
@@ -95,7 +93,7 @@ export function Hero({
               </div>
             ))}
           </dl>
-        </motion.div>
+        </div>
         <motion.div
           className="relative isolate mx-auto w-full max-w-[31rem] lg:max-h-[600px] lg:scale-95 xl:max-h-[640px] xl:scale-[0.98]"
           style={{ y: parallaxY }}
