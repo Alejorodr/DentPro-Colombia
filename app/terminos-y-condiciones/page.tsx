@@ -142,7 +142,7 @@ export default function TerminosYCondicionesPage() {
                 manifestación inequívoca de la aceptación plena, libre e
                 informada de la totalidad de estos Términos, así como de la{" "}
                 <Link
-                  href="/politica-de-privacidad"
+                  href="/politica-de-tratamiento-de-datos"
                   className="font-medium text-brand-teal underline-offset-2 hover:underline dark:text-accent-cyan"
                 >
                   Política de Tratamiento de Datos Personales
@@ -710,7 +710,7 @@ export default function TerminosYCondicionesPage() {
               <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">
                 El tratamiento de los datos personales del Usuario se rige por la{" "}
                 <Link
-                  href="/politica-de-privacidad"
+                  href="/politica-de-tratamiento-de-datos"
                   className="font-medium text-brand-teal underline-offset-2 hover:underline dark:text-accent-cyan"
                 >
                   Política de Tratamiento de Datos Personales

@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 
 import { auth } from "@/auth";
 import { getDefaultDashboardPath, isUserRole, roleLabels, type UserRole } from "@/lib/auth/roles";
+import { getCollectionItems, type CollectionResponse } from "@/lib/api/responses";
 import type { AppointmentSummary } from "@/lib/api/types";
 import { AppointmentsTable } from "./AppointmentsTable";
 
@@ -21,7 +22,8 @@ async function fetchAppointments() {
     throw new Error("No se pudieron cargar las citas.");
   }
 
-  return (await response.json()) as AppointmentSummary[];
+  const payload = (await response.json()) as CollectionResponse<AppointmentSummary>;
+  return getCollectionItems(payload);
 }
 
 export default async function AppointmentsPage(props: any) {

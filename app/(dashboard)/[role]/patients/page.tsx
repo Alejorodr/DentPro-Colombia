@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 
 import { auth } from "@/auth";
 import { getDefaultDashboardPath, isUserRole, roleLabels, type UserRole } from "@/lib/auth/roles";
+import { getCollectionItems, type CollectionResponse } from "@/lib/api/responses";
 import type { PatientSummary } from "@/lib/api/types";
 import { PatientsTable } from "./PatientsTable";
 
@@ -21,7 +22,8 @@ async function fetchPatients() {
     throw new Error("No se pudieron cargar los pacientes.");
   }
 
-  return (await response.json()) as PatientSummary[];
+  const payload = (await response.json()) as CollectionResponse<PatientSummary>;
+  return getCollectionItems(payload);
 }
 
 export default async function PatientsPage(props: any) {
@@ -57,12 +59,12 @@ export default async function PatientsPage(props: any) {
         </p>
       </header>
 
-      <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 transition-colors duración-300 dark:bg-surface-elevated dark:ring-surface-muted">
+      <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 transition-colors duration-300 dark:bg-surface-elevated dark:ring-surface-muted">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Listado</h2>
           <Link
             href={`/${requestedRole}`}
-            className="text-sm font-semibold text-brand-teal transición-colors hover:text-brand-indigo dark:text-accent-cyan"
+            className="text-sm font-semibold text-brand-teal transition-colors hover:text-brand-indigo dark:text-accent-cyan"
           >
             Volver al tablero
           </Link>
