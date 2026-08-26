@@ -17,8 +17,12 @@ test("home exposes critical CTAs and availability block", async ({ page }) => {
 
   await page.goto("/", { waitUntil: "domcontentloaded" });
 
+  const main = page.getByRole("main", { name: /Página principal DentPro/i });
+
   await expect(page.getByRole("link", { name: "Ver disponibilidad" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Reservar turno" })).toBeVisible();
+  const reserveLink = main.getByRole("link", { name: "Reservar turno" }).first();
+  await expect(reserveLink).toBeVisible();
+  await expect(reserveLink).toHaveAttribute("href", "/appointments/new");
   await expect(page.getByTestId(E2E_TEST_IDS.availabilityBlock)).toBeVisible();
 
   if (runtimeErrors.length > 0) {

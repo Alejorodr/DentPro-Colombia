@@ -9,6 +9,19 @@ const OPS_RATE_LIMIT_CONFIG = {
   windowMs: 60_000,
 } as const;
 
+type OpsRateLimitOptions = {
+  allowE2EBypass?: boolean;
+};
+
+function canBypassOpsRateLimitForE2E() {
+  return (
+    process.env.RUN_E2E === "1" &&
+    process.env.TEST_AUTH_BYPASS === "1" &&
+    process.env.VERCEL !== "1" &&
+    !process.env.VERCEL_ENV
+  );
+}
+
 export function getOpsKey(): string | null {
   const value = process.env.OPS_KEY?.trim();
   return value && value.length > 0 ? value : null;
@@ -59,7 +72,11 @@ export function isOpsIpAllowed(request: Request): boolean {
   return allowlist.includes(clientIp);
 }
 
-export async function enforceOpsRateLimit(request: Request): Promise<NextResponse | null> {
+export async function enforceOpsRateLimit(request: Request, options: OpsRateLimitOptions = {}): Promise<NextResponse | null> {
+  if (options.allowE2EBypass && canBypassOpsRateLimitForE2E()) {
+    return null;
+  }
+
   return enforceRateLimit(request, "ops", OPS_RATE_LIMIT_CONFIG);
 }
 

@@ -8,7 +8,7 @@ const mockGetPrismaClient = vi.fn(() => ({
 }));
 
 const mockIsOpsIpAllowed = vi.fn<(request: Request) => boolean>(() => true);
-const mockEnforceOpsRateLimit = vi.fn<(request: Request) => Promise<Response | null>>(async () => null);
+const mockEnforceOpsRateLimit = vi.fn<(request: Request, options?: { allowE2EBypass?: boolean }) => Promise<Response | null>>(async () => null);
 const mockGetOpsKey = vi.fn(() => "ops-secret");
 const mockIsValidOpsKey = vi.fn((header: string | null | undefined, opsKey: string | null) => header === opsKey);
 const mockLogAuditEvent = vi.fn();
@@ -99,6 +99,7 @@ describe("/api/test/seed hardening", () => {
     );
 
     expect(response.status).toBe(500);
+    expect(mockEnforceOpsRateLimit).toHaveBeenCalledWith(expect.any(Request), { allowE2EBypass: true });
     const payload = await response.json();
     expect(payload).toEqual({ error: "Seed failed." });
     expect(JSON.stringify(payload)).not.toContain("Sensitive DB detail");

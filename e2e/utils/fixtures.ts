@@ -6,6 +6,10 @@ import { E2E_ROUTES, E2E_TEST_IDS, type E2EPortalRole } from "./constants";
 
 export type PortalRole = E2EPortalRole;
 
+export function getVisibleByTestId(page: Page, testId: string) {
+  return page.locator(`[data-testid="${testId}"]:visible`).first();
+}
+
 export async function prepareRoleContext(params: {
   request: APIRequestContext;
   context: BrowserContext;
@@ -64,5 +68,5 @@ export async function openReceptionistSchedule(page: Page) {
   await page.goto(E2E_ROUTES.receptionist.schedule, { waitUntil: "domcontentloaded" });
 
   await expect(page).toHaveURL(/\/portal\/receptionist\/schedule/);
-  await expect(page.getByTestId(E2E_TEST_IDS.receptionistSchedulePage)).toBeVisible();
+  await expect(getVisibleByTestId(page, E2E_TEST_IDS.receptionistSchedulePage)).toBeVisible();
 }

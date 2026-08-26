@@ -31,7 +31,7 @@ export async function POST(request: Request) {
     return respondUnauthorized();
   }
 
-  const rateLimitResponse = await enforceOpsRateLimit(request);
+  const rateLimitResponse = await enforceOpsRateLimit(request, { allowE2EBypass: true });
   if (rateLimitResponse) {
     logger.warn({ event: "test.seed.disabled", route: "/api/test/seed", nodeEnv, vercelEnv, reason: "rate_limited" });
     return rateLimitResponse;

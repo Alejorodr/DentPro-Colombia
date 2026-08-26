@@ -54,11 +54,22 @@ export async function getGoogleReviews(): Promise<GoogleReviewsSummary | null> {
         "id,displayName,rating,userRatingCount,googleMapsUri,reviews.rating,reviews.text,reviews.authorAttribution,reviews.relativePublishTimeDescription,reviews.publishTime",
     },
     next: { revalidate: 21600 },
+  }).catch((error: unknown) => {
+    if (process.env.NODE_ENV !== "production") {
+      console.warn("Google Places reviews unavailable", { error });
+    }
+    return null;
   });
 
+  if (!response) {
+    return null;
+  }
+
   if (!response.ok) {
-    const body = await response.text();
-    console.error("Google Places API error", { status: response.status, body });
+    if (process.env.NODE_ENV !== "production") {
+      const body = await response.text().catch(() => "<unavailable body>");
+      console.warn("Google Places reviews unavailable", { status: response.status, body });
+    }
     return null;
   }
 

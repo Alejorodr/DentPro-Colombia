@@ -8,9 +8,7 @@ import { seedTestData } from "./utils/seed";
 
 test("login page renders and shows credential error", async ({ page }) => {
   await page.goto(E2E_ROUTES.login, { waitUntil: "domcontentloaded" });
-  await expect(
-    page.getByRole("heading", { name: "Iniciar sesión" }),
-  ).toBeVisible();
+  await expect(page.getByTestId("login-form-ready")).toBeVisible();
   const { submitButton } = await fillLoginForm(page, {
     email: "admin@dentpro.test",
     password: "incorrecta",
