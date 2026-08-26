@@ -122,7 +122,7 @@ export function ProfessionalLabResults() {
           />
           <input
             type="url"
-            placeholder="Add lab result link (URL)"
+            placeholder="Agrega el enlace del resultado (URL)"
             onBlur={(event) => {
               if (event.target.value.trim()) {
                 void handleUpload(null, event.target.value.trim());

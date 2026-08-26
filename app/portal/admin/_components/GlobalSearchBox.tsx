@@ -82,7 +82,7 @@ export function AdminGlobalSearch() {
         <MagnifyingGlass aria-hidden="true" className="h-4 w-4" />
         <input
           type="search"
-          placeholder="Search patients, staff, or services"
+          placeholder="Buscar pacientes, equipo o servicios"
           aria-label="Buscar en el portal"
           className="w-full bg-transparent text-sm text-slate-700 outline-hidden placeholder:text-slate-400 dark:text-slate-100"
           value={query}

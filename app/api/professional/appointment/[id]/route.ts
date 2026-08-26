@@ -4,7 +4,7 @@ import { errorResponse } from "@/app/api/_utils/response";
 import { getPrismaClient } from "@/lib/prisma";
 import { requireRole, requireSession } from "@/lib/authz";
 
-export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const sessionResult = await requireSession();
   if ("error" in sessionResult) {
     return errorResponse(sessionResult.error.message, sessionResult.error.status);

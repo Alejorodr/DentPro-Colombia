@@ -57,7 +57,7 @@ export function ProfessionalPatients() {
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search patients by name, email, or code"
+            placeholder="Buscar pacientes por nombre, correo o código"
             className="w-full rounded-2xl border border-slate-200 bg-white py-2 pl-10 pr-4 text-sm text-slate-600 dark:border-surface-muted/60 dark:bg-surface-base dark:text-slate-100"
           />
         </div>
