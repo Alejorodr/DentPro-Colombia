@@ -4,15 +4,14 @@ import { notFound, redirect } from "next/navigation";
 
 import { auth } from "@/auth";
 import { getDefaultDashboardPath, isUserRole, roleLabels, type UserRole } from "@/lib/auth/roles";
-import { getCollectionItems, type CollectionResponse } from "@/lib/api/responses";
-import type { PatientSummary } from "@/lib/api/types";
+import { getCollectionResult, toLegacyPatientSummary, type CollectionResponse } from "@/lib/api/responses";
 import { PatientsTable } from "./PatientsTable";
 
 async function fetchPatients() {
   const headersList = await headers();
   const host = headersList.get("host");
   const protocol = process.env.NODE_ENV === "production" ? "https" : "http";
-  const url = host ? `${protocol}://${host}/api/patients` : "/api/patients";
+  const url = host ? `${protocol}://${host}/api/patients?pageSize=50` : "/api/patients?pageSize=50";
 
   const response = await fetch(url, {
     cache: "no-store",
@@ -22,8 +21,12 @@ async function fetchPatients() {
     throw new Error("No se pudieron cargar los pacientes.");
   }
 
-  const payload = (await response.json()) as CollectionResponse<PatientSummary>;
-  return getCollectionItems(payload);
+  const payload = (await response.json()) as CollectionResponse<unknown>;
+  const result = getCollectionResult(payload);
+  return {
+    patients: result.items.map(toLegacyPatientSummary),
+    total: result.total,
+  };
 }
 
 export default async function PatientsPage(props: any) {
@@ -44,7 +47,7 @@ export default async function PatientsPage(props: any) {
     redirect(getDefaultDashboardPath(session.user.role));
   }
 
-  const patients = await fetchPatients();
+  const { patients, total } = await fetchPatients();
   const roleLabel = roleLabels[requestedRole as UserRole];
 
   return (
@@ -71,6 +74,11 @@ export default async function PatientsPage(props: any) {
         </div>
 
         <PatientsTable patients={patients} />
+        {total > patients.length ? (
+          <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
+            Mostrando {patients.length} de {total} pacientes. Usa el portal correspondiente para ver el listado completo.
+          </p>
+        ) : null}
       </section>
     </main>
   );
