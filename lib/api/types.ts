@@ -1,15 +1,3 @@
-export interface AppointmentRequestPayload {
-  name: string;
-  phone: string;
-  email?: string;
-  service: string;
-  message?: string;
-  preferredDate?: string;
-  patientId?: string;
-  specialistId?: string;
-  scheduleId?: string;
-}
-
 export const APPOINTMENT_STATUSES = ["pending", "confirmed", "cancelled"] as const;
 export type AppointmentStatus = (typeof APPOINTMENT_STATUSES)[number];
 
