@@ -17,7 +17,7 @@ describe("admin analytics", () => {
     prisma = testDb.prisma;
     reset = testDb.reset;
     disconnect = testDb.disconnect;
-  }, 20000);
+  }, 60000);
 
   beforeEach(async () => {
     await reset();

@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/Icon";
 import { Button } from "@/components/ui/Button";
 import { GoogleColorLogo } from "@/components/ui/GoogleColorLogo";
+import { getDefaultDashboardPath } from "@/lib/auth/roles";
 
 interface RegisterFormProps {
   googleEnabled?: boolean;
@@ -52,7 +53,7 @@ export function RegisterForm({ googleEnabled = false }: RegisterFormProps) {
     setIsSubmitting(true);
     setFormError(null);
     try {
-      await signIn("google", { redirectTo: "/portal/paciente" });
+      await signIn("google", { redirectTo: getDefaultDashboardPath("PACIENTE") });
       setFormError("No pudimos iniciar con Google. Inténtalo de nuevo.");
     } catch {
       setFormError("No pudimos iniciar con Google. Inténtalo de nuevo.");
@@ -93,7 +94,7 @@ export function RegisterForm({ googleEnabled = false }: RegisterFormProps) {
         return;
       }
 
-      router.replace("/portal/paciente");
+      router.replace(getDefaultDashboardPath("PACIENTE"));
       router.refresh();
     } catch {
       setFormError("No pudimos conectarnos. Revisa tu conexión e inténtalo de nuevo.");

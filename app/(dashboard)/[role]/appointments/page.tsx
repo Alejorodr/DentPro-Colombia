@@ -4,14 +4,14 @@ import { notFound, redirect } from "next/navigation";
 
 import { auth } from "@/auth";
 import { getDefaultDashboardPath, isUserRole, roleLabels, type UserRole } from "@/lib/auth/roles";
-import type { AppointmentSummary } from "@/lib/api/types";
+import { getCollectionResult, toLegacyAppointmentSummary, type CollectionResponse } from "@/lib/api/responses";
 import { AppointmentsTable } from "./AppointmentsTable";
 
 async function fetchAppointments() {
   const headersList = await headers();
   const host = headersList.get("host");
   const protocol = process.env.NODE_ENV === "production" ? "https" : "http";
-  const url = host ? `${protocol}://${host}/api/appointments` : "/api/appointments";
+  const url = host ? `${protocol}://${host}/api/appointments?pageSize=50` : "/api/appointments?pageSize=50";
 
   const response = await fetch(url, {
     cache: "no-store",
@@ -21,7 +21,12 @@ async function fetchAppointments() {
     throw new Error("No se pudieron cargar las citas.");
   }
 
-  return (await response.json()) as AppointmentSummary[];
+  const payload = (await response.json()) as CollectionResponse<unknown>;
+  const result = getCollectionResult(payload);
+  return {
+    appointments: result.items.map(toLegacyAppointmentSummary),
+    total: result.total,
+  };
 }
 
 export default async function AppointmentsPage(props: any) {
@@ -42,7 +47,7 @@ export default async function AppointmentsPage(props: any) {
     redirect(getDefaultDashboardPath(session.user.role));
   }
 
-  const appointments = await fetchAppointments();
+  const { appointments, total } = await fetchAppointments();
   const roleLabel = roleLabels[requestedRole as UserRole];
 
   return (
@@ -69,6 +74,11 @@ export default async function AppointmentsPage(props: any) {
         </div>
 
         <AppointmentsTable appointments={appointments} />
+        {total > appointments.length ? (
+          <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
+            Mostrando {appointments.length} de {total} citas. Usa el portal correspondiente para ver el listado completo.
+          </p>
+        ) : null}
       </section>
     </main>
   );

@@ -53,7 +53,7 @@ export default async function SchedulesPage(props: any) {
 
   return (
     <main className="space-y-6 py-6">
-      <header className="rounded-2xl bg-white px-6 py-5 shadow-sm ring-1 ring-slate-200 transición-colors duración-300 dark:bg-surface-elevated dark:ring-surface-muted">
+      <header className="rounded-2xl bg-white px-6 py-5 shadow-sm ring-1 ring-slate-200 transition-colors duration-300 dark:bg-surface-elevated dark:ring-surface-muted">
         <p className="text-xs font-semibold uppercase tracking-wide text-brand-teal dark:text-accent-cyan">
           {roleLabel}
         </p>
@@ -63,12 +63,12 @@ export default async function SchedulesPage(props: any) {
         </p>
       </header>
 
-      <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 transición-colors duración-300 dark:bg-surface-elevated dark:ring-surface-muted">
+      <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 transition-colors duration-300 dark:bg-surface-elevated dark:ring-surface-muted">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Disponibilidad</h2>
           <Link
             href={`/${requestedRole}`}
-            className="text-sm font-semibold text-brand-teal transición-colors hover:text-brand-indigo dark:text-accent-cyan"
+            className="text-sm font-semibold text-brand-teal transition-colors hover:text-brand-indigo dark:text-accent-cyan"
           >
             Volver al tablero
           </Link>

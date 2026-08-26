@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { useMemo } from "react";
 
-import { isUserRole, roleLabels, type UserRole } from "@/lib/auth/roles";
+import { getDefaultDashboardPath, isUserRole, roleLabels, roleSlugMap, type UserRole } from "@/lib/auth/roles";
 import type { AuthSession } from "@/auth";
 
 interface DashboardShellProps {
@@ -34,22 +34,22 @@ function getActiveRole(pathname: string, fallbackRole: UserRole): UserRole {
 
 const portalPaths: Record<UserRole, { label: string; href: string }[]> = {
   PACIENTE: [
-    { label: "Citas", href: "/portal/paciente" },
-    { label: "Perfil", href: "/portal/paciente/profile" },
+    { label: "Citas", href: getDefaultDashboardPath("PACIENTE") },
+    { label: "Perfil", href: `/portal/${roleSlugMap.PACIENTE}/profile` },
   ],
   PROFESIONAL: [
-    { label: "Agenda", href: "/portal/profesional" },
-    { label: "Pacientes", href: "/portal/profesional/patients" },
+    { label: "Agenda", href: getDefaultDashboardPath("PROFESIONAL") },
+    { label: "Pacientes", href: `/portal/${roleSlugMap.PROFESIONAL}/patients` },
   ],
   RECEPCIONISTA: [
-    { label: "Dashboard", href: "/portal/recepcion" },
-    { label: "Horarios", href: "/portal/recepcion/schedule" },
-    { label: "Pacientes", href: "/portal/recepcion/patients" },
+    { label: "Dashboard", href: getDefaultDashboardPath("RECEPCIONISTA") },
+    { label: "Horarios", href: `/portal/${roleSlugMap.RECEPCIONISTA}/schedule` },
+    { label: "Pacientes", href: `/portal/${roleSlugMap.RECEPCIONISTA}/patients` },
   ],
   ADMINISTRADOR: [
-    { label: "Dashboard", href: "/portal/admin" },
-    { label: "Staff", href: "/portal/admin/staff" },
-    { label: "Horarios", href: "/portal/admin/schedule" },
+    { label: "Dashboard", href: getDefaultDashboardPath("ADMINISTRADOR") },
+    { label: "Staff", href: `/portal/${roleSlugMap.ADMINISTRADOR}/staff` },
+    { label: "Horarios", href: `/portal/${roleSlugMap.ADMINISTRADOR}/scheduling` },
   ],
 };
 

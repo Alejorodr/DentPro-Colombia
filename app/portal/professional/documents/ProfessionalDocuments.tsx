@@ -122,7 +122,7 @@ export function ProfessionalDocuments() {
           />
           <input
             type="url"
-            placeholder="Add document link (URL)"
+            placeholder="Agrega el enlace del documento (URL)"
             onBlur={(event) => {
               if (event.target.value.trim()) {
                 void handleUpload(null, event.target.value.trim());

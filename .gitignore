@@ -6,6 +6,7 @@ out/
 .env.*
 !.env.example
 *.db
+*.log
 prisma/.cache/
 prisma/migrations.test-backup/
 tests/prisma-client/

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Bell, Trash } from "@/components/ui/Icon";
 import { Skeleton } from "@/app/portal/components/ui/Skeleton";
@@ -38,11 +38,11 @@ export function NotificationsBell() {
   const panelRef = useRef<HTMLDivElement>(null);
   const panelId = "notifications-panel";
 
-  const loadNotifications = async (cursor?: string | null, unreadOnlyOverride?: boolean) => {
+  const loadNotifications = useCallback(async (cursor?: string | null, unreadOnlyFilter = false) => {
     setError(null);
     const params = new URLSearchParams({ limit: "8" });
     if (cursor) params.set("cursor", cursor);
-    if (unreadOnlyOverride ?? unreadOnly) params.set("unread", "true");
+    if (unreadOnlyFilter) params.set("unread", "true");
 
     try {
       const response = await fetchWithRetry(`/api/notifications?${params.toString()}`);
@@ -57,12 +57,12 @@ export function NotificationsBell() {
     } catch {
       setError("No se pudieron cargar las notificaciones.");
     }
-  };
+  }, []);
 
   useEffect(() => {
     setIsLoading(true);
     void loadNotifications().finally(() => setIsLoading(false));
-  }, []);
+  }, [loadNotifications]);
 
   useEffect(() => {
     if (open) panelRef.current?.focus();
@@ -137,7 +137,7 @@ export function NotificationsBell() {
         onClick={() => {
           setOpen((prev) => !prev);
           setIsLoading(true);
-          void loadNotifications().finally(() => setIsLoading(false));
+          void loadNotifications(null, unreadOnly).finally(() => setIsLoading(false));
         }}
       >
         <Bell aria-hidden="true" className="h-5 w-5" weight="bold" />
@@ -182,7 +182,7 @@ export function NotificationsBell() {
                   className="mt-1 font-semibold text-rose-700 underline"
                   onClick={() => {
                     setIsLoading(true);
-                    void loadNotifications().finally(() => setIsLoading(false));
+                    void loadNotifications(null, unreadOnly).finally(() => setIsLoading(false));
                   }}
                 >
                   Reintentar
@@ -251,7 +251,7 @@ export function NotificationsBell() {
                 type="button"
                 onClick={async () => {
                   setIsLoadingMore(true);
-                  await loadNotifications(nextCursor);
+                  await loadNotifications(nextCursor, unreadOnly);
                   setIsLoadingMore(false);
                 }}
                 className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold uppercase text-slate-600"

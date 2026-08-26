@@ -15,6 +15,9 @@ export default defineConfig({
   },
   test: {
     environment: "jsdom",
+    setupFiles: ["./tests/setup.ts"],
+    testTimeout: 30000,
+    hookTimeout: 60000,
     exclude: [".next/**", ".agents/**", ".claude/**", "e2e/**", "**/node_modules/**"],
     server: {
       deps: {

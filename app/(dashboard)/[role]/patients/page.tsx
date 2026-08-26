@@ -4,14 +4,14 @@ import { notFound, redirect } from "next/navigation";
 
 import { auth } from "@/auth";
 import { getDefaultDashboardPath, isUserRole, roleLabels, type UserRole } from "@/lib/auth/roles";
-import type { PatientSummary } from "@/lib/api/types";
+import { getCollectionResult, toLegacyPatientSummary, type CollectionResponse } from "@/lib/api/responses";
 import { PatientsTable } from "./PatientsTable";
 
 async function fetchPatients() {
   const headersList = await headers();
   const host = headersList.get("host");
   const protocol = process.env.NODE_ENV === "production" ? "https" : "http";
-  const url = host ? `${protocol}://${host}/api/patients` : "/api/patients";
+  const url = host ? `${protocol}://${host}/api/patients?pageSize=50` : "/api/patients?pageSize=50";
 
   const response = await fetch(url, {
     cache: "no-store",
@@ -21,7 +21,12 @@ async function fetchPatients() {
     throw new Error("No se pudieron cargar los pacientes.");
   }
 
-  return (await response.json()) as PatientSummary[];
+  const payload = (await response.json()) as CollectionResponse<unknown>;
+  const result = getCollectionResult(payload);
+  return {
+    patients: result.items.map(toLegacyPatientSummary),
+    total: result.total,
+  };
 }
 
 export default async function PatientsPage(props: any) {
@@ -42,7 +47,7 @@ export default async function PatientsPage(props: any) {
     redirect(getDefaultDashboardPath(session.user.role));
   }
 
-  const patients = await fetchPatients();
+  const { patients, total } = await fetchPatients();
   const roleLabel = roleLabels[requestedRole as UserRole];
 
   return (
@@ -57,18 +62,23 @@ export default async function PatientsPage(props: any) {
         </p>
       </header>
 
-      <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 transition-colors duración-300 dark:bg-surface-elevated dark:ring-surface-muted">
+      <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 transition-colors duration-300 dark:bg-surface-elevated dark:ring-surface-muted">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Listado</h2>
           <Link
             href={`/${requestedRole}`}
-            className="text-sm font-semibold text-brand-teal transición-colors hover:text-brand-indigo dark:text-accent-cyan"
+            className="text-sm font-semibold text-brand-teal transition-colors hover:text-brand-indigo dark:text-accent-cyan"
           >
             Volver al tablero
           </Link>
         </div>
 
         <PatientsTable patients={patients} />
+        {total > patients.length ? (
+          <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
+            Mostrando {patients.length} de {total} pacientes. Usa el portal correspondiente para ver el listado completo.
+          </p>
+        ) : null}
       </section>
     </main>
   );
