@@ -110,7 +110,10 @@ export function Hero({
                   className="h-full w-full object-cover"
                 />
               </div>
-              <div className="relative z-20 mt-6 grid gap-4 border-t border-slate-100/60 pt-5 text-sm transition-colors duration-500 dark:border-surface-muted/50 dark:text-slate-100">
+              <div
+                className="relative z-20 mt-6 grid gap-4 border-t border-slate-100/60 pt-5 text-sm transition-colors duration-500 dark:border-surface-muted/50 dark:text-slate-100"
+                data-testid="hero-review-widget"
+              >
                 <HeroGoogleReviewRotator googleReviews={googleReviews} fallback={testimonial} />
               </div>
             </div>

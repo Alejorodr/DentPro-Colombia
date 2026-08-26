@@ -69,7 +69,7 @@ export async function POST(request: Request) {
     return respondUnauthorized();
   }
 
-  const rateLimitResponse = await enforceOpsRateLimit(request);
+  const rateLimitResponse = await enforceOpsRateLimit(request, { allowE2EBypass: true });
   if (rateLimitResponse) {
     return rateLimitResponse;
   }
