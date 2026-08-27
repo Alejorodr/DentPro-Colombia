@@ -48,4 +48,11 @@ export default [
       ],
     },
   },
+  {
+    // Static design-system kit/demo artifacts are not App Router runtime code.
+    files: ["design-system/ui_kits/**/*.jsx"],
+    rules: {
+      "@next/next/no-img-element": "off",
+    },
+  },
 ];

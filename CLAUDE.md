@@ -1,6 +1,6 @@
 # DentPro Colombia — Claude Code Context
 
-Este repositorio es la plataforma de **DentPro Colombia**, una clínica dental especializada en Chía, Cundinamarca. Stack: **Next.js App Router + Tailwind v4 + Phosphor Icons + NextAuth**.
+Este repositorio es la plataforma de **DentPro Colombia**, una clínica dental especializada en Chía, Cundinamarca. Stack: **Next.js App Router + Tailwind v4 + AnimateIcons/Lucide + NextAuth**.
 
 > Lee también: `design-system/README.md` para guías de marca completas, `design-system/SKILL.md` para instrucciones de uso del sistema de diseño, y `design-system/colors_and_type.css` para todos los tokens visuales.
 
@@ -24,7 +24,7 @@ app/
 
 components/
 └── ui/
-    └── Icon.tsx          # Barrel de Phosphor Icons — SIEMPRE importar desde aquí
+    └── Icon.tsx          # Barrel semántico AnimateIcons/Lucide — SIEMPRE importar desde aquí
 
 lib/
 ├── marketing/            # Defaults del homepage, datos de servicios y especialistas
@@ -48,7 +48,7 @@ design-system/            # Sistema de diseño exportado desde Claude Design
 |---|---|
 | Framework | Next.js 15 App Router |
 | Estilos | Tailwind CSS v4 |
-| Iconos | Phosphor Icons (`@phosphor-icons/react`) |
+| Iconos | AnimateIcons/Lucide (`@animateicons/react` + `lucide-react`) |
 | Auth | NextAuth (Credentials provider) |
 | Idioma | Español (Colombia), `lang="es"`, `locale="es_CO"` |
 | Fuentes | Outfit (headings), Inter (body) |
@@ -75,8 +75,8 @@ design-system/            # Sistema de diseño exportado desde Claude Design
 - **Tarjeta portal** (`app/portal/components/ui/Card.tsx`): `rounded-2xl border border-slate-200/80 bg-white p-6 shadow-xs shadow-slate-100/60` — sin hover-lift, patrón deliberadamente distinto a la tarjeta signature (dashboard denso/tabular vs. marketing orientado a conversión). No convertir a signature card.
 
 ### Iconos
-- **Siempre** desde `@/components/ui/Icon.tsx`, nunca import directo.
-- `weight="bold"` para UI general, `weight="fill"` para estados/status.
+- **Siempre** desde `@/components/ui/Icon.tsx`, nunca import directo desde librerías de iconos.
+- El wrapper mantiene compatibilidad con `weight`, pero la geometría visual objetivo es Lucide.
 - Tamaños: 16px inline, 20px botones/nav, 24px servicios/floating.
 - Contenedores: `icon-badge` (40px) o `icon-circle` (56px) — definidos en `globals.css`.
 

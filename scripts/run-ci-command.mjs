@@ -8,6 +8,8 @@ if (!command) {
 }
 
 const env = { ...process.env };
+env.DOTENV_CONFIG_QUIET ??= "true";
+
 if (env.CI && !env.NO_COLOR) {
   env.FORCE_COLOR = "0";
 }

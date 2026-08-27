@@ -654,7 +654,10 @@ export function ProfessionalDashboard() {
                 ) : null}
                 {appointmentDetail.appointment.status === AppointmentStatus.CHECKED_IN ? (
                   <span className="shrink-0 rounded-2xl border border-brand-teal/40 bg-brand-light/40 px-4 py-2 text-xs font-semibold text-brand-teal dark:border-accent-cyan/40 dark:bg-accent-cyan/10 dark:text-accent-cyan">
-                    Paciente presente ✓
+                    <span className="inline-flex items-center gap-1.5">
+                      Paciente presente
+                      <CheckCircle aria-hidden="true" className="h-3.5 w-3.5" weight="fill" />
+                    </span>
                   </span>
                 ) : null}
               </div>

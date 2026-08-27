@@ -1,10 +1,10 @@
-import { execFileSync } from "node:child_process";
 import fs from "node:fs";
-import path from "node:path";
 import { pathToFileURL } from "node:url";
 
 import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import type { PrismaClient } from "@prisma/client";
+
+import { getPrismaTestPaths, getPrismaWorkerDatabasePath, preparePrismaTestDatabase } from "./prisma-test-setup";
 
 type TestPrisma = {
   prisma: PrismaClient;
@@ -14,21 +14,6 @@ type TestPrisma = {
 
 let prismaPromise: Promise<TestPrisma> | null = null;
 
-function ensureClientGenerated(schemaPath: string, databaseUrl: string) {
-  const env = {
-    ...process.env,
-    TEST_DATABASE_URL: databaseUrl,
-    DATABASE_URL: databaseUrl,
-  };
-  // Invoke the local Prisma CLI entrypoint directly via node, not `npx` through a
-  // shell: on Windows, execFileSync's shell:true mode joins argv into a raw command
-  // line without per-argument quoting, so a schema path containing spaces (this
-  // repo's absolute path does) gets split into multiple arguments and fails.
-  const prismaCli = path.join(process.cwd(), "node_modules", "prisma", "build", "index.js");
-  execFileSync(process.execPath, [prismaCli, "generate", "--schema", schemaPath], { stdio: "ignore", env });
-  execFileSync(process.execPath, [prismaCli, "db", "push", "--schema", schemaPath], { stdio: "ignore", env });
-}
-
 export async function getTestPrisma(): Promise<TestPrisma> {
   if (prismaPromise) {
     return prismaPromise;
@@ -36,21 +21,23 @@ export async function getTestPrisma(): Promise<TestPrisma> {
 
   prismaPromise = (async () => {
     const root = process.cwd();
-    const schemaPath = path.join(root, "prisma", "schema.test.prisma");
-    const dbDir = path.join(root, "tests", ".tmp");
-    const dbPath = path.join(dbDir, "analytics-test.db");
+    const { dbDir, prismaClientPath, templateDbPath } = getPrismaTestPaths(root);
+    const dbPath = getPrismaWorkerDatabasePath(root);
     const databaseUrl = `file:${dbPath}`;
 
-    fs.mkdirSync(dbDir, { recursive: true });
+    if (!fs.existsSync(templateDbPath) || !fs.existsSync(prismaClientPath)) {
+      preparePrismaTestDatabase(root);
+    }
+
     if (fs.existsSync(dbPath)) {
       fs.rmSync(dbPath);
     }
+    fs.mkdirSync(dbDir, { recursive: true });
+    fs.copyFileSync(templateDbPath, dbPath);
 
     process.env.TEST_DATABASE_URL = databaseUrl;
     process.env.DATABASE_URL = databaseUrl;
-    ensureClientGenerated(schemaPath, databaseUrl);
 
-    const prismaClientPath = path.join(root, "tests", "prisma-client", "index.js");
     const prismaModule = await import(pathToFileURL(prismaClientPath).toString());
     const PrismaClientConstructor = prismaModule.PrismaClient as typeof PrismaClient;
     const adapter = new PrismaBetterSqlite3({ url: dbPath });

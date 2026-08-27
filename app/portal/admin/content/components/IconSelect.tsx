@@ -1,6 +1,6 @@
 "use client";
 
-import * as Icons from "@/components/ui/Icon";
+import { resolveMarketingIcon } from "@/app/(marketing)/components/icon-registry";
 import { cn } from "@/lib/utils";
 import { MARKETING_ICON_KEYS, type MarketingIconKey } from "@/lib/marketing/homepage-types";
 
@@ -24,9 +24,7 @@ type IconSelectProps =
 
 export function IconSelect(props: IconSelectProps) {
   const { value, disabled, emptyLabel = "Sin ícono", className } = props;
-  const SelectedIcon = value
-    ? (Icons as unknown as Record<string, React.ComponentType<{ size?: number }>>)[value]
-    : undefined;
+  const SelectedIcon = value ? resolveMarketingIcon(value) : undefined;
 
   const handleChange = (next: string) => {
     if (props.allowEmpty) {

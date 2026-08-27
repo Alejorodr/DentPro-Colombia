@@ -89,7 +89,7 @@ export async function getHomepageContent(prismaClient?: PrismaClient): Promise<H
       whatsapp: {
         href: settings?.infoBarWhatsappHref ?? fallback.infoBar.whatsapp.href,
         label: settings?.infoBarWhatsappLabel ?? fallback.infoBar.whatsapp.label,
-        icon: "ChatCircleDots",
+        icon: "WhatsappLogo",
       },
       email: {
         href: settings?.infoBarEmailHref ?? fallback.infoBar.email.href,

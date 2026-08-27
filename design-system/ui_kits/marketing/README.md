@@ -19,7 +19,7 @@ Recreation of the **public marketing site** from `app/(marketing)/` and `app/pag
 
 ## What's faithful, what's simplified
 
-- **Faithful**: layout, colors, gradients, type scale, card radius, shadow system, Phosphor icon usage, Spanish tú-form copy, the exact 6 services with their highlight bullets, the gradient booking panel as the only saturated surface.
+- **Faithful**: layout, colors, gradients, type scale, card radius, shadow system, Lucide-style icon usage, Spanish tú-form copy, the exact 6 services with their highlight bullets, the gradient booking panel as the only saturated surface.
 - **Simplified**: dynamic data fetching (Google reviews, slot availability) is mocked with the static defaults. Image-heavy bits (specialist headshots) use initial monograms over the brand gradient — the production app pulls Unsplash URLs that aren't appropriate to ship in a static mock.
 - **Map** is a styled placeholder, not the real Google Maps embed.
 
@@ -29,7 +29,7 @@ Open `ui_kits/marketing/index.html` directly. It needs no build step — React +
 
 ## Extending it
 
-If you add a new service or specialist, edit the arrays inline at the top of `Services.jsx` / `Specialists.jsx`. Keep voice in Spanish, tú-form, sentence case. Add new icons by importing them into `../_shared/Icons.jsx` from the Phosphor path data.
+If you add a new service or specialist, edit the arrays inline at the top of `Services.jsx` / `Specialists.jsx`. Keep voice in Spanish, tú-form, sentence case. Add new icons by adding Lucide-style static paths to `../_shared/Icons.jsx`.
 
 ## Known font substitution
 

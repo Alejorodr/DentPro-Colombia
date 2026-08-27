@@ -3,19 +3,18 @@
 import Image from "next/image";
 import Link from "next/link";
 
-import type { ComponentType, SVGProps } from "react";
+import { useRef } from "react";
 
 import { SignOut, X } from "@/components/ui/Icon";
+import type { Icon, IconHandle } from "@/components/ui/Icon";
 import { Button } from "@/components/ui/Button";
 
 const iconWeight = "bold" as const;
 
-type IconProps = SVGProps<SVGSVGElement> & { weight?: typeof iconWeight };
-
 type NavItem = {
   label: string;
   href: string;
-  icon: ComponentType<IconProps>;
+  icon: Icon;
 };
 
 interface SidebarProps {
@@ -61,6 +60,42 @@ function resolveActiveHref(pathname: string, search: string, entries: NavItem[])
       .filter((entry) => isItemActive(pathname, search, entry.href))
       .sort((a, b) => b.href.length - a.href.length)
       .at(0)?.href ?? null
+  );
+}
+
+function SidebarNavLink({ active, item }: { active: boolean; item: NavItem }) {
+  const iconRef = useRef<IconHandle>(null);
+  const ItemIcon = item.icon;
+
+  const startIconAnimation = () => iconRef.current?.startAnimation();
+  const stopIconAnimation = () => iconRef.current?.stopAnimation();
+
+  return (
+    <Link
+      key={item.href}
+      href={item.href}
+      aria-current={active ? "page" : undefined}
+      className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-teal/60 dark:focus-visible:ring-accent-cyan/60 ${
+        active
+          ? "bg-brand-teal/10 text-brand-teal dark:bg-accent-cyan/10 dark:text-accent-cyan"
+          : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-surface-muted/70"
+      }`}
+      onBlur={stopIconAnimation}
+      onFocus={startIconAnimation}
+      onMouseEnter={startIconAnimation}
+      onMouseLeave={stopIconAnimation}
+      onPointerDown={startIconAnimation}
+    >
+      <ItemIcon
+        ref={iconRef}
+        aria-hidden="true"
+        className="h-5 w-5"
+        isAnimated={false}
+        nativeAnimation
+        weight={iconWeight}
+      />
+      {item.label}
+    </Link>
   );
 }
 
@@ -118,22 +153,7 @@ export function Sidebar({
             </p>
             {items.map((item) => {
               const active = item.href === activeHref;
-              const ItemIcon = item.icon;
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  aria-current={active ? "page" : undefined}
-                  className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-teal/60 dark:focus-visible:ring-accent-cyan/60 ${
-                    active
-                      ? "bg-brand-teal/10 text-brand-teal dark:bg-accent-cyan/10 dark:text-accent-cyan"
-                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-surface-muted/70"
-                  }`}
-                >
-                  <ItemIcon aria-hidden="true" className="h-5 w-5" weight={iconWeight} />
-                  {item.label}
-                </Link>
-              );
+              return <SidebarNavLink key={item.href} active={active} item={item} />;
             })}
           </div>
           {settingsItems.length > 0 ? (
@@ -143,22 +163,7 @@ export function Sidebar({
               </p>
               {settingsItems.map((item) => {
                 const active = item.href === activeHref;
-                const ItemIcon = item.icon;
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    aria-current={active ? "page" : undefined}
-                    className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-teal/60 dark:focus-visible:ring-accent-cyan/60 ${
-                      active
-                        ? "bg-brand-teal/10 text-brand-teal dark:bg-accent-cyan/10 dark:text-accent-cyan"
-                        : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-surface-muted/70"
-                    }`}
-                  >
-                    <ItemIcon aria-hidden="true" className="h-5 w-5" weight={iconWeight} />
-                    {item.label}
-                  </Link>
-                );
+                return <SidebarNavLink key={item.href} active={active} item={item} />;
               })}
             </div>
           ) : null}

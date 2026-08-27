@@ -10,6 +10,8 @@ import ReactCrop, {
 } from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
 
+import { X } from "@/components/ui/Icon";
+
 // Build initial centered crop using display dimensions (not natural)
 function buildInitialCrop(displayW: number, displayH: number, aspect: number): Crop {
   return centerCrop(
@@ -145,7 +147,7 @@ export function ImageCropModal({ src, aspect, maxW, maxH, label, onConfirm, onCa
               className="flex h-8 w-8 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-surface-muted"
               aria-label="Cerrar"
             >
-              ✕
+              <X aria-hidden="true" className="h-4 w-4" weight="bold" />
             </button>
           </div>
         </div>

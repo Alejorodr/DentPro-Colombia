@@ -63,3 +63,30 @@ describe("isDatabaseUnavailableError", () => {
     expect(prismaModule.isDatabaseUnavailableError(new prismaModule.DatabaseConfigurationError("boom"))).toBe(false);
   });
 });
+
+describe("normalizePostgresSslModeForPg", () => {
+  it("keeps pg's current strict behavior explicit for legacy sslmode aliases", async () => {
+    const prismaModule = await import("@/lib/prisma");
+
+    expect(prismaModule.normalizePostgresSslModeForPg("postgresql://user:pass@example.com/db?sslmode=require")).toBe(
+      "postgresql://user:pass@example.com/db?sslmode=verify-full",
+    );
+    expect(prismaModule.normalizePostgresSslModeForPg("postgres://user:pass@example.com/db?sslmode=prefer")).toBe(
+      "postgres://user:pass@example.com/db?sslmode=verify-full",
+    );
+    expect(prismaModule.normalizePostgresSslModeForPg("postgresql://user:pass@example.com/db?sslmode=verify-ca")).toBe(
+      "postgresql://user:pass@example.com/db?sslmode=verify-full",
+    );
+  });
+
+  it("leaves non-postgres and already explicit URLs unchanged", async () => {
+    const prismaModule = await import("@/lib/prisma");
+
+    expect(prismaModule.normalizePostgresSslModeForPg("file:./tests/.tmp/test.db")).toBe(
+      "file:./tests/.tmp/test.db",
+    );
+    expect(prismaModule.normalizePostgresSslModeForPg("postgresql://user:pass@example.com/db?sslmode=verify-full")).toBe(
+      "postgresql://user:pass@example.com/db?sslmode=verify-full",
+    );
+  });
+});

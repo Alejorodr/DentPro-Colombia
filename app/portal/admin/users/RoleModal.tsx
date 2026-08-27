@@ -6,6 +6,7 @@ import { roleLabels, userRoles, type UserRole } from "@/lib/auth/roles";
 import { fetchWithTimeout } from "@/lib/http";
 import { STATUS_COLORS } from "@/app/portal/components/ui/statusColors";
 import { useModalDialog } from "@/app/portal/components/ui/useModalDialog";
+import { X } from "@/components/ui/Icon";
 
 export type Specialty = {
   id: string;
@@ -285,7 +286,7 @@ export function RoleModal({
             className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 text-slate-500 dark:border-surface-muted"
             aria-label="Cerrar"
           >
-            ✕
+            <X aria-hidden="true" className="h-4 w-4" weight="bold" />
           </button>
         </div>
 

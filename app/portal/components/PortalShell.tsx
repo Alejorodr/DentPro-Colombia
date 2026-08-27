@@ -9,10 +9,13 @@ import { signOut } from "next-auth/react";
 import {
   CalendarCheck,
   ClipboardText,
+  CreditCard,
+  FileText,
   Gear,
   House,
   ShieldCheck,
   SquaresFour,
+  Stethoscope,
   Users,
 } from "@/components/ui/Icon";
 
@@ -55,17 +58,17 @@ const navByRole: Record<UserRole, NavItem[]> = {
     { label: "Agenda", href: "/portal/receptionist/schedule", icon: CalendarCheck },
     { label: "Pacientes", href: "/portal/receptionist/patients", icon: Users },
     { label: "Personal", href: "/portal/receptionist/staff", icon: Users },
-    { label: "Facturación", href: "/portal/receptionist/billing", icon: ClipboardText },
+    { label: "Facturación", href: "/portal/receptionist/billing", icon: CreditCard },
     { label: "Configuración", href: "/portal/receptionist/settings", icon: Gear },
   ],
   ADMINISTRADOR: [
     { label: "Inicio", href: "/portal/admin", icon: House },
     { label: "Usuarios", href: "/portal/admin/users", icon: Users },
-    { label: "Especialidades", href: "/portal/admin/specialties", icon: ClipboardText },
-    { label: "Servicios y tarifas", href: "/portal/admin/services", icon: ClipboardText },
+    { label: "Especialidades", href: "/portal/admin/specialties", icon: Stethoscope },
+    { label: "Servicios y tarifas", href: "/portal/admin/services", icon: CreditCard },
     { label: "Gestión de agenda", href: "/portal/admin/scheduling", icon: CalendarCheck },
     { label: "Contenido", href: "/portal/admin/content", icon: SquaresFour },
-    { label: "Plantillas clínicas", href: "/portal/admin/templates", icon: ClipboardText },
+    { label: "Plantillas clínicas", href: "/portal/admin/templates", icon: FileText },
     { label: "Auditoría", href: "/portal/admin/audit", icon: ShieldCheck },
   ],
 };

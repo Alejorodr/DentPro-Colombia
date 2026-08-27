@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { fetchWithRetry } from "@/lib/http";
 import { useModalDialog } from "@/app/portal/components/ui/useModalDialog";
 import { ClinicalHistoryPanel } from "@/app/portal/professional/patients/[id]/ClinicalHistoryPanel";
+import { X } from "@/components/ui/Icon";
 
 type PatientDetail = {
   id: string;
@@ -74,7 +75,7 @@ export function PatientDetailModal({ patientId, onClose }: { patientId: string; 
             className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 text-slate-500 dark:border-surface-muted"
             aria-label="Cerrar"
           >
-            ✕
+            <X aria-hidden="true" className="h-4 w-4" weight="bold" />
           </button>
         </div>
 

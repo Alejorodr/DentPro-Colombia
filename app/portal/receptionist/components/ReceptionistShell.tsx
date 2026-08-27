@@ -6,7 +6,7 @@ import { signOut } from "next-auth/react";
 
 import {
   CalendarCheck,
-  ClipboardText,
+  CreditCard,
   Gear,
   House,
   UserCircle,
@@ -28,7 +28,7 @@ const navItems = [
   { label: "Schedule", href: "/portal/receptionist/schedule", icon: CalendarCheck },
   { label: "Patients", href: "/portal/receptionist/patients", icon: Users },
   { label: "Staff", href: "/portal/receptionist/staff", icon: UserCircle },
-  { label: "Billing", href: "/portal/receptionist/billing", icon: ClipboardText },
+  { label: "Billing", href: "/portal/receptionist/billing", icon: CreditCard },
   { label: "Settings", href: "/portal/receptionist/settings", icon: Gear },
 ];
 

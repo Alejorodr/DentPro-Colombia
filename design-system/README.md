@@ -7,7 +7,7 @@ The system is in Spanish. Tone is warm and clinically precise — see `CONTENT F
 > **Sources used**
 > - GitHub repo: **https://github.com/Alejorodr/DentPro-Colombia** (mounted as `DentPro-Colombia/` in this project; readers can explore the same repo to extend this system)
 > - Logo files & storefront photo provided by the brand owner (now in `assets/`)
-> - Tailwind v4 + Phosphor Icons stack — design tokens come from `app/globals.css` + `tailwind.config.js`
+> - Tailwind v4 + AnimateIcons/Lucide stack — design tokens come from `app/globals.css` + `tailwind.config.js`
 >
 > If you want to build a richer system, the repo's `app/(marketing)/components/` and `app/portal/components/` folders contain the source-of-truth React for every screen.
 
@@ -24,7 +24,7 @@ The system is in Spanish. Tone is warm and clinically precise — see `CONTENT F
 | `preview/` | Cards rendered in the Design System tab — type ramps, palette, components, etc. |
 | `ui_kits/marketing/` | Recreation of the **public marketing site** — landing, services, specialists, booking, contact, login modal, floating CTAs. Open `index.html`. |
 | `ui_kits/portal/` | Recreation of the **multi-role clinical portal** — switch between Admin / Profesional / Paciente / Recepción from the topbar. Open `index.html`. |
-| `ui_kits/_shared/Icons.jsx` | Shared Phosphor icon set used by both kits. |
+| `ui_kits/_shared/Icons.jsx` | Shared Lucide-style static icon set used by both kits. |
 
 ---
 
@@ -84,7 +84,7 @@ DentPro writes like a **modern Colombian dental clinic** that wants to feel both
 - Phone: `+57 323 796 8435` (e164 in `tel:`, spaced for display).
 
 ### No emoji
-The codebase contains zero emoji in user copy. Phosphor icons fill that role (see `ICONOGRAPHY`). **Don't add emoji** when generating DentPro content.
+The codebase contains zero emoji in user copy. Lucide-style UI icons fill that role (see `ICONOGRAPHY`). **Don't add emoji** when generating DentPro content.
 
 ### Examples to imitate
 
@@ -194,7 +194,7 @@ A 28px-radius rectangle, translucent white fill, soft border, large diffused sha
 ## ICONOGRAPHY
 
 ### System
-**[Phosphor Icons](https://phosphoricons.com/)** via `@phosphor-icons/react`. Always referenced through the project's barrel at `components/ui/Icon.tsx` — never imported directly.
+**AnimateIcons/Lucide** via `@animateicons/react` and `lucide-react`. Always reference icons through the project's barrel at `components/ui/Icon.tsx` — never import icon libraries directly from product code.
 
 ```tsx
 import { CalendarCheck, Tooth, WhatsappLogo } from "@/components/ui/Icon";
@@ -204,10 +204,10 @@ Available out-of-the-box (the icons actually used in the product):
 `ArrowLeft, ArrowRight, Baby, Bell, CalendarBlank, CalendarCheck, CaretLeft, CaretRight, ChartLineUp, ChatCircleDots, CheckCircle, CircleNotch, ClipboardText, Clock, ClockCounterClockwise, Copyright, CreditCard, DiamondsFour, EnvelopeSimple, Eye, FacebookLogo, FileArrowUp, FileText, Flask, Funnel, Gear, Headset, House, InstagramLogo, LinkedinLogo, List, Lock, MagnifyingGlass, MapPin, Medal, Microphone, Moon, MoonStars, PencilSimple, Phone, Printer, Question, ShieldCheck, ShieldWarning, SignIn, SignOut, Smiley, Sparkle, SquaresFour, Stethoscope, Sun, TiktokLogo, Tooth, TrendUp, Trash, UserCheck, UserCircle, UserMinus, Users, UsersFour, UsersThree, WarningCircle, WhatsappLogo, X, XCircle`.
 
 ### Weights
-DentPro uses Phosphor's `weight` variants — never the default thin.
-- `weight="bold"` — most UI: buttons, nav, services
-- `weight="fill"` — small status icons inside the InfoBar (location pin, clock, WhatsApp), checklist checkmarks
-- Plain (no weight) — never used in product
+DentPro keeps a compatibility `weight` prop in the icon barrel, but visual weight is normalized to Lucide stroke widths.
+- `weight="bold"` — maps to a stronger stroke for most UI: buttons, nav, services
+- `weight="fill"` — maps to a stronger stroke for status icons
+- Plain (no weight) — maps to the default Lucide stroke
 
 ### Sizes
 - 16px (`h-4 w-4`) — inline with text
@@ -217,12 +217,12 @@ DentPro uses Phosphor's `weight` variants — never the default thin.
 
 ### Conventions
 - **One service = one icon.** Mapping lives in `app/(marketing)/components/icon-registry.tsx`. Adding a service means registering its icon there.
-- **No emoji.** No unicode picto chars. No PNG icons. Phosphor only.
+- **No emoji.** No unicode picto chars. No PNG icons. Lucide geometry for product UI.
 - The **dental SVG glyph** at `app/icon.svg` (copied to `assets/icon.svg`) is the favicon — a tiny tooth used in browser tabs and PWA manifest.
 - Logos are PNGs/JPGs (copied from brand owner). No simplified mark — when space is tight, use the "DP" monogram (white text on `bg-brand-teal` circle) that the navbar already uses.
 
 ### CDN fallback
-If consuming this design system outside Next.js (e.g. in a static HTML mock), Phosphor ships a single ES module + CSS pair you can link directly. Otherwise the project's `Icon.tsx` barrel is the canonical way.
+If consuming this design system outside Next.js (e.g. in a static HTML mock), use `ui_kits/_shared/Icons.jsx` for the bundled Lucide-style static icons. Otherwise the project's `Icon.tsx` barrel is the canonical way.
 
 ### Logo asset inventory (`assets/`)
 | File | Use |

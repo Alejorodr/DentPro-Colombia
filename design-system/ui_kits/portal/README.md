@@ -18,7 +18,7 @@ The topbar has a dropdown to swap between **Admin / Profesional / Paciente / Rec
 
 ## What's faithful
 
-- **Sidebar nav** — exact role nav from `PortalShell.tsx`, with the same Phosphor icons.
+- **Sidebar nav** — exact role nav from `PortalShell.tsx`, with the same Lucide-style icons.
 - **Topbar** — sticky frosted header with search, notifications, help, avatar pill, plus an admin-only global search input.
 - **Admin dashboard** — 4 KPI cards (Appointments / Revenue / Active Staff / Pending), period pill selector (Today/Last 7/Last 30/MTD/YTD), revenue bar chart, staff-on-duty list, today's appointments table.
 - **Patient dashboard** — header card with patient ID + clinic chips, next-visit gradient hero, quick actions, history feed, consent checklist.
