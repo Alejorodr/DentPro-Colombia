@@ -14,7 +14,7 @@
 - Environment documentation and security hardening notes.
 - Sentry client/server initialization and monitoring endpoint.
 - Structured logger for API audit events (appointments, user role changes, deletions).
-- Icon wrapper to centralize Phosphor icon imports.
+- Icon wrapper to centralize product UI icon imports.
 - Upgrade guides for Next.js 16 and Tailwind CSS v4.
 - GitHub Actions workflow to run lint, test, and build on PRs.
 - Prisma v7 configuration file (`prisma/prisma.config.ts`) to define datasource URLs outside schema files.

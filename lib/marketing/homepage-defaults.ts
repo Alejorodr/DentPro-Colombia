@@ -18,7 +18,7 @@ export const HOMEPAGE_DEFAULT_CONTENT: HomepageNormalizedContent = {
   infoBar: {
     location: { text: "Cra. 7 #13-180, Chía, Cundinamarca", icon: "MapPin" },
     schedule: { text: "Lun–Sáb 8:00-19:00 · Domingos y festivos con cita previa", icon: "Clock" },
-    whatsapp: { href: "https://wa.me/573237968435", label: "Agenda por WhatsApp", icon: "ChatCircleDots" },
+    whatsapp: { href: "https://wa.me/573237968435", label: "Agenda por WhatsApp", icon: "WhatsappLogo" },
     email: { href: "mailto:dentprocolombia@gmail.com", label: "dentprocolombia@gmail.com", icon: "EnvelopeSimple" },
     socials: [
       { href: "https://www.instagram.com/dentprocol", label: "Instagram", icon: "InstagramLogo", placements: ["INFOBAR", "FOOTER"] },

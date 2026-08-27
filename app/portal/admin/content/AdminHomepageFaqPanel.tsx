@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Card } from "@/app/portal/components/ui/Card";
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
+import { ArrowDown, ArrowUp } from "@/components/ui/Icon";
 
 type FaqItem = {
   id: string;
@@ -237,7 +238,7 @@ export function AdminHomepageFaqPanel() {
                 onClick={() => reorderFaqs(index, index - 1)}
                 disabled={saving || index === 0}
               >
-                ↑
+                <ArrowUp aria-hidden="true" className="h-3.5 w-3.5" />
               </button>
               <button
                 type="button"
@@ -245,7 +246,7 @@ export function AdminHomepageFaqPanel() {
                 onClick={() => reorderFaqs(index, index + 1)}
                 disabled={saving || index === faqs.length - 1}
               >
-                ↓
+                <ArrowDown aria-hidden="true" className="h-3.5 w-3.5" />
               </button>
               <button
                 type="button"

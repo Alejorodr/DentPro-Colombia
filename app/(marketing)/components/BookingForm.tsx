@@ -37,7 +37,7 @@ interface SocialLink {
 }
 
 const CHANNEL_ICON: Record<ChannelType, MarketingIconName> = {
-  WHATSAPP: "ChatCircleDots",
+  WHATSAPP: "WhatsappLogo",
   PHONE: "Phone",
   EMAIL: "EnvelopeSimple",
 };

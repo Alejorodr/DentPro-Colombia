@@ -8,6 +8,7 @@ import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
 import { STATUS_COLORS } from "@/app/portal/components/ui/statusColors";
 import { Card } from "@/app/portal/components/ui/Card";
 import { useModalDialog } from "@/app/portal/components/ui/useModalDialog";
+import { ArrowLeft, ArrowRight } from "@/components/ui/Icon";
 import { RoleModal, type Specialty } from "./RoleModal";
 import { PatientDetailModal } from "./PatientDetailModal";
 
@@ -599,19 +600,21 @@ export function AdminUsersPanel({ roleFilter, roleLock }: AdminUsersPanelProps) 
             <div className="flex gap-2">
               <button
                 type="button"
-                className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold uppercase disabled:opacity-40"
+                className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold uppercase disabled:opacity-40"
                 disabled={page <= 1 || loading}
                 onClick={() => setPage((p) => p - 1)}
               >
-                ← Anterior
+                <ArrowLeft aria-hidden="true" className="h-3.5 w-3.5" />
+                Anterior
               </button>
               <button
                 type="button"
-                className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold uppercase disabled:opacity-40"
+                className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold uppercase disabled:opacity-40"
                 disabled={page * 20 >= total || loading}
                 onClick={() => setPage((p) => p + 1)}
               >
-                Siguiente →
+                Siguiente
+                <ArrowRight aria-hidden="true" className="h-3.5 w-3.5" />
               </button>
             </div>
           </div>

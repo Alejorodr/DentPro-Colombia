@@ -1,6 +1,6 @@
 // DentPro Marketing — InfoBar
 // Mirrors app/(marketing)/components/InfoBar.tsx
-const { MapPin, Clock, ChatCircleDots, EnvelopeSimple, InstagramLogo, FacebookLogo, TiktokLogo } = window.DPIcons;
+const { MapPin, Clock, WhatsappLogo, EnvelopeSimple, InstagramLogo, FacebookLogo, TiktokLogo } = window.DPIcons;
 
 function DPInfoBar() {
   return (
@@ -22,7 +22,7 @@ function DPInfoBar() {
             Lun–Sáb 8:00–19:00 · Domingos y festivos con cita previa
           </span>
           <a href="https://wa.me/573237968435" target="_blank" rel="noopener" style={{ display: "inline-flex", alignItems: "center", gap: 8, color: "var(--color-brand-teal)", fontWeight: 600, textDecoration: "none" }}>
-            <ChatCircleDots size={18} />
+            <WhatsappLogo size={18} />
             Agenda por WhatsApp
           </a>
         </div>

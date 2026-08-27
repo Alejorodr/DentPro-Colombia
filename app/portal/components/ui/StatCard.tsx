@@ -1,14 +1,11 @@
-import type { ComponentType, SVGProps } from "react";
-
 import { Card } from "@/app/portal/components/ui/Card";
-
-type IconProps = SVGProps<SVGSVGElement> & { weight?: "bold" | "duotone" | "fill" | "light" | "regular" | "thin" };
+import type { Icon } from "@/components/ui/Icon";
 
 type StatCardProps = {
   label: string;
   value: string;
   change: string;
-  icon: ComponentType<IconProps>;
+  icon: Icon;
   iconClassName?: string;
 };
 
