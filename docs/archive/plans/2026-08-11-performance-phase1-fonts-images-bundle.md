@@ -20,7 +20,7 @@
 ### Task 1: Capture Lighthouse baseline (before any changes)
 
 **Files:**
-- Create: `docs/superpowers/plans/lighthouse-baseline.json` (scratch artifact, not committed — see step 3)
+- Create: `docs/archive/plans/lighthouse-baseline.json` (scratch artifact, not committed — see step 3)
 
 **Interfaces:**
 - Consumes: nothing (first task)
@@ -46,7 +46,7 @@ Run this in the background (it's a long-running server), then wait ~3 seconds fo
 - [x] **Step 3: Run Lighthouse against the homepage**
 
 ```bash
-npx lighthouse http://localhost:3000 --output=json --output-path=docs/superpowers/plans/lighthouse-baseline.json --only-categories=performance --chrome-flags="--headless"
+npx lighthouse http://localhost:3000 --output=json --output-path=docs/archive/plans/lighthouse-baseline.json --only-categories=performance --chrome-flags="--headless"
 ```
 
 Expected: exits 0, produces a JSON report. Note the `performance` score and the `largest-contentful-paint`, `first-contentful-paint`, `cumulative-layout-shift`, and `total-byte-weight` (bundle-size-adjacent) audit values from the output — write them down in your task-completion notes for comparison against Task 7's after-measurement. This file is a scratch artifact for your own reference during this plan; it does not get committed (it's not part of the shipped app and isn't referenced by any other task).
@@ -522,7 +522,7 @@ pnpm run start
 (background, wait for it to bind)
 
 ```bash
-npx lighthouse http://localhost:3000 --output=json --output-path=docs/superpowers/plans/lighthouse-after-phase1.json --only-categories=performance --chrome-flags="--headless"
+npx lighthouse http://localhost:3000 --output=json --output-path=docs/archive/plans/lighthouse-after-phase1.json --only-categories=performance --chrome-flags="--headless"
 ```
 
 Stop the production server after this completes.
@@ -534,7 +534,7 @@ Compare `lighthouse-baseline.json` (Task 1) against `lighthouse-after-phase1.jso
 - [x] **Step 4: Clean up scratch files**
 
 ```bash
-rm -f docs/superpowers/plans/lighthouse-baseline.json docs/superpowers/plans/lighthouse-after-phase1.json
+rm -f docs/archive/plans/lighthouse-baseline.json docs/archive/plans/lighthouse-after-phase1.json
 git status --short
 ```
 Expected: clean working tree (these files were never `git add`ed, so nothing to unstage — this just confirms no stray files remain).

@@ -24,7 +24,7 @@
 
 # Part 1 — Canales, redes sociales, Información de empresa
 
-*(implements `docs/superpowers/specs/2026-08-19-company-info-channels-unification-design.md`)*
+*(implements `docs/archive/specs/2026-08-19-company-info-channels-unification-design.md`)*
 
 ### Task 1: Prisma schema — HomepageChannel + placements
 
@@ -1082,7 +1082,7 @@ git commit -m "chore(admin): remove obsolete Barra superior and Acciones flotant
 
 # Part 2 — Fusión Especialistas → Staff
 
-*(implements Section A of `docs/superpowers/specs/2026-08-20-admin-content-cms-restructure-design.md`)*
+*(implements Section A of `docs/archive/specs/2026-08-20-admin-content-cms-restructure-design.md`)*
 
 ### Task 13: Prisma — additive homepage columns on ProfessionalProfile
 
@@ -1312,7 +1312,7 @@ git commit -m "feat(marketing): SpecialistsSlider reads from ProfessionalProfile
 
 # Part 3 — Fusión Servicios → Service clínico
 
-*(implements Section B of `docs/superpowers/specs/2026-08-20-admin-content-cms-restructure-design.md`)*
+*(implements Section B of `docs/archive/specs/2026-08-20-admin-content-cms-restructure-design.md`)*
 
 ### Task 17: Prisma — additive homepage columns on Service + ServiceHighlight model
 
@@ -1557,7 +1557,7 @@ git commit -m "feat(marketing): ServicesSection reads from Service, remove Homep
 
 # Part 4 — Partir el formulario gigante y estructura final del sidebar
 
-*(implements Section C/D/E of `docs/superpowers/specs/2026-08-20-admin-content-cms-restructure-design.md`)*
+*(implements Section C/D/E of `docs/archive/specs/2026-08-20-admin-content-cms-restructure-design.md`)*
 
 ### Task 21: Split AdminHomepageSettingsPanel into 5 independent panels
 

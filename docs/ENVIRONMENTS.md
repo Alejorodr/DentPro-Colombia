@@ -33,9 +33,9 @@ This project separates **Development**, **Preview/Staging**, and **Production** 
 
 ## Prisma scripts
 Add environment-specific workflow:
-- `npm run prisma generate` (already included in build)
-- `npx prisma migrate deploy` (staging/production)
-- `npx prisma db push` (development only)
+- `pnpm exec prisma generate` (already included in build)
+- `pnpm exec prisma migrate deploy` (staging/production)
+- `pnpm exec prisma db push` (development only)
 
 
 ## Runtime stages (operación)

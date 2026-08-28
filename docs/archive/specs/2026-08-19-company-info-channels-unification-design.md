@@ -2,7 +2,7 @@
 
 ## Context
 
-Siguiente paso del rediseño de `/portal/admin/content`, a partir de lo mapeado en `docs/superpowers/specs/2026-08-19-homepage-content-audit.md`. Ese audit encontró que la información básica de la clínica está fragmentada y duplicada en el código:
+Siguiente paso del rediseño de `/portal/admin/content`, a partir de lo mapeado en `docs/archive/specs/2026-08-19-homepage-content-audit.md`. Ese audit encontró que la información básica de la clínica está fragmentada y duplicada en el código:
 
 - El número de WhatsApp existe en **4 lugares independientes**: `infoBarWhatsappHref` (InfoBar), `floatingWhatsappNumber` (botón flotante), `contactWhatsapp` (footer), y un literal hardcodeado en `BookingForm.tsx` — ninguno lee de los otros.
 - El teléfono existe en 2 lugares (`floatingPhoneNumber`, `contactPhone`), igual de desconectados.

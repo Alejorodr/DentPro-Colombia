@@ -4,22 +4,22 @@ Este proyecto utiliza Prisma con SQLite para persistir usuarios, roles y sesione
 
 ## Ejecutar migraciones
 
-1. Asegúrate de haber instalado las dependencias (`npm install`).
+1. Asegúrate de haber instalado las dependencias (`pnpm install`).
 2. Configura la variable `DATABASE_URL` en tu entorno (consulta `.env.example`).
 3. Aplica las migraciones usando Prisma:
 
 ```bash
-npm run prisma migrate dev
+pnpm exec prisma migrate dev
 ```
 
 > Prisma generará automáticamente el cliente y aplicará las migraciones a la base de datos indicada en `DATABASE_URL`.
 
 ## Cargar datos semilla
 
-El comando `npm run db:seed` ejecuta `prisma/seed.js`, que inserta usuarios base y asegura que los roles (`patient`, `professional`, `reception`, `admin`) queden asignados.
+El comando `pnpm run db:seed` ejecuta el seed configurado por Prisma, que inserta usuarios base y asegura que los roles (`patient`, `professional`, `reception`, `admin`) queden asignados.
 
 ```bash
-npm run db:seed
+pnpm run db:seed
 ```
 
 - Debes definir una contraseña segura para los usuarios iniciales exportando `SEED_PASSWORD` antes de ejecutar el script. El valor no se registrará ni se mostrará en consola.

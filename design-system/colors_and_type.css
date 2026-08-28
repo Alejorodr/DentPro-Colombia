@@ -1,5 +1,5 @@
 /* DentPro Colombia — Colors & Type Tokens
- * Source of truth: app/globals.css + tailwind.config.js from Alejorodr/DentPro-Colombia.
+ * Source of truth: app/globals.css from Alejorodr/DentPro-Colombia.
  * Two themes: :root (light) and :root.dark (dark). Toggle by adding `.dark` to <html>.
  * Brand sans: Outfit (9 weights, brand-owned). Inter retained as italic fallback.
  */

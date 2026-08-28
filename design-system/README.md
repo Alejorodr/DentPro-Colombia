@@ -7,7 +7,7 @@ The system is in Spanish. Tone is warm and clinically precise — see `CONTENT F
 > **Sources used**
 > - GitHub repo: **https://github.com/Alejorodr/DentPro-Colombia** (mounted as `DentPro-Colombia/` in this project; readers can explore the same repo to extend this system)
 > - Logo files & storefront photo provided by the brand owner (now in `assets/`)
-> - Tailwind v4 + AnimateIcons/Lucide stack — design tokens come from `app/globals.css` + `tailwind.config.js`
+> - Tailwind v4 + AnimateIcons/Lucide stack — design tokens come from `app/globals.css`
 >
 > If you want to build a richer system, the repo's `app/(marketing)/components/` and `app/portal/components/` folders contain the source-of-truth React for every screen.
 
