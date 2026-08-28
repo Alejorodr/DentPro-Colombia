@@ -47,14 +47,14 @@ cp .env.example .env
 3. Genera el cliente Prisma y aplica migraciones:
 
 ```bash
-npm run prisma generate
-npx prisma migrate deploy
+pnpm exec prisma generate
+pnpm exec prisma migrate deploy
 ```
 
 4. Ejecuta el seed:
 
 ```bash
-npm run prisma:seed
+pnpm run prisma:seed
 ```
 
 ### Credenciales demo (seed)
@@ -82,7 +82,7 @@ Los adjuntos clínicos se almacenan en Vercel Blob y se referencian por `storage
 El seed garantiza que exista un usuario ADMINISTRADOR con el correo real (ej. `kevinrodr@hotmail.com`). Ejecuta el seed manualmente cuando quieras crear o actualizar la cuenta admin:
 
 ```bash
-SEED_ADMIN_EMAIL=kevinrodr@hotmail.com SEED_ADMIN_PASSWORD="TuPasswordSegura" npm run prisma:seed
+SEED_ADMIN_EMAIL=kevinrodr@hotmail.com SEED_ADMIN_PASSWORD="TuPasswordSegura" pnpm run prisma:seed
 ```
 
 - Si el usuario existe, se asegura el rol `ADMINISTRADOR` y se actualiza la contraseña solo si `SEED_ADMIN_PASSWORD` está presente.

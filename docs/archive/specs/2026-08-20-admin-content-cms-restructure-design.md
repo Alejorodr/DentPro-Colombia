@@ -4,9 +4,9 @@
 
 Continuación directa de dos documentos previos:
 
-- `docs/superpowers/specs/2026-08-19-homepage-content-audit.md` — mapa completo de la home pública contra la cobertura del CMS.
-- `docs/superpowers/specs/2026-08-19-admin-content-cms-audit.md` — auditoría del lado admin de `/portal/admin/content`: encontró que el sidebar muestra 22 entradas pero solo hay 13 componentes editables reales (10 entradas son deep-links a un mismo formulario gigante de 46 campos), dos casos de duplicación de datos a nivel de entidad (Especialistas/Servicios de marketing vs. registros operacionales reales), toggles de visibilidad huérfanos, y varias inconsistencias menores de nombrado/UI.
-- `docs/superpowers/specs/2026-08-19-company-info-channels-unification-design.md` — diseño ya aprobado (no se re-implementa acá, se referencia): unifica WhatsApp/Teléfono/Email/redes sociales en modelos con control de visibilidad por ubicación, agrupados en una nueva sección "Información de empresa".
+- `docs/archive/specs/2026-08-19-homepage-content-audit.md` — mapa completo de la home pública contra la cobertura del CMS.
+- `docs/archive/specs/2026-08-19-admin-content-cms-audit.md` — auditoría del lado admin de `/portal/admin/content`: encontró que el sidebar muestra 22 entradas pero solo hay 13 componentes editables reales (10 entradas son deep-links a un mismo formulario gigante de 46 campos), dos casos de duplicación de datos a nivel de entidad (Especialistas/Servicios de marketing vs. registros operacionales reales), toggles de visibilidad huérfanos, y varias inconsistencias menores de nombrado/UI.
+- `docs/archive/specs/2026-08-19-company-info-channels-unification-design.md` — diseño ya aprobado (no se re-implementa acá, se referencia): unifica WhatsApp/Teléfono/Email/redes sociales en modelos con control de visibilidad por ubicación, agrupados en una nueva sección "Información de empresa".
 
 Este documento cubre lo que falta para completar la simplificación del CMS: las dos fusiones de entidades duplicadas, partir el formulario gigante en paneles reales, y los arreglos menores encontrados en la auditoría.
 

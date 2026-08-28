@@ -15,7 +15,7 @@ Recreation of the **public marketing site** from `app/(marketing)/` and `app/pag
 | `Specialists.jsx` | Specialists carousel | `SpecialistsSlider.tsx` |
 | `BookingForm.jsx` | Gradient booking panel + benefits sidebar | `BookingForm.tsx` |
 | `Contact.jsx` | Contact channels, map placeholder, footer | `ContactSection.tsx` + footer |
-| `LoginModal.jsx` | Split-panel login dialog + floating WhatsApp/phone buttons | `LoginModal.tsx` + `FloatingActions.tsx` |
+| `LoginModal.jsx` | Split-panel login dialog + floating WhatsApp/phone buttons | Static kit reference; runtime login uses the current auth components |
 
 ## What's faithful, what's simplified
 

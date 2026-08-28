@@ -92,7 +92,6 @@ export async function authorizeCredentials(credentials?: CredentialsInput) {
 
   logger.info({ event: "auth.credentials.success", userId: user.id, role: user.role });
 
-  // TODO: Implement 2FA verification for ADMINISTRADOR/PROFESIONAL when mfaEnabled is true.
   return {
     id: user.id,
     name: user.name,

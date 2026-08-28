@@ -1,4 +1,4 @@
-# Upgrade to Next.js 16
+# Upgrade to Next.js 16 — completado
 
 ## Summary
 - Updated to Next.js 16 and React 19 (latest) and enabled Cache Components via `next.config.ts`.
@@ -6,17 +6,19 @@
 - Removed route-segment `runtime`/`dynamic` exports that are incompatible with Cache Components.
 - Wrapped global providers in a `<Suspense>` boundary to satisfy Cache Components prerendering rules.
 
-## Required Actions
-1. Install dependencies:
+La migración está aplicada en `main` y validada con build, lint, typecheck y pruebas. Este documento queda como nota histórica; no contiene pasos pendientes.
+
+## Referencia histórica
+Los comandos originales fueron:
    ```bash
-   npm install next@latest react@latest react-dom@latest
-   npm install eslint-config-next@latest
+   pnpm add next@latest react@latest react-dom@latest
+   pnpm add -D eslint-config-next@latest
    ```
 2. Verify the `proxy.ts` configuration and matcher.
 3. Ensure `DATABASE_URL` is available in build and runtime environments.
 4. Run a build to validate:
    ```bash
-   npm run build
+   pnpm run build
    ```
 
 ## Notes

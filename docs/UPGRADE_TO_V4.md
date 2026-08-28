@@ -1,4 +1,4 @@
-# Upgrade to Tailwind CSS v4
+# Upgrade to Tailwind CSS v4 — completado
 
 ## Summary
 - Migrated to Tailwind CSS v4 using `@tailwindcss/upgrade`.
@@ -6,15 +6,17 @@
 - Added theme tokens via `@theme` and new custom variants to align with the v4 API.
 - Updated PostCSS configuration to use `@tailwindcss/postcss`.
 
-## Required Actions
-1. Install dependencies:
+La migración está aplicada en `main` y validada con build, lint, typecheck y pruebas. Este documento queda como nota histórica; no contiene pasos pendientes.
+
+## Referencia histórica
+Los comandos originales fueron:
    ```bash
-   npm install tailwindcss@latest @tailwindcss/postcss
+   pnpm add tailwindcss@latest @tailwindcss/postcss
    ```
 2. Confirm Node.js >= 20 is used in local/CI environments.
 3. Run a build to validate:
    ```bash
-   npm run build
+   pnpm run build
    ```
 
 ## Notes

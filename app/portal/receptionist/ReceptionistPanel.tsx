@@ -246,7 +246,6 @@ export function ReceptionistPanel() {
               </button>
             </div>
           ) : null}
-          {/* TODO: agregar paginación para listas de profesionales y especialidades cuando crezcan. */}
         </div>
       </section>
     </div>
