@@ -12,6 +12,8 @@
     "vercel-build": "pnpm exec prisma generate --schema prisma/schema.prisma && node scripts/vercel-prisma.mjs && next build --webpack",
     "start": "next start",
     "lint": "eslint .",
+    "changeset": "node node_modules/@changesets/cli/bin.js",
+    "version-packages": "node node_modules/@changesets/cli/bin.js version",
     "test": "cross-env VITEST_PRISMA_SETUP=1 node scripts/run-ci-command.mjs \"vitest run --maxWorkers=4\"",
     "test:unit": "cross-env VITEST_PRISMA_SETUP=0 node scripts/run-ci-command.mjs \"vitest run --exclude tests/analytics-admin.spec.ts\"",
     "test:integration": "cross-env VITEST_PRISMA_SETUP=1 node scripts/run-ci-command.mjs \"vitest run tests/analytics-admin.spec.ts\"",
@@ -54,6 +56,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@changesets/cli": "^3.0.1",
     "@next/bundle-analyzer": "16.3.0",
     "@next/eslint-plugin-next": "^16.3.0",
     "@playwright/test": "^1.62.1",
