@@ -581,11 +581,11 @@ export function ProfessionalDashboard() {
                             <p className="text-xs text-slate-500">{new Date(item.createdAt).toLocaleString("es-CO")}</p>
                           </div>
                           {item.url ? (
-                            <Link className="text-xs font-semibold text-brand-indigo" href={item.url} target="_blank">
+                            <Link className="text-xs font-semibold text-brand-indigo" href={item.url} target="_blank" rel="noopener noreferrer">
                               Abrir
                             </Link>
                           ) : item.dataUrl ? (
-                            <Link className="text-xs font-semibold text-brand-indigo" href={item.dataUrl} target="_blank">
+                            <Link className="text-xs font-semibold text-brand-indigo" href={item.dataUrl} target="_blank" rel="noopener noreferrer">
                               Vista previa
                             </Link>
                           ) : null}

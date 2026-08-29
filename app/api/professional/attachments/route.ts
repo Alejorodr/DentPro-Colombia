@@ -12,10 +12,26 @@ const allowedKinds = new Set<AttachmentKind>([AttachmentKind.XRAY, AttachmentKin
 function isSafeAttachmentUrl(url: string) {
   try {
     const parsed = new URL(url);
-    return parsed.protocol === "http:" || parsed.protocol === "https:";
+    return parsed.protocol === "https:";
   } catch {
     return false;
   }
+}
+
+const SAFE_DATA_URL_MIME_TYPES = new Set([
+  "application/pdf",
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+]);
+
+function isSafeAttachmentDataUrl(value: string, mimeType?: string | null) {
+  const match = /^data:([^;,]+);base64,([a-z0-9+/]+=*)$/i.exec(value);
+  if (!match || !SAFE_DATA_URL_MIME_TYPES.has(match[1].toLowerCase())) {
+    return false;
+  }
+
+  return !mimeType || mimeType.toLowerCase() === match[1].toLowerCase();
 }
 
 const professionalAttachmentSchema = z.object({
@@ -72,6 +88,7 @@ export async function GET(request: Request) {
     select: {
       id: true,
       filename: true,
+      mimeType: true,
       url: true,
       dataUrl: true,
       createdAt: true,
@@ -94,8 +111,11 @@ export async function GET(request: Request) {
     attachments: attachments.map((attachment) => ({
       id: attachment.id,
       filename: attachment.filename,
-      url: attachment.url,
-      dataUrl: attachment.dataUrl,
+      url: attachment.url && isSafeAttachmentUrl(attachment.url) ? attachment.url : null,
+      dataUrl:
+        attachment.dataUrl && isSafeAttachmentDataUrl(attachment.dataUrl, attachment.mimeType)
+          ? attachment.dataUrl
+          : null,
       createdAt: attachment.createdAt.toISOString(),
       patient: attachment.patient
         ? {
@@ -130,6 +150,14 @@ export async function POST(request: Request) {
 
   if (!payload.url && !payload.dataUrl) {
     return errorResponse("Adjunto sin enlace ni dataUrl.");
+  }
+
+  if (payload.url && !isSafeAttachmentUrl(payload.url)) {
+    return errorResponse("La URL del adjunto debe usar HTTPS.");
+  }
+
+  if (payload.dataUrl && !isSafeAttachmentDataUrl(payload.dataUrl, payload.mimeType)) {
+    return errorResponse("El contenido embebido del adjunto no es seguro.");
   }
 
   const prisma = getPrismaClient();

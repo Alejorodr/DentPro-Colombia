@@ -100,6 +100,39 @@ describe("clinical domain hardening", () => {
     expect(mockPrisma.appointment.findUnique).not.toHaveBeenCalled();
   });
 
+  it("rejects insecure schemes and active HTML data URLs", async () => {
+    const { POST } = await import("@/app/api/professional/attachments/route");
+
+    mockRequireSession.mockResolvedValue({ user: { id: "pro-user", role: "PROFESIONAL" } });
+
+    const httpResponse = await POST(
+      new Request("http://localhost/api/professional/attachments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          kind: "DOCUMENT",
+          filename: "nota.pdf",
+          url: "http://example.com/file.pdf",
+        }),
+      }),
+    );
+    const htmlDataResponse = await POST(
+      new Request("http://localhost/api/professional/attachments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          kind: "DOCUMENT",
+          filename: "nota.html",
+          dataUrl: "data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg==",
+        }),
+      }),
+    );
+
+    expect(httpResponse.status).toBe(400);
+    expect(htmlDataResponse.status).toBe(400);
+    expect(mockPrisma.professionalProfile.findUnique).not.toHaveBeenCalled();
+  });
+
   it("rejects patientId outside professional ownership when creating attachments", async () => {
     const { POST } = await import("@/app/api/professional/attachments/route");
 

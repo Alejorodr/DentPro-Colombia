@@ -160,6 +160,7 @@ export function ProfessionalDocuments() {
                       className="text-xs font-semibold text-brand-indigo"
                       href={attachment.url ?? attachment.dataUrl ?? "#"}
                       target="_blank"
+                      rel="noopener noreferrer"
                     >
                       View
                     </a>
