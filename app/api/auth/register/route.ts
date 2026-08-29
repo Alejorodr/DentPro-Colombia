@@ -8,6 +8,7 @@ import { parseJson } from "@/app/api/_utils/validation";
 import { PASSWORD_POLICY_MESSAGE, PASSWORD_POLICY_REGEX } from "@/lib/auth/password-policy";
 import { Prisma } from "@prisma/client";
 import { logAuditEvent } from "@/lib/audit";
+import { enforceRateLimit } from "@/app/api/_utils/ratelimit";
 
 const registerSchema = z.object({
   name: z.string().trim().min(1, "El nombre es obligatorio.").max(120),
@@ -22,6 +23,13 @@ const registerSchema = z.object({
 });
 
 export async function POST(request: Request) {
+  const rateLimited = await enforceRateLimit(request, "auth:register", {
+    limit: 5,
+    window: "1 m",
+    windowMs: 60_000,
+  });
+  if (rateLimited) return rateLimited;
+
   const { data: payload, error } = await parseJson(request, registerSchema);
   if (error) {
     return error;
@@ -60,7 +68,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true }, { status: 201 });
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
-      return errorResponse("Ya existe una cuenta con ese correo.", 409);
+      return NextResponse.json({ ok: true }, { status: 201 });
     }
     return internalServerErrorResponse("No se pudo crear la cuenta. Inténtalo de nuevo.");
   }
