@@ -99,4 +99,17 @@ describe("PATCH /api/users/[id] guards", () => {
     const res = await callPatch(OTHER_USER_ID, { role: "RECEPCIONISTA" });
     expect(res.status).toBe(200);
   });
+
+  it("records password changes for session invalidation", async () => {
+    prismaMock.user.findUnique.mockResolvedValue(makeExisting());
+    const res = await callPatch(OTHER_USER_ID, { password: "NewSecure1!" });
+
+    expect(res.status).toBe(200);
+    expect(prismaMock.user.update).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        passwordHash: expect.any(String),
+        passwordChangedAt: expect.any(Date),
+      }),
+    }));
+  });
 });

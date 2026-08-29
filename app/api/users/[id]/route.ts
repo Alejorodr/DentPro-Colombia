@@ -97,6 +97,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
         lastName: payload.lastName?.trim() ?? undefined,
         role: requestedRole ?? undefined,
         passwordHash: passwordHash ?? undefined,
+        passwordChangedAt: passwordHash ? new Date() : undefined,
         active: typeof payload.active === "boolean" ? payload.active : undefined,
       },
     });
