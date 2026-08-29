@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 import { z } from "zod";
 
 import { getPrismaClient } from "@/lib/prisma";
-import { errorResponse, internalServerErrorResponse } from "@/app/api/_utils/response";
+import { internalServerErrorResponse } from "@/app/api/_utils/response";
 import { parseJson } from "@/app/api/_utils/validation";
 import { PASSWORD_POLICY_MESSAGE, PASSWORD_POLICY_REGEX } from "@/lib/auth/password-policy";
 import { Prisma } from "@prisma/client";
