@@ -61,6 +61,7 @@ Original root cause: public `/_monitoring?error=1` triggered a Sentry exception 
 Change: require `x-monitoring-test-token` matching `MONITORING_TEST_TOKEN`; absent/invalid access returns 404 and never calls Sentry.
 
 Evidence: `tests/monitoring-route.test.ts`, 2/2 passed. Status: `FIXED`.
+Commit: `6936380`.
 
 ## SEC-009
 
@@ -69,6 +70,7 @@ Original root cause: legacy professional attachments accepted arbitrary external
 Change: server accepts HTTPS only; embedded data is restricted to base64 PDF/JPEG/PNG/WebP; unsafe legacy values are filtered on read; external links use `noopener noreferrer`.
 
 Evidence: `tests/clinical-domain-hardening.spec.ts`, 4/4 passed. Status: `MITIGATED`.
+Commit: `6e8fe1d`.
 
 ## CodeQL
 
@@ -126,7 +128,7 @@ The role/resource matrix is in `security-test-matrix.md`. The current schema has
 
 ## Scanner Results
 
-The latest completed evidence remains in `security-report-retest.md`: Semgrep workflow scan 0, Gitleaks 0, OSV 0, pnpm audit 0, Grype 0, Checkov 184/0 and Syft SBOM 1,030 components. CodeQL is configured but remote validation is pending. No DAST, ZAP Active Scan or Nuclei was run.
+Final local re-test evidence: Semgrep project scan 10 contextual review signals, Gitleaks 0, OSV 0, pnpm audit 0, Grype 0, Trivy 0 actual vulnerabilities/secrets/misconfigurations, Checkov 204/0 and Syft SBOM 1,033 components. CodeQL is configured but remote validation is pending. No DAST, ZAP Active Scan or Nuclei was run.
 
 ## Remaining Risks
 
