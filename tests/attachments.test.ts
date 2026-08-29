@@ -20,6 +20,17 @@ describe("clinical attachments helpers", () => {
     expect(cleaned).toContain("<p>Consent</p>");
   });
 
+  it("removes active elements and unsafe URL schemes from consent html", () => {
+    const dirtyHtml =
+      '<svg onload="alert(1)"><a href="javascript:alert(2)">open</a></svg><iframe src="https://evil.test"></iframe><p style="background:url(javascript:alert(3))">safe</p>';
+
+    const cleaned = sanitizeConsentHtml(dirtyHtml);
+
+    expect(cleaned).not.toMatch(/svg|iframe|onload|javascript:|style=/i);
+    expect(cleaned).toContain("open");
+    expect(cleaned).toContain("safe");
+  });
+
   it("uploads buffers to blob storage and returns a path", async () => {
     mockPut.mockResolvedValue({ pathname: "/clinical/episode-1/attachment.pdf" });
     const key = "clinical/episode-1/attachment.pdf";

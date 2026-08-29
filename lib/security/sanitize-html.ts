@@ -1,6 +1,13 @@
-const SCRIPT_TAG_REGEX = /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi;
-const EVENT_HANDLER_REGEX = /\son\w+=(?:"[^"]*"|'[^']*'|[^\s>]+)/gi;
+import sanitizeHtml from "sanitize-html";
 
 export function sanitizeConsentHtml(html: string): string {
-  return html.replace(SCRIPT_TAG_REGEX, "").replace(EVENT_HANDLER_REGEX, "");
+  return sanitizeHtml(html, {
+    allowedTags: ["p", "br", "strong", "em", "u", "s", "h1", "h2", "h3", "ol", "ul", "li", "a"],
+    allowedAttributes: {
+      a: ["href", "title"],
+    },
+    allowedSchemes: ["http", "https", "mailto"],
+    allowProtocolRelative: false,
+    disallowedTagsMode: "discard",
+  });
 }
