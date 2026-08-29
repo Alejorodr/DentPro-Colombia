@@ -18,15 +18,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v6
+        uses: pnpm/action-setup@f520eceda224fe1a4aed5a2a27a194379a409996 # v6
         with:
           version: 10.34.5
 
       - name: Use Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version-file: .nvmrc
           cache: pnpm
@@ -37,7 +37,7 @@ jobs:
 
       - name: Create or update release PR
         id: changesets
-        uses: changesets/action@v2.0.0-next.3
+        uses: changesets/action@bd3a6f5a6447609d793369d8bbc183db5c282565 # v2.0.0-next.3
         with:
           version-script: pnpm run version-packages
           commit-message: "chore(release): version packages"
