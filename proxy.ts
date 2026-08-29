@@ -4,9 +4,11 @@ import { getToken } from "next-auth/jwt";
 import { getInferredAuthBaseUrl, getSessionCookieName, isLocalE2EAuthRuntime } from "@/lib/auth/runtime";
 import { getDefaultDashboardPath, isUserRole, roleFromSlug, type UserRole } from "@/lib/auth/roles";
 import { errorResponse } from "@/app/api/_utils/response";
+import { checkMemoryRateLimit } from "@/lib/rateLimit";
 
 const RATE_LIMIT_WINDOW_SECONDS = 60;
 const RATE_LIMIT_MAX_REQUESTS = 10;
+let warnedAuthRateLimitFallback = false;
 
 function resolveRequestId(request: NextRequest) {
   const existing = request.headers.get("x-request-id");
@@ -48,10 +50,34 @@ function matchesPrefix(pathname: string, prefix: string): boolean {
 export async function applyAuthRateLimit(request: NextRequest): Promise<NextResponse | null> {
   if (!request.nextUrl.pathname.startsWith("/api/auth/")) return null;
 
+  const fallback = () => {
+    const ip =
+      request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+      request.headers.get("x-real-ip") ??
+      "unknown";
+    const result = checkMemoryRateLimit({
+      key: `proxy:auth:${ip}`,
+      limit: RATE_LIMIT_MAX_REQUESTS,
+      windowMs: RATE_LIMIT_WINDOW_SECONDS * 1000,
+    });
+    return result.allowed
+      ? null
+      : new NextResponse("Too many requests", {
+          status: 429,
+          headers: { "Retry-After": result.retryAfter.toString() },
+        });
+  };
+
   const upstashUrl = process.env.UPSTASH_REDIS_REST_URL;
   const upstashToken = process.env.UPSTASH_REDIS_REST_TOKEN;
 
-  if (!upstashUrl || !upstashToken) return null;
+  if (!upstashUrl || !upstashToken) {
+    if (!warnedAuthRateLimitFallback) {
+      console.warn("[ratelimit] Proxy Upstash config missing; using conservative in-memory fallback.");
+      warnedAuthRateLimitFallback = true;
+    }
+    return fallback();
+  }
 
   const ip =
     request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
@@ -64,6 +90,7 @@ export async function applyAuthRateLimit(request: NextRequest): Promise<NextResp
     const incrRes = await fetch(`${upstashUrl}/incr/${key}`, {
       headers: { Authorization: `Bearer ${upstashToken}` },
     });
+    if (!incrRes.ok) throw new Error(`Upstash returned ${incrRes.status}`);
     const { result: count } = (await incrRes.json()) as { result: number };
 
     if (count === 1) {
@@ -75,8 +102,15 @@ export async function applyAuthRateLimit(request: NextRequest): Promise<NextResp
     if (count > RATE_LIMIT_MAX_REQUESTS) {
       return new NextResponse("Too many requests", { status: 429 });
     }
-  } catch {
-    // Upstash unavailable — allow through
+  } catch (error) {
+    if (!warnedAuthRateLimitFallback) {
+      console.warn(
+        "[ratelimit] Proxy Upstash unavailable; using conservative in-memory fallback.",
+        error instanceof Error ? error.name : "unknown_error",
+      );
+      warnedAuthRateLimitFallback = true;
+    }
+    return fallback();
   }
 
   return null;

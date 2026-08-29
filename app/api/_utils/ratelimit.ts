@@ -13,6 +13,7 @@ export type RateLimitConfig = {
 
 const ratelimiters = new Map<string, Ratelimit>();
 let warnedMissingUpstashConfig = false;
+let warnedUpstashFailure = false;
 
 const hasUpstashConfig = Boolean(
   process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN,
@@ -50,46 +51,7 @@ function getRatelimiter(config: RateLimitConfig) {
   return limiter;
 }
 
-export async function enforceRateLimit(request: Request, key: string, config: RateLimitConfig) {
-  const ip = getClientIp(request);
-  const identifier = `${key}:${ip}`;
-  const runtimeStage = getRuntimeStage();
-  const isProd = isProductionRuntime();
-
-  const limiter = getRatelimiter(config);
-  if (limiter) {
-    const result = await limiter.limit(identifier);
-    if (!result.success) {
-      const reset = typeof result.reset === "number" ? result.reset : Date.now();
-      const retryAfter = Math.max(1, Math.ceil((reset - Date.now()) / 1000));
-      return NextResponse.json(
-        { error: "Demasiadas solicitudes. Intenta más tarde.", retryAfter },
-        {
-          status: 429,
-          headers: {
-            "Retry-After": retryAfter.toString(),
-          },
-        },
-      );
-    }
-    return null;
-  }
-
-  if (isProd && !warnedMissingUpstashConfig) {
-    const warning =
-      runtimeStage === "vercel-production"
-        ? "[ratelimit] Upstash not configured in Vercel production; distributed rate limiting is disabled."
-        : runtimeStage === "ci-e2e"
-          ? "[ratelimit] Upstash not configured in CI/E2E; using in-memory fallback for deterministic tests."
-          : `[ratelimit] Upstash not configured in ${runtimeStage}; distributed rate limiting is disabled.`;
-    console.warn(warning);
-    warnedMissingUpstashConfig = true;
-  }
-
-  if (isProd && runtimeStage !== "ci-e2e") {
-    return null;
-  }
-
+function getMemoryRateLimitResponse(identifier: string, config: RateLimitConfig) {
   const memoryResult = checkMemoryRateLimit({
     key: identifier,
     limit: config.limit,
@@ -101,12 +63,57 @@ export async function enforceRateLimit(request: Request, key: string, config: Ra
       { error: "Demasiadas solicitudes. Intenta más tarde.", retryAfter: memoryResult.retryAfter },
       {
         status: 429,
-        headers: {
-          "Retry-After": memoryResult.retryAfter.toString(),
-        },
+        headers: { "Retry-After": memoryResult.retryAfter.toString() },
       },
     );
   }
 
   return null;
+}
+
+export async function enforceRateLimit(request: Request, key: string, config: RateLimitConfig) {
+  const ip = getClientIp(request);
+  const identifier = `${key}:${ip}`;
+  const runtimeStage = getRuntimeStage();
+  const isProd = isProductionRuntime();
+
+  const limiter = getRatelimiter(config);
+  if (limiter) {
+    try {
+      const result = await limiter.limit(identifier);
+      if (!result.success) {
+        const reset = typeof result.reset === "number" ? result.reset : Date.now();
+        const retryAfter = Math.max(1, Math.ceil((reset - Date.now()) / 1000));
+        return NextResponse.json(
+          { error: "Demasiadas solicitudes. Intenta más tarde.", retryAfter },
+          {
+            status: 429,
+            headers: { "Retry-After": retryAfter.toString() },
+          },
+        );
+      }
+      return null;
+    } catch (error) {
+      if (!warnedUpstashFailure) {
+        console.warn(
+          "[ratelimit] Upstash unavailable; using conservative in-memory fallback.",
+          error instanceof Error ? error.name : "unknown_error",
+        );
+        warnedUpstashFailure = true;
+      }
+    }
+  }
+
+  if (isProd && !warnedMissingUpstashConfig) {
+    const warning =
+      runtimeStage === "vercel-production"
+        ? "[ratelimit] Upstash not configured in Vercel production; using conservative in-memory fallback."
+        : runtimeStage === "ci-e2e"
+          ? "[ratelimit] Upstash not configured in CI/E2E; using in-memory fallback for deterministic tests."
+          : `[ratelimit] Upstash not configured in ${runtimeStage}; using conservative in-memory fallback.`;
+    console.warn(warning);
+    warnedMissingUpstashConfig = true;
+  }
+
+  return getMemoryRateLimitResponse(identifier, config);
 }
