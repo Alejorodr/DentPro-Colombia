@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockRequireSession = vi.fn();
-const mockHead = vi.fn();
+const mockGet = vi.fn();
 const mockLogClinicalAccess = vi.fn();
 
 const mockPrisma = {
@@ -27,7 +27,7 @@ vi.mock("@/lib/prisma", () => ({
 }));
 
 vi.mock("@vercel/blob", () => ({
-  head: (...args: unknown[]) => mockHead(...args),
+  get: (...args: unknown[]) => mockGet(...args),
 }));
 
 vi.mock("@/lib/clinical/access-log", () => ({
@@ -54,8 +54,39 @@ describe("clinical attachments authz hardening", () => {
     });
 
     expect(response.status).toBe(404);
-    expect(mockHead).not.toHaveBeenCalled();
+    expect(mockGet).not.toHaveBeenCalled();
     expect(mockLogClinicalAccess).not.toHaveBeenCalled();
+  });
+
+  it("streams an authorized attachment from private Blob storage", async () => {
+    const { GET: downloadAttachment } = await import("@/app/api/clinical/attachments/[attachmentId]/download/route");
+
+    mockRequireSession.mockResolvedValue({ user: { id: "user-admin-1", role: "ADMINISTRADOR" } });
+    mockPrisma.clinicalAttachment.findFirst.mockResolvedValue({
+      id: "a-1",
+      patientId: "patient-1",
+      filename: "xray.pdf",
+      mimeType: "application/pdf",
+      size: 4,
+      storageKey: "clinical/a-1/xray.pdf",
+      visibleToPatient: false,
+      episode: { professionalId: "professional-1", visibleToPatient: false },
+    });
+    mockGet.mockResolvedValue({
+      statusCode: 200,
+      headers: new Headers({ "Content-Type": "application/pdf" }),
+      stream: new ReadableStream({ start(controller) { controller.enqueue(new Uint8Array([1, 2, 3, 4])); controller.close(); } }),
+      blob: { contentType: "application/pdf", size: 4 },
+    });
+
+    const response = await downloadAttachment(new Request("http://localhost/api/clinical/attachments/a-1/download"), {
+      params: Promise.resolve({ attachmentId: "a-1" }),
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("cache-control")).toBe("private, no-store");
+    expect(response.headers.get("x-content-type-options")).toBe("nosniff");
+    expect(mockGet).toHaveBeenCalledWith("clinical/a-1/xray.pdf", { access: "private", useCache: false });
   });
 
   it("returns 404 for professional trying to delete attachment outside own scope", async () => {

@@ -31,7 +31,7 @@ describe("clinical attachments helpers", () => {
     expect(mockPut).toHaveBeenCalledWith(
       key,
       content,
-      expect.objectContaining({ access: "public", addRandomSuffix: false, contentType: "application/pdf" }),
+      expect.objectContaining({ access: "private", addRandomSuffix: false, contentType: "application/pdf" }),
     );
   });
 });

@@ -152,7 +152,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ epi
   const checksum = await buildClinicalAttachmentChecksum(file);
   const fileBuffer = Buffer.from(await file.arrayBuffer());
 
-  // Upload to external Blob storage; access is gated by this API before sharing download URLs.
+  // Clinical files must live in a private Blob store; downloads are streamed through the authorized API.
   const storageKey = await uploadToBlob(fileBuffer, key, file.type);
 
   const attachment = await prisma.clinicalAttachment.create({
@@ -192,4 +192,3 @@ export async function POST(request: Request, { params }: { params: Promise<{ epi
     { status: 201 },
   );
 }
-

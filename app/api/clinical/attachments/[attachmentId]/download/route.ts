@@ -1,5 +1,3 @@
-import { NextResponse } from "next/server";
-
 import { errorResponse } from "@/app/api/_utils/response";
 import { getRouteFromRequest, getRequestId } from "@/app/api/clinical/_utils";
 import { logClinicalAccess } from "@/lib/clinical/access-log";
@@ -7,7 +5,7 @@ import { getProfessionalProfile } from "@/lib/clinical/access";
 import { getPrismaClient } from "@/lib/prisma";
 import { requireSession } from "@/lib/authz";
 import { AccessLogAction } from "@prisma/client";
-import { head } from "@vercel/blob";
+import { get } from "@vercel/blob";
 
 export async function GET(request: Request, { params }: { params: Promise<{ attachmentId: string }> }) {
   const sessionResult = await requireSession();
@@ -80,7 +78,17 @@ export async function GET(request: Request, { params }: { params: Promise<{ atta
     metadata: { attachmentId },
   });
 
-  // Blob URLs are public but unguessable; access is enforced by this authenticated endpoint.
-  const blob = await head(attachment.storageKey);
-  return NextResponse.redirect(blob.downloadUrl, 302);
+  const blob = await get(attachment.storageKey, { access: "private", useCache: false });
+  if (!blob || blob.statusCode !== 200 || !blob.stream) {
+    return errorResponse("Adjunto no disponible.", 410);
+  }
+
+  const headers = new Headers(Array.from(blob.headers.entries()) as [string, string][]);
+  headers.set("Content-Type", attachment.mimeType);
+  headers.set("Content-Length", attachment.size.toString());
+  headers.set("Content-Disposition", `attachment; filename="${attachment.filename.replace(/["\\\r\n]/g, "_")}"`);
+  headers.set("Cache-Control", "private, no-store");
+  headers.set("X-Content-Type-Options", "nosniff");
+
+  return new Response(blob.stream, { status: 200, headers });
 }
