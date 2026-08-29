@@ -19,6 +19,7 @@ function req(path: string, ip = "1.2.3.4") {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mockFetch.mockReset();
   vi.unstubAllEnvs();
 });
 
@@ -39,24 +40,24 @@ describe("middleware", () => {
   it("allows requests under the rate limit", async () => {
     vi.stubEnv("UPSTASH_REDIS_REST_URL", "https://upstash.io");
     vi.stubEnv("UPSTASH_REDIS_REST_TOKEN", "tok");
-    mockFetch.mockResolvedValue({ json: async () => ({ result: 5 }) });
-    const res = await middleware(req("/api/auth/signin"));
+    mockFetch.mockResolvedValue({ ok: true, json: async () => ({ result: 5 }) });
+    const res = await middleware(req("/api/auth/signin", "1.2.3.5"));
     expect(res.status).toBe(200);
   });
 
   it("returns 429 when over the rate limit", async () => {
     vi.stubEnv("UPSTASH_REDIS_REST_URL", "https://upstash.io");
     vi.stubEnv("UPSTASH_REDIS_REST_TOKEN", "tok");
-    mockFetch.mockResolvedValue({ json: async () => ({ result: 11 }) });
-    const res = await middleware(req("/api/auth/signin"));
+    mockFetch.mockResolvedValue({ ok: true, json: async () => ({ result: 11 }) });
+    const res = await middleware(req("/api/auth/signin", "1.2.3.6"));
     expect(res.status).toBe(429);
   });
 
-  it("passes through when Upstash fetch throws (graceful degradation)", async () => {
+  it("uses the conservative fallback when Upstash fetch throws", async () => {
     vi.stubEnv("UPSTASH_REDIS_REST_URL", "https://upstash.io");
     vi.stubEnv("UPSTASH_REDIS_REST_TOKEN", "tok");
     mockFetch.mockRejectedValue(new Error("network error"));
-    const res = await middleware(req("/api/auth/signin"));
+    const res = await middleware(req("/api/auth/signin", "1.2.3.7"));
     expect(res.status).toBe(200);
   });
 });
