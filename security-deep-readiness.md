@@ -4,6 +4,8 @@ Date: 2026-08-29
 Branch: `security/remediation-standard-audit`  
 Original reports preserved: `security-report.md`, `security-report-retest.md`.
 
+Readiness continuation: 2026-08-30. See `security-staging-report.md` for the current orchestrator ledger.
+
 ## Executive Summary
 
 SEC-008 is closed in application code. SEC-009 is mitigated in application code with server-side validation and regression coverage. CodeQL CI is configured using the official GitHub CodeQL Action v4.36.0 pinned to its verified release commit, but remote execution has not occurred. Clinical storage and staging remain externally verifiable blockers.
@@ -113,7 +115,7 @@ Current integration inventory from repository configuration:
 
 ## Test Users
 
-See `security-test-matrix.md`. Roles and controlled cases are documented; provisioning is pending an isolated staging database.
+See `security-test-matrix.md` and `security-test-identities.md`. Roles and controlled cases are documented; provisioning is pending an isolated staging database and staging-only authentication configuration.
 
 ## Authorization Matrix
 
@@ -157,3 +159,29 @@ Concrete blockers:
 - Security staging and test users not provisioned.
 
 The next step is to provision isolated Security Staging and perform the non-destructive Blob inventory plus CodeQL workflow run. Do not start `security-audit deep`, DAST, ZAP Active Scan or Nuclei until those four blockers have evidence.
+
+## Current Baseline - 2026-08-30
+
+- Branch: `security/remediation-standard-audit`.
+- Tracked worktree changes before this continuation: none; pre-existing untracked audit artifacts remain untracked.
+- Focused security regression suite: 11 files / 35 tests passed.
+- Lint: PASS.
+- Typecheck: PASS.
+- Build: PASS, Next.js 16.3.0, 130 static pages generated.
+- Vercel CLI: 50.1.3, no local credentials; no Vercel operation performed.
+- GitHub CLI: authenticated as repository owner; branch was not pushed and no remote workflow was started.
+
+## Workstream Ledger
+
+| Workstream | Status | Dependencies | Evidence |
+|---|---|---|---|
+| A Vercel/staging | BLOCKED | Vercel auth and separate project | `vercel whoami` reported no credentials |
+| B Private Blob | BLOCKED | Isolated Blob/DB | Local contract only; storage report says UNVERIFIED |
+| C Database | BLOCKED | Separate PostgreSQL | No staging DB supplied |
+| D Identities | DONE for design; provisioning blocked | Staging DB and staging auth | `security-test-matrix.md`, `security-test-identities.md` |
+| E Upstash | BLOCKED | Separate DB/namespace | No staging namespace supplied |
+| F CodeQL | BLOCKED remote | Branch push and GitHub run | Workflow configured; remote validation pending |
+| G Integrations | DONE for inventory | Provider settings | Repository-based classification |
+| H Deployment | BLOCKED | A/C/E/G | No staging target |
+| I Authorization | BLOCKED | H/D | Matrix ready; no staging URL |
+| J Middleware | BLOCKED | H/D | Local tests pass; staging absent |
