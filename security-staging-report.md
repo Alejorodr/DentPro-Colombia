@@ -77,7 +77,7 @@ The application has a conservative local fallback. Staging requires an isolated 
 
 Status: `NOT READY`.
 
-No synthetic data was created because there is no isolated staging database. The future seed must use only existing Prisma models and deterministic fictional values.
+No synthetic data was created because there is no isolated staging database. The guarded seed uses only existing Prisma models and deterministic fictional values; it requires `SECURITY_STAGING=1`, `SECURITY_STAGING_CONFIRMATION=synthetic-v1` and a staging-only password variable.
 
 ## Test Identities
 
