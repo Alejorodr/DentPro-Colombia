@@ -9,16 +9,24 @@ concurrency:
   group: release-${{ github.ref }}
   cancel-in-progress: false
 
-permissions:
-  contents: write
-  pull-requests: write
+# Least privilege by default; write scopes are granted only to the job that needs them.
+permissions: {}
 
 jobs:
   release-pr:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+      pull-requests: write
     steps:
       - name: Checkout
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          # Do not leave GITHUB_TOKEN in .git/config while third-party install code runs.
+          # changesets/action injects its own credentials for its pushes, and the tag
+          # step below authenticates explicitly.
+          persist-credentials: false
 
       - name: Setup pnpm
         uses: pnpm/action-setup@f520eceda224fe1a4aed5a2a27a194379a409996 # v6
@@ -32,12 +40,15 @@ jobs:
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
 
+      # --ignore-scripts: no dependency lifecycle scripts (nor our postinstall prisma generate)
+      # run in a job that holds a write token. The release flow only needs @changesets/cli,
+      # so the Prisma client is not generated here.
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile --ignore-scripts
 
       - name: Create or update release PR
         id: changesets
-        uses: changesets/action@bd3a6f5a6447609d793369d8bbc183db5c282565 # v2.0.0-next.3
+        uses: changesets/action@c47fa68bd43bb8ae0bae7e558622593deebf5955 # v2.0.0-next.3 (commit)
         with:
           version-script: pnpm run version-packages
           commit-message: "chore(release): version packages"
@@ -53,6 +64,11 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          # checkout ran with persist-credentials: false, so authenticate origin for this step only
+          # and restore the token-less URL when the step exits.
+          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          trap 'git remote set-url origin "https://github.com/${GITHUB_REPOSITORY}.git"' EXIT
+
           VERSION="$(node -p "require('./package.json').version")"
           TAG="v${VERSION}"
 

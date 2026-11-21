@@ -1,5 +1,11 @@
 import { defineConfig } from "@playwright/test";
 
+// @ts-expect-error -- módulo .mjs sin tipos
+import { assertLocalE2EDatabase } from "./scripts/e2e-db-guard.mjs";
+
+// También cubre `npx playwright test` sin pasar por scripts/run-e2e.mjs.
+assertLocalE2EDatabase();
+
 const isProdE2E = process.env.E2E_ENV === "production";
 const e2eBaseUrl = "http://127.0.0.1:3000";
 const nextStartCommand = "pnpm exec next start -H 127.0.0.1 -p 3000";
