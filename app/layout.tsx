@@ -71,12 +71,16 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const requestId = (await headers()).get("x-request-id") ?? undefined;
+  const requestHeaders = await headers();
+  const requestId = requestHeaders.get("x-request-id") ?? undefined;
+  // Per-request CSP nonce set by proxy.ts (H2). Next.js stamps it on its own
+  // framework scripts automatically; our inline <Script>s must pass it.
+  const nonce = requestHeaders.get("x-nonce") ?? undefined;
   const shouldLoadVercelInsights = process.env.VERCEL === "1" && process.env.RUN_E2E !== "1";
   return (
     <html lang="es" className={`h-full ${inter.variable} ${outfit.variable}`} suppressHydrationWarning>
       <head>
-        <Script id="theme" strategy="beforeInteractive">
+        <Script id="theme" strategy="beforeInteractive" nonce={nonce}>
           {`
             const root = document.documentElement;
             const storageKey = "theme";

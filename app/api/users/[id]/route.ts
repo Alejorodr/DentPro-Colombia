@@ -97,6 +97,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
         lastName: payload.lastName?.trim() ?? undefined,
         role: requestedRole ?? undefined,
         passwordHash: passwordHash ?? undefined,
+        passwordChangedAt: passwordHash ? new Date() : undefined,
         active: typeof payload.active === "boolean" ? payload.active : undefined,
       },
     });
@@ -154,7 +155,13 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     });
   }
 
+  const roleChanged = existing.role !== targetRole;
+
   if (targetRole === "PACIENTE") {
+    // A previously deactivated profile (from an earlier role change away from PACIENTE)
+    // is reactivated instead of creating a duplicate — userId is @unique.
+    const patientActive =
+      typeof payload.active === "boolean" ? payload.active : roleChanged ? true : undefined;
     if (!existing.patient) {
       await prisma.patientProfile.create({
         data: {
@@ -170,7 +177,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
         data: {
           phone: payload.phone?.trim() || undefined,
           documentId: payload.documentId?.trim() || undefined,
-          active: typeof payload.active === "boolean" ? payload.active : undefined,
+          active: patientActive,
         },
       });
     }
@@ -184,7 +191,11 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     // Only touch professionalProfile.active on genuine role/active-status requests.
     // A save that only carries homepage-presence fields (see AdminSpecialistsCopyPanel,
     // Contenido → Equipo) must not silently reactivate a deactivated professional.
-    const shouldSetActive = payload.role !== undefined || typeof payload.active === "boolean";
+    // An explicit `active` wins (deactivating the user also deactivates the profile);
+    // a role request without `active` (re)activates it, including a profile left
+    // inactive by an earlier role change away from PROFESIONAL.
+    const professionalActive =
+      typeof payload.active === "boolean" ? payload.active : payload.role !== undefined ? true : undefined;
 
     if (!existing.professional) {
       if (!payload.specialtyId) {
@@ -195,7 +206,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
           user: { connect: { id } },
           specialty: { connect: { id: payload.specialtyId } },
           slotDurationMinutes: payload.slotDurationMinutes ?? null,
-          active: shouldSetActive ? true : undefined,
+          active: professionalActive,
           homepageBioShort: payload.homepageBioShort,
           homepageImageUrl: payload.homepageImageUrl,
           homepageImageAlt: payload.homepageImageAlt,
@@ -209,7 +220,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
         data: {
           specialty: payload.specialtyId ? { connect: { id: payload.specialtyId } } : undefined,
           slotDurationMinutes: payload.slotDurationMinutes ?? undefined,
-          active: shouldSetActive ? true : undefined,
+          active: professionalActive,
           homepageBioShort: payload.homepageBioShort,
           homepageImageUrl: payload.homepageImageUrl,
           homepageImageAlt: payload.homepageImageAlt,
@@ -220,12 +231,15 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     }
   }
 
+  // Never hard-delete clinical profiles on a role change: deleting them would either
+  // cascade (SignedConsent, MedicalAllergy, schedules...) or 500 on FK Restrict
+  // (appointments, episodes). Deactivate instead; switching back reactivates them above.
   if (targetRole !== "PACIENTE" && existing.patient) {
-    await prisma.patientProfile.delete({ where: { userId: id } });
+    await prisma.patientProfile.update({ where: { userId: id }, data: { active: false } });
   }
 
   if (targetRole !== "PROFESIONAL" && existing.professional) {
-    await prisma.professionalProfile.delete({ where: { userId: id } });
+    await prisma.professionalProfile.update({ where: { userId: id }, data: { active: false } });
   }
 
   return NextResponse.json(redactSensitiveAuthFields(updated));
@@ -240,7 +254,11 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
   const { id } = await params;
   const roleError = requireRole(sessionResult.user, ["ADMINISTRADOR"]);
   if (roleError) {
-    return errorResponse("No tienes permisos para eliminar usuarios.", 403);
+    return errorResponse("No tienes permisos para desactivar usuarios.", 403);
+  }
+
+  if (id === sessionResult.user.id) {
+    return errorResponse("No puedes desactivarte a ti mismo.", 403);
   }
 
   const prisma = getPrismaClient();
@@ -255,25 +273,38 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
       where: { role: "ADMINISTRADOR", active: true, id: { not: id } },
     });
     if (otherActiveAdminCount === 0) {
-      return errorResponse("No puedes eliminar al único administrador activo.", 400);
+      return errorResponse("No puedes desactivar al único administrador activo.", 400);
     }
   }
 
-  await prisma.user.delete({ where: { id } });
+  // Soft delete: a hard user.delete would cascade clinical records (ClinicalNote,
+  // SignedConsent.acceptedByUser, AccessLog...) or 500 on FK Restrict when the user
+  // has appointments/episodes. Deactivate the account and its profiles instead.
+  try {
+    await prisma.$transaction(async (tx) => {
+      await tx.user.update({ where: { id }, data: { active: false } });
+      await tx.patientProfile.updateMany({ where: { userId: id }, data: { active: false } });
+      await tx.professionalProfile.updateMany({ where: { userId: id }, data: { active: false } });
+    });
+  } catch (error) {
+    logger.error({ event: "user.deactivate_failed", userId: id, error: String(error) });
+    return errorResponse("No se pudo desactivar el usuario.", 500);
+  }
+
   logger.info({
-    event: "user.deleted",
+    event: "user.deactivated",
     userId: id,
     actorId: sessionResult.user.id,
     actorRole: sessionResult.user.role,
   });
   await logAuditEvent({
     actor: { userId: sessionResult.user.id, role: sessionResult.user.role },
-    action: "user.deleted",
+    action: "user.deactivated",
     resourceType: "user",
     resourceId: id,
     targetLabel: existing.email,
     status: "success",
-    metadata: { previousRole: existing.role },
+    metadata: { mode: "soft", previousRole: existing.role, previousActive: existing.active },
   });
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, active: false });
 }

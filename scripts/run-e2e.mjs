@@ -4,6 +4,8 @@ import os from "node:os";
 import path from "node:path";
 import { config as loadEnv } from "dotenv";
 
+import { assertLocalE2EDatabase } from "./e2e-db-guard.mjs";
+
 const shouldRun = process.env.RUN_E2E === "1";
 const e2eBaseUrl = "http://127.0.0.1:3000";
 
@@ -11,6 +13,8 @@ if (!shouldRun) {
   console.log("Skipping Playwright E2E. Set RUN_E2E=1 to enable.");
   process.exit(0);
 }
+
+assertLocalE2EDatabase();
 
 rmSync(path.join(process.cwd(), ".next"), {
   force: true,

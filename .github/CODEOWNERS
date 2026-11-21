@@ -1,0 +1,12 @@
+# Security-sensitive paths require review from the repository owner.
+# Enforce it with branch protection on main: "Require review from Code Owners".
+
+/.github/          @Alejorodr
+/scripts/          @Alejorodr
+/prisma/           @Alejorodr
+/vercel.json       @Alejorodr
+/package.json      @Alejorodr
+/pnpm-lock.yaml    @Alejorodr
+/proxy.ts          @Alejorodr
+/auth*.ts          @Alejorodr
+/lib/auth/         @Alejorodr

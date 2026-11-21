@@ -101,6 +101,8 @@ export function AppointmentsList({ initialAppointments, role }: AppointmentsList
                   Paciente: {appointment.patient?.user.name} {appointment.patient?.user.lastName}
                 </p>
               </div>
+              {/* Cancelled appointments are terminal: the API rejects any further action (409). */}
+              {appointment.status !== "CANCELLED" ? (
               <div className="flex flex-wrap gap-2">
                 {role === "PACIENTE" ? (
                   <>
@@ -171,6 +173,7 @@ export function AppointmentsList({ initialAppointments, role }: AppointmentsList
                   </>
                 ) : null}
               </div>
+              ) : null}
             </div>
             {appointment.notes ? (
               <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">Notas: {appointment.notes}</p>

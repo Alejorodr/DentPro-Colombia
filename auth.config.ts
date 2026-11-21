@@ -117,9 +117,10 @@ export const authConfig = {
           GoogleProvider({
             clientId: process.env.GOOGLE_CLIENT_ID,
             clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-            // signIn callback already validates email exists + active in Neon,
-            // so auto-linking to an existing user by email is safe here.
-            allowDangerousEmailAccountLinking: true,
+            // Sin vinculación automática por correo: como el correo de una cuenta puede
+            // registrarse o cambiarse sin verificación, auto-vincular permitía tomar cuentas
+            // (pre-hijacking). Quien ya tenga Google vinculado sigue entrando igual.
+            allowDangerousEmailAccountLinking: false,
           }),
         ]
       : []),

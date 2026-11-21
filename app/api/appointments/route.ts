@@ -16,6 +16,11 @@ import { getAppointmentBufferMinutes, hasBufferConflict } from "@/lib/appointmen
 import { sendAppointmentEmail } from "@/lib/notifications/email";
 import { recordAppointmentEvent } from "@/lib/appointments/events";
 import { assertSlotBookable } from "@/lib/scheduling/effective-availability";
+import {
+  BookingLimitError,
+  assertPatientBookingCapInTransaction,
+  checkSlotLeadTime,
+} from "@/lib/appointments/booking-limits";
 import * as Sentry from "@sentry/nextjs";
 
 const appointmentUserSelect = {
@@ -231,6 +236,11 @@ export async function POST(request: Request) {
     return errorResponse("Slot no encontrado.", 404);
   }
 
+  const leadTimeViolation = checkSlotLeadTime(timeSlot.startAt, sessionResult.user.role);
+  if (leadTimeViolation) {
+    return errorResponse(leadTimeViolation.message, leadTimeViolation.status);
+  }
+
   const service = await prisma.service.findUnique({
     where: { id: payload.serviceId },
   });
@@ -300,8 +310,15 @@ export async function POST(request: Request) {
     }
   }
 
+  const isPatientBooking = sessionResult.user.role === "PACIENTE";
+
   try {
     const appointment = await prisma.$transaction(async (tx) => {
+      if (isPatientBooking) {
+        // Staff (RECEPCIONISTA/ADMINISTRADOR) bookings are exempt from the cap.
+        await assertPatientBookingCapInTransaction(tx, patientId);
+      }
+
       const updated = await tx.timeSlot.updateMany({
         where: { id: timeSlot.id, status: TimeSlotStatus.AVAILABLE },
         data: { status: TimeSlotStatus.BOOKED },
@@ -311,7 +328,7 @@ export async function POST(request: Request) {
         throw new Error("Slot reservado");
       }
 
-        const created = await tx.appointment.create({
+      const created = await tx.appointment.create({
         data: {
           patientId,
           professionalId,
@@ -397,6 +414,16 @@ export async function POST(request: Request) {
 
     return NextResponse.json(appointment, { status: 201 });
   } catch (error) {
+    if (error instanceof BookingLimitError) {
+      logger.warn({
+        event: "appointment.create.limit_reached",
+        route: "/api/appointments",
+        requestId,
+        userId: sessionResult.user.id,
+        status: error.status,
+      });
+      return errorResponse(error.message, error.status);
+    }
     if (isDatabaseUnavailableError(error)) {
       return serviceUnavailableResponse("Base de datos temporalmente no disponible.", error.retryAfterMs);
     }

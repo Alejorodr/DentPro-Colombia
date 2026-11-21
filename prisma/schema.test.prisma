@@ -1,6 +1,7 @@
 generator client {
-  provider = "prisma-client-js"
-  output   = "../tests/prisma-client"
+  provider        = "prisma-client-js"
+  output          = "../tests/prisma-client"
+  previewFeatures = ["partialIndexes"]
 }
 
 datasource db {
@@ -128,7 +129,7 @@ model TimeSlot {
   endAt          DateTime
   status         String              @default("AVAILABLE")
   professional   ProfessionalProfile @relation(fields: [professionalId], references: [id], onDelete: Cascade)
-  appointment    Appointment?
+  appointments   Appointment[]
 
   @@index([professionalId])
   @@index([startAt])
@@ -138,7 +139,7 @@ model Appointment {
   id             String              @id @default(uuid())
   patientId      String
   professionalId String
-  timeSlotId     String              @unique
+  timeSlotId     String
   serviceId      String
   serviceName    String?
   servicePriceCents Int?
@@ -156,6 +157,8 @@ model Appointment {
   @@index([patientId])
   @@index([professionalId])
   @@index([serviceId])
+  @@index([timeSlotId])
+  @@unique([timeSlotId], map: "Appointment_timeSlotId_active_key", where: raw("status <> 'CANCELLED'"))
 }
 
 model PasswordResetToken {

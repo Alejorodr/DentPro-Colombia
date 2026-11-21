@@ -54,7 +54,7 @@ function isItemActive(pathname: string, search: string, href: string) {
  * Resolves the single most specific matching entry, so a plain href does not stay lit while a
  * query-scoped sibling owns the current URL (e.g. "Usuarios" vs "Gestión de personal").
  */
-function resolveActiveHref(pathname: string, search: string, entries: NavItem[]): string | null {
+export function resolveActiveHref(pathname: string, search: string, entries: NavItem[]): string | null {
   return (
     entries
       .filter((entry) => isItemActive(pathname, search, entry.href))

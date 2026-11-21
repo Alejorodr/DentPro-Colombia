@@ -300,11 +300,11 @@ export function AdminUsersPanel({ roleFilter, roleLock }: AdminUsersPanelProps) 
     const response = await fetchWithTimeout(`/api/users/${user.id}`, { method: "DELETE" });
 
     if (response.ok) {
-      setUsers((prev) => prev.filter((item) => item.id !== user.id));
-      setTotal((prev) => prev - 1);
+      // DELETE is a soft delete: the account stays (inactive) to preserve clinical history.
+      setUsers((prev) => prev.map((item) => (item.id === user.id ? { ...item, active: false } : item)));
     } else {
       const body = (await response.json().catch(() => null)) as { error?: string } | null;
-      setError(body?.error ?? "No pudimos eliminar el usuario.");
+      setError(body?.error ?? "No pudimos dar de baja al usuario.");
     }
 
     setSaving(false);
@@ -578,11 +578,12 @@ export function AdminUsersPanel({ roleFilter, roleLock }: AdminUsersPanelProps) 
                       ) : null}
                       <button
                         type="button"
-                        className="rounded-full border border-red-200 px-3 py-1 text-xs font-semibold uppercase text-red-600"
+                        className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold uppercase text-slate-600"
                         onClick={() => void deleteUser(user)}
                         disabled={saving}
+                        title="Desactiva la cuenta y sus perfiles. El historial clínico se conserva."
                       >
-                        Eliminar
+                        Dar de baja
                       </button>
                     </div>
                   </div>

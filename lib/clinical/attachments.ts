@@ -48,7 +48,7 @@ export async function uploadToBlob(
 ): Promise<string> {
   const { put } = await import("@vercel/blob");
   const result = await put(key, file, {
-    access: "public",
+    access: "private",
     addRandomSuffix: false,
     contentType,
   });

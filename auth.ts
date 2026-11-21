@@ -5,9 +5,10 @@ import { cookies } from "next/headers";
 import { authConfig } from "@/auth.config";
 import { isUserRole, type UserRole } from "@/lib/auth/roles";
 import { DentProPrismaAdapter } from "@/lib/auth/dentpro-prisma-adapter";
-import { findUserByEmail } from "@/lib/auth/users";
+import { findUserByEmail, findUserById } from "@/lib/auth/users";
 import { getJwtSecretString } from "@/lib/auth/jwt";
 import { getInferredAuthBaseUrl, getSessionCookieName, isLocalE2EAuthRuntime } from "@/lib/auth/runtime";
+import { resolveSessionUser } from "@/lib/auth/session";
 
 type AuthenticatedUser = {
   id?: string;
@@ -30,9 +31,8 @@ const { handlers, signIn, signOut } = NextAuth({
 export { handlers, signIn, signOut };
 
 // @auth/core@0.41.2 calls next/headers cookies() synchronously; Next.js 16
-// made cookies() strictly async — baseAuth() throws instead of returning null,
-// so the fallback never runs. Skip baseAuth entirely and decode the JWT
-// directly using await cookies(), which is the proper async API.
+// made cookies() strictly async. Decode the JWT with the async cookies API,
+// then resolve identity and authorization state against the current database row.
 export async function auth(): Promise<AuthSession> {
   const cookieStore = await cookies();
   const baseUrl = getInferredAuthBaseUrl();
@@ -47,26 +47,14 @@ export async function auth(): Promise<AuthSession> {
         salt: cookieName,
       }) as Record<string, unknown> | null;
 
-      if (token && !token["invalidated"]) {
-        const role = token["role"];
-        const userId =
-          typeof token["userId"] === "string" ? token["userId"] :
-          typeof token["sub"] === "string" ? token["sub"] : "";
+      const userId =
+        typeof token?.["userId"] === "string" ? token["userId"] :
+        typeof token?.["sub"] === "string" ? token["sub"] : "";
+      const currentUser = userId ? await findUserById(userId) : null;
+      const sessionUser = resolveSessionUser(token ?? {}, currentUser);
 
-        if (userId && isUserRole(role as string)) {
-          return {
-            user: {
-              id: userId,
-              name: (token["name"] as string | null) ?? null,
-              email: (token["email"] as string | null) ?? null,
-              image: (token["picture"] as string | null) ?? null,
-              role: role as UserRole,
-              professionalId: (token["professionalId"] as string | null) ?? null,
-              patientId: (token["patientId"] as string | null) ?? null,
-              mustChangePassword: (token["mustChangePassword"] as boolean | null) ?? false,
-            },
-          };
-        }
+      if (sessionUser) {
+        return { user: sessionUser };
       }
     } catch {
       // Decode failed — fall through to unauthenticated

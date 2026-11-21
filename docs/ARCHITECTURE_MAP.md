@@ -174,8 +174,9 @@
 - `GET /api/_monitoring`: interno/observabilidad.
 - `POST /api/cron/appointments/reminders`: cron protegido por secreto.
 - `GET /api/ops/auth-diagnostics`: protegido con `OPS_KEY`, allowlist IP y rate limit.
-- `POST /api/ops/migrate`: solo `development` + `OPS_KEY` + allowlist + rate limit.
 - `POST /api/ops/seed-admin`: solo `development` + no Vercel/prod + `OPS_KEY`.
+- Allowlist IP de ops (`OPS_IP_ALLOWLIST`, lista separada por comas): en producción (`NODE_ENV=production` o `VERCEL_ENV=production`) una allowlist vacía **deniega** (fail-closed), salvo E2E local/CI con `RUN_E2E=1` fuera de Vercel. En development/test una allowlist vacía permite. En Vercel la IP se toma de `x-vercel-forwarded-for` / `x-real-ip`; en self-hosting la app debe ir detrás de un proxy que sobrescriba `x-real-ip`/`x-forwarded-for`.
+- `/api/ops/migrate` fue eliminado (H4, 2026-11-21): las migraciones se aplican con `prisma migrate deploy` desde CI o localmente, nunca vía endpoint HTTP.
 - `POST /api/test/seed`: solo `test` y 404 en producción.
 
 ## 6) Inventario adicional de infraestructura

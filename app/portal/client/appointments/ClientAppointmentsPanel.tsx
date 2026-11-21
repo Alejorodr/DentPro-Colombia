@@ -109,12 +109,13 @@ export function ClientAppointmentsPanel({ upcoming, past }: { upcoming: Appointm
                     <p className="mt-1 text-xs font-medium text-brand-teal">{activityMessage[appointment.status]}</p>
                   ) : null}
                 </div>
+                {appointment.status !== "CANCELLED" ? (
                 <div className="flex flex-wrap gap-2">
                   <button
                     type="button"
                     className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-50 dark:border-surface-muted dark:text-slate-200"
                     onClick={() => setRescheduleId(appointment.id)}
-                    disabled={processingId === appointment.id || appointment.status === "CANCELLED"}
+                    disabled={processingId === appointment.id}
                   >
                     <CalendarBlank size={14} aria-hidden="true" />
                     Reprogramar
@@ -123,12 +124,13 @@ export function ClientAppointmentsPanel({ upcoming, past }: { upcoming: Appointm
                     type="button"
                     className="inline-flex items-center gap-2 rounded-full bg-red-600 px-4 py-2 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
                     onClick={() => cancelAppointment(appointment.id)}
-                    disabled={processingId === appointment.id || appointment.status === "CANCELLED"}
+                    disabled={processingId === appointment.id}
                   >
                     <XCircle size={14} aria-hidden="true" />
                     {processingId === appointment.id ? "Cancelando..." : "Cancelar"}
                   </button>
                 </div>
+                ) : null}
               </div>
             </article>
           ))

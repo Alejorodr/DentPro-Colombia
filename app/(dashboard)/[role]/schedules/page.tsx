@@ -14,6 +14,9 @@ async function fetchSchedules() {
 
   const response = await fetch(url, {
     cache: "no-store",
+    headers: {
+      ...(headersList.get("cookie") ? { cookie: headersList.get("cookie")! } : {}),
+    },
   });
 
   if (!response.ok) {

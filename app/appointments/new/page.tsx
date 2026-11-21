@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
 import { NewAppointmentForm } from "@/app/appointments/new/NewAppointmentForm";
+import { getActiveAppointmentCountForUser } from "@/lib/appointments/patient-active-count";
 
 export const metadata: Metadata = {
   title: "Reservar turno",
@@ -37,6 +38,9 @@ export default async function NewAppointmentPage({
     redirect(`/auth/login?callbackUrl=${encodeURIComponent(callbackUrl)}`);
   }
 
+  const activeAppointmentsCount =
+    session.user.role === "PACIENTE" ? await getActiveAppointmentCountForUser(session.user.id) : 0;
+
   return (
     <div className="mx-auto w-full max-w-4xl space-y-6 px-6 py-10">
       <header className="space-y-2">
@@ -44,7 +48,7 @@ export default async function NewAppointmentPage({
         <h1 className="text-2xl font-semibold text-slate-900">Agenda una cita</h1>
         <p className="text-sm text-slate-600">Selecciona especialidad, profesional y horario disponible.</p>
       </header>
-      <NewAppointmentForm role={session.user.role} />
+      <NewAppointmentForm role={session.user.role} activeAppointmentsCount={activeAppointmentsCount} />
     </div>
   );
 }

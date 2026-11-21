@@ -5,6 +5,11 @@ import { useRouter, useSearchParams } from "next/navigation";
 
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
 import { Card } from "@/app/portal/components/ui/Card";
+import {
+  ACTIVE_CAP_MESSAGE,
+  MAX_ACTIVE_APPOINTMENTS_PER_PATIENT,
+  isSlotBookableByPatient,
+} from "@/lib/appointments/booking-limits";
 
 type Service = {
   id: string;
@@ -57,7 +62,12 @@ function buildDateOptions(days = 7) {
 
 const SLOT_REFRESH_MS = 45_000;
 
-export function ClientBookingForm() {
+type ClientBookingFormProps = {
+  /** Active future appointments (SCHEDULED/CONFIRMED) the patient already holds. */
+  activeAppointmentsCount?: number;
+};
+
+export function ClientBookingForm({ activeAppointmentsCount = 0 }: ClientBookingFormProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [services, setServices] = useState<Service[]>([]);
@@ -96,7 +106,9 @@ export function ClientBookingForm() {
     try {
       const res = await fetchWithRetry(`/api/slots?${query.toString()}`);
       const data = res.ok ? ((await res.json()) as { slots?: Slot[] }) : null;
-      const freshSlots = data?.slots ?? [];
+      // Client-side guard: the API already hides slots inside the patient lead
+      // time window, but the page can sit open past the cutoff between refreshes.
+      const freshSlots = (data?.slots ?? []).filter((slot) => isSlotBookableByPatient(slot.startAt));
       setSlots(freshSlots);
       // If auto-refreshing and the selected slot is no longer available, warn the user
       if (isRefresh && selectedSlotIdRef.current && !freshSlots.some((s) => s.id === selectedSlotIdRef.current)) {
@@ -199,9 +211,10 @@ export function ClientBookingForm() {
       const isSlotTaken = response.status === 409;
       setStatusKind(isSlotTaken ? "warning" : "error");
       setStatus(
-        isSlotTaken
-          ? "Este horario fue tomado justo ahora. Los turnos disponibles fueron actualizados — elige otro."
-          : (data?.error ?? "No se pudo completar la reserva."),
+        data?.error ??
+          (isSlotTaken
+            ? "Este horario fue tomado justo ahora. Los turnos disponibles fueron actualizados — elige otro."
+            : "No se pudo completar la reserva."),
       );
       if (isSlotTaken) {
         setSelectedSlotId("");
@@ -215,7 +228,8 @@ export function ClientBookingForm() {
     router.push("/portal/client/appointments");
   };
 
-  const canSubmit = !!selectedServiceId && !!selectedSlotId && !submitting;
+  const atActiveCap = activeAppointmentsCount >= MAX_ACTIVE_APPOINTMENTS_PER_PATIENT;
+  const canSubmit = !!selectedServiceId && !!selectedSlotId && !submitting && !atActiveCap;
 
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
@@ -464,6 +478,15 @@ export function ClientBookingForm() {
             <span>Total estimado</span>
             <span>{selectedService ? formatter.format(selectedService.priceCents / 100) : "--"}</span>
           </div>
+
+          {atActiveCap ? (
+            <div
+              className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:border-amber-800/40 dark:bg-amber-950/30 dark:text-amber-300"
+              data-testid="active-cap-banner"
+            >
+              {ACTIVE_CAP_MESSAGE}
+            </div>
+          ) : null}
 
           {status ? (
             <div

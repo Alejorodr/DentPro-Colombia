@@ -81,6 +81,12 @@ export function getTrustHostSetting(): boolean {
 }
 
 export function isLocalE2EAuthRuntime(hostOrBaseUrl: string): boolean {
+  // Defense in depth: the E2E auth bypass must never be active on a Vercel deployment,
+  // even if RUN_E2E / TEST_AUTH_BYPASS are misconfigured there.
+  if (isVercelRuntime()) {
+    return false;
+  }
+
   if (!isE2ERuntime() || process.env.TEST_AUTH_BYPASS !== "1") {
     return false;
   }

@@ -62,7 +62,7 @@ describe("refreshFutureInventoryForProfessional", () => {
       expect.objectContaining({
         where: expect.objectContaining({
           status: "AVAILABLE",
-          appointment: null,
+          appointments: { none: {} },
         }),
       }),
     );

@@ -6,18 +6,10 @@ const withBundleAnalyzer = withBundleAnalyzerInit({
 });
 
 const isProd = process.env.NODE_ENV === "production";
-const csp = [
-  "base-uri 'self'",
-  "frame-ancestors 'none'",
-  "form-action 'self'",
-  "object-src 'none'",
-  "img-src 'self' data: blob: https:",
-  `script-src 'self'${isProd ? " 'unsafe-inline'" : " 'unsafe-eval'"}`,
-  "style-src 'self' 'unsafe-inline'",
-  "font-src 'self' data:",
-  `connect-src 'self' https:${isProd ? "" : " http: ws: wss:"}`,
-  "frame-src 'self' https://www.google.com",
-].join("; ");
+// Content-Security-Policy is NOT set here: it needs a per-request nonce, so
+// proxy.ts builds it (lib/security/csp.ts) for every HTML response — enforced
+// in production, report-only in development. See H2 in
+// docs/security/plan-refuerzo-2026-11-20.md.
 
 
 const sentryOtelWarningPattern = /Critical dependency: the request of a dependency is an expression/;
@@ -38,7 +30,6 @@ const securityHeaders = [
     key: "Permissions-Policy",
     value: "camera=(), microphone=(), geolocation=(), interest-cohort=()",
   },
-  { key: isProd ? "Content-Security-Policy" : "Content-Security-Policy-Report-Only", value: csp },
 ];
 
 const nextConfig: NextConfig = {

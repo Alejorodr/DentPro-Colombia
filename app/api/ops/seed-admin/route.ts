@@ -434,8 +434,15 @@ export async function POST(request: Request) {
             },
           });
 
-          await prisma.appointment.upsert({
+          // timeSlotId is no longer globally unique (cancelled appointments release their slot),
+          // so resolve the existing appointment for this slot first; "__new__" never matches.
+          const existingAppointment = await prisma.appointment.findFirst({
             where: { timeSlotId: timeSlot.id },
+            select: { id: true },
+            orderBy: { createdAt: "desc" },
+          });
+          await prisma.appointment.upsert({
+            where: { id: existingAppointment?.id ?? "__new__" },
             update: {
               patientId: patient.id,
               professionalId: professional.id,
@@ -505,8 +512,15 @@ export async function POST(request: Request) {
 
           const service = services[0];
 
-          await prisma.appointment.upsert({
+          // timeSlotId is no longer globally unique (cancelled appointments release their slot),
+          // so resolve the existing appointment for this slot first; "__new__" never matches.
+          const existingAppointment = await prisma.appointment.findFirst({
             where: { timeSlotId: timeSlot.id },
+            select: { id: true },
+            orderBy: { createdAt: "desc" },
+          });
+          await prisma.appointment.upsert({
+            where: { id: existingAppointment?.id ?? "__new__" },
             update: {
               patientId: demoPatient.id,
               professionalId: primaryProfessional.id,

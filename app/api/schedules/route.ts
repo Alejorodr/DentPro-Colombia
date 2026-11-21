@@ -2,8 +2,15 @@ import { NextResponse } from "next/server";
 
 import { getPrismaClient } from "@/lib/prisma";
 import type { ScheduleSlot } from "@/lib/api/types";
+import { errorResponse } from "@/app/api/_utils/response";
+import { requireSession } from "@/lib/authz";
 
 export async function GET() {
+  const sessionResult = await requireSession();
+  if ("error" in sessionResult) {
+    return errorResponse(sessionResult.error.message, sessionResult.error.status);
+  }
+
   const prisma = getPrismaClient();
 
   try {

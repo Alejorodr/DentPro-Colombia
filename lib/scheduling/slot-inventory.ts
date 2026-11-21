@@ -174,7 +174,7 @@ export async function refreshFutureInventoryForProfessional(params: {
       where: {
         professionalId: professional.id,
         status: TimeSlotStatus.AVAILABLE,
-        appointment: null,
+        appointments: { none: {} },
         startAt: { gte: rangeStart, lt: rangeEnd },
       },
     });
@@ -260,7 +260,7 @@ export async function refreshFutureInventoryForProfessional(params: {
       where: {
         professionalId: professional.id,
         status: TimeSlotStatus.AVAILABLE,
-        appointment: null,
+        appointments: { none: {} },
         startAt: { gte: rangeStart, lt: rangeEnd },
       },
     });

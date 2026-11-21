@@ -99,4 +99,105 @@ describe("PATCH /api/users/[id] guards", () => {
     const res = await callPatch(OTHER_USER_ID, { role: "RECEPCIONISTA" });
     expect(res.status).toBe(200);
   });
+
+  it("records password changes for session invalidation", async () => {
+    prismaMock.user.findUnique.mockResolvedValue(makeExisting());
+    const res = await callPatch(OTHER_USER_ID, { password: "NewSecure1!" });
+
+    expect(res.status).toBe(200);
+    expect(prismaMock.user.update).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        passwordHash: expect.any(String),
+        passwordChangedAt: expect.any(Date),
+      }),
+    }));
+  });
+});
+
+describe("PATCH /api/users/[id] role change keeps profiles (soft deactivation)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    requireSessionMock.mockResolvedValue(ADMIN_SESSION);
+    requireRoleMock.mockReturnValue(null);
+    prismaMock.user.count.mockResolvedValue(2);
+  });
+
+  it("PROFESIONAL → RECEPCIONISTA deactivates the professional profile and never deletes it", async () => {
+    prismaMock.user.findUnique.mockResolvedValue(
+      makeExisting({ role: "PROFESIONAL", professional: { id: "prof-1", active: true } }),
+    );
+    prismaMock.user.update.mockResolvedValue({ id: OTHER_USER_ID, role: "RECEPCIONISTA", active: true });
+
+    const res = await callPatch(OTHER_USER_ID, { role: "RECEPCIONISTA" });
+
+    expect(res.status).toBe(200);
+    expect(prismaMock.professionalProfile.update).toHaveBeenCalledWith({
+      where: { userId: OTHER_USER_ID },
+      data: { active: false },
+    });
+    expect(prismaMock.professionalProfile.delete).not.toHaveBeenCalled();
+    expect(prismaMock.patientProfile.delete).not.toHaveBeenCalled();
+  });
+
+  it("PACIENTE → RECEPCIONISTA deactivates the patient profile and never deletes it", async () => {
+    prismaMock.user.findUnique.mockResolvedValue(
+      makeExisting({ role: "PACIENTE", patient: { id: "pat-1", active: true } }),
+    );
+    prismaMock.user.update.mockResolvedValue({ id: OTHER_USER_ID, role: "RECEPCIONISTA", active: true });
+
+    const res = await callPatch(OTHER_USER_ID, { role: "RECEPCIONISTA" });
+
+    expect(res.status).toBe(200);
+    expect(prismaMock.patientProfile.update).toHaveBeenCalledWith({
+      where: { userId: OTHER_USER_ID },
+      data: { active: false },
+    });
+    expect(prismaMock.patientProfile.delete).not.toHaveBeenCalled();
+  });
+
+  it("switching back to PACIENTE reactivates the existing profile instead of creating a duplicate", async () => {
+    prismaMock.user.findUnique.mockResolvedValue(
+      makeExisting({ role: "RECEPCIONISTA", patient: { id: "pat-1", active: false } }),
+    );
+    prismaMock.user.update.mockResolvedValue({ id: OTHER_USER_ID, role: "PACIENTE", active: true });
+
+    const res = await callPatch(OTHER_USER_ID, { role: "PACIENTE" });
+
+    expect(res.status).toBe(200);
+    expect(prismaMock.patientProfile.create).not.toHaveBeenCalled();
+    expect(prismaMock.patientProfile.update).toHaveBeenCalledWith(expect.objectContaining({
+      where: { userId: OTHER_USER_ID },
+      data: expect.objectContaining({ active: true }),
+    }));
+  });
+
+  it("switching back to PROFESIONAL reactivates the existing profile instead of creating a duplicate", async () => {
+    prismaMock.user.findUnique.mockResolvedValue(
+      makeExisting({ role: "RECEPCIONISTA", professional: { id: "prof-1", active: false } }),
+    );
+    prismaMock.user.update.mockResolvedValue({ id: OTHER_USER_ID, role: "PROFESIONAL", active: true });
+
+    const res = await callPatch(OTHER_USER_ID, { role: "PROFESIONAL" });
+
+    expect(res.status).toBe(200);
+    expect(prismaMock.professionalProfile.create).not.toHaveBeenCalled();
+    expect(prismaMock.professionalProfile.update).toHaveBeenCalledWith(expect.objectContaining({
+      where: { userId: OTHER_USER_ID },
+      data: expect.objectContaining({ active: true }),
+    }));
+  });
+
+  it("deactivating a PROFESIONAL user also deactivates the professional profile", async () => {
+    prismaMock.user.findUnique.mockResolvedValue(
+      makeExisting({ role: "PROFESIONAL", professional: { id: "prof-1", active: true } }),
+    );
+    prismaMock.user.update.mockResolvedValue({ id: OTHER_USER_ID, role: "PROFESIONAL", active: false });
+
+    const res = await callPatch(OTHER_USER_ID, { active: false });
+
+    expect(res.status).toBe(200);
+    expect(prismaMock.professionalProfile.update).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ active: false }),
+    }));
+  });
 });

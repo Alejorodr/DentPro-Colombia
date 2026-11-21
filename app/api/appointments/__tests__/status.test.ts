@@ -34,6 +34,9 @@ type AppointmentRecord = {
 };
 
 const mockAppointments = new Map<string, AppointmentRecord>();
+const { timeSlotUpdateManyMock } = vi.hoisted(() => ({
+  timeSlotUpdateManyMock: vi.fn(async (_args: unknown) => ({ count: 1 })),
+}));
 const PENDING_STATUS: AppointmentStatus = "pending";
 const CONFIRMED_STATUS: AppointmentStatus = "confirmed";
 const CANCELLED_STATUS: AppointmentStatus = "cancelled";
@@ -71,7 +74,13 @@ vi.mock("@/lib/prisma", () => {
     },
   };
 
-  return { getPrismaClient: () => prismaMock };
+  const client = {
+    ...prismaMock,
+    timeSlot: { updateMany: timeSlotUpdateManyMock },
+    $transaction: async <T,>(callback: (tx: unknown) => Promise<T>) => callback(client),
+  };
+
+  return { getPrismaClient: () => client };
 });
 
 async function createAppointment(initialStatus: AppointmentStatus) {
@@ -92,6 +101,7 @@ async function createAppointment(initialStatus: AppointmentStatus) {
 describe("PATCH /api/appointments/[id]/status", () => {
   beforeEach(() => {
     mockAppointments.clear();
+    timeSlotUpdateManyMock.mockClear();
     requireSessionMock.mockResolvedValue({
       user: { id: "receptionist-1", role: "RECEPCIONISTA" },
     });
@@ -105,7 +115,7 @@ describe("PATCH /api/appointments/[id]/status", () => {
         method: "PATCH",
         body: JSON.stringify({ status: "confirmed" }),
       }),
-      { params: { id: appointment.id } },
+      { params: Promise.resolve({ id: appointment.id }) },
     );
 
     expect(response.status).toBe(200);
@@ -125,13 +135,47 @@ describe("PATCH /api/appointments/[id]/status", () => {
         method: "PATCH",
         body: JSON.stringify({ status: "confirmed" }),
       }),
-      { params: { id: appointment.id } },
+      { params: Promise.resolve({ id: appointment.id }) },
     );
 
     expect(response.status).toBe(400);
 
     const storedStatus = mockAppointments.get(appointment.id)?.status;
     expect(storedStatus && fromPrismaStatus(storedStatus)).toBe(CANCELLED_STATUS);
+  });
+
+  it("releases the time slot when cancelling", async () => {
+    const appointment = await createAppointment(CONFIRMED_STATUS);
+    mockAppointments.set(appointment.id, { ...appointment, timeSlotId: "slot-1" });
+
+    const response = await PATCH(
+      new Request(`http://localhost/api/appointments/${appointment.id}/status`, {
+        method: "PATCH",
+        body: JSON.stringify({ status: "cancelled" }),
+      }),
+      { params: Promise.resolve({ id: appointment.id }) },
+    );
+
+    expect(response.status).toBe(200);
+    expect(timeSlotUpdateManyMock).toHaveBeenCalledWith({
+      where: { id: "slot-1", status: "BOOKED" },
+      data: { status: "AVAILABLE" },
+    });
+  });
+
+  it("does not touch the time slot when confirming", async () => {
+    const appointment = await createAppointment(PENDING_STATUS);
+    mockAppointments.set(appointment.id, { ...appointment, timeSlotId: "slot-2" });
+
+    await PATCH(
+      new Request(`http://localhost/api/appointments/${appointment.id}/status`, {
+        method: "PATCH",
+        body: JSON.stringify({ status: "confirmed" }),
+      }),
+      { params: Promise.resolve({ id: appointment.id }) },
+    );
+
+    expect(timeSlotUpdateManyMock).not.toHaveBeenCalled();
   });
 
   it("returns 404 when appointment does not exist", async () => {
@@ -141,7 +185,7 @@ describe("PATCH /api/appointments/[id]/status", () => {
         method: "PATCH",
         body: JSON.stringify({ status: "cancelled" }),
       }),
-      { params: { id: missingId } },
+      { params: Promise.resolve({ id: missingId }) },
     );
 
     expect(response.status).toBe(404);

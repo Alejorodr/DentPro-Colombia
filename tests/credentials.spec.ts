@@ -4,6 +4,11 @@ import { authorizeCredentials } from "@/lib/auth/credentials";
 import { getDefaultDashboardPath } from "@/lib/auth/roles";
 import { authenticateUser, findUserByEmail } from "@/lib/auth/users";
 
+// El límite por cuenta tiene su propia suite (credentials-account-rate-limit.spec.ts).
+vi.mock("@/app/api/_utils/ratelimit", () => ({
+  checkIdentifierRateLimit: vi.fn().mockResolvedValue({ allowed: true }),
+}));
+
 vi.mock("@/lib/auth/users", () => ({
   authenticateUser: vi.fn(),
   findUserByEmail: vi.fn(),
