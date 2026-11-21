@@ -68,7 +68,16 @@ function formatDateInput(date: Date) {
   return date.toISOString().slice(0, 10);
 }
 
-export function ReceptionistBilling() {
+type ReceptionistBillingProps = {
+  /**
+   * Only ADMINISTRADOR may revert a PAID payment or record an amount below the
+   * service price (enforced by /api/appointments/[id]/payment). The UI mirrors
+   * those rules so receptionists are not offered actions the server rejects.
+   */
+  isAdmin?: boolean;
+};
+
+export function ReceptionistBilling({ isAdmin = false }: ReceptionistBillingProps) {
   const [selectedDate, setSelectedDate] = useState(() => formatDateInput(new Date()));
   const [data, setData] = useState<BillingResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -76,6 +85,7 @@ export function ReceptionistBilling() {
   const [payForm, setPayForm] = useState<PayForm>({ paymentStatus: PaymentStatus.PAID, paymentMethod: PaymentMethod.CASH, paidAmountCents: "" });
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [conflict, setConflict] = useState(false);
 
   const load = useCallback(async (date: string) => {
     setLoading(true);
@@ -93,24 +103,37 @@ export function ReceptionistBilling() {
     void load(selectedDate);
   }, [load, selectedDate]);
 
+  const isAmountLocked = (appointment: AppointmentBilling) => !isAdmin && appointment.servicePriceCents != null;
+
   const openPayModal = (appointment: AppointmentBilling) => {
     setPayTarget(appointment);
     setPayForm({
-      paymentStatus: appointment.paymentStatus === PaymentStatus.PAID ? PaymentStatus.PAID : PaymentStatus.PAID,
-      paymentMethod: appointment.paymentMethod ?? PaymentMethod.CASH,
-      paidAmountCents: appointment.paidAmountCents != null
-        ? String(appointment.paidAmountCents / 100)
-        : appointment.servicePriceCents != null
-          ? String(appointment.servicePriceCents / 100)
-          : "",
+      paymentStatus: PaymentStatus.PAID,
+      paymentMethod: appointment.paymentMethod ?? "",
+      paidAmountCents: isAmountLocked(appointment)
+        ? String((appointment.servicePriceCents ?? 0) / 100)
+        : appointment.paidAmountCents != null
+          ? String(appointment.paidAmountCents / 100)
+          : appointment.servicePriceCents != null
+            ? String(appointment.servicePriceCents / 100)
+            : "",
     });
     setFeedback(null);
+    setConflict(false);
+  };
+
+  const reloadAfterConflict = () => {
+    setPayTarget(null);
+    setFeedback(null);
+    setConflict(false);
+    void load(selectedDate);
   };
 
   const submitPayment = async () => {
     if (!payTarget) return;
     setSaving(true);
     setFeedback(null);
+    setConflict(false);
     try {
       const amountCents = payForm.paidAmountCents
         ? Math.round(parseFloat(payForm.paidAmountCents) * 100)
@@ -129,7 +152,12 @@ export function ReceptionistBilling() {
         void load(selectedDate);
       } else {
         const body = (await response.json().catch(() => null)) as { error?: string } | null;
-        setFeedback(body?.error ?? "No se pudo registrar el cobro.");
+        if (response.status === 409) {
+          setConflict(true);
+          setFeedback(body?.error ?? "El cobro fue modificado por otra persona. Recarga e intenta de nuevo.");
+        } else {
+          setFeedback(body?.error ?? "No se pudo registrar el cobro.");
+        }
       }
     } finally {
       setSaving(false);
@@ -276,9 +304,19 @@ export function ReceptionistBilling() {
                   onChange={(event) => setPayForm((prev) => ({ ...prev, paymentStatus: event.target.value as PaymentStatus }))}
                 >
                   <option value={PaymentStatus.PAID}>Cobrado</option>
-                  <option value={PaymentStatus.PENDING}>Pendiente</option>
-                  <option value={PaymentStatus.WAIVED}>Exonerado</option>
+                  {/* Reverting a PAID payment is ADMINISTRADOR-only. */}
+                  {isAdmin || payTarget.paymentStatus !== PaymentStatus.PAID ? (
+                    <>
+                      <option value={PaymentStatus.PENDING}>Pendiente</option>
+                      <option value={PaymentStatus.WAIVED}>Exonerado</option>
+                    </>
+                  ) : null}
                 </select>
+                {!isAdmin && payTarget.paymentStatus === PaymentStatus.PAID ? (
+                  <span className="mt-1 block text-[11px] font-normal normal-case tracking-normal text-slate-400">
+                    Solo un administrador puede revertir un pago registrado.
+                  </span>
+                ) : null}
               </label>
 
               {payForm.paymentStatus === PaymentStatus.PAID && (
@@ -288,8 +326,9 @@ export function ReceptionistBilling() {
                     <select
                       className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm normal-case text-slate-700 dark:border-surface-muted dark:bg-surface-base dark:text-slate-200"
                       value={payForm.paymentMethod}
-                      onChange={(event) => setPayForm((prev) => ({ ...prev, paymentMethod: event.target.value as PaymentMethod }))}
+                      onChange={(event) => setPayForm((prev) => ({ ...prev, paymentMethod: event.target.value as PaymentMethod | "" }))}
                     >
+                      <option value="">Selecciona un método</option>
                       <option value={PaymentMethod.CASH}>Efectivo</option>
                       <option value={PaymentMethod.CARD}>Tarjeta</option>
                       <option value={PaymentMethod.TRANSFER}>Transferencia</option>
@@ -300,18 +339,39 @@ export function ReceptionistBilling() {
                     <input
                       type="number"
                       min={0}
+                      max={payTarget.servicePriceCents != null ? payTarget.servicePriceCents / 100 : undefined}
                       step={1000}
-                      className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm normal-case text-slate-700 dark:border-surface-muted dark:bg-surface-base dark:text-slate-200"
+                      readOnly={isAmountLocked(payTarget)}
+                      aria-readonly={isAmountLocked(payTarget)}
+                      className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm normal-case text-slate-700 read-only:cursor-not-allowed read-only:bg-slate-50 read-only:text-slate-500 dark:border-surface-muted dark:bg-surface-base dark:text-slate-200 dark:read-only:bg-surface-muted/40"
                       value={payForm.paidAmountCents}
                       onChange={(event) => setPayForm((prev) => ({ ...prev, paidAmountCents: event.target.value }))}
                       placeholder={payTarget.servicePriceCents != null ? String(payTarget.servicePriceCents / 100) : "0"}
                     />
+                    {isAmountLocked(payTarget) ? (
+                      <span className="mt-1 block text-[11px] font-normal normal-case tracking-normal text-slate-400">
+                        El monto corresponde a la tarifa del servicio. Solo un administrador puede registrar un descuento.
+                      </span>
+                    ) : null}
                   </label>
                 </>
               )}
             </div>
 
-            {feedback ? <p className="mt-3 text-sm text-rose-600">{feedback}</p> : null}
+            {feedback ? (
+              <div className="mt-3 text-sm text-rose-600" role="alert">
+                <p>{feedback}</p>
+                {conflict ? (
+                  <button
+                    type="button"
+                    onClick={reloadAfterConflict}
+                    className="mt-2 rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold uppercase text-slate-600 dark:border-surface-muted dark:text-slate-200"
+                  >
+                    Recargar cobros
+                  </button>
+                ) : null}
+              </div>
+            ) : null}
 
             <div className="mt-6 flex justify-end gap-2">
               <button
@@ -324,7 +384,7 @@ export function ReceptionistBilling() {
               <button
                 type="button"
                 onClick={submitPayment}
-                disabled={saving}
+                disabled={saving || (payForm.paymentStatus === PaymentStatus.PAID && !payForm.paymentMethod)}
                 className="rounded-full bg-brand-teal px-4 py-2 text-xs font-semibold uppercase text-white disabled:opacity-50"
               >
                 {saving ? "Guardando…" : "Guardar"}
