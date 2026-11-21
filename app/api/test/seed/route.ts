@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { AppointmentStatus, Prisma, ProfessionalScheduleStatus, Role, TimeSlotStatus } from "@prisma/client";
 
 import { getPrismaClient } from "@/lib/prisma";
+import { upsertSlotAppointment } from "@/lib/appointments/upsert-slot-appointment";
 import { logAuditEvent } from "@/lib/audit";
 import { logger } from "@/lib/logger";
 import { refreshFutureInventoryForProfessional } from "@/lib/scheduling/slot-inventory";
@@ -224,34 +225,15 @@ export async function POST(request: Request) {
       },
     });
 
-    // timeSlotId is no longer globally unique (cancelled appointments release their slot),
-    // so resolve the existing appointment for this slot first; "__new__" never matches.
-    const existingAppointment = await prisma.appointment.findFirst({
-      where: { timeSlotId: timeSlot.id },
-      select: { id: true },
-      orderBy: { createdAt: "desc" },
-    });
-    await prisma.appointment.upsert({
-      where: { id: existingAppointment?.id ?? "__new__" },
-      update: {
-        patientId: patient.id,
-        professionalId: professional.id,
-        serviceId: service.id,
-        serviceName: service.name,
-        servicePriceCents: service.priceCents,
-        reason: service.name,
-        status: AppointmentStatus.CONFIRMED,
-      },
-      create: {
-        patientId: patient.id,
-        professionalId: professional.id,
-        timeSlotId: timeSlot.id,
-        serviceId: service.id,
-        serviceName: service.name,
-        servicePriceCents: service.priceCents,
-        reason: service.name,
-        status: AppointmentStatus.CONFIRMED,
-      },
+    // Seguro ante seeds concurrentes (workers de Playwright): ver upsertSlotAppointment.
+    await upsertSlotAppointment(prisma, timeSlot.id, {
+      patientId: patient.id,
+      professionalId: professional.id,
+      serviceId: service.id,
+      serviceName: service.name,
+      servicePriceCents: service.priceCents,
+      reason: service.name,
+      status: AppointmentStatus.CONFIRMED,
     });
 
     const rangeStart = new Date();
