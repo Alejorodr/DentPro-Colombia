@@ -12,6 +12,7 @@ import { getDefaultDashboardPath, isUserRole, roleFromSlug, type UserRole } from
 import { errorResponse } from "@/app/api/_utils/response";
 import { checkMemoryRateLimit } from "@/lib/rateLimit";
 import { NONCE_HEADER, buildContentSecurityPolicy, generateNonce } from "@/lib/security/csp";
+import { getUpstashRestConfig } from "@/lib/security/upstash-config";
 
 const RATE_LIMIT_WINDOW_SECONDS = 60;
 const RATE_LIMIT_MAX_REQUESTS = 10;
@@ -105,12 +106,24 @@ function resolveClientIp(request: NextRequest): string {
 /**
  * Los POST de /api/auth/* (login con credenciales, etc.) fallan cerrados en producción si
  * Upstash no está disponible: un limitador en memoria por instancia no frena fuerza bruta en
- * serverless. Los GET (session, csrf, providers) conservan el respaldo en memoria para no
- * romper la navegación. CI/E2E corre un build de producción sin Upstash a propósito.
+ * serverless. CI/E2E corre un build de producción sin Upstash a propósito.
  */
 function shouldFailClosed(request: NextRequest): boolean {
   return request.method === "POST" && isProductionRuntime() && getRuntimeStage() !== "ci-e2e";
 }
+
+function tooManyRequestsResponse(retryAfterSeconds: number) {
+  // JSON: el cliente de Auth.js parsea la respuesta; un texto plano rompe la sesión en el navegador.
+  return NextResponse.json(
+    { error: "Demasiados intentos. Espera un momento e intenta de nuevo." },
+    { status: 429, headers: { "Retry-After": retryAfterSeconds.toString() } },
+  );
+}
+
+// Solo se limitan los métodos que intentan autenticar o cambian estado (login, signin, signout).
+// GET /api/auth/session se llama en cada navegación y foco de pestaña: contarlo agotaba el cupo
+// de 10/min por IP con uso normal (o de toda una sede tras la misma IP) y devolvía 429.
+const RATE_LIMITED_AUTH_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 
 function failClosedResponse(reason: string) {
   if (!warnedAuthRateLimitFallback) {
@@ -125,6 +138,7 @@ function failClosedResponse(reason: string) {
 
 export async function applyAuthRateLimit(request: NextRequest): Promise<NextResponse | null> {
   if (!request.nextUrl.pathname.startsWith("/api/auth/")) return null;
+  if (!RATE_LIMITED_AUTH_METHODS.has(request.method)) return null;
 
   const ip = resolveClientIp(request);
 
@@ -134,18 +148,12 @@ export async function applyAuthRateLimit(request: NextRequest): Promise<NextResp
       limit: RATE_LIMIT_MAX_REQUESTS,
       windowMs: RATE_LIMIT_WINDOW_SECONDS * 1000,
     });
-    return result.allowed
-      ? null
-      : new NextResponse("Too many requests", {
-          status: 429,
-          headers: { "Retry-After": result.retryAfter.toString() },
-        });
+    return result.allowed ? null : tooManyRequestsResponse(result.retryAfter);
   };
 
-  const upstashUrl = process.env.UPSTASH_REDIS_REST_URL;
-  const upstashToken = process.env.UPSTASH_REDIS_REST_TOKEN;
+  const upstash = getUpstashRestConfig();
 
-  if (!upstashUrl || !upstashToken) {
+  if (!upstash) {
     if (shouldFailClosed(request)) return failClosedResponse("missing_config");
     if (!warnedAuthRateLimitFallback) {
       console.warn("[ratelimit] Proxy Upstash config missing; using conservative in-memory fallback.");
@@ -157,23 +165,20 @@ export async function applyAuthRateLimit(request: NextRequest): Promise<NextResp
   const key = `rl:auth:${encodeURIComponent(ip)}`;
 
   try {
-    const incrRes = await fetch(`${upstashUrl}/incr/${key}`, {
-      headers: { Authorization: `Bearer ${upstashToken}` },
+    const incrRes = await fetch(`${upstash.url}/incr/${key}`, {
+      headers: { Authorization: `Bearer ${upstash.token}` },
     });
     if (!incrRes.ok) throw new Error(`Upstash returned ${incrRes.status}`);
     const { result: count } = (await incrRes.json()) as { result: number };
 
     if (count === 1) {
-      void fetch(`${upstashUrl}/expire/${key}/${RATE_LIMIT_WINDOW_SECONDS}`, {
-        headers: { Authorization: `Bearer ${upstashToken}` },
+      void fetch(`${upstash.url}/expire/${key}/${RATE_LIMIT_WINDOW_SECONDS}`, {
+        headers: { Authorization: `Bearer ${upstash.token}` },
       });
     }
 
     if (count > RATE_LIMIT_MAX_REQUESTS) {
-      return new NextResponse("Too many requests", {
-        status: 429,
-        headers: { "Retry-After": RATE_LIMIT_WINDOW_SECONDS.toString() },
-      });
+      return tooManyRequestsResponse(RATE_LIMIT_WINDOW_SECONDS);
     }
   } catch (error) {
     if (shouldFailClosed(request)) return failClosedResponse("upstash_error");

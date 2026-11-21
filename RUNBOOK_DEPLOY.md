@@ -16,8 +16,8 @@ Use `.env.example` as the source of truth. At minimum, configure:
 - `AUTH_SECRET`
 - `AUTH_JWT_SECRET`
 - `NEXT_PUBLIC_APP_URL`
-- `UPSTASH_REDIS_REST_URL`
-- `UPSTASH_REDIS_REST_TOKEN`
+- `UPSTASH_REDIS_REST_URL` (o `KV_REST_API_URL` de la integración Upstash de Vercel)
+- `UPSTASH_REDIS_REST_TOKEN` (o `KV_REST_API_TOKEN`). **Obligatorias en producción**: sin ellas el login responde 503.
 - `BLOB_READ_WRITE_TOKEN` (Vercel Blob)
 - `RESEND_API_KEY`
 - `EMAIL_FROM`

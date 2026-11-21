@@ -12,8 +12,9 @@ async function middleware(req: NextRequest): Promise<NextResponse> {
   return (await applyAuthRateLimit(req)) ?? new NextResponse(null, { status: 200 });
 }
 
-function req(path: string, ip = "1.2.3.4") {
+function req(path: string, ip = "1.2.3.4", method = "GET") {
   return new NextRequest(`http://localhost${path}`, {
+    method,
     headers: { "x-forwarded-for": ip },
   });
 }
@@ -49,7 +50,7 @@ describe("middleware", () => {
     vi.stubEnv("UPSTASH_REDIS_REST_URL", "https://upstash.io");
     vi.stubEnv("UPSTASH_REDIS_REST_TOKEN", "tok");
     mockFetch.mockResolvedValue({ ok: true, json: async () => ({ result: 5 }) });
-    const res = await middleware(req("/api/auth/signin", "1.2.3.5"));
+    const res = await middleware(req("/api/auth/signin", "1.2.3.5", "POST"));
     expect(res.status).toBe(200);
   });
 
@@ -57,15 +58,43 @@ describe("middleware", () => {
     vi.stubEnv("UPSTASH_REDIS_REST_URL", "https://upstash.io");
     vi.stubEnv("UPSTASH_REDIS_REST_TOKEN", "tok");
     mockFetch.mockResolvedValue({ ok: true, json: async () => ({ result: 11 }) });
-    const res = await middleware(req("/api/auth/signin", "1.2.3.6"));
+    const res = await middleware(req("/api/auth/signin", "1.2.3.6", "POST"));
     expect(res.status).toBe(429);
+    // Auth.js parsea la respuesta como JSON; un 429 en texto plano rompía la sesión del cliente.
+    expect(res.headers.get("content-type")).toContain("application/json");
+    expect(await res.json()).toHaveProperty("error");
+  });
+
+  it("never rate-limits or counts GET /api/auth/session", async () => {
+    vi.stubEnv("UPSTASH_REDIS_REST_URL", "https://upstash.io");
+    vi.stubEnv("UPSTASH_REDIS_REST_TOKEN", "tok");
+    mockFetch.mockResolvedValue({ ok: true, json: async () => ({ result: 999 }) });
+    const res = await middleware(req("/api/auth/session", "1.2.3.8"));
+    expect(res.status).toBe(200);
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  it("keeps navigation working past the limit without Upstash (E2E/dev memory fallback)", async () => {
+    for (let i = 0; i < 25; i += 1) {
+      const res = await middleware(req("/api/auth/session", "1.2.3.9"));
+      expect(res.status).toBe(200);
+    }
+  });
+
+  it("still blocks credential POST bursts with the memory fallback", async () => {
+    const statuses: number[] = [];
+    for (let i = 0; i < 12; i += 1) {
+      statuses.push((await middleware(req("/api/auth/callback/credentials", "1.2.3.10", "POST"))).status);
+    }
+    expect(statuses.slice(0, 10).every((s) => s === 200)).toBe(true);
+    expect(statuses.slice(10)).toEqual([429, 429]);
   });
 
   it("uses the conservative fallback when Upstash fetch throws", async () => {
     vi.stubEnv("UPSTASH_REDIS_REST_URL", "https://upstash.io");
     vi.stubEnv("UPSTASH_REDIS_REST_TOKEN", "tok");
     mockFetch.mockRejectedValue(new Error("network error"));
-    const res = await middleware(req("/api/auth/signin", "1.2.3.7"));
+    const res = await middleware(req("/api/auth/signin", "1.2.3.7", "POST"));
     expect(res.status).toBe(200);
   });
 });
@@ -160,7 +189,7 @@ describe("proxy auth rate limit fail-closed (fase 2)", () => {
     expect(res?.status).toBe(503);
   });
 
-  it("keeps the memory fallback for auth GET (session) in production", async () => {
+  it("does not fail closed for auth GET (session) in production", async () => {
     vi.stubEnv("NODE_ENV", "production");
     vi.stubEnv("CI", "");
     vi.stubEnv("UPSTASH_REDIS_REST_URL", "");
@@ -177,6 +206,19 @@ describe("proxy auth rate limit fail-closed (fase 2)", () => {
     vi.stubEnv("UPSTASH_REDIS_REST_TOKEN", "");
     const res = await applyAuthRateLimit(post("/api/auth/callback/credentials", { "x-forwarded-for": "7.7.7.7" }));
     expect(res).toBeNull();
+  });
+
+  it("accepts the Vercel Marketplace KV_REST_API_* names (no 503 in production)", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("CI", "");
+    vi.stubEnv("UPSTASH_REDIS_REST_URL", "");
+    vi.stubEnv("UPSTASH_REDIS_REST_TOKEN", "");
+    vi.stubEnv("KV_REST_API_URL", "https://kv.upstash.io");
+    vi.stubEnv("KV_REST_API_TOKEN", "kv-tok");
+    mockFetch.mockResolvedValue({ ok: true, json: async () => ({ result: 1 }) });
+    const res = await applyAuthRateLimit(post("/api/auth/callback/credentials", { "x-forwarded-for": "4.4.4.4" }));
+    expect(res).toBeNull();
+    expect(String(mockFetch.mock.calls[0]?.[0])).toContain("https://kv.upstash.io/incr/");
   });
 
   it("on Vercel keys on x-vercel-forwarded-for, ignoring a spoofed x-forwarded-for", async () => {
