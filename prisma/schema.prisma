@@ -1,5 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["partialIndexes"]
 }
 
 datasource db {
@@ -233,7 +234,7 @@ model ProfessionalProfile {
   homepageImageAlt      String?
   showOnHomepage        Boolean                          @default(false)
   homepageSortOrder     Int                              @default(0)
-  user                   User                             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user                   User                             @relation(fields: [userId], references: [id], onDelete: Restrict)
   specialty              Specialty                        @relation(fields: [specialtyId], references: [id], onDelete: Restrict)
   timeSlots              TimeSlot[]
   appointments           Appointment[]
@@ -262,7 +263,7 @@ model PatientProfile {
   avatarUrl           String?
   patientCode         String?              @unique
   active              Boolean              @default(true)
-  user                User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user                User                 @relation(fields: [userId], references: [id], onDelete: Restrict)
   appointments        Appointment[]
   allergies           MedicalAllergy[]
   attachments         Attachment[]
@@ -310,7 +311,9 @@ model TimeSlot {
   endAt          DateTime
   status         TimeSlotStatus      @default(AVAILABLE)
   professional   ProfessionalProfile @relation(fields: [professionalId], references: [id], onDelete: Cascade)
-  appointment    Appointment?
+  /// A slot keeps the history of cancelled appointments, but at most one
+  /// non-cancelled appointment (enforced by Appointment_timeSlotId_active_key).
+  appointments   Appointment[]
 
   @@unique([professionalId, startAt, endAt])
   @@index([professionalId])
@@ -321,7 +324,7 @@ model Appointment {
   id                String              @id @default(uuid())
   patientId         String
   professionalId    String
-  timeSlotId        String              @unique
+  timeSlotId        String
   serviceId         String
   serviceName       String?
   servicePriceCents Int?
@@ -351,6 +354,9 @@ model Appointment {
   @@index([serviceId])
   @@index([status])
   @@index([createdAt])
+  @@index([timeSlotId])
+  // Cancelled appointments release their slot: only one non-cancelled appointment per slot.
+  @@unique([timeSlotId], map: "Appointment_timeSlotId_active_key", where: raw("status <> 'CANCELLED'"))
 }
 
 model AppointmentEvent {
@@ -383,7 +389,7 @@ model ClinicalNote {
   deletedByUserId String?          @db.Uuid
   appointment     Appointment?     @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
   episode         ClinicalEpisode? @relation(fields: [episodeId], references: [id], onDelete: Cascade)
-  author          User             @relation("ClinicalNoteAuthor", fields: [authorUserId], references: [id], onDelete: Cascade)
+  author          User             @relation("ClinicalNoteAuthor", fields: [authorUserId], references: [id], onDelete: Restrict)
   deletedByUser   User?            @relation("ClinicalNoteDeletedBy", fields: [deletedByUserId], references: [id], onDelete: SetNull)
 
   @@index([appointmentId])
@@ -434,7 +440,7 @@ model MedicalAllergy {
   severity  AllergySeverity
   notes     String?
   createdAt DateTime        @default(now())
-  patient   PatientProfile  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  patient   PatientProfile  @relation(fields: [patientId], references: [id], onDelete: Restrict)
 
   @@index([patientId])
 }
@@ -559,9 +565,9 @@ model SignedConsent {
   acceptedByUserId String                 @db.Uuid
   ipHash           String?
   userAgent        String?
-  patient          PatientProfile         @relation(fields: [patientId], references: [id], onDelete: Cascade)
-  template         ClinicDocumentTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
-  acceptedByUser   User                   @relation("SignedConsentAcceptedBy", fields: [acceptedByUserId], references: [id], onDelete: Cascade)
+  patient          PatientProfile         @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  template         ClinicDocumentTemplate @relation(fields: [templateId], references: [id], onDelete: Restrict)
+  acceptedByUser   User                   @relation("SignedConsentAcceptedBy", fields: [acceptedByUserId], references: [id], onDelete: Restrict)
 
   @@index([patientId])
   @@index([templateId])
