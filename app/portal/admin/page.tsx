@@ -1,113 +1,112 @@
-import { PeriodSelector } from "@/app/portal/admin/_components/PeriodSelector";
-import { SectionHeader } from "@/app/portal/components/ui/SectionHeader";
+import { Suspense } from "react";
+
 import {
   getAdminKpis,
   getAdminRevenueTrend,
   getAdminTrend,
   getAppointmentsForRange,
-  parseRange,
   getStaffOnDuty,
+  parseRange,
 } from "@/app/portal/admin/_data/analytics";
+import { STATUS_COLORS } from "@/app/portal/components/ui/statusColors";
+import GlassyDashboard, { type GlassyDashboardData, type GlassyStatusTone } from "@/components/ui/GlassyDashboard";
 import { requireRole } from "@/lib/auth/require-role";
 import { formatInTimeZone, getAnalyticsTimeZone } from "@/lib/dates/tz";
-import { KPIStatCard } from "@/app/portal/admin/_components/KPIStatCard";
-import { RevenueTrendChart } from "@/app/portal/admin/_components/RevenueTrendChart";
-import { StaffOnDutyList } from "@/app/portal/admin/_components/StaffOnDutyList";
-import { AppointmentsTable } from "@/app/portal/admin/_components/AppointmentsTable";
 
-function formatTime(date: Date, timeZone: string) {
-  return formatInTimeZone(date, timeZone, { hour: "2-digit", minute: "2-digit" });
+const STATUS_TONES: Record<string, GlassyStatusTone> = {
+  SCHEDULED: "scheduled",
+  CONFIRMED: "confirmed",
+  CHECKED_IN: "active",
+  COMPLETED: "completed",
+  CANCELLED: "closed",
+  NO_SHOW: "closed",
+};
+
+const FALLBACK_LABELS: Record<string, string> = {
+  SCHEDULED: "Programada",
+  CONFIRMED: "Confirmada",
+  CHECKED_IN: "En consulta",
+  COMPLETED: "Completada",
+  CANCELLED: "Cancelada",
+  NO_SHOW: "No asistió",
+};
+
+const statusLabel = (status: string) => STATUS_COLORS[status]?.label ?? FALLBACK_LABELS[status] ?? status;
+const toneFor = (status: string): GlassyStatusTone => STATUS_TONES[status] ?? "scheduled";
+
+/** Variación porcentual contra el período anterior; null si no hay base de comparación. */
+function percentChange(current: number, previous: number) {
+  if (previous <= 0) return null;
+  return ((current - previous) / previous) * 100;
 }
-
-const formatCurrency = (amount: number) =>
-  new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(amount);
 
 type AdminPortalPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
 
-export default async function AdminPortalPage({
-  searchParams = Promise.resolve({}),
-}: AdminPortalPageProps) {
+export default async function AdminPortalPage({ searchParams = Promise.resolve({}) }: AdminPortalPageProps) {
   await requireRole("ADMINISTRADOR");
-  const resolvedSearchParams = await searchParams;
-  const range = parseRange(resolvedSearchParams ?? {});
+  const range = parseRange((await searchParams) ?? {});
   const timeZone = range.timeZone ?? getAnalyticsTimeZone();
-  const [kpis, appointments, trend, revenueTrend, staffOnDuty] = await Promise.all([
+
+  // Período anterior de igual duración, para calcular las variaciones de las métricas.
+  const span = range.to.getTime() - range.from.getTime();
+  const previousFrom = new Date(range.from.getTime() - span);
+
+  const [kpis, previousKpis, trend, revenueTrend, appointments, staffOnDuty] = await Promise.all([
     getAdminKpis({ from: range.from, to: range.to }),
-    getAppointmentsForRange({ from: range.from, to: range.to, limit: 8 }),
+    getAdminKpis({ from: previousFrom, to: range.from }),
     getAdminTrend({ from: range.from, to: range.to, bucket: range.bucket, timeZone }),
     getAdminRevenueTrend({ from: range.from, to: range.to, bucket: range.bucket, timeZone }),
+    getAppointmentsForRange({ from: range.from, to: range.to, limit: 120 }),
     getStaffOnDuty(),
   ]);
 
-  const stats = [
-    {
-      label: "Citas del período",
-      value: `${kpis.totalAppointments}`,
-      change: `En ${range.label.toLowerCase()}`,
-      testId: "admin-kpi-appointments",
+  const data: GlassyDashboardData = {
+    rangeKey: range.rangeKey,
+    rangeLabel: range.label,
+    fromInput: range.fromInput,
+    toInput: range.toInput,
+    kpis: {
+      revenue: kpis.revenueCents / 100,
+      revenueDelta: percentChange(kpis.revenueCents, previousKpis.revenueCents),
+      appointments: kpis.totalAppointments,
+      appointmentsDelta: percentChange(kpis.totalAppointments, previousKpis.totalAppointments),
+      newPatients: kpis.newPatients,
+      newPatientsDelta: percentChange(kpis.newPatients, previousKpis.newPatients),
+      cancellations: kpis.cancellations,
+      cancellationsDelta: percentChange(kpis.cancellations, previousKpis.cancellations),
+      utilization: kpis.utilizationRate * 100,
+      bookedSlots: kpis.bookedSlots,
+      totalSlots: kpis.totalSlots,
+      pending: kpis.pendingApprovals,
+      activeProfessionals: kpis.activeProfessionals,
     },
-    {
-      label: "Ingresos del período",
-      value: formatCurrency(kpis.revenueCents / 100),
-      change: "Acumulado en el rango seleccionado",
-      testId: "admin-kpi-revenue",
+    trend: {
+      labels: revenueTrend.labels,
+      revenue: revenueTrend.series.map((cents) => cents / 100),
+      appointments: trend.series,
     },
-    {
-      label: "Profesionales activos",
-      value: `${kpis.activeProfessionals}`,
-      change: "Con agenda configurada",
-      testId: "admin-kpi-active-staff",
-    },
-    {
-      label: "Citas pendientes",
-      value: `${kpis.pendingApprovals}`,
-      change: "Por confirmar o gestionar",
-      testId: "admin-kpi-pending-approvals",
-    },
-  ];
+    statusMix: Object.entries(kpis.statusCounts)
+      .filter(([, count]) => count > 0)
+      .map(([status, count]) => ({ status, label: statusLabel(status), tone: toneFor(status), count })),
+    appointments: appointments.map((appointment) => ({
+      id: appointment.id,
+      patient: appointment.patientName ?? "Paciente sin nombre",
+      professional: appointment.professionalName ?? "Sin asignar",
+      service: appointment.serviceName ?? "Consulta general",
+      dateLabel: formatInTimeZone(appointment.startAt, timeZone, { weekday: "short", day: "numeric", month: "short" }),
+      timeLabel: formatInTimeZone(appointment.startAt, timeZone, { hour: "numeric", minute: "2-digit" }),
+      status: appointment.status,
+      statusLabel: statusLabel(appointment.status),
+      tone: toneFor(appointment.status),
+    })),
+    staff: staffOnDuty,
+  };
 
   return (
-    <div className="space-y-8">
-      <div data-testid="admin-dashboard-title">
-        <SectionHeader
-          eyebrow="Portal Administrador"
-          title="Gestión general"
-          description="Monitorea las métricas clave por período y actúa rápido sobre operaciones."
-        />
-      </div>
-
-      <PeriodSelector rangeKey={range.rangeKey} fromInput={range.fromInput} toInput={range.toInput} />
-
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {stats.map((stat) => (
-          <KPIStatCard key={stat.label} {...stat} />
-        ))}
-      </section>
-
-      <section className="grid gap-6 lg:grid-cols-[2fr_1fr]">
-        <RevenueTrendChart
-          series={revenueTrend.series.map((value) => value / 100)}
-          labels={revenueTrend.labels}
-          title="Tendencia de ingresos"
-          subtitle="Evolución en el período seleccionado"
-          totalLabel={formatCurrency(revenueTrend.totalCents / 100)}
-          deltaLabel={`${trend.series.reduce((acc, value) => acc + value, 0)} citas en el período`}
-        />
-        <StaffOnDutyList staff={staffOnDuty} />
-      </section>
-
-      <AppointmentsTable
-        appointments={appointments.map((appointment) => ({
-          id: appointment.id,
-          patientName: appointment.patientName,
-          professionalName: appointment.professionalName,
-          serviceName: appointment.serviceName,
-          timeLabel: formatTime(appointment.startAt, timeZone),
-          status: appointment.status,
-        }))}
-      />
-    </div>
+    <Suspense>
+      <GlassyDashboard data={data} />
+    </Suspense>
   );
 }

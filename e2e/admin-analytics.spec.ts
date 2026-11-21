@@ -21,8 +21,7 @@ test.describe("Admin analytics dashboard", () => {
     await expect(page.getByTestId("admin-kpi-pending-approvals")).toContainText("Citas pendientes");
     await expect(page.getByTestId("admin-kpi-pending-approvals")).toContainText(/^\D*\d+/m);
 
-    const rangeSelector = page.getByRole("combobox").first();
-    await rangeSelector.selectOption("last7");
+    await page.getByRole("group", { name: "Período del reporte" }).getByRole("button", { name: "7 días" }).click();
 
     await expect(page).toHaveURL(/range=last7/);
 
