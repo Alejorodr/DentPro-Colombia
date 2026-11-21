@@ -35,7 +35,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 
   try {
     const exportPayload = await buildPatientExport(prisma, id, {
-      includeHiddenClinical: true,
+      // Política: el admin no tiene acceso clínico; solo exporta lo visible para el paciente.
+      includeHiddenClinical: false,
       skip,
       take,
     });

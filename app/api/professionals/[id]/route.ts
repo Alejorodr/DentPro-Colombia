@@ -137,28 +137,47 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
 
   const { id } = await params;
   if (!isAuthorized(sessionUser.role, ["ADMINISTRADOR"])) {
-    return errorResponse("No tienes permisos para eliminar profesionales.", 403);
+    return errorResponse("No tienes permisos para desactivar profesionales.", 403);
   }
 
   const prisma = getPrismaClient();
   const professional = await prisma.professionalProfile.findUnique({
     where: { id },
-    include: { user: { select: { email: true } } },
+    select: { userId: true, active: true, user: { select: { email: true, active: true } } },
   });
 
   if (!professional) {
     return errorResponse("Profesional no encontrado.", 404);
   }
 
-  await prisma.user.delete({ where: { id: professional.userId } });
+  // Idempotente: si ya está inactivo no se escribe nada.
+  if (!professional.active && !professional.user.active) {
+    return NextResponse.json({ ok: true });
+  }
+
+  // Soft delete: se conservan notas clínicas, citas y episodios asociados;
+  // el acceso se bloquea vía user.active=false (verificado en cada auth()).
+  try {
+    await prisma.$transaction([
+      prisma.user.update({ where: { id: professional.userId }, data: { active: false } }),
+      prisma.professionalProfile.update({ where: { id }, data: { active: false } }),
+    ]);
+  } catch {
+    return errorResponse("No se pudo desactivar el profesional.", 500);
+  }
 
   await logAuditEvent({
     actor: { userId: sessionUser.id, role: sessionUser.role },
-    action: "professional.deleted",
+    action: "professional.deactivated",
     resourceType: "professional",
     resourceId: id,
     targetLabel: professional.user.email,
     status: "success",
+    metadata: {
+      mode: "soft",
+      previousUserActive: professional.user.active,
+      previousProfileActive: professional.active,
+    },
   });
 
   return NextResponse.json({ ok: true });

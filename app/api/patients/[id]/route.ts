@@ -38,18 +38,28 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   const prisma = getPrismaClient();
   const patient = await prisma.patientProfile.findUnique({
     where: { id },
-    select: { userId: true },
+    select: { userId: true, user: { select: { role: true, email: true } } },
   });
 
-  if (!patient) {
+  // Un perfil de paciente puede sobrevivir (inactivo) a un cambio de rol. Sin este guard,
+  // recepción podría cambiar el correo de un admin o profesional y tomar su cuenta.
+  if (!patient || patient.user.role !== "PACIENTE") {
     return errorResponse("Paciente no encontrado.", 404);
+  }
+
+  // El correo es la identidad de acceso (login y recuperación de contraseña): solo el admin
+  // puede cambiarlo. Reenviar el mismo correo (como hace el formulario) no cuenta como cambio.
+  const requestedEmail = payload.email?.toLowerCase();
+  const emailChanged = requestedEmail !== undefined && requestedEmail !== patient.user.email.toLowerCase();
+  if (emailChanged && sessionResult.user.role !== "ADMINISTRADOR") {
+    return errorResponse("Solo un administrador puede cambiar el correo de un paciente.", 403);
   }
 
   try {
     const updated = await prisma.user.update({
       where: { id: patient.userId },
       data: {
-        email: payload.email?.toLowerCase() ?? undefined,
+        email: emailChanged ? requestedEmail : undefined,
         name: payload.name?.trim() ?? undefined,
         lastName: payload.lastName?.trim() ?? undefined,
         patient: {
@@ -93,20 +103,53 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
     return errorResponse(sessionResult.error.message, sessionResult.error.status);
   }
 
-  const roleError = requireRole(sessionResult.user, ["RECEPCIONISTA", "ADMINISTRADOR"]);
+  // Desactivar un paciente es una acción sensible: solo administración.
+  // Recepción puede alternar `active` vía PATCH, pero no usar este endpoint.
+  const roleError = requireRole(sessionResult.user, ["ADMINISTRADOR"]);
   if (roleError) {
-    return errorResponse(roleError.message, roleError.status);
+    return errorResponse("No tienes permisos para desactivar pacientes.", 403);
   }
 
   const { id } = await params;
   const prisma = getPrismaClient();
-  const patient = await prisma.patientProfile.findUnique({ where: { id } });
+  const patient = await prisma.patientProfile.findUnique({
+    where: { id },
+    select: { userId: true, active: true, user: { select: { email: true, active: true, role: true } } },
+  });
 
-  if (!patient) {
+  if (!patient || patient.user.role !== "PACIENTE") {
     return errorResponse("Paciente no encontrado.", 404);
   }
 
-  await prisma.user.delete({ where: { id: patient.userId } });
+  // Idempotente: si ya está inactivo no se escribe nada.
+  if (!patient.active && !patient.user.active) {
+    return NextResponse.json({ ok: true });
+  }
+
+  // Soft delete: se conserva la historia clínica, consentimientos y alergias
+  // (requisito legal de retención); el acceso se bloquea vía user.active=false.
+  try {
+    await prisma.$transaction([
+      prisma.user.update({ where: { id: patient.userId }, data: { active: false } }),
+      prisma.patientProfile.update({ where: { id }, data: { active: false } }),
+    ]);
+  } catch {
+    return errorResponse("No se pudo desactivar el paciente.", 500);
+  }
+
+  await logAuditEvent({
+    actor: { userId: sessionResult.user.id, role: sessionResult.user.role },
+    action: "patient.deactivated",
+    resourceType: "patient",
+    resourceId: id,
+    targetLabel: patient.user.email,
+    status: "success",
+    metadata: {
+      mode: "soft",
+      previousUserActive: patient.user.active,
+      previousProfileActive: patient.active,
+    },
+  });
 
   return NextResponse.json({ ok: true });
 }

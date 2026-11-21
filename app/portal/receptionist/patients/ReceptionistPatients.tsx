@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { MagnifyingGlass, PencilSimple, Trash, UserMinus } from "@/components/ui/Icon";
+import { MagnifyingGlass, PencilSimple, UserMinus } from "@/components/ui/Icon";
 
 import { Card } from "@/app/portal/components/ui/Card";
 import { Table } from "@/app/portal/components/ui/Table";
@@ -28,7 +28,7 @@ type PatientRecord = {
   user: { name: string; lastName: string; email: string };
 };
 
-export function ReceptionistPatients() {
+export function ReceptionistPatients({ canEditEmail = false }: { canEditEmail?: boolean }) {
   const [patients, setPatients] = useState<PatientRecord[]>([]);
   const [query, setQuery] = useState("");
   const [form, setForm] = useState(emptyForm);
@@ -139,16 +139,6 @@ export function ReceptionistPatients() {
     setSaving(false);
   };
 
-  const removePatient = async (patient: PatientRecord) => {
-    if (!window.confirm(`¿Eliminar a ${patient.user.name} ${patient.user.lastName}?`)) {
-      return;
-    }
-    setSaving(true);
-    await fetchWithTimeout(`/api/patients/${patient.id}`, { method: "DELETE" });
-    await loadPatients();
-    setSaving(false);
-  };
-
   return (
     <div className="space-y-6">
       <section className="flex flex-wrap items-center justify-between gap-4">
@@ -255,15 +245,6 @@ export function ReceptionistPatients() {
                       <UserMinus size={14} />
                       {patient.active ? "Desactivar" : "Activar"}
                     </button>
-                    <button
-                      type="button"
-                      className="inline-flex items-center gap-1 rounded-full border border-rose-200 px-3 py-1 text-xs font-semibold text-rose-600"
-                      onClick={() => removePatient(patient)}
-                      disabled={saving}
-                    >
-                      <Trash size={14} />
-                      Eliminar
-                    </button>
                   </div>
                 </td>
               </tr>
@@ -291,9 +272,11 @@ export function ReceptionistPatients() {
               ].map((field) => (
                 <input
                   key={field.key}
-                  className="input h-11 text-sm"
+                  className="input h-11 text-sm disabled:cursor-not-allowed disabled:opacity-60"
                   placeholder={field.label}
                   value={field.value}
+                  disabled={field.key === "email" && !canEditEmail}
+                  title={field.key === "email" && !canEditEmail ? "Solo un administrador puede cambiar el correo." : undefined}
                   onChange={(event) =>
                     setEditing((prev) =>
                       prev
