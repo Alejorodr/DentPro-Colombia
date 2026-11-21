@@ -1,3 +1,4 @@
+import { sanitizeAttachmentLinks } from "@/lib/security/attachment-url";
 import Link from "next/link";
 
 import { requireRole } from "@/lib/auth/require-role";
@@ -69,7 +70,7 @@ export default async function ClientTreatmentHistoryPage() {
         },
         attachments: {
           where: { kind: AttachmentKind.XRAY },
-          select: { id: true, filename: true, url: true, dataUrl: true },
+          select: { id: true, filename: true, mimeType: true, url: true, dataUrl: true },
           orderBy: { createdAt: "desc" },
           take: 3,
         },
@@ -102,7 +103,7 @@ export default async function ClientTreatmentHistoryPage() {
         specialty: string | null;
         note: string | null;
         prescriptionItems: { name: string; dosage: string | null; frequency: string | null }[];
-        attachments: { id: string; filename: string; url: string | null; dataUrl: string | null }[];
+        attachments: { id: string; filename: string; mimeType: string | null; url: string | null; dataUrl: string | null }[];
       }
     | {
         kind: "episode";
@@ -260,7 +261,8 @@ export default async function ClientTreatmentHistoryPage() {
                               </p>
                               <div className="flex flex-wrap gap-2">
                                 {item.attachments.map((att) => {
-                                  const href = att.url ?? att.dataUrl;
+                                  const safe = sanitizeAttachmentLinks(att);
+                                  const href = safe.url ?? safe.dataUrl;
                                   return href ? (
                                     <Link
                                       key={att.id}

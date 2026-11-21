@@ -1,3 +1,4 @@
+import { addDaysZoned, formatDateInput, fromZonedDateParts, getAnalyticsTimeZone, startOfZonedDay } from "@/lib/dates/tz";
 import { NextResponse } from "next/server";
 
 import { getPrismaClient } from "@/lib/prisma";
@@ -5,10 +6,19 @@ import { errorResponse } from "@/app/api/_utils/response";
 import { requireRole, requireSession } from "@/lib/authz";
 import { AppointmentStatus, PaymentMethod, PaymentStatus } from "@prisma/client";
 
-function parseDateParam(param: string | null): Date | null {
-  if (!param) return null;
-  const d = new Date(`${param}T00:00:00`);
-  return Number.isNaN(d.getTime()) ? null : d;
+// El día de cobro es el día calendario de la clínica (America/Bogota), no el del servidor:
+// en Vercel el servidor corre en UTC y el día quedaba corrido 5 horas.
+function resolveClinicDay(param: string | null): { dayStart: Date; dayEnd: Date } {
+  const timeZone = getAnalyticsTimeZone();
+  const match = param ? /^(\d{4})-(\d{2})-(\d{2})$/.exec(param) : null;
+  const dayStart = match
+    ? fromZonedDateParts(
+        { year: Number(match[1]), month: Number(match[2]), day: Number(match[3]), hour: 0, minute: 0, second: 0 },
+        timeZone,
+      )
+    : startOfZonedDay(new Date(), timeZone);
+  const dayEnd = new Date(addDaysZoned(dayStart, 1, timeZone).getTime() - 1);
+  return { dayStart, dayEnd };
 }
 
 export async function GET(request: Request) {
@@ -24,12 +34,7 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const dateStr = searchParams.get("date");
-  const baseDate = parseDateParam(dateStr) ?? new Date();
-
-  const dayStart = new Date(baseDate);
-  dayStart.setHours(0, 0, 0, 0);
-  const dayEnd = new Date(baseDate);
-  dayEnd.setHours(23, 59, 59, 999);
+  const { dayStart, dayEnd } = resolveClinicDay(dateStr);
 
   const prisma = getPrismaClient();
 
@@ -81,7 +86,7 @@ export async function GET(request: Request) {
   }
 
   return NextResponse.json({
-    date: baseDate.toISOString().slice(0, 10),
+    date: formatDateInput(dayStart, getAnalyticsTimeZone()),
     summary: {
       totalBilledCents: totalBilled,
       totalPendingCents: totalPending,

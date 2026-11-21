@@ -6,33 +6,9 @@ import { parseJson } from "@/app/api/_utils/validation";
 import { getPrismaClient } from "@/lib/prisma";
 import { AttachmentKind } from "@prisma/client";
 import { requireRole, requireSession } from "@/lib/authz";
+import { isSafeAttachmentDataUrl, isSafeAttachmentUrl } from "@/lib/security/attachment-url";
 
 const allowedKinds = new Set<AttachmentKind>([AttachmentKind.XRAY, AttachmentKind.LAB, AttachmentKind.DOCUMENT]);
-
-function isSafeAttachmentUrl(url: string) {
-  try {
-    const parsed = new URL(url);
-    return parsed.protocol === "https:";
-  } catch {
-    return false;
-  }
-}
-
-const SAFE_DATA_URL_MIME_TYPES = new Set([
-  "application/pdf",
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-]);
-
-function isSafeAttachmentDataUrl(value: string, mimeType?: string | null) {
-  const match = /^data:([^;,]+);base64,([a-z0-9+/]+=*)$/i.exec(value);
-  if (!match || !SAFE_DATA_URL_MIME_TYPES.has(match[1].toLowerCase())) {
-    return false;
-  }
-
-  return !mimeType || mimeType.toLowerCase() === match[1].toLowerCase();
-}
 
 const professionalAttachmentSchema = z.object({
   kind: z.nativeEnum(AttachmentKind),

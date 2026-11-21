@@ -6,17 +6,9 @@ import { parseJson } from "@/app/api/_utils/validation";
 import { getPrismaClient } from "@/lib/prisma";
 import { AttachmentKind } from "@prisma/client";
 import { requireRole, requireSession } from "@/lib/authz";
+import { isSafeAttachmentDataUrl, isSafeAttachmentUrl } from "@/lib/security/attachment-url";
 
 const allowedKinds = new Set<AttachmentKind>([AttachmentKind.XRAY, AttachmentKind.LAB, AttachmentKind.DOCUMENT]);
-
-function isSafeAttachmentUrl(url: string) {
-  try {
-    const parsed = new URL(url);
-    return parsed.protocol === "http:" || parsed.protocol === "https:";
-  } catch {
-    return false;
-  }
-}
 
 const attachmentSchema = z.object({
   kind: z.nativeEnum(AttachmentKind),
@@ -55,6 +47,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
   if (!payload.url && !payload.dataUrl) {
     return errorResponse("Adjunto sin enlace ni dataUrl.");
+  }
+
+  if (payload.dataUrl && !isSafeAttachmentDataUrl(payload.dataUrl, payload.mimeType)) {
+    return errorResponse("El archivo adjunto no es válido. Usa PDF, JPG, PNG o WEBP.");
   }
 
   const { id } = await params;
