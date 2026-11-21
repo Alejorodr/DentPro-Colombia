@@ -113,20 +113,31 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
         ? AppointmentStatus.CHECKED_IN
         : payload.status;
 
+    // A cancelled appointment has released its slot (it may already be booked by someone
+    // else), so it cannot be reactivated, and re-cancelling must not touch the slot.
+    const wasCancelled = previousStatus === AppointmentStatus.CANCELLED;
+    if (wasCancelled && nextStatus !== AppointmentStatus.CANCELLED) {
+      return errorResponse("Esta cita está cancelada y su horario fue liberado. Agenda una nueva cita.", 409);
+    }
+
     const updated = await prisma.appointment.update({
       where: { id },
       data: {
         status: nextStatus,
         notes: payload.notes ?? undefined,
         checkedInAt: nextStatus === AppointmentStatus.CHECKED_IN ? appointment.checkedInAt ?? new Date() : null,
-        timeSlot: {
-          update: {
-            status:
-              nextStatus === AppointmentStatus.CANCELLED || nextStatus === AppointmentStatus.NO_SHOW
-                ? TimeSlotStatus.AVAILABLE
-                : TimeSlotStatus.BOOKED,
-          },
-        },
+        ...(wasCancelled
+          ? {}
+          : {
+              timeSlot: {
+                update: {
+                  status:
+                    nextStatus === AppointmentStatus.CANCELLED || nextStatus === AppointmentStatus.NO_SHOW
+                      ? TimeSlotStatus.AVAILABLE
+                      : TimeSlotStatus.BOOKED,
+                },
+              },
+            }),
       },
       select: appointmentMutationResponseSelect,
     });
@@ -263,6 +274,12 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
 
     if (!appointment) {
       return errorResponse("Cita no encontrada.", 404);
+    }
+
+    // The slot of a cancelled appointment was already released and may belong to another
+    // appointment now; cancelling again must not flip it back to AVAILABLE.
+    if (appointment.status === AppointmentStatus.CANCELLED) {
+      return errorResponse("La cita ya está cancelada.", 409);
     }
 
     if (sessionResult.user.role === "PACIENTE") {

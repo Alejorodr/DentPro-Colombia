@@ -5,7 +5,7 @@ import { getPrismaClient } from "@/lib/prisma";
 import { errorResponse } from "@/app/api/_utils/response";
 import { parseJson } from "@/app/api/_utils/validation";
 import { createReceptionNotifications } from "@/lib/notifications";
-import { TimeSlotStatus } from "@prisma/client";
+import { AppointmentStatus, TimeSlotStatus } from "@prisma/client";
 import { getRequestId } from "@/app/api/_utils/request";
 import { logger } from "@/lib/logger";
 import { logAuditEvent } from "@/lib/audit";
@@ -16,6 +16,7 @@ import * as Sentry from "@sentry/nextjs";
 import { recordAppointmentEvent } from "@/lib/appointments/events";
 import { assertSlotBookable } from "@/lib/scheduling/effective-availability";
 import { appointmentMutationResponseSelect, serializeAppointmentMutationResponse } from "@/lib/appointments/response";
+import { checkSlotLeadTime } from "@/lib/appointments/booking-limits";
 
 const rescheduleSchema = z
   .object({
@@ -127,6 +128,12 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     return errorResponse("Cita no encontrada.", 404);
   }
 
+  // Only active appointments hold their slot. A cancelled appointment's slot may already
+  // belong to someone else, so "rescheduling" it would release another patient's slot.
+  if (appointment.status !== AppointmentStatus.SCHEDULED && appointment.status !== AppointmentStatus.CONFIRMED) {
+    return errorResponse("Solo puedes reprogramar citas programadas o confirmadas.", 409);
+  }
+
   if (sessionResult.user.role === "PACIENTE") {
     if (!canRescheduleWithLimit(appointment.timeSlot.startAt)) {
       return errorResponse("Solo puedes reprogramar con 24h de anticipación.", 409);
@@ -142,6 +149,16 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
   if (!newSlot) {
     return errorResponse("Nuevo slot no encontrado.", 404);
+  }
+
+  // F3: a professional can only move appointments within their own agenda.
+  if (sessionResult.user.role === "PROFESIONAL" && newSlot.professionalId !== appointment.professionalId) {
+    return errorResponse("Solo puedes reprogramar citas dentro de tu propia agenda.", 403);
+  }
+
+  const leadTimeViolation = checkSlotLeadTime(newSlot.startAt, sessionResult.user.role);
+  if (leadTimeViolation) {
+    return errorResponse(leadTimeViolation.message, leadTimeViolation.status);
   }
 
   const availabilityCheck = await assertSlotBookable({

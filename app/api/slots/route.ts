@@ -3,6 +3,19 @@ import { NextResponse } from "next/server";
 import { addDaysZoned, formatDateInput, fromZonedDateParts, getAnalyticsTimeZone } from "@/lib/dates/tz";
 import { getPrismaClient } from "@/lib/prisma";
 import { getEffectiveAvailability } from "@/lib/scheduling/effective-availability";
+import { requireSession } from "@/lib/authz";
+import { isSlotBookableByPatient } from "@/lib/appointments/booking-limits";
+
+const STAFF_ROLES = new Set(["PROFESIONAL", "RECEPCIONISTA", "ADMINISTRADOR"]);
+
+async function isStaffCaller() {
+  try {
+    const result = await requireSession();
+    return "user" in result && STAFF_ROLES.has(result.user.role);
+  } catch {
+    return false;
+  }
+}
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -41,9 +54,16 @@ export async function GET(request: Request) {
     includeReasons,
   });
 
+  // Patients and anonymous callers only see slots outside the booking lead time
+  // window (lib/appointments/booking-limits.ts); staff keep the full list.
+  const now = new Date();
+  const slots = (await isStaffCaller())
+    ? effective.slots
+    : effective.slots.filter((slot) => isSlotBookableByPatient(slot.startAt, now));
+
   return NextResponse.json({
     date: formatDateInput(startAt, timeZone),
-    slots: effective.slots,
+    slots,
     reasons: includeReasons ? Object.fromEntries(effective.reasons?.entries() ?? []) : undefined,
   });
 }

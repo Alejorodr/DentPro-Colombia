@@ -4,6 +4,7 @@ import { z } from "zod";
 import { getPrismaClient } from "@/lib/prisma";
 import { TimeSlotStatus } from "@prisma/client";
 import { logger } from "@/lib/logger";
+import { getPatientBookingCutoff } from "@/lib/appointments/booking-limits";
 
 const querySchema = z.object({
   limit: z.coerce.number().int().min(1).max(12).default(6),
@@ -26,7 +27,8 @@ export async function GET(request: Request) {
     const slots = await prisma.timeSlot.findMany({
       where: {
         status: TimeSlotStatus.AVAILABLE,
-        startAt: { gte: now },
+        // Public visitors book as patients: hide slots inside the lead time window.
+        startAt: { gt: getPatientBookingCutoff(now) },
         professional: {
           active: true,
           professionalServices: {

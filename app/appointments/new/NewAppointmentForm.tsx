@@ -5,6 +5,11 @@ import { useSearchParams } from "next/navigation";
 
 import type { UserRole } from "@/lib/auth/roles";
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
+import {
+  ACTIVE_CAP_MESSAGE,
+  MAX_ACTIVE_APPOINTMENTS_PER_PATIENT,
+  isSlotBookableByPatient,
+} from "@/lib/appointments/booking-limits";
 
 type Professional = {
   id: string;
@@ -26,9 +31,13 @@ type Service = {
 
 interface NewAppointmentFormProps {
   role: UserRole;
+  /** Active future appointments the patient already holds (only relevant for PACIENTE). */
+  activeAppointmentsCount?: number;
 }
 
-export function NewAppointmentForm({ role }: NewAppointmentFormProps) {
+export function NewAppointmentForm({ role, activeAppointmentsCount = 0 }: NewAppointmentFormProps) {
+  const isPatient = role === "PACIENTE";
+  const atActiveCap = isPatient && activeAppointmentsCount >= MAX_ACTIVE_APPOINTMENTS_PER_PATIENT;
   const searchParams = useSearchParams();
   const preselectedProfessionalId = searchParams.get("professionalId") ?? "";
 
@@ -95,11 +104,12 @@ export function NewAppointmentForm({ role }: NewAppointmentFormProps) {
     void fetchWithRetry(`/api/slots?${params.toString()}`)
       .then((res) => res.json())
       .then((payload) => {
-        const nextSlots = payload.slots ?? [];
-        setSlots(nextSlots);
+        const nextSlots: TimeSlot[] = payload.slots ?? [];
+        // Patients cannot book inside the lead time window (the API filters too).
+        setSlots(isPatient ? nextSlots.filter((slot) => isSlotBookableByPatient(slot.startAt)) : nextSlots);
       })
       .catch(() => setSlots([]));
-  }, [serviceId, selectedDate]);
+  }, [serviceId, selectedDate, isPatient]);
 
   const serviceProfessionals = useMemo(() => {
     const uniqueIds = new Set(slots.map((slot) => slot.professional.id));
@@ -260,7 +270,13 @@ export function NewAppointmentForm({ role }: NewAppointmentFormProps) {
         <p className="text-sm font-semibold text-brand-teal">{status}</p>
       ) : null}
 
-      <button type="submit" className="btn-primary">
+      {atActiveCap ? (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+          {ACTIVE_CAP_MESSAGE}
+        </div>
+      ) : null}
+
+      <button type="submit" className="btn-primary disabled:cursor-not-allowed disabled:opacity-60" disabled={atActiveCap}>
         Confirmar turno
       </button>
     </form>

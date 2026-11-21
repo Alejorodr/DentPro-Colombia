@@ -11,6 +11,11 @@ import { getRequestId } from "@/app/api/_utils/request";
 import { logger } from "@/lib/logger";
 import { requireRole, requireSession } from "@/lib/authz";
 import { assertSlotBookable } from "@/lib/scheduling/effective-availability";
+import {
+  BookingLimitError,
+  assertPatientBookingCapInTransaction,
+  checkSlotLeadTime,
+} from "@/lib/appointments/booking-limits";
 import * as Sentry from "@sentry/nextjs";
 
 const basicUserSelect = {
@@ -113,6 +118,12 @@ export async function POST(request: Request) {
     if (!timeSlot) {
       return errorResponse("Slot no encontrado.", 404);
     }
+
+    const leadTimeViolation = checkSlotLeadTime(timeSlot.startAt, sessionResult.user.role);
+    if (leadTimeViolation) {
+      return errorResponse(leadTimeViolation.message, leadTimeViolation.status);
+    }
+
     const availabilityCheck = await assertSlotBookable({
       slotId: timeSlot.id,
       serviceId: service.id,
@@ -123,6 +134,8 @@ export async function POST(request: Request) {
     }
 
     const appointment = await prisma.$transaction(async (tx) => {
+      await assertPatientBookingCapInTransaction(tx, patient.id);
+
       const updatedSlot = await tx.timeSlot.updateMany({
         where: { id: timeSlot.id, status: TimeSlotStatus.AVAILABLE },
         data: { status: TimeSlotStatus.BOOKED },
@@ -190,6 +203,16 @@ export async function POST(request: Request) {
 
     return NextResponse.json(appointment, { status: 201 });
   } catch (error) {
+    if (error instanceof BookingLimitError) {
+      logger.warn({
+        event: "client.appointment.limit_reached",
+        route: "/api/client/appointments",
+        requestId,
+        userId: sessionResult.user.id,
+        status: error.status,
+      });
+      return errorResponse(error.message, error.status);
+    }
     if (isDatabaseUnavailableError(error)) {
       return serviceUnavailableResponse("Base de datos temporalmente no disponible.", error.retryAfterMs);
     }

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { AppointmentStatus as PrismaAppointmentStatus, TimeSlotStatus } from "@prisma/client";
 
 import { requireRole, requireSession } from "@/lib/authz";
 import { getPrismaClient } from "@/lib/prisma";
@@ -13,7 +14,7 @@ const transitionRules: Record<AppointmentStatus, AppointmentStatus[]> = {
   cancelled: [],
 };
 
-export async function PATCH(request: Request, context: any) {
+export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
   const sessionResult = await requireSession();
   if ("error" in sessionResult) {
     return errorResponse(sessionResult.error.message, sessionResult.error.status);
@@ -26,7 +27,7 @@ export async function PATCH(request: Request, context: any) {
 
   const prisma = getPrismaClient();
 
-  const { params } = context as { params?: { id?: string } };
+  const params = await context.params;
   const appointmentId = params?.id;
   if (!appointmentId) {
     return buildError("Debes especificar una cita válida.");
@@ -70,13 +71,27 @@ export async function PATCH(request: Request, context: any) {
   }
 
   try {
-    const updated = await prisma.appointment.update({
-      where: { id: appointmentId },
-      data: { status: toPrismaStatus(nextStatus) },
-      include: {
-        patient: { include: { user: { select: { name: true, lastName: true } } } },
-        professional: { include: { user: { select: { name: true, lastName: true } } } },
-      },
+    const prismaNextStatus = toPrismaStatus(nextStatus);
+    const updated = await prisma.$transaction(async (tx) => {
+      const result = await tx.appointment.update({
+        where: { id: appointmentId },
+        data: { status: prismaNextStatus },
+        include: {
+          patient: { include: { user: { select: { name: true, lastName: true } } } },
+          professional: { include: { user: { select: { name: true, lastName: true } } } },
+        },
+      });
+
+      // Cancelling releases the slot so it can be booked again (the partial unique index
+      // only counts non-cancelled appointments). Transitions out of CANCELLED are not allowed.
+      if (prismaNextStatus === PrismaAppointmentStatus.CANCELLED && result.timeSlotId) {
+        await tx.timeSlot.updateMany({
+          where: { id: result.timeSlotId, status: TimeSlotStatus.BOOKED },
+          data: { status: TimeSlotStatus.AVAILABLE },
+        });
+      }
+
+      return result;
     });
 
     const patientName = updated.patient?.user

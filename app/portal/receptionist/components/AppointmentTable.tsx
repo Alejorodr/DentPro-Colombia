@@ -78,7 +78,8 @@ export function AppointmentTable({ appointments, page, totalPages, onPageChange,
       setFeedback("Estado actualizado correctamente.");
       onRefresh();
     } else {
-      setFeedback("No se pudo actualizar el estado. Intenta nuevamente.");
+      const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+      setFeedback(payload?.error ?? "No se pudo actualizar el estado. Intenta nuevamente.");
     }
 
     setBusyId(null);
@@ -224,6 +225,9 @@ export function AppointmentTable({ appointments, page, totalPages, onPageChange,
                         <button type="button" className="inline-flex items-center gap-1 rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold uppercase text-slate-600" onClick={() => setEventsAppointmentId(appointment.id)}>
                           <Eye size={14} />Ver historial
                         </button>
+                        {/* Cancelled appointments are terminal: the API rejects reschedule/status changes (409). */}
+                        {appointment.status !== AppointmentStatus.CANCELLED ? (
+                        <>
                         <button type="button" className="inline-flex items-center gap-1 rounded-full border border-brand-teal bg-brand-teal/10 px-3 py-1 text-xs font-semibold uppercase text-brand-teal ring-1 ring-brand-teal/20" onClick={() => setRescheduleId(appointment.id)} disabled={busyId === appointment.id}>
                           <PencilSimple size={14} />Reprogramar
                         </button>
@@ -242,6 +246,8 @@ export function AppointmentTable({ appointments, page, totalPages, onPageChange,
                         <button type="button" className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-semibold uppercase disabled:opacity-50 ${STATUS_COLORS.CANCELLED.border} ${STATUS_COLORS.CANCELLED.text}`} onClick={() => setCancelTarget(appointment.id)} disabled={busyId === appointment.id || ([AppointmentStatus.CANCELLED, AppointmentStatus.NO_SHOW] as AppointmentStatus[]).includes(appointment.status)}>
                           <XCircle size={14} />Cancelar
                         </button>
+                        </>
+                        ) : null}
                       </div>
                     </td>
                   </tr>

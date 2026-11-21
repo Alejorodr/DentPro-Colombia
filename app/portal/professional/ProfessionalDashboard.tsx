@@ -325,7 +325,8 @@ export function ProfessionalDashboard() {
     setIsSaving(true);
     try {
       await persistNotes();
-      if (markCompleted) {
+      // Cancelled appointments are terminal: the API rejects status changes (409).
+      if (markCompleted && appointmentDetail?.appointment.status !== AppointmentStatus.CANCELLED) {
         await fetchWithTimeout(`/api/appointments/${selectedAppointmentId}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
@@ -824,15 +825,17 @@ export function ProfessionalDashboard() {
           </div>
 
           <div className="rounded-3xl border border-slate-200 bg-white/80 p-4 shadow-xs dark:border-surface-muted/60 dark:bg-surface-muted/60">
-            <label className="flex items-center gap-3 text-xs text-slate-500">
-              <input
-                type="checkbox"
-                checked={markCompleted}
-                onChange={(event) => setMarkCompleted(event.target.checked)}
-                className="h-4 w-4 rounded border-slate-300 text-brand-indigo focus:ring-brand-indigo"
-              />
-              Marcar cita como completada
-            </label>
+            {appointmentDetail?.appointment.status !== AppointmentStatus.CANCELLED ? (
+              <label className="flex items-center gap-3 text-xs text-slate-500">
+                <input
+                  type="checkbox"
+                  checked={markCompleted}
+                  onChange={(event) => setMarkCompleted(event.target.checked)}
+                  className="h-4 w-4 rounded border-slate-300 text-brand-indigo focus:ring-brand-indigo"
+                />
+                Marcar cita como completada
+              </label>
+            ) : null}
             <button
               type="button"
               onClick={handleSaveToHistory}
