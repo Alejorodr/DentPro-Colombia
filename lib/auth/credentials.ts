@@ -1,6 +1,17 @@
+import { createHash } from "node:crypto";
+
+import { checkIdentifierRateLimit } from "@/app/api/_utils/ratelimit";
 import { getDefaultDashboardPath, isUserRole } from "@/lib/auth/roles";
 import { authenticateUser, findUserByEmail } from "@/lib/auth/users";
 import { logger } from "@/lib/logger";
+
+// Límite por cuenta, además del límite por IP de proxy.ts: frena la fuerza bruta distribuida
+// contra un mismo correo. El correo se guarda como hash para no dejar PII en Redis.
+const LOGIN_ACCOUNT_RATE_LIMIT = { limit: 10, window: "15 m", windowMs: 15 * 60 * 1000 } as const;
+
+function accountKey(email: string) {
+  return createHash("sha256").update(email).digest("hex").slice(0, 32);
+}
 
 type CredentialsInput = {
   email?: string;
@@ -77,6 +88,12 @@ export async function authorizeCredentials(credentials?: CredentialsInput) {
     if (!databaseUrl) {
       return null;
     }
+  }
+
+  const accountLimit = await checkIdentifierRateLimit("auth:login", accountKey(email), LOGIN_ACCOUNT_RATE_LIMIT);
+  if (!accountLimit.allowed) {
+    logger.warn({ event: "auth.credentials.rate_limited", reason: accountLimit.reason });
+    return null;
   }
 
   const user = await authenticateUser(email, password);

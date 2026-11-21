@@ -1,10 +1,17 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 
-import { getInferredAuthBaseUrl, getSessionCookieName, isLocalE2EAuthRuntime } from "@/lib/auth/runtime";
+import {
+  getInferredAuthBaseUrl,
+  getRuntimeStage,
+  getSessionCookieName,
+  isLocalE2EAuthRuntime,
+  isProductionRuntime,
+} from "@/lib/auth/runtime";
 import { getDefaultDashboardPath, isUserRole, roleFromSlug, type UserRole } from "@/lib/auth/roles";
 import { errorResponse } from "@/app/api/_utils/response";
 import { checkMemoryRateLimit } from "@/lib/rateLimit";
+import { NONCE_HEADER, buildContentSecurityPolicy, generateNonce } from "@/lib/security/csp";
 
 const RATE_LIMIT_WINDOW_SECONDS = 60;
 const RATE_LIMIT_MAX_REQUESTS = 10;
@@ -21,9 +28,41 @@ function resolveRequestId(request: NextRequest) {
   return Math.random().toString(16).slice(2);
 }
 
-function withRequestId(response: NextResponse, requestId: string) {
+type CspHeader = { name: string; value: string } | null;
+
+function withRequestId(response: NextResponse, requestId: string, csp: CspHeader = null) {
   response.headers.set("x-request-id", requestId);
+  if (csp) {
+    response.headers.set(csp.name, csp.value);
+  }
   return response;
+}
+
+// Paths the original auth matcher covered. Everything else reaches the proxy
+// only so it can receive the per-request CSP nonce (H2) and must skip the
+// session/role logic below, exactly as before the matcher was widened.
+function isAuthScopedPath(pathname: string): boolean {
+  return (
+    matchesPrefix(pathname, "/portal") ||
+    matchesPrefix(pathname, "/api") ||
+    pathname === "/auth/login" ||
+    pathname === "/login"
+  );
+}
+
+// HTML-rendering paths get a nonce CSP. API routes return JSON/files and keep
+// only the static security headers from next.config.ts.
+function buildRequestCsp(pathname: string, requestHeaders: Headers): CspHeader {
+  if (matchesPrefix(pathname, "/api")) return null;
+  const nonce = generateNonce();
+  const isDev = process.env.NODE_ENV !== "production";
+  const value = buildContentSecurityPolicy(nonce, isDev);
+  // Next.js extracts the nonce from this request header during SSR and
+  // applies it to its framework scripts; x-nonce is for our own <Script>s.
+  requestHeaders.set(NONCE_HEADER, nonce);
+  requestHeaders.set("Content-Security-Policy", value);
+  // Dev keeps report-only (as before) so HMR/devtools never get blocked.
+  return { name: isDev ? "Content-Security-Policy-Report-Only" : "Content-Security-Policy", value };
 }
 
 function resolveRole(token: { role?: string; invalidated?: boolean } | null): UserRole | null {
@@ -47,14 +86,49 @@ function matchesPrefix(pathname: string, prefix: string): boolean {
   return pathname === prefix || pathname.startsWith(`${prefix}/`);
 }
 
+function resolveClientIp(request: NextRequest): string {
+  // En Vercel la plataforma fija estas cabeceras; x-forwarded-for puede venir del cliente.
+  if (process.env.VERCEL === "1") {
+    return (
+      request.headers.get("x-vercel-forwarded-for")?.split(",")[0]?.trim() ||
+      request.headers.get("x-real-ip")?.trim() ||
+      "unknown"
+    );
+  }
+  return (
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    request.headers.get("x-real-ip")?.trim() ||
+    "unknown"
+  );
+}
+
+/**
+ * Los POST de /api/auth/* (login con credenciales, etc.) fallan cerrados en producción si
+ * Upstash no está disponible: un limitador en memoria por instancia no frena fuerza bruta en
+ * serverless. Los GET (session, csrf, providers) conservan el respaldo en memoria para no
+ * romper la navegación. CI/E2E corre un build de producción sin Upstash a propósito.
+ */
+function shouldFailClosed(request: NextRequest): boolean {
+  return request.method === "POST" && isProductionRuntime() && getRuntimeStage() !== "ci-e2e";
+}
+
+function failClosedResponse(reason: string) {
+  if (!warnedAuthRateLimitFallback) {
+    console.error(`[ratelimit] Proxy auth rate limit unavailable (${reason}); failing closed.`);
+    warnedAuthRateLimitFallback = true;
+  }
+  return NextResponse.json(
+    { error: "Servicio temporalmente no disponible. Intenta más tarde." },
+    { status: 503, headers: { "Retry-After": "60" } },
+  );
+}
+
 export async function applyAuthRateLimit(request: NextRequest): Promise<NextResponse | null> {
   if (!request.nextUrl.pathname.startsWith("/api/auth/")) return null;
 
+  const ip = resolveClientIp(request);
+
   const fallback = () => {
-    const ip =
-      request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-      request.headers.get("x-real-ip") ??
-      "unknown";
     const result = checkMemoryRateLimit({
       key: `proxy:auth:${ip}`,
       limit: RATE_LIMIT_MAX_REQUESTS,
@@ -72,6 +146,7 @@ export async function applyAuthRateLimit(request: NextRequest): Promise<NextResp
   const upstashToken = process.env.UPSTASH_REDIS_REST_TOKEN;
 
   if (!upstashUrl || !upstashToken) {
+    if (shouldFailClosed(request)) return failClosedResponse("missing_config");
     if (!warnedAuthRateLimitFallback) {
       console.warn("[ratelimit] Proxy Upstash config missing; using conservative in-memory fallback.");
       warnedAuthRateLimitFallback = true;
@@ -79,12 +154,7 @@ export async function applyAuthRateLimit(request: NextRequest): Promise<NextResp
     return fallback();
   }
 
-  const ip =
-    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-    request.headers.get("x-real-ip") ??
-    "unknown";
-
-  const key = `rl:auth:${ip}`;
+  const key = `rl:auth:${encodeURIComponent(ip)}`;
 
   try {
     const incrRes = await fetch(`${upstashUrl}/incr/${key}`, {
@@ -100,9 +170,13 @@ export async function applyAuthRateLimit(request: NextRequest): Promise<NextResp
     }
 
     if (count > RATE_LIMIT_MAX_REQUESTS) {
-      return new NextResponse("Too many requests", { status: 429 });
+      return new NextResponse("Too many requests", {
+        status: 429,
+        headers: { "Retry-After": RATE_LIMIT_WINDOW_SECONDS.toString() },
+      });
     }
   } catch (error) {
+    if (shouldFailClosed(request)) return failClosedResponse("upstash_error");
     if (!warnedAuthRateLimitFallback) {
       console.warn(
         "[ratelimit] Proxy Upstash unavailable; using conservative in-memory fallback.",
@@ -121,6 +195,12 @@ export default async function proxy(request: NextRequest) {
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-request-id", requestId);
   const { pathname } = request.nextUrl;
+  const csp = buildRequestCsp(pathname, requestHeaders);
+
+  if (!isAuthScopedPath(pathname)) {
+    return withRequestId(NextResponse.next({ request: { headers: requestHeaders } }), requestId, csp);
+  }
+
   const host = request.headers.get("host") ?? "";
   const isLocalhost = host.startsWith("localhost") || host.startsWith("127.0.0.1");
   const secret = process.env.AUTH_JWT_SECRET ?? process.env.NEXTAUTH_SECRET ?? process.env.AUTH_SECRET;
@@ -146,7 +226,10 @@ export default async function proxy(request: NextRequest) {
     (allowE2EBypass || !isProductionEnv) &&
     process.env.TEST_AUTH_BYPASS === "1" &&
     isLocalhost &&
-    testRoleCookie.length > 0;
+    testRoleCookie.length > 0 &&
+    // Never honour the test-role cookie on Vercel, whatever the other env flags say.
+    process.env.VERCEL !== "1" &&
+    !process.env.VERCEL_ENV;
 
   if (!role && bypassEnabled) {
     const testRole = testRoleCookie || "ADMINISTRADOR";
@@ -161,11 +244,11 @@ export default async function proxy(request: NextRequest) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = getDefaultDashboardPath(role);
     redirectUrl.search = "";
-    return withRequestId(NextResponse.redirect(redirectUrl), requestId);
+    return withRequestId(NextResponse.redirect(redirectUrl), requestId, csp);
   }
 
   const rateLimitResponse = await applyAuthRateLimit(request);
-  if (rateLimitResponse) return withRequestId(rateLimitResponse, requestId);
+  if (rateLimitResponse) return withRequestId(rateLimitResponse, requestId, csp);
 
   // Backstop only — every app/api/**/route.ts under these prefixes already
   // calls requireSession()/requireRole() itself. This just adds a cheap,
@@ -178,10 +261,10 @@ export default async function proxy(request: NextRequest) {
 
   if (isAdminApiRoute || isClinicalApiRoute) {
     if (!role) {
-      return withRequestId(errorResponse("No autorizado.", 401), requestId);
+      return withRequestId(errorResponse("No autorizado.", 401), requestId, csp);
     }
     if (isAdminApiRoute && role !== "ADMINISTRADOR") {
-      return withRequestId(errorResponse("No autorizado.", 403), requestId);
+      return withRequestId(errorResponse("No autorizado.", 403), requestId, csp);
     }
   }
 
@@ -189,7 +272,7 @@ export default async function proxy(request: NextRequest) {
     const response = NextResponse.next({
       request: { headers: requestHeaders },
     });
-    return withRequestId(response, requestId);
+    return withRequestId(response, requestId, csp);
   }
 
   if (!role) {
@@ -197,13 +280,13 @@ export default async function proxy(request: NextRequest) {
     redirectUrl.pathname = "/auth/login";
     const callbackPath = `${pathname}${request.nextUrl.search}`;
     redirectUrl.searchParams.set("callbackUrl", callbackPath);
-    return withRequestId(NextResponse.redirect(redirectUrl), requestId);
+    return withRequestId(NextResponse.redirect(redirectUrl), requestId, csp);
   }
 
   const PORTAL_SHARED_PATHS = ["/portal/change-password"];
   if (PORTAL_SHARED_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/"))) {
     const response = NextResponse.next({ request: { headers: requestHeaders } });
-    return withRequestId(response, requestId);
+    return withRequestId(response, requestId, csp);
   }
 
   const segments = pathname.split("/").filter(Boolean);
@@ -214,7 +297,7 @@ export default async function proxy(request: NextRequest) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = getDefaultDashboardPath(role);
     redirectUrl.search = "";
-    return withRequestId(NextResponse.redirect(redirectUrl), requestId);
+    return withRequestId(NextResponse.redirect(redirectUrl), requestId, csp);
   }
 
   const allowAdminReceptionist = role === "ADMINISTRADOR" && requestedRole === "RECEPCIONISTA";
@@ -223,15 +306,31 @@ export default async function proxy(request: NextRequest) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = getDefaultDashboardPath(role);
     redirectUrl.search = "";
-    return withRequestId(NextResponse.redirect(redirectUrl), requestId);
+    return withRequestId(NextResponse.redirect(redirectUrl), requestId, csp);
   }
 
   const response = NextResponse.next({
     request: { headers: requestHeaders },
   });
-  return withRequestId(response, requestId);
+  return withRequestId(response, requestId, csp);
 }
 
 export const config = {
-  matcher: ["/portal/:path*", "/auth/login", "/login", "/api/:path*"],
+  matcher: [
+    "/portal/:path*",
+    "/auth/login",
+    "/login",
+    "/api/:path*",
+    // Every other HTML page, so it receives the per-request CSP nonce (H2).
+    // Skips Next internals, public files with an extension, and router
+    // prefetches (RSC payloads, not HTML documents).
+    {
+      source:
+        "/((?!api|_next/static|_next/image|_vercel|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|avif|ico|txt|xml|webmanifest|json|js|css|map|woff|woff2)$).*)",
+      missing: [
+        { type: "header", key: "next-router-prefetch" },
+        { type: "header", key: "purpose", value: "prefetch" },
+      ],
+    },
+  ],
 };

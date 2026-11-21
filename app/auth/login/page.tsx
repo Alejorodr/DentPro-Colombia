@@ -45,6 +45,7 @@ export default async function AuthLoginPage(props: any) {
     InvalidEmail: "Debes ingresar un correo válido.",
     SessionRequired: "Tu sesión expiró. Vuelve a iniciar sesión.",
     AccessDenied: "No tienes permisos para acceder a este recurso.",
+    OAuthAccountNotLinked: "Ese correo ya tiene una cuenta con contraseña. Inicia sesión con tu correo y contraseña.",
   };
   const loginErrorMessage = errorParam ? errorMessages[errorParam] ?? "No pudimos iniciar sesión." : null;
   const callbackUrlRaw = searchParams?.callbackUrl;

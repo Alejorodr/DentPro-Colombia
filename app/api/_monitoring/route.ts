@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 
+import { safeEqual } from "@/lib/security/safe-compare";
+
 function hasMonitoringTestAccess(request: Request) {
   const expectedToken = process.env.MONITORING_TEST_TOKEN?.trim();
   const suppliedToken = request.headers.get("x-monitoring-test-token")?.trim();
-  return Boolean(expectedToken && suppliedToken && suppliedToken === expectedToken);
+  return safeEqual(suppliedToken, expectedToken);
 }
 
 export async function GET(request: Request) {

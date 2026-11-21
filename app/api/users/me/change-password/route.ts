@@ -8,6 +8,7 @@ import { parseJson } from "@/app/api/_utils/validation";
 import { requireSession } from "@/lib/authz";
 import { PASSWORD_POLICY_MESSAGE, PASSWORD_POLICY_REGEX } from "@/lib/auth/password-policy";
 import { logAuditEvent } from "@/lib/audit";
+import { enforceRateLimit } from "@/app/api/_utils/ratelimit";
 
 const changePasswordSchema = z.object({
   currentPassword: z.string().min(1, "La contraseña actual es requerida."),
@@ -19,6 +20,14 @@ export async function POST(request: Request) {
   if ("error" in sessionResult) {
     return errorResponse(sessionResult.error.message, sessionResult.error.status);
   }
+
+  // Por usuario: frena la adivinación de la contraseña actual con una sesión robada.
+  const rateLimited = await enforceRateLimit(request, `auth:change-password:${sessionResult.user.id}`, {
+    limit: 5,
+    window: "15 m",
+    windowMs: 15 * 60 * 1000,
+  });
+  if (rateLimited) return rateLimited;
 
   const { data: payload, error } = await parseJson(request, changePasswordSchema);
   if (error) return error;

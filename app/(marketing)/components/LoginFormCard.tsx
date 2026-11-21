@@ -17,6 +17,7 @@ const errorMessages: Record<string, string> = {
   SessionRequired: "Tu sesión expiró. Inicia sesión nuevamente.",
   OAuthSignin: "No pudimos iniciar sesión con Google. Inténtalo de nuevo.",
   AccessDenied: "Tu cuenta de Google no cumple los requisitos de acceso.",
+  OAuthAccountNotLinked: "Ese correo ya tiene una cuenta con contraseña. Inicia sesión con tu correo y contraseña.",
   Default: "No pudimos procesar tu solicitud. Inténtalo más tarde.",
 };
 

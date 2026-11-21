@@ -41,18 +41,37 @@ export function isValidOpsKey(headerKey: string | null | undefined, opsKey: stri
   return timingSafeEqual(expected, actual);
 }
 
+function firstHeaderValue(request: Request, name: string): string | null {
+  const raw = request.headers.get(name);
+  if (!raw) {
+    return null;
+  }
+  const first = raw.split(",")[0]?.trim();
+  return first ? first : null;
+}
+
 export function getClientIp(request: Request): string {
-  const forwardedFor = request.headers.get("x-forwarded-for");
-  if (forwardedFor) {
-    return forwardedFor.split(",")[0]?.trim() ?? "unknown";
+  if (process.env.VERCEL === "1") {
+    // En Vercel, `x-vercel-forwarded-for` y `x-real-ip` los fija el edge de Vercel
+    // y el cliente no puede falsificarlos. `x-forwarded-for` no se consulta aquí.
+    return firstHeaderValue(request, "x-vercel-forwarded-for") ?? firstHeaderValue(request, "x-real-ip") ?? "unknown";
   }
 
-  const realIp = request.headers.get("x-real-ip");
+  const realIp = firstHeaderValue(request, "x-real-ip");
   if (realIp) {
-    return realIp.trim();
+    return realIp;
   }
 
-  return request.headers.get("cf-connecting-ip")?.trim() || "unknown";
+  // Fuera de Vercel, `x-forwarded-for` (y `x-real-ip`) solo son confiables si la app
+  // corre detrás de un reverse proxy que SOBRESCRIBE estos headers con la IP real del
+  // cliente. Un self-hosting expuesto directamente permite falsificarlos y saltarse la
+  // allowlist. Tomar el último hop tampoco es fiable sin conocer la cadena de proxies.
+  const forwardedFor = firstHeaderValue(request, "x-forwarded-for");
+  if (forwardedFor) {
+    return forwardedFor;
+  }
+
+  return firstHeaderValue(request, "cf-connecting-ip") ?? "unknown";
 }
 
 export function getOpsIpAllowlist(): string[] {
@@ -63,10 +82,32 @@ export function getOpsIpAllowlist(): string[] {
     .filter(Boolean);
 }
 
+function isProductionOpsRuntime(): boolean {
+  return process.env.NODE_ENV === "production" || process.env.VERCEL_ENV === "production";
+}
+
+/**
+ * Una allowlist vacía solo se tolera en E2E local/CI: `next start` corre con
+ * NODE_ENV=production, así que se permite cuando RUN_E2E=1 y NO es un runtime de Vercel.
+ */
+function canUseEmptyAllowlistForE2E(): boolean {
+  return process.env.RUN_E2E === "1" && process.env.VERCEL !== "1" && !process.env.VERCEL_ENV;
+}
+
+/**
+ * Allowlist de IPs para rutas ops.
+ * - Producción (NODE_ENV=production o VERCEL_ENV=production): allowlist vacía => DENEGAR
+ *   (fail-closed), salvo E2E fuera de Vercel (ver `canUseEmptyAllowlistForE2E`).
+ * - Development/test: allowlist vacía => permitir.
+ * - Con allowlist definida: solo IPs listadas, en cualquier entorno.
+ */
 export function isOpsIpAllowed(request: Request): boolean {
   const allowlist = getOpsIpAllowlist();
   if (allowlist.length === 0) {
-    return true;
+    if (!isProductionOpsRuntime()) {
+      return true;
+    }
+    return canUseEmptyAllowlistForE2E();
   }
   const clientIp = getClientIp(request);
   return allowlist.includes(clientIp);

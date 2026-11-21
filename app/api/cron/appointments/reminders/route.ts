@@ -5,6 +5,7 @@ import { sendAppointmentEmail } from "@/lib/notifications/email";
 import { logger } from "@/lib/logger";
 import { REMINDABLE_APPOINTMENT_STATUSES } from "@/lib/appointments/status";
 import { getRequestId } from "@/app/api/_utils/request";
+import { safeEqual } from "@/lib/security/safe-compare";
 
 function isAuthorizedCron(request: Request): boolean {
   const secret = process.env.CRON_SECRET?.trim();
@@ -13,13 +14,14 @@ function isAuthorizedCron(request: Request): boolean {
     return !isProtectedEnvironment;
   }
 
+  const BEARER_PREFIX = "Bearer ";
   const header = request.headers.get("authorization")?.trim();
-  if (header?.startsWith("Bearer ")) {
-    return header.replace("Bearer ", "") === secret;
+  if (header?.startsWith(BEARER_PREFIX)) {
+    return safeEqual(header.slice(BEARER_PREFIX.length), secret);
   }
 
   const cronKey = request.headers.get("x-cron-key")?.trim();
-  return cronKey === secret;
+  return safeEqual(cronKey, secret);
 }
 
 export async function GET(request: Request) {
