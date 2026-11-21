@@ -71,7 +71,7 @@ describe("rate limit fail-closed for sensitive buckets", () => {
 
   it("returns 503 for sensitive buckets when Upstash errors in production", async () => {
     const limit = vi.fn().mockRejectedValue(new Error("upstash timeout"));
-    vi.doMock("@upstash/redis", () => ({ Redis: { fromEnv: vi.fn(() => ({})) } }));
+    vi.doMock("@upstash/redis", () => ({ Redis: class { static fromEnv() { return {}; } } }));
     vi.doMock("@upstash/ratelimit", () => ({
       Ratelimit: class {
         static fixedWindow() {

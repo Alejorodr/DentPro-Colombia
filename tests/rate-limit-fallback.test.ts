@@ -25,7 +25,7 @@ describe("rate limit production fallback", () => {
 
   it("falls back when the configured Upstash limiter throws", async () => {
     const limit = vi.fn().mockRejectedValue(new Error("upstash timeout"));
-    vi.doMock("@upstash/redis", () => ({ Redis: { fromEnv: vi.fn(() => ({})) } }));
+    vi.doMock("@upstash/redis", () => ({ Redis: class { static fromEnv() { return {}; } } }));
     vi.doMock("@upstash/ratelimit", () => ({
       Ratelimit: class {
         static fixedWindow() { return {}; }

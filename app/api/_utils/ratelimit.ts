@@ -6,6 +6,7 @@ import { Redis } from "@upstash/redis";
 import { checkMemoryRateLimit } from "@/lib/rateLimit";
 import { getRuntimeStage, isProductionRuntime } from "@/lib/auth/runtime";
 import { logger } from "@/lib/logger";
+import { getUpstashRestConfig } from "@/lib/security/upstash-config";
 
 export type RateLimitConfig = {
   limit: number;
@@ -43,11 +44,9 @@ let warnedMissingUpstashConfig = false;
 let warnedUpstashFailure = false;
 let reportedFailClosed = false;
 
-const hasUpstashConfig = Boolean(
-  process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN,
-);
+const upstashConfig = getUpstashRestConfig();
 
-const redis = hasUpstashConfig ? Redis.fromEnv() : null;
+const redis = upstashConfig ? new Redis({ url: upstashConfig.url, token: upstashConfig.token }) : null;
 
 function firstHeaderValue(request: Request, name: string): string | null {
   const value = request.headers.get(name)?.split(",")[0]?.trim();

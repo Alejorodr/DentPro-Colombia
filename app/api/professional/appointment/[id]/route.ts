@@ -1,3 +1,4 @@
+import { sanitizeAttachmentLinks } from "@/lib/security/attachment-url";
 import { NextResponse } from "next/server";
 
 import { errorResponse } from "@/app/api/_utils/response";
@@ -67,7 +68,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
         },
       },
       attachments: {
-        select: { id: true, kind: true, filename: true, url: true, dataUrl: true, createdAt: true },
+        select: { id: true, kind: true, filename: true, mimeType: true, url: true, dataUrl: true, createdAt: true },
         orderBy: { createdAt: "desc" },
       },
     },
@@ -141,8 +142,8 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
       id: attachment.id,
       kind: attachment.kind,
       filename: attachment.filename,
-      url: attachment.url,
-      dataUrl: attachment.dataUrl,
+      url: sanitizeAttachmentLinks(attachment).url,
+      dataUrl: sanitizeAttachmentLinks(attachment).dataUrl,
       createdAt: attachment.createdAt.toISOString(),
     })),
     history: history.map((historyItem) => ({

@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { z } from "zod";
 
 import { getPrismaClient } from "@/lib/prisma";
@@ -55,8 +55,23 @@ export async function POST(request: Request) {
   }
 
   const email = normalizeEmail(emailRaw);
-  const prisma = getPrismaClient();
+  // Toda la búsqueda, el token y el envío del correo corren después de responder, para que
+  // el tiempo de respuesta no revele si el correo existe (antes era más lento cuando sí).
+  after(() => issuePasswordReset(email, requestId));
 
+  logger.info({
+    event: "auth.forgot_password.success",
+    route: "/api/auth/forgot-password",
+    requestId,
+    status: 200,
+    durationMs: Date.now() - startedAt,
+  });
+  return NextResponse.json({ message: GENERIC_MESSAGE }, { status: 200 });
+}
+
+async function issuePasswordReset(email: string, requestId: string) {
+  const startedAt = Date.now();
+  const prisma = getPrismaClient();
   try {
     const user = await prisma.user.findUnique({
       where: { email },
@@ -100,13 +115,4 @@ export async function POST(request: Request) {
       error,
     });
   }
-
-  logger.info({
-    event: "auth.forgot_password.success",
-    route: "/api/auth/forgot-password",
-    requestId,
-    status: 200,
-    durationMs: Date.now() - startedAt,
-  });
-  return NextResponse.json({ message: GENERIC_MESSAGE }, { status: 200 });
 }
