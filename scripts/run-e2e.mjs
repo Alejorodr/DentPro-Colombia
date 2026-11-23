@@ -43,8 +43,11 @@ if (!existsSync(defaultBrowserPath)) {
 
 const suite = process.env.E2E_SUITE ?? "full";
 const childEnv = { ...process.env };
-loadEnv({ path: ".env", processEnv: childEnv, quiet: true });
-loadEnv({ path: ".env.local", processEnv: childEnv, override: true, quiet: true });
+// e2e-local.mjs pasa E2E_SKIP_ENV_FILES=1 para no heredar credenciales reales de .env.local.
+if (process.env.E2E_SKIP_ENV_FILES !== "1") {
+  loadEnv({ path: ".env", processEnv: childEnv, quiet: true });
+  loadEnv({ path: ".env.local", processEnv: childEnv, override: true, quiet: true });
+}
 Object.assign(childEnv, process.env);
 
 const e2eEnvDefaults = {
@@ -85,7 +88,10 @@ console.log(
 );
 
 const grep = suite === "smoke" ? "--grep @smoke" : "";
-const workers = suite === "smoke" ? "--workers=1" : "";
+// E2E_WORKERS permite igualar el paralelismo del runner de CI (2 workers): todos los logins
+// salen de la misma IP y el limitador en memoria corta si hay demasiados en paralelo.
+const workers =
+  suite === "smoke" ? "--workers=1" : process.env.E2E_WORKERS ? `--workers=${process.env.E2E_WORKERS}` : "";
 
 if (suite === "smoke") {
   console.log("[run-e2e] smoke suite = home + auth + receptionist critical path + minimal clinical flow");
@@ -152,4 +158,6 @@ const run = (command) =>
     });
   });
 
-await run(`pnpm exec playwright test ${grep} ${workers}`.trim());
+// E2E_ARGS: specs o flags extra de Playwright (p. ej. "e2e/client-portal.spec.ts --repeat-each=3").
+const extraArgs = process.env.E2E_ARGS ?? "";
+await run(`pnpm exec playwright test ${grep} ${workers} ${extraArgs}`.trim());

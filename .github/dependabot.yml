@@ -1,18 +1,25 @@
 version: 2
+# Flujo de releases: develop acumula el trabajo y main solo recibe releases versionados.
+# Dependabot corre una vez al mes con todo agrupado (un PR por ecosistema); esos PRs se
+# unifican en el siguiente release. Las alertas de seguridad llegan aparte, sin esperar.
 updates:
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 5
+      interval: "monthly"
+    open-pull-requests-limit: 2
     commit-message:
       prefix: "chore(ci)"
+    groups:
+      github-actions:
+        patterns:
+          - "*"
 
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 5
+      interval: "monthly"
+    open-pull-requests-limit: 3
     commit-message:
       prefix: "chore(deps)"
     groups:
@@ -20,3 +27,6 @@ updates:
         update-types:
           - "minor"
           - "patch"
+      major:
+        update-types:
+          - "major"
