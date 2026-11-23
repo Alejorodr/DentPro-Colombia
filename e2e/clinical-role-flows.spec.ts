@@ -1,6 +1,12 @@
 import { expect, test } from "@playwright/test";
 
-import { getVisibleByTestId, openReceptionistSchedule, openRolePortal, prepareRoleContext } from "./utils/fixtures";
+import {
+  getVisibleByTestId,
+  openNotificationsPanel,
+  openReceptionistSchedule,
+  openRolePortal,
+  prepareRoleContext,
+} from "./utils/fixtures";
 import { E2E_TEST_IDS } from "./utils/constants";
 
 const isEnabled = process.env.RUN_E2E === "1";
@@ -26,8 +32,7 @@ test.describe("Clinical cross-role flows", () => {
     await prepareRoleContext({ request, context, role: "RECEPCIONISTA" });
     await openReceptionistSchedule(page);
 
-    await page.getByTestId(E2E_TEST_IDS.receptionistNotificationsButton).click();
-    await expect(page.getByTestId(E2E_TEST_IDS.receptionistNotificationsPanel)).toBeVisible();
+    await openNotificationsPanel(page);
     await expect(page.getByRole("button", { name: /Marcar todas como leídas/i })).toBeVisible();
 
     const loadMore = page.getByRole("button", { name: /Cargar más/i });

@@ -63,6 +63,26 @@ export async function openReceptionistDashboard(page: Page) {
   await expect(page).toHaveURL(/\/portal\/receptionist\/dashboard(?:\?.*)?$/);
 }
 
+/**
+ * Abre el centro de notificaciones tolerando la carrera con la hidratación:
+ * la topbar llega renderizada por SSR y un click antes de que React adjunte
+ * el onClick se pierde. Reintenta el click solo mientras el botón siga cerrado
+ * (aria-expanded !== "true") para no cerrar el panel con un segundo click.
+ */
+export async function openNotificationsPanel(page: Page) {
+  const button = page.getByTestId(E2E_TEST_IDS.receptionistNotificationsButton);
+  const panel = page.getByTestId(E2E_TEST_IDS.receptionistNotificationsPanel);
+
+  await expect(async () => {
+    if ((await button.getAttribute("aria-expanded")) !== "true") {
+      await button.click();
+    }
+    await expect(panel).toBeVisible({ timeout: 2_000 });
+  }).toPass({ timeout: 15_000 });
+
+  return panel;
+}
+
 export async function openReceptionistSchedule(page: Page) {
   await openReceptionistDashboard(page);
   await page.goto(E2E_ROUTES.receptionist.schedule, { waitUntil: "domcontentloaded" });
