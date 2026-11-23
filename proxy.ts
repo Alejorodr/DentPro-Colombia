@@ -23,10 +23,8 @@ function resolveRequestId(request: NextRequest) {
   if (existing) {
     return existing;
   }
-  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
-    return crypto.randomUUID();
-  }
-  return Math.random().toString(16).slice(2);
+  // Web Crypto está disponible en Node 24 y en el runtime de Next; sin fallback a Math.random.
+  return crypto.randomUUID();
 }
 
 type CspHeader = { name: string; value: string } | null;
