@@ -11,6 +11,8 @@ import {
 } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { Pool } from "pg";
+
+import { serializePoolClientQueries } from "../lib/db/serialize-pg-queries";
 import { bootstrapHomepageContent } from "../lib/marketing/homepage";
 
 const databaseUrl = process.env.DATABASE_URL;
@@ -25,9 +27,11 @@ if (process.env.NODE_ENV === "production") {
   }
 }
 
-const pool = new Pool({
-  connectionString: databaseUrl,
-});
+const pool = serializePoolClientQueries(
+  new Pool({
+    connectionString: databaseUrl,
+  }),
+);
 
 const prisma = new PrismaClient({ adapter: new PrismaPg(pool) });
 

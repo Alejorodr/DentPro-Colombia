@@ -47,6 +47,8 @@ const env = {
   APPDATA: process.env.APPDATA,
   LOCALAPPDATA: process.env.LOCALAPPDATA,
   TEMP: process.env.TEMP,
+  // Permite depurar, p. ej. NODE_OPTIONS=--trace-deprecation pnpm e2e:local
+  ...(process.env.NODE_OPTIONS ? { NODE_OPTIONS: process.env.NODE_OPTIONS } : {}),
   TMP: process.env.TMP,
   ComSpec: process.env.ComSpec,
   PLAYWRIGHT_BROWSERS_PATH: process.env.PLAYWRIGHT_BROWSERS_PATH,

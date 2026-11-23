@@ -2,6 +2,8 @@ import { Prisma, PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { Pool } from "pg";
 
+import { serializePoolClientQueries } from "@/lib/db/serialize-pg-queries";
+
 declare global {
   var __prisma: PrismaClient | undefined;
   var __prismaPool: Pool | undefined;
@@ -213,9 +215,11 @@ function makeClient(): PrismaClient {
 
   const pool =
     globalThis.__prismaPool ??
-    new Pool({
-      connectionString: selectedUrl,
-    });
+    serializePoolClientQueries(
+      new Pool({
+        connectionString: selectedUrl,
+      }),
+    );
   const adapter = new PrismaPg(pool);
 
   globalThis.__prismaPool = pool;
