@@ -5,6 +5,19 @@ out/
 .env
 .env.*
 !.env.example
+
+# Credenciales y llaves (DOG-20)
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+id_rsa*
+id_ed25519*
+credentials*.json
+service-account*.json
+*-service-account.json
+.npmrc.local
 *.db
 *.log
 prisma/.cache/
