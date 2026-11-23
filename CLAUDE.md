@@ -89,7 +89,7 @@ design-system/            # Sistema de diseño exportado desde Claude Design
 - **Tú-form siempre**, nunca usted.
 - CTAs = verbos: `Agenda tu cita`, `Ver disponibilidad`, `Reservar turno`.
 - Sin emoji nunca. Sin signos de exclamación excepto en mensajes de éxito (máx 1 por página).
-- Portal: navegación en inglés (`Dashboard`, `Staff Management`), contenido en español.
+- Portal: todo en español, navegación incluida (`Inicio`, `Agenda`, `Pacientes`). Los cuatro roles comparten el shell glassy (`PortalGlassShell`).
 
 ### Moneda y fechas
 - Precios: `Intl.NumberFormat("es-CO", { style: "currency", currency: "COP" })` — sin decimales: `$1.250.000`.
@@ -165,7 +165,7 @@ pnpm e2e:db:down              # bajar el contenedor
 **Añades una pantalla al portal:**
 1. Revisa `design-system/ui_kits/portal/RoleViews.jsx` para el patrón de layout.
 2. Protege la ruta según el rol correspondiente en NextAuth.
-3. Labels de navegación en inglés, contenido de la página en español.
+3. Labels de navegación y contenido en español; la página se monta dentro de `PortalGlassShell`.
 
 **Modificas el marketing site:**
 1. Referencia `design-system/ui_kits/marketing/` para estructura.

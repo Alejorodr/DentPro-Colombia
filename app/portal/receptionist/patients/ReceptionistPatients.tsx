@@ -143,7 +143,7 @@ export function ReceptionistPatients({ canEditEmail = false }: { canEditEmail?: 
     <div className="space-y-6">
       <section className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-brand-teal dark:text-accent-cyan">Patients</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-brand-teal dark:text-accent-cyan">Pacientes</p>
           <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">Gestión de pacientes</h1>
         </div>
         <div className="relative w-full max-w-sm">

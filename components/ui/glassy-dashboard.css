@@ -187,7 +187,7 @@
 
 /* Botón icónico de vidrio (también viste ThemeToggle, notificaciones y WhatsApp). */
 .gd-icon-button,
-.gd-top-actions > :is(button, a),
+.gd-top-actions > :is(button, a):not(.gd-top-cta),
 .gd-top-actions > div > button:first-child {
   inline-size: 44px; block-size: 44px; flex: none; display: inline-grid; place-items: center; padding: 0;
   border-radius: 999px; border: 1px solid var(--gd-line); background: var(--gd-inner); color: var(--gd-strong);
@@ -196,8 +196,25 @@
   cursor: pointer;
 }
 .gd-icon-button:hover,
-.gd-top-actions > :is(button, a):hover,
+.gd-top-actions > :is(button, a):not(.gd-top-cta):hover,
 .gd-top-actions > div > button:first-child:hover { background: var(--gd-raised); }
+
+/* Botón de alternar activo (p. ej. modo privado del profesional). */
+.gd-top-actions > button[aria-pressed="true"] {
+  color: #fff; border-color: transparent;
+  background: linear-gradient(135deg, #0a3d91, #1f6cd3 60%, #4cc3f1);
+}
+.gd-top-actions > button[aria-pressed="true"]:hover { background: linear-gradient(135deg, #0a3d91, #1f6cd3 60%, #4cc3f1); }
+
+/* Acción principal del rol en la barra (p. ej. "Agendar cita"). */
+.gd-top-cta {
+  display: inline-flex; align-items: center; gap: 8px; min-block-size: 44px; padding: 0 18px 0 14px;
+  border-radius: 999px; color: #fff; font-size: 13px; font-weight: 600; white-space: nowrap; text-decoration: none;
+  background: linear-gradient(135deg, #0a3d91, #1f6cd3 60%, #4cc3f1);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 30%), 0 14px 30px -16px rgb(10 61 145 / 80%);
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+.gd-top-cta:hover { transform: translateY(-2px); box-shadow: inset 0 1px 0 rgb(255 255 255 / 30%), 0 20px 40px -18px rgb(10 61 145 / 85%); }
 .gd-icon-button svg { width: 17px; height: 17px; }
 .gd-top-actions :is(button, a) svg { width: 18px; height: 18px; }
 
@@ -709,6 +726,9 @@
 
 /* Encabezados de página */
 .gd-legacy > h1, .gd-legacy :where(h1) { letter-spacing: -.02em; }
+
+/* En oscuro, el azul de marca sin variante `dark:` (eyebrows, enlaces) queda ilegible sobre el vidrio. */
+:where(.dark) .gd-legacy :is(.text-brand-teal, .text-brand-indigo):not([class*="dark:text-"]) { color: var(--gd-accent); }
 
 /* Modales de las páginas (role="dialog") y sus overlays */
 .gd-app .gd-legacy [role="dialog"] {

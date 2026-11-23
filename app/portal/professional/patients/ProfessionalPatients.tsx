@@ -47,8 +47,8 @@ export function ProfessionalPatients() {
   return (
     <div className="space-y-6">
       <header>
-        <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Patients</p>
-        <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">Patient list</h1>
+        <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Pacientes</p>
+        <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">Lista de pacientes</h1>
       </header>
 
       <div className="rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-xs dark:border-surface-muted/60 dark:bg-surface-muted">
@@ -64,7 +64,7 @@ export function ProfessionalPatients() {
 
         <div className="mt-6 space-y-3">
           {patients.length === 0 ? (
-            <p className="text-sm text-slate-500">No patients matched your search.</p>
+            <p className="text-sm text-slate-500">Ningún paciente coincide con la búsqueda.</p>
           ) : (
             patients.map((patient) => (
               <div

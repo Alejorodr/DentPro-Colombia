@@ -24,7 +24,7 @@ import { roleFromSlug, roleLabels, roleSlugMap, type UserRole } from "@/lib/auth
 import type { ClinicInfo } from "@/lib/clinic";
 import { Sidebar } from "@/app/portal/components/layout/Sidebar";
 import { Topbar } from "@/app/portal/components/layout/Topbar";
-import { AdminGlassShell } from "@/app/portal/components/layout/AdminGlassShell";
+import { PortalGlassShell } from "@/app/portal/components/layout/PortalGlassShell";
 import { ClientPortalShell } from "@/app/portal/client/components/ClientPortalShell";
 import { ReceptionistShell } from "@/app/portal/receptionist/components/ReceptionistShell";
 import { ProfessionalShell } from "@/app/portal/professional/components/ProfessionalShell";
@@ -126,7 +126,9 @@ export function PortalShell({ children, session, clinic }: PortalShellProps) {
 
   if (isAdmin) {
     return (
-      <AdminGlassShell
+      <PortalGlassShell
+        portalLabel="Portal administrador"
+        homeHref="/portal/admin"
         navItems={navItems}
         settingsItems={settingsItems}
         pathname={pathname}
@@ -137,7 +139,7 @@ export function PortalShell({ children, session, clinic }: PortalShellProps) {
         notificationsSlot={<NotificationsDropdown scope="admin" />}
       >
         {children}
-      </AdminGlassShell>
+      </PortalGlassShell>
     );
   }
 
