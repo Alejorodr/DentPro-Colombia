@@ -2,6 +2,7 @@ import type { BrowserContext } from "@playwright/test";
 import { encode } from "next-auth/jwt";
 
 import { getSessionCookieName } from "../../lib/auth/runtime";
+import { readConfiguredAuthSecret } from "../../lib/auth/secret";
 import type { SeededUsersByRole } from "./seed";
 
 type SessionRole = "ADMINISTRADOR" | "RECEPCIONISTA" | "PACIENTE" | "PROFESIONAL";
@@ -17,7 +18,7 @@ function resolveSeededUser(role: SessionRole, seededUsers?: SeededUsersByRole) {
 
 export async function seedRoleSession(context: BrowserContext, role: SessionRole, seededUsers?: SeededUsersByRole) {
   const seededUser = resolveSeededUser(role, seededUsers);
-  const secret = process.env.AUTH_JWT_SECRET ?? process.env.NEXTAUTH_SECRET ?? process.env.AUTH_SECRET ?? "test-secret";
+  const secret = readConfiguredAuthSecret() ?? "test-secret";
   const baseUrl = process.env.NEXTAUTH_URL ?? "http://127.0.0.1:3000";
   const sessionCookieName = getSessionCookieName(baseUrl);
   const sessionSalt = sessionCookieName.startsWith("__Secure-")

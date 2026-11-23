@@ -53,9 +53,7 @@ const env = {
   DATABASE_URL: LOCAL_DB,
   DATABASE_URL_UNPOOLED: LOCAL_DB,
   SHADOW_DATABASE_URL: LOCAL_SHADOW_DB,
-  // proxy.ts resuelve el secreto con `??`: un AUTH_JWT_SECRET vacío cortaría la cadena.
-  AUTH_JWT_SECRET: "test-secret",
-  AUTH_SECRET: "test-secret",
+  // AUTH_JWT_SECRET/AUTH_SECRET de .env.local quedan en "": lib/auth/secret.ts los trata como ausentes.
   NEXTAUTH_SECRET: "test-secret",
   NEXTAUTH_URL: "http://127.0.0.1:3000",
   NEXT_PUBLIC_APP_URL: "http://localhost:3000",

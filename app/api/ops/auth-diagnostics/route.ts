@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { getPrismaClient } from "@/lib/prisma";
+import { hasConfiguredAuthSecret } from "@/lib/auth/secret";
 import { getInferredAuthBaseUrl, isProductionRuntime, isVercelRuntime, shouldUseSecureCookies } from "@/lib/auth/runtime";
 import {
   enforceOpsRateLimit,
@@ -30,12 +31,6 @@ function sanitizeBaseUrl(url: string): string {
     return "";
   }
   return url.split("?")[0] ?? url;
-}
-
-function hasAuthSecret(): boolean {
-  return Boolean(
-    process.env.AUTH_JWT_SECRET || process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET,
-  );
 }
 
 export async function GET(request: Request) {
@@ -78,7 +73,7 @@ export async function GET(request: Request) {
   if (!process.env.NEXTAUTH_URL && !process.env.VERCEL_URL) {
     notes.push("NEXTAUTH_URL or VERCEL_URL missing.");
   }
-  if (!hasAuthSecret()) {
+  if (!hasConfiguredAuthSecret()) {
     notes.push("AUTH_JWT_SECRET/NEXTAUTH_SECRET/AUTH_SECRET missing.");
   }
   if (!dbConfigured) {
@@ -96,7 +91,7 @@ export async function GET(request: Request) {
     isVercel: isVercelRuntime(),
     inferredBaseUrl: sanitizeBaseUrl(inferredBaseUrl),
     hasNextAuthUrl: Boolean(process.env.NEXTAUTH_URL),
-    hasAuthSecret: hasAuthSecret(),
+    hasAuthSecret: hasConfiguredAuthSecret(),
     usesSecureCookies,
     dbConfigured,
     dbConnectOk,
