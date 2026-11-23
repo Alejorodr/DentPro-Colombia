@@ -32,3 +32,11 @@ graphify-out/
 
 # AI local outputs
 .ai/codex/results/
+
+# Reportes locales de auditoría de seguridad (pueden contener hallazgos sensibles)
+/SECURITY-TOOLS.md
+/security-report.md
+/security-results/
+
+# Planes locales generados por agentes
+/docs/superpowers/plans/
