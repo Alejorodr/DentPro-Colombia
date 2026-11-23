@@ -37,3 +37,6 @@ graphify-out/
 /SECURITY-TOOLS.md
 /security-report.md
 /security-results/
+
+# Planes locales generados por agentes
+/docs/superpowers/plans/
