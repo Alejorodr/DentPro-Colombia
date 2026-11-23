@@ -1,9 +1,4 @@
 {
-  "git": {
-    "deploymentEnabled": {
-      "develop": false
-    }
-  },
   "crons": [
     {
       "path": "/api/cron/appointments/reminders",
