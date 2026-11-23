@@ -9,6 +9,7 @@ import {
   isProductionRuntime,
 } from "@/lib/auth/runtime";
 import { getDefaultDashboardPath, isUserRole, roleFromSlug, type UserRole } from "@/lib/auth/roles";
+import { readConfiguredAuthSecret } from "@/lib/auth/secret";
 import { errorResponse } from "@/app/api/_utils/response";
 import { checkMemoryRateLimit } from "@/lib/rateLimit";
 import { NONCE_HEADER, buildContentSecurityPolicy, generateNonce } from "@/lib/security/csp";
@@ -206,7 +207,7 @@ export default async function proxy(request: NextRequest) {
 
   const host = request.headers.get("host") ?? "";
   const isLocalhost = host.startsWith("localhost") || host.startsWith("127.0.0.1");
-  const secret = process.env.AUTH_JWT_SECRET ?? process.env.NEXTAUTH_SECRET ?? process.env.AUTH_SECRET;
+  const secret = readConfiguredAuthSecret();
   if (!secret) {
     const message = "NEXTAUTH_SECRET is not configured.";
     if (process.env.NODE_ENV === "production") {

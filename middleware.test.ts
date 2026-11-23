@@ -161,6 +161,20 @@ describe("proxy CSP nonce (H2)", () => {
   });
 });
 
+describe("proxy auth secret (DOG-6)", () => {
+  it("does not throw in production when AUTH_JWT_SECRET is empty but NEXTAUTH_SECRET is set", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("AUTH_JWT_SECRET", "");
+    vi.stubEnv("AUTH_SECRET", "");
+    vi.stubEnv("NEXTAUTH_SECRET", "test-secret-test-secret-test-secret");
+    const res = await defaultMiddleware(
+      new NextRequest("http://localhost/portal/admin", { headers: { accept: "text/html" } }),
+    );
+    expect(res.status).toBe(307);
+    expect(res.headers.get("location")).toContain("/auth/login");
+  });
+});
+
 describe("proxy auth rate limit fail-closed (fase 2)", () => {
   function post(path: string, headers: Record<string, string> = {}) {
     return new NextRequest(`http://localhost${path}`, {
