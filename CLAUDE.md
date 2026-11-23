@@ -113,14 +113,30 @@ design-system/            # Sistema de diseño exportado desde Claude Design
 
 ```bash
 # Desarrollo
-npm run dev
+pnpm dev
 
-# Build
-npm run build
+# Verificación local completa (antes de integrar un ticket a develop)
+pnpm lint && pnpm typecheck && pnpm test && pnpm build
 
-# Lint
-npm run lint
+# E2E locales contra Postgres efímero en Docker (aislado de .env.local)
+pnpm e2e:local:smoke          # @smoke, igual al CI de PR
+pnpm e2e:local                # suite completa, igual al Nightly
+pnpm e2e:local -- e2e/auth.spec.ts --repeat-each=3   # un spec puntual
+pnpm e2e:db:down              # bajar el contenedor
 ```
+
+---
+
+## Flujo de trabajo: tickets, develop y releases
+
+- **Tickets en Linear.** Cada trabajo nace de un ticket (`DP-123`).
+- **`main`** = última versión publicada y estable (lo que está en producción). Solo recibe releases.
+- **`develop`** = versión local más nueva: acumula los tickets terminados y probados. Se sube a GitHub **solo como respaldo** (no dispara CI; Vercel no despliega `develop`, ver `vercel.json`).
+- **Por ticket:** rama corta desde `develop` (`feat/DP-123-descripcion`, `fix/DP-124-...`), verificación local completa (lint, typecheck, test, build y E2E si toca flujos), changeset (`pnpm changeset`) y merge a `develop` en local.
+- **Release:** solo con aprobación explícita del dueño. Un único PR `develop` → `main`, CI verde, merge, `pnpm version-packages` y etiqueta `vX.Y.Z`.
+- **Hotfix urgente de producción:** rama desde `main`, PR directo a `main`, y luego merge de `main` en `develop`.
+- **Dependabot:** mensual y agrupado; sus PRs se unifican en el siguiente release. Las alertas de seguridad se atienden aparte.
+- Nunca correr E2E contra Neon (prod ni dev): siembran usuarios con contraseñas públicas. Usar `pnpm e2e:local`.
 
 ---
 
