@@ -23,6 +23,7 @@
     "prisma:seed": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' prisma/seed.ts",
     "postinstall": "node scripts/prisma-generate-safe.mjs",
     "typecheck": "tsc --noEmit",
+    "secrets:scan": "node scripts/scan-secrets.mjs",
     "test:e2e": "node scripts/run-e2e.mjs",
     "e2e:prod": "cross-env E2E_ENV=production RUN_E2E=1 pnpm run test:e2e",
     "e2e:smoke": "cross-env RUN_E2E=1 E2E_SUITE=smoke pnpm run test:e2e",

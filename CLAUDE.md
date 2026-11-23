@@ -123,6 +123,10 @@ pnpm e2e:local:smoke          # @smoke, igual al CI de PR
 pnpm e2e:local                # suite completa, igual al Nightly
 pnpm e2e:local -- e2e/auth.spec.ts --repeat-each=3   # un spec puntual
 pnpm e2e:db:down              # bajar el contenedor
+
+# Escaneo de secretos con gitleaks en Docker (igual al workflow Secret Scan)
+pnpm secrets:scan             # todo el historial
+pnpm secrets:scan -- staged   # solo lo preparado para commit
 ```
 
 ---
