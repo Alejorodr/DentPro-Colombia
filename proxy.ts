@@ -330,7 +330,7 @@ export const config = {
     // prefetches (RSC payloads, not HTML documents).
     {
       source:
-        "/((?!api|_next/static|_next/image|_vercel|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|avif|ico|txt|xml|webmanifest|json|js|css|map|woff|woff2)$).*)",
+        "/((?!api|149e9513-01fa-4fb0-aad4-566afd725d1b|_next/static|_next/image|_vercel|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|avif|ico|txt|xml|webmanifest|json|js|css|map|woff|woff2)$).*)",
       missing: [
         { type: "header", key: "next-router-prefetch" },
         { type: "header", key: "purpose", value: "prefetch" },

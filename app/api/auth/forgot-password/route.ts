@@ -9,6 +9,7 @@ import { enforceRateLimit } from "@/app/api/_utils/ratelimit";
 import { getRequestId } from "@/app/api/_utils/request";
 import { logger } from "@/lib/logger";
 import * as Sentry from "@sentry/nextjs";
+import { botBlockedResponse, isBotRequest } from "@/lib/security/bot-protection";
 
 const GENERIC_MESSAGE = "Si el correo existe, te enviaremos instrucciones para restablecer tu contraseña.";
 const forgotPasswordSchema = z.object({
@@ -31,6 +32,9 @@ export async function POST(request: Request) {
       status: 429,
     });
     return rateLimited;
+  }
+  if (await isBotRequest("/api/auth/forgot-password")) {
+    return botBlockedResponse();
   }
 
   logger.info({

@@ -4,6 +4,7 @@ import { checkIdentifierRateLimit } from "@/app/api/_utils/ratelimit";
 import { getDefaultDashboardPath, isUserRole } from "@/lib/auth/roles";
 import { authenticateUser, findUserByEmail } from "@/lib/auth/users";
 import { logger } from "@/lib/logger";
+import { isBotRequest } from "@/lib/security/bot-protection";
 
 // Límite por cuenta, además del límite por IP de proxy.ts: frena la fuerza bruta distribuida
 // contra un mismo correo. El correo se guarda como hash para no dejar PII en Redis.
@@ -93,6 +94,11 @@ export async function authorizeCredentials(credentials?: CredentialsInput) {
   const accountLimit = await checkIdentifierRateLimit("auth:login", accountKey(email), LOGIN_ACCOUNT_RATE_LIMIT);
   if (!accountLimit.allowed) {
     logger.warn({ event: "auth.credentials.rate_limited", reason: accountLimit.reason });
+    return null;
+  }
+
+  // DOG-17: un bot recibe el mismo error genérico que unas credenciales inválidas.
+  if (await isBotRequest("/api/auth/callback/credentials")) {
     return null;
   }
 
