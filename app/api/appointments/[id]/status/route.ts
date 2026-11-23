@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { z } from "zod";
 import { AppointmentStatus as PrismaAppointmentStatus, TimeSlotStatus } from "@prisma/client";
 
 import { requireRole, requireSession } from "@/lib/authz";
@@ -6,13 +7,17 @@ import { getPrismaClient } from "@/lib/prisma";
 import { errorResponse } from "@/app/api/_utils/response";
 import { logAuditEvent } from "@/lib/audit";
 import type { AppointmentStatus } from "@/lib/api/types";
-import { buildError, fromPrismaStatus, isValidAppointmentStatus, toAppointmentSummary, toPrismaStatus } from "../../utils";
+import { parseJson } from "@/app/api/_utils/validation";
+import { buildError, fromPrismaStatus, toAppointmentSummary, toPrismaStatus } from "../../utils";
 
 const transitionRules: Record<AppointmentStatus, AppointmentStatus[]> = {
   pending: ["confirmed", "cancelled"],
   confirmed: ["cancelled"],
   cancelled: [],
 };
+
+// DOG-19: un body `null` o sin `status` antes terminaba en 500; zod lo rechaza con 400.
+const statusSchema = z.object({ status: z.enum(["pending", "confirmed", "cancelled"]) });
 
 export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
   const sessionResult = await requireSession();
@@ -33,24 +38,12 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     return buildError("Debes especificar una cita válida.");
   }
 
-  let body: unknown;
-  try {
-    body = await request.json();
-  } catch (error) {
-    console.error("Invalid status payload", error);
-    return buildError("No se pudo leer la solicitud de cambio de estado.");
-  }
-
-  const rawStatus =
-    typeof (body as { status?: string }).status === "string"
-      ? (body as { status: string }).status
-      : "";
-
-  if (!isValidAppointmentStatus(rawStatus)) {
+  const { data: payload, error } = await parseJson(request, statusSchema);
+  if (error) {
     return buildError("El estado solicitado no es válido.", 400);
   }
 
-  const nextStatus = rawStatus as AppointmentStatus;
+  const nextStatus: AppointmentStatus = payload.status;
 
   const appointment = await prisma.appointment.findUnique({
     where: { id: appointmentId },

@@ -5,6 +5,7 @@ import { getProfessionalProfile } from "@/lib/clinical/access";
 import { logClinicalAccess } from "@/lib/clinical/access-log";
 import { getPrismaClient } from "@/lib/prisma";
 import { AccessLogAction } from "@prisma/client";
+import { sanitizeConsentHtml } from "@/lib/security/sanitize-html";
 
 export default async function EpisodePrintPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await requireRole("PROFESIONAL");
@@ -101,7 +102,7 @@ export default async function EpisodePrintPage({ params }: { params: Promise<{ i
             <p className="text-xs font-semibold uppercase text-slate-400">{quoteTemplate.title}</p>
             <div
               className="prose prose-sm mt-2 max-w-none text-slate-700"
-              dangerouslySetInnerHTML={{ __html: quoteTemplate.contentHtml }}
+              dangerouslySetInnerHTML={{ __html: sanitizeConsentHtml(quoteTemplate.contentHtml) }}
             />
           </div>
         ) : null}
