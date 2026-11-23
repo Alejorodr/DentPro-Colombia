@@ -1,3 +1,13 @@
+import { cleanup } from "@testing-library/react";
+import { afterEach } from "vitest";
+
+// Sin `globals: true`, Testing Library no desmonta automáticamente entre tests.
+// Sin esto, React deja trabajo agendado que corre tras el teardown de jsdom
+// ("window is not defined") y vitest 5 lo reporta como error no manejado.
+afterEach(() => {
+  cleanup();
+});
+
 class MockIntersectionObserver implements IntersectionObserver {
   readonly root: Element | Document | null = null;
   readonly rootMargin = "0px";
