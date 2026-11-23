@@ -72,7 +72,8 @@ export async function GET(request: Request) {
           professionalId: professional.id,
           patientId: { in: patientIds },
         },
-        include: { timeSlot: true },
+        // Solo lo necesario para la última visita (DOG-11): antes traía la cita y el turno completos.
+        select: { patientId: true, timeSlot: { select: { startAt: true } } },
         orderBy: { timeSlot: { startAt: "desc" } },
       })
     : [];
