@@ -15,6 +15,7 @@ import { getHomepageContent } from "@/lib/marketing/homepage";
 import { adaptHomepageContent, buildBookingChannels } from "@/lib/marketing/homepage-adapter";
 import { getGoogleReviews } from "@/lib/google/google-reviews";
 import { HOMEPAGE_DEFAULT_CONTENT } from "@/lib/marketing/homepage-defaults";
+import { safeJsonLd } from "@/lib/security/json-ld";
 
 const DEFAULT_META_TITLE = "Odontología especializada en Chía | Agenda online";
 const DEFAULT_META_DESCRIPTION =
@@ -30,10 +31,6 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 // Prevents </script> injection in JSON-LD script blocks
-function safeJsonLd(data: unknown): string {
-  return JSON.stringify(data).replace(/</g, "\\u003c");
-}
-
 const NAV_CTA = { href: "/appointments/new", label: "Reservar turno" };
 const NAV_LOGIN = { href: "/auth/login", label: "Iniciar sesión" };
 

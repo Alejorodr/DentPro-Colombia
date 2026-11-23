@@ -7,6 +7,7 @@ import { parseJson } from "@/app/api/_utils/validation";
 import { getPrismaClient } from "@/lib/prisma";
 import { requireSession, requireRole } from "@/lib/authz";
 import { ClinicDocumentTemplateType } from "@prisma/client";
+import { sanitizeConsentHtml } from "@/lib/security/sanitize-html";
 
 const consentSchema = z.object({
   templateId: z.string().uuid(),
@@ -47,7 +48,16 @@ export async function GET() {
     include: { template: true },
   });
 
-  return NextResponse.json({ templates, consents });
+  // Defensa en profundidad (DOG-19): el admin ya sanitiza al guardar, pero una plantilla cargada
+  // por otro camino (seed, datos previos al sanitizador) se mostraría tal cual con innerHTML.
+  return NextResponse.json({
+    templates: templates.map((template) => ({ ...template, contentHtml: sanitizeConsentHtml(template.contentHtml) })),
+    consents: consents.map((consent) =>
+      consent.template
+        ? { ...consent, template: { ...consent.template, contentHtml: sanitizeConsentHtml(consent.template.contentHtml) } }
+        : consent,
+    ),
+  });
 }
 
 export async function POST(request: Request) {

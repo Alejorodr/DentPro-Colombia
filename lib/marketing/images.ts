@@ -20,6 +20,31 @@ export function isAllowedMarketingImageType(type: string): type is (typeof MARKE
   return MARKETING_IMAGE_ALLOWED_TYPES.includes(type as (typeof MARKETING_IMAGE_ALLOWED_TYPES)[number]);
 }
 
+/**
+ * Comprueba que los primeros bytes del archivo correspondan al tipo declarado (DOG-19).
+ * `File.type` lo pone el navegador y el cliente lo controla: sin esto, un HTML o un SVG
+ * renombrado como `image/png` se subiría al Blob público.
+ */
+export function matchesMarketingImageSignature(
+  bytes: Uint8Array,
+  type: (typeof MARKETING_IMAGE_ALLOWED_TYPES)[number],
+): boolean {
+  const startsWith = (signature: number[], offset = 0) =>
+    bytes.length >= offset + signature.length && signature.every((byte, index) => bytes[offset + index] === byte);
+
+  switch (type) {
+    case "image/jpeg":
+      return startsWith([0xff, 0xd8, 0xff]);
+    case "image/png":
+      return startsWith([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+    case "image/webp":
+      // "RIFF" ???? "WEBP"
+      return startsWith([0x52, 0x49, 0x46, 0x46]) && startsWith([0x57, 0x45, 0x42, 0x50], 8);
+    default:
+      return false;
+  }
+}
+
 export function isAllowedMarketingUploadFolder(folder: string): folder is MarketingUploadFolder {
   return MARKETING_UPLOAD_FOLDERS.includes(folder as MarketingUploadFolder);
 }

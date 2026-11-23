@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { SERVICES, getServiceBySlug } from "@/lib/marketing/services-data";
+import { safeJsonLd } from "@/lib/security/json-ld";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -75,8 +76,8 @@ export default async function ServicePage({ params }: Props) {
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(faqJsonLd) }} />
 
       {/* Breadcrumb */}
       <nav aria-label="Breadcrumb" className="border-b border-slate-100 bg-white dark:border-surface-muted/40 dark:bg-surface-base">

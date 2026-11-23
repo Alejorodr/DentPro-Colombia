@@ -23,6 +23,8 @@ function parseDateInput(value?: string | null) {
   return { year, month, day };
 }
 
+const MAX_PAGE_SIZE = 100;
+
 export async function GET(request: Request) {
   const sessionUser = await getSessionUser();
 
@@ -41,8 +43,9 @@ export async function GET(request: Request) {
   const dateParam = parseDateInput(searchParams.get("date"));
   const rawPage = Number(searchParams.get("page") ?? "1");
   const rawPageSize = Number(searchParams.get("pageSize") ?? "8");
-  const page = Number.isFinite(rawPage) && rawPage > 0 ? rawPage : 1;
-  const pageSize = Number.isFinite(rawPageSize) && rawPageSize > 0 ? rawPageSize : 8;
+  // DOG-19: enteros y con tope. Antes `pageSize=1000000` devolvía todo el rango y `page=1.5` daba 500.
+  const page = Number.isFinite(rawPage) && rawPage >= 1 ? Math.trunc(rawPage) : 1;
+  const pageSize = Number.isFinite(rawPageSize) && rawPageSize >= 1 ? Math.min(Math.trunc(rawPageSize), MAX_PAGE_SIZE) : 8;
   const professionalId = searchParams.get("professionalId")?.trim() ?? "";
   const specialty = searchParams.get("specialty")?.trim() ?? "";
   const status = searchParams.get("status")?.trim() ?? "";
