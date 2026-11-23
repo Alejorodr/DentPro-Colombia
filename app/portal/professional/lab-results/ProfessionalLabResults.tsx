@@ -60,7 +60,7 @@ export function ProfessionalLabResults() {
       dataUrl = await new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = () => resolve(String(reader.result));
-        reader.onerror = () => reject(new Error("Error reading file"));
+        reader.onerror = () => reject(new Error("No se pudo leer el archivo"));
         reader.readAsDataURL(file);
       });
     }
@@ -92,14 +92,14 @@ export function ProfessionalLabResults() {
   return (
     <div className="space-y-6">
       <header>
-        <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Lab Results</p>
-        <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">Lab uploads</h1>
+        <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Resultados de laboratorio</p>
+        <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">Resultados cargados</h1>
       </header>
 
       <div className="rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-xs dark:border-surface-muted/60 dark:bg-surface-muted">
         <div className="flex items-center gap-2">
           <Flask size={20} className="text-slate-400" />
-          <h2 className="text-lg font-semibold">Upload new lab result</h2>
+          <h2 className="text-lg font-semibold">Subir resultado de laboratorio</h2>
         </div>
         <div className="mt-4 space-y-2">
           <select
@@ -107,7 +107,7 @@ export function ProfessionalLabResults() {
             onChange={(event) => setSelectedPatientId(event.target.value)}
             className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600 dark:border-surface-muted/60 dark:bg-surface-base dark:text-slate-100"
           >
-            <option value="">Select patient (optional)</option>
+            <option value="">Seleccionar paciente (opcional)</option>
             {patients.map((patient) => (
               <option key={patient.id} value={patient.id}>
                 {patient.name} {patient.lastName}
@@ -132,15 +132,15 @@ export function ProfessionalLabResults() {
             className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600 dark:border-surface-muted/60 dark:bg-surface-base dark:text-slate-100"
           />
           {uploadError ? <p className="text-xs text-rose-400">{uploadError}</p> : null}
-          <p className="text-[11px] text-slate-400">For production, configure external storage.</p>
+          <p className="text-[11px] text-slate-400">Los archivos de más de 2 MB se agregan como enlace.</p>
         </div>
       </div>
 
       <div className="rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-xs dark:border-surface-muted/60 dark:bg-surface-muted">
-        <h2 className="text-lg font-semibold">Recent lab results</h2>
+        <h2 className="text-lg font-semibold">Resultados recientes</h2>
         <div className="mt-4 space-y-3">
           {attachments.length === 0 ? (
-            <p className="text-sm text-slate-500">No lab results uploaded yet.</p>
+            <p className="text-sm text-slate-500">Aún no hay resultados de laboratorio.</p>
           ) : (
             attachments
               .filter((attachment) => (selectedPatientId ? attachment.patient?.id === selectedPatientId : true))
@@ -162,7 +162,7 @@ export function ProfessionalLabResults() {
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      View
+                      Ver
                     </a>
                   ) : null}
                 </div>

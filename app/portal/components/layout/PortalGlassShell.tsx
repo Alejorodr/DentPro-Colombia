@@ -11,39 +11,53 @@ import { List, SignOut, Tooth, WhatsappLogo, X, type Icon as IconComponent } fro
 import { AvatarFallback } from "@/app/portal/components/ui/AvatarFallback";
 import { resolveActiveHref } from "@/app/portal/components/layout/Sidebar";
 
-type NavItem = { label: string; href: string; icon: IconComponent };
+export type PortalGlassNavItem = { label: string; href: string; icon: IconComponent };
 
-type AdminGlassShellProps = {
+type PortalGlassShellProps = {
   children: ReactNode;
-  navItems: NavItem[];
-  settingsItems: NavItem[];
+  /** Nombre del portal bajo la marca, p. ej. "Portal administrador". */
+  portalLabel: string;
+  /** Inicio del portal del rol (destino del logo). */
+  homeHref: string;
+  navItems: PortalGlassNavItem[];
+  settingsItems?: PortalGlassNavItem[];
   pathname: string;
   /** Query string actual (sin `?`), para resolver entradas con filtros. */
-  search: string;
+  search?: string;
   userName: string;
   onSignOut: () => void;
   searchSlot?: ReactNode;
   notificationsSlot?: ReactNode;
+  /** Controles propios del rol en la barra superior, antes del cambio de tema. */
+  actionsSlot?: ReactNode;
+  /** Acción principal del rol (p. ej. "Agendar cita"): botón en la barra y primera opción del menú móvil. */
+  primaryAction?: PortalGlassNavItem;
 };
 
 /**
- * Shell "glassy" del portal administrador: fondo de gradiente de marca, barra superior en
- * píldora, dock lateral con indicador deslizante y un escenario de vidrio para cada página.
+ * Shell "glassy" común a todos los roles del portal: fondo de gradiente de marca, barra superior
+ * en píldora, dock lateral con indicador deslizante y un escenario de vidrio para cada página.
+ * Cada rol aporta su navegación y sus controles (buscador, notificaciones, acciones propias).
  */
-export function AdminGlassShell({
+export function PortalGlassShell({
   children,
+  portalLabel,
+  homeHref,
   navItems,
-  settingsItems,
+  settingsItems = [],
   pathname,
-  search,
+  search = "",
   userName,
   onSignOut,
   searchSlot,
   notificationsSlot,
-}: AdminGlassShellProps) {
+  actionsSlot,
+  primaryAction,
+}: PortalGlassShellProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const entries = [...navItems, ...settingsItems];
   const activeHref = resolveActiveHref(pathname, search, entries);
+  const navLabel = `Navegación del ${portalLabel.toLowerCase()}`;
 
   const dockItems = entries.map((item) => ({
     key: item.href,
@@ -52,6 +66,8 @@ export function AdminGlassShell({
     icon: item.icon,
     active: item.href === activeHref,
   }));
+
+  const PrimaryIcon = primaryAction?.icon;
 
   return (
     <div className="gd-app">
@@ -63,19 +79,26 @@ export function AdminGlassShell({
 
       <div className="gd-surround">
         <header className="gd-top gd-glass">
-          <Link href="/portal/admin" className="gd-brand" aria-label="DentPro, inicio del portal administrador">
+          <Link href={homeHref} className="gd-brand" aria-label={`DentPro, inicio del ${portalLabel.toLowerCase()}`}>
             <span className="gd-logo" aria-hidden="true">
               <Tooth size={20} />
             </span>
             <span>
               <strong>DentPro</strong>
-              <small>Portal administrador</small>
+              <small>{portalLabel}</small>
             </span>
           </Link>
 
           <div className="gd-top-search">{searchSlot}</div>
 
           <div className="gd-top-actions">
+            {primaryAction && PrimaryIcon ? (
+              <Link href={primaryAction.href} className="gd-top-cta gd-hide-sm">
+                <PrimaryIcon aria-hidden="true" />
+                {primaryAction.label}
+              </Link>
+            ) : null}
+            {actionsSlot}
             <ThemeToggle />
             {notificationsSlot}
             <a
@@ -108,7 +131,7 @@ export function AdminGlassShell({
         <div className="gd-layout">
           <GlassyDock
             variant="side"
-            ariaLabel="Navegación del portal administrador"
+            ariaLabel={navLabel}
             items={dockItems}
             footer={
               <button type="button" aria-label="Cerrar sesión" onClick={onSignOut}>
@@ -120,9 +143,7 @@ export function AdminGlassShell({
             }
           />
           <main className="gd-stage" id="contenido">
-            <div className="gd-page gd-legacy">
-              {children}
-            </div>
+            <div className="gd-page gd-legacy">{children}</div>
           </main>
         </div>
 
@@ -133,7 +154,14 @@ export function AdminGlassShell({
       </div>
 
       {menuOpen ? (
-        <MobileMenu items={dockItems} userName={userName} onSignOut={onSignOut} close={() => setMenuOpen(false)} />
+        <MobileMenu
+          items={primaryAction ? [{ key: `cta:${primaryAction.href}`, ...primaryAction, active: false }, ...dockItems] : dockItems}
+          navLabel={navLabel}
+          portalLabel={portalLabel}
+          userName={userName}
+          onSignOut={onSignOut}
+          close={() => setMenuOpen(false)}
+        />
       ) : null}
     </div>
   );
@@ -141,11 +169,15 @@ export function AdminGlassShell({
 
 function MobileMenu({
   items,
+  navLabel,
+  portalLabel,
   userName,
   onSignOut,
   close,
 }: {
   items: { key: string; href: string; label: string; icon: IconComponent; active: boolean }[];
+  navLabel: string;
+  portalLabel: string;
   userName: string;
   onSignOut: () => void;
   close: () => void;
@@ -161,7 +193,7 @@ function MobileMenu({
     <dialog
       ref={ref}
       className="gd-sheet"
-      aria-label="Menú del portal administrador"
+      aria-label={`Menú del ${portalLabel.toLowerCase()}`}
       onClose={close}
       onClick={(event) => {
         if (event.target === event.currentTarget) event.currentTarget.close();
@@ -177,7 +209,7 @@ function MobileMenu({
             <X aria-hidden="true" />
           </button>
         </header>
-        <nav aria-label="Navegación del portal administrador">
+        <nav aria-label={navLabel}>
           {items.map((item) => {
             const ItemIcon = item.icon;
             return (
@@ -201,4 +233,4 @@ function MobileMenu({
   );
 }
 
-export default AdminGlassShell;
+export default PortalGlassShell;

@@ -44,7 +44,7 @@ export function ReceptionistSettings() {
   return (
     <div className="space-y-8">
       <header>
-        <p className="text-xs font-semibold uppercase tracking-wide text-brand-teal dark:text-accent-cyan">Settings</p>
+        <p className="text-xs font-semibold uppercase tracking-wide text-brand-teal dark:text-accent-cyan">Configuración</p>
         <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">Preferencias del portal</h1>
       </header>
 
