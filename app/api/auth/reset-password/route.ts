@@ -10,6 +10,7 @@ import { enforceRateLimit } from "@/app/api/_utils/ratelimit";
 import { getRequestId } from "@/app/api/_utils/request";
 import { logger } from "@/lib/logger";
 import * as Sentry from "@sentry/nextjs";
+import { botBlockedResponse, isBotRequest } from "@/lib/security/bot-protection";
 
 const resetPasswordSchema = z.object({
   token: z.string().trim().min(10).max(256),
@@ -32,6 +33,9 @@ export async function POST(request: Request) {
       status: 429,
     });
     return rateLimited;
+  }
+  if (await isBotRequest("/api/auth/reset-password")) {
+    return botBlockedResponse();
   }
 
   logger.info({
