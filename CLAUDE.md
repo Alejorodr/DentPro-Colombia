@@ -129,10 +129,10 @@ pnpm e2e:db:down              # bajar el contenedor
 
 ## Flujo de trabajo: tickets, develop y releases
 
-- **Tickets en Linear.** Cada trabajo nace de un ticket (`DP-123`).
+- **Tickets en Linear.** Cada trabajo nace de un ticket (`DOG-123`, proyecto "DentPro Colombia" en el workspace DOGBYTE de Linear).
 - **`main`** = última versión publicada y estable (lo que está en producción). Solo recibe releases.
 - **`develop`** = versión local más nueva: acumula los tickets terminados y probados. Se sube a GitHub **solo como respaldo** (no dispara CI; Vercel no despliega `develop`, ver `vercel.json`).
-- **Por ticket:** rama corta desde `develop` (`feat/DP-123-descripcion`, `fix/DP-124-...`), verificación local completa (lint, typecheck, test, build y E2E si toca flujos), changeset (`pnpm changeset`) y merge a `develop` en local.
+- **Por ticket:** rama corta desde `develop` (`feat/DOG-123-descripcion`, `fix/DOG-124-...`), verificación local completa (lint, typecheck, test, build y E2E si toca flujos), changeset (`pnpm changeset`) y merge a `develop` en local.
 - **Release:** solo con aprobación explícita del dueño. Un único PR `develop` → `main`, CI verde, merge, `pnpm version-packages` y etiqueta `vX.Y.Z`.
 - **Hotfix urgente de producción:** rama desde `main`, PR directo a `main`, y luego merge de `main` en `develop`.
 - **Dependabot:** mensual y agrupado; sus PRs se unifican en el siguiente release. Las alertas de seguridad se atienden aparte.
