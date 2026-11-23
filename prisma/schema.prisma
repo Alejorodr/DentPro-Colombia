@@ -753,7 +753,10 @@ model Notification {
   createdAt  DateTime  @default(now())
   user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([userId])
+  // (userId, readAt): contador de no leídas. (userId, createdAt): feed ordenado por fecha.
+  // Ambos cubren también las búsquedas solo por userId (DOG-11).
+  @@index([userId, readAt])
+  @@index([userId, createdAt])
   @@index([readAt])
   @@index([createdAt])
 }
