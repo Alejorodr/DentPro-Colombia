@@ -1,3 +1,8 @@
+import { withAbortTimeout } from "@/lib/http";
+
+// Imágenes de hasta 5 MB.
+const BLOB_UPLOAD_TIMEOUT_MS = 30_000;
+
 export const MARKETING_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
 export const MARKETING_IMAGE_ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
 
@@ -72,11 +77,10 @@ export function buildMarketingImageStorageKey(folder: MarketingUploadFolder, san
 
 export async function uploadPublicMarketingImage(file: File | Buffer, key: string, contentType: string) {
   const { put } = await import("@vercel/blob");
-  const result = await put(key, file, {
-    access: "public",
-    addRandomSuffix: false,
-    contentType,
-  });
+  const result = await withAbortTimeout(
+    (abortSignal) => put(key, file, { access: "public", addRandomSuffix: false, contentType, abortSignal }),
+    BLOB_UPLOAD_TIMEOUT_MS,
+  );
 
   return result.url;
 }

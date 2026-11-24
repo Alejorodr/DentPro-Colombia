@@ -67,6 +67,20 @@ export async function fetchWithTimeout(
   }
 }
 
+/**
+ * Corre una operación de un SDK que acepta AbortSignal y la aborta si no responde a tiempo.
+ * El temporizador se limpia en cuanto la operación resuelve, así no corta una descarga en curso.
+ */
+export async function withAbortTimeout<T>(operation: (signal: AbortSignal) => Promise<T>, timeoutMs: number): Promise<T> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(new Error(`Tiempo de espera agotado (${timeoutMs} ms).`)), timeoutMs);
+  try {
+    return await operation(controller.signal);
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
 export async function fetchWithRetry(
   input: RequestInfo | URL,
   init: RequestInit = {},

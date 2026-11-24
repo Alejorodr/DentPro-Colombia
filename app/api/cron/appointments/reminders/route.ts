@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { getPrismaClient } from "@/lib/prisma";
 import { sendAppointmentEmail } from "@/lib/notifications/email";
+import { processDueOutboxEmails } from "@/lib/email/outbox";
 import { logger } from "@/lib/logger";
 import { REMINDABLE_APPOINTMENT_STATUSES } from "@/lib/appointments/status";
 import { getRequestId } from "@/app/api/_utils/request";
@@ -105,6 +106,12 @@ export async function GET(request: Request) {
     }
   }
 
+  // DOG-13: el cron (diario) también reintenta los correos que quedaron pendientes en la cola.
+  const outbox = await processDueOutboxEmails().catch((error: unknown) => {
+    logger.error({ event: "cron.outbox.failed", requestId, error });
+    return null;
+  });
+
   logger.info({
     event: "cron.reminders.completed",
     route: "/api/cron/appointments/reminders",
@@ -113,6 +120,7 @@ export async function GET(request: Request) {
     sentCount,
     skippedAlreadySent,
     failedCount,
+    outbox,
   });
 
   return NextResponse.json({
@@ -120,5 +128,6 @@ export async function GET(request: Request) {
     sent: sentCount,
     skippedAlreadySent,
     failed: failedCount,
+    outbox,
   });
 }

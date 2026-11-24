@@ -999,3 +999,33 @@ model PasswordResetToken {
   @@index([userId])
   @@index([expiresAt])
 }
+
+enum EmailOutboxStatus {
+  PENDING
+  SENDING
+  SENT
+  FAILED
+}
+
+/// Cola de correos salientes (DOG-13). El cuerpo va cifrado y se borra al enviarse.
+model EmailOutbox {
+  id            String            @id @default(uuid())
+  kind          String
+  transport     String
+  to            String
+  subject       String
+  html          String?
+  text          String?
+  status        EmailOutboxStatus @default(PENDING)
+  attempts      Int               @default(0)
+  lastError     String?
+  nextAttemptAt DateTime          @default(now())
+  /// Pasada esta fecha el correo ya no sirve (enlace vencido, cita pasada) y no se envía.
+  expiresAt     DateTime?
+  lockedUntil   DateTime?
+  sentAt        DateTime?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  @@index([status, nextAttemptAt])
+}

@@ -1,3 +1,8 @@
+import { withAbortTimeout } from "@/lib/http";
+
+// Adjuntos de hasta 10 MB: 60 s bastan incluso con conexiones lentas.
+const BLOB_UPLOAD_TIMEOUT_MS = 60_000;
+
 export const CLINICAL_ATTACHMENT_MAX_BYTES = 10 * 1024 * 1024;
 export const CLINICAL_ATTACHMENT_ALLOWED_TYPES = ["application/pdf", "image/jpeg", "image/png"] as const;
 
@@ -47,10 +52,9 @@ export async function uploadToBlob(
   contentType?: string,
 ): Promise<string> {
   const { put } = await import("@vercel/blob");
-  const result = await put(key, file, {
-    access: "private",
-    addRandomSuffix: false,
-    contentType,
-  });
+  const result = await withAbortTimeout(
+    (abortSignal) => put(key, file, { access: "private", addRandomSuffix: false, contentType, abortSignal }),
+    BLOB_UPLOAD_TIMEOUT_MS,
+  );
   return result.pathname;
 }
