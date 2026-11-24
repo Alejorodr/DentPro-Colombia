@@ -1,25 +1,11 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { SessionProvider, useSession } from "next-auth/react";
+import { SessionProvider } from "next-auth/react";
 
-import type { UserRole } from "@/lib/auth/roles";
 import PwaRegister from "@/components/PwaRegister";
-
-export function useAuthRole() {
-  const { data: session, status } = useSession();
-  const userRole = ((session?.user ?? null) as { role?: UserRole } | null)?.role ?? null;
-
-  return useMemo(
-    () => ({
-      role: userRole,
-      isLoading: status === "loading",
-    }),
-    [userRole, status],
-  );
-}
 
 export function AppProviders({ children }: { children: ReactNode }) {
   const [queryClient] = useState(() =>

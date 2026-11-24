@@ -16,29 +16,6 @@ export function getAppointmentBufferMinutes(): number {
   return DEFAULT_BUFFER_MINUTES;
 }
 
-export function buildSlotsWithBuffer(
-  startAt: Date,
-  endAt: Date,
-  durationMinutes: number,
-  bufferMinutes: number,
-): SlotWindow[] {
-  const slots: SlotWindow[] = [];
-  const bufferMs = Math.max(0, bufferMinutes) * 60_000;
-  let cursor = new Date(startAt);
-
-  while (cursor < endAt) {
-    const slotStart = new Date(cursor);
-    const slotEnd = new Date(slotStart.getTime() + durationMinutes * 60_000);
-    if (slotEnd > endAt) {
-      break;
-    }
-    slots.push({ startAt: slotStart, endAt: slotEnd });
-    cursor = new Date(slotEnd.getTime() + bufferMs);
-  }
-
-  return slots;
-}
-
 export function hasBufferConflict(
   target: SlotWindow,
   bookedSlots: Array<Pick<TimeSlot, "startAt" | "endAt">>,

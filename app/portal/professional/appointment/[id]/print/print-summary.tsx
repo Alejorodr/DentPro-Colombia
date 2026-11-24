@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 
-export interface AppointmentPrintData {
+interface AppointmentPrintData {
   id: string;
   reason: string;
   serviceName: string | null;

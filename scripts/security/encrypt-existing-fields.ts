@@ -2,8 +2,8 @@
  * Cifra los datos sensibles que quedaron en claro antes de DOG-18, y re-cifra con la
  * clave actual después de una rotación. Es idempotente: se puede correr varias veces.
  *
- *   pnpm exec tsx scripts/security/encrypt-existing-fields.ts           # solo cuenta
- *   pnpm exec tsx scripts/security/encrypt-existing-fields.ts --apply   # cifra
+ *   pnpm dlx tsx scripts/security/encrypt-existing-fields.ts           # solo cuenta
+ *   pnpm dlx tsx scripts/security/encrypt-existing-fields.ts --apply   # cifra
  *
  * Necesita DATABASE_URL, FIELD_ENCRYPTION_KEY (+ _KEY_ID) y FIELD_HASH_KEY del entorno
  * que se quiere migrar. Cada fila se lee a través del cliente (que descifra lo que ya

@@ -9,7 +9,7 @@ import {
   parseRange,
 } from "@/app/portal/admin/_data/analytics";
 import { STATUS_COLORS } from "@/app/portal/components/ui/statusColors";
-import GlassyDashboard, { type GlassyDashboardData, type GlassyStatusTone } from "@/components/ui/GlassyDashboard";
+import { GlassyDashboard, type GlassyDashboardData, type GlassyStatusTone } from "@/components/ui/GlassyDashboard";
 import { requireRole } from "@/lib/auth/require-role";
 import { formatInTimeZone, getAnalyticsTimeZone } from "@/lib/dates/tz";
 

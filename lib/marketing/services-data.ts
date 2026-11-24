@@ -1,4 +1,4 @@
-export interface ServiceFAQ {
+interface ServiceFAQ {
   question: string;
   answer: string;
 }

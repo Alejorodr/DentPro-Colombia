@@ -35,7 +35,7 @@ export async function openRolePortal(params: {
   await expect(params.page).toHaveURL(new RegExp(`^.*${rolePath}`));
 }
 
-export async function openReceptionistDashboard(page: Page) {
+async function openReceptionistDashboard(page: Page) {
   const receptionistPortalPath = /^\/portal\/receptionist(?:\/.*)?$/;
   const isInReceptionistPortal = () => receptionistPortalPath.test(new URL(page.url()).pathname);
   const isOnDashboard = () => new URL(page.url()).pathname === E2E_ROUTES.receptionist.dashboard;

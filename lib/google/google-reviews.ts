@@ -3,7 +3,7 @@ import { fetchWithTimeout } from "@/lib/http";
 // Si Google tarda, la home se muestra sin reseñas en vez de quedarse esperando.
 const GOOGLE_PLACES_TIMEOUT_MS = 5_000;
 
-export type GoogleReviewItem = {
+type GoogleReviewItem = {
   id: string;
   authorName: string;
   authorUri?: string;

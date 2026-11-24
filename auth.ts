@@ -23,12 +23,12 @@ type AuthenticatedUser = {
 
 export type AuthSession = { user?: AuthenticatedUser | null } | null;
 
-const { handlers, signIn, signOut } = NextAuth({
+const { handlers } = NextAuth({
   ...authConfig,
   adapter: DentProPrismaAdapter(),
 });
 
-export { handlers, signIn, signOut };
+export { handlers };
 
 // @auth/core@0.41.2 calls next/headers cookies() synchronously; Next.js 16
 // made cookies() strictly async. Decode the JWT with the async cookies API,

@@ -8,7 +8,7 @@ type PasswordResetEmailPayload = {
   expiresAt?: Date;
 };
 
-export function buildPasswordResetEmail(resetLink: string) {
+function buildPasswordResetEmail(resetLink: string) {
   return {
     subject: "Restablecer contraseña en DentPro",
     text: `Recibimos una solicitud para restablecer tu contraseña. Abre este enlace para continuar: ${resetLink}`,

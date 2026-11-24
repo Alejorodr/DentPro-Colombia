@@ -26,7 +26,7 @@ export const MARKETING_ICON_KEYS = [
 
 export type MarketingIconKey = (typeof MARKETING_ICON_KEYS)[number];
 
-export type HomepageServiceContent = {
+type HomepageServiceContent = {
   id: string;
   title: string;
   description: string;
@@ -34,7 +34,7 @@ export type HomepageServiceContent = {
   highlights: string[];
 };
 
-export type HomepageSpecialistContent = {
+type HomepageSpecialistContent = {
   id: string;
   name: string;
   specialty: string;
@@ -45,17 +45,17 @@ export type HomepageSpecialistContent = {
   };
 };
 
-export type HomepageHeroStatContent = {
+type HomepageHeroStatContent = {
   label: string;
   description: string;
 };
 
-export type HomepageBookingOptionContent = {
+type HomepageBookingOptionContent = {
   value: string;
   label: string;
 };
 
-export type HomepageBookingBenefitContent = {
+type HomepageBookingBenefitContent = {
   icon: MarketingIconKey;
   text: string;
 };
@@ -77,27 +77,27 @@ export type HomepageChannelContent = {
   placements: HomepagePlacement[];
 };
 
-export type HomepageContactSupportItemContent = {
+type HomepageContactSupportItemContent = {
   icon: MarketingIconKey;
   text: string;
 };
 
-export type HomepageLocationContent = {
+type HomepageLocationContent = {
   name: string;
   description: string;
 };
 
-export type HomepageLegalLinkContent = {
+type HomepageLegalLinkContent = {
   href: string;
   label: string;
 };
 
-export type HomepageNavLinkContent = {
+type HomepageNavLinkContent = {
   label: string;
   href: string;
 };
 
-export type HomepageFaqContent = {
+type HomepageFaqContent = {
   question: string;
   answer: string;
 };

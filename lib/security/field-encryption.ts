@@ -115,7 +115,7 @@ export function decryptValue(value: unknown): unknown {
 }
 
 /** Normaliza un documento de identidad: sin espacios, puntos ni guiones, en mayúsculas. */
-export function normalizeDocumentId(value: string): string {
+function normalizeDocumentId(value: string): string {
   return value.replace(/[^0-9A-Za-z]/g, "").toUpperCase();
 }
 

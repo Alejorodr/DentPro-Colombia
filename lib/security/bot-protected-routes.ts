@@ -11,6 +11,3 @@ export const BOT_PROTECTED_ROUTES = [
   { path: "/api/auth/forgot-password", method: "POST" },
   { path: "/api/auth/reset-password", method: "POST" },
 ] as const;
-
-/** Prefijo de las rutas internas de BotID (script y proxy hacia Vercel). */
-export const BOTID_PATH_PREFIX = "/149e9513-01fa-4fb0-aad4-566afd725d1b";

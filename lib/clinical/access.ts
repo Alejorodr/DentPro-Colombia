@@ -25,16 +25,3 @@ export async function professionalHasPatientAccess(
 
   return Boolean(episodeMatch);
 }
-
-export async function professionalHasEpisodeAccess(
-  prisma: PrismaClient,
-  professional: ProfessionalProfile,
-  episodeId: string,
-) {
-  const episode = await prisma.clinicalEpisode.findFirst({
-    where: { id: episodeId, professionalId: professional.id, deletedAt: null },
-    select: { id: true },
-  });
-
-  return Boolean(episode);
-}

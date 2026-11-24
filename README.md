@@ -79,10 +79,10 @@ Los adjuntos clínicos se almacenan en Vercel Blob y se referencian por `storage
 
 ## Seed del admin (manual)
 
-El seed garantiza que exista un usuario ADMINISTRADOR con el correo real (ej. `kevinrodr@hotmail.com`). Ejecuta el seed manualmente cuando quieras crear o actualizar la cuenta admin:
+El seed garantiza que exista un usuario ADMINISTRADOR con el correo que indiques. Ejecuta el seed manualmente cuando quieras crear o actualizar la cuenta admin:
 
 ```bash
-SEED_ADMIN_EMAIL=kevinrodr@hotmail.com SEED_ADMIN_PASSWORD="TuPasswordSegura" pnpm run prisma:seed
+SEED_ADMIN_EMAIL=admin@tu-dominio.com SEED_ADMIN_PASSWORD="TuPasswordSegura" pnpm run prisma:seed
 ```
 
 - Si el usuario existe, se asegura el rol `ADMINISTRADOR` y se actualiza la contraseña solo si `SEED_ADMIN_PASSWORD` está presente.
@@ -114,32 +114,31 @@ Para emails de citas (confirmaciones, recordatorios, reprogramaciones) configura
 
 ## Scripts útiles
 
-- `npm run dev`: entorno local (Turbopack)
-- `npm run build`: build de producción
-- `npm run lint`: lint
-- `npm run test`: tests unitarios
-- `npm run test:e2e`: E2E (opt-in, requiere browsers instalados)
-- `npm run e2e:prod`: E2E en modo producción (opt-in, requiere browsers instalados)
+- `pnpm dev`: entorno local (webpack)
+- `pnpm build`: build de producción
+- `pnpm lint`: lint
+- `pnpm typecheck`: chequeo de tipos
+- `pnpm test`: tests unitarios e integración (Vitest)
+- `pnpm e2e:local`: E2E completos contra un Postgres efímero en Docker (aislado de `.env.local`)
+- `pnpm e2e:local:smoke`: solo los E2E `@smoke`, igual que el CI de los PR
+- `pnpm e2e:db:down`: baja el contenedor de Postgres de los E2E
+- `pnpm secrets:scan`: busca secretos con gitleaks (en Docker)
+
+Verificación completa antes de integrar un cambio:
+
+```bash
+pnpm lint && pnpm typecheck && pnpm test && pnpm build
+```
 
 ### Playwright (E2E)
 
-Para instalar los browsers (una sola vez) ejecuta:
+Para instalar el navegador (una sola vez):
 
 ```bash
-npx playwright install --with-deps chromium
+pnpm exec playwright install --with-deps chromium
 ```
 
-Luego habilita los E2E con:
-
-```bash
-RUN_E2E=1 npm run test:e2e
-```
-
-Para ejecutar contra build de producción (incluye `NEXT_TELEMETRY_DISABLED=1` en el servidor de Playwright):
-
-```bash
-npm run e2e:prod
-```
+Nunca corras los E2E contra Neon (ni producción ni dev): siembran usuarios con contraseñas públicas. Usa `pnpm e2e:local`. Más detalles en `docs/E2E.md`.
 
 ## Roles soportados
 
@@ -153,9 +152,9 @@ npm run e2e:prod
 - `/` Landing pública
 - `/auth/login` Login con Credentials
 - `/appointments/new` Crear turno (login requerido)
-- `/portal/paciente`
-- `/portal/profesional`
-- `/portal/recepcionista`
+- `/portal/client` (paciente)
+- `/portal/professional`
+- `/portal/receptionist`
 - `/portal/admin`
 
 ## Analytics admin (KPIs por período)

@@ -12,7 +12,7 @@ type ButtonClassOptions = {
   className?: string;
 };
 
-export function buttonClasses({ variant = "primary", size = "md", className }: ButtonClassOptions = {}) {
+function buttonClasses({ variant = "primary", size = "md", className }: ButtonClassOptions = {}) {
   const base =
     "inline-flex items-center justify-center gap-2 rounded-full text-sm font-semibold transition focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-teal/60 disabled:pointer-events-none disabled:opacity-60";
   const variants: Record<ButtonVariant, string> = {
