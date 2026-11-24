@@ -254,6 +254,8 @@ model PatientProfile {
   userId              String               @unique @db.Uuid
   phone               String?
   documentId          String?
+  /// HMAC del documento normalizado para buscarlo sin descifrar (DOG-18).
+  documentIdHash      String?
   dateOfBirth         DateTime?
   gender              String?
   insuranceProvider   String?
@@ -272,6 +274,8 @@ model PatientProfile {
   prescriptions       Prescription[]
   consents            SignedConsent[]
   accessLogs          AccessLog[]
+
+  @@index([documentIdHash])
 }
 
 model Service {

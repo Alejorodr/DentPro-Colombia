@@ -8,6 +8,7 @@ import { enforceRateLimit } from "@/app/api/_utils/ratelimit";
 import { getRequestId } from "@/app/api/_utils/request";
 import { getPaginationParams } from "@/app/api/_utils/pagination";
 import { logger } from "@/lib/logger";
+import { documentIdSearchHash } from "@/lib/security/field-encryption";
 import { requireRole, requireSession } from "@/lib/authz";
 import * as Sentry from "@sentry/nextjs";
 
@@ -19,6 +20,16 @@ const searchUserSelect = {
 };
 
 const searchQuerySchema = z.string().trim().min(1).max(80);
+
+/**
+ * Las notas clínicas están cifradas en reposo (DOG-18), así que no se pueden filtrar en SQL.
+ * Se descifran las más recientes del profesional y se filtran en memoria.
+ */
+const NOTE_SEARCH_WINDOW = 300;
+
+function normalizeForSearch(value: string): string {
+  return value.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
+}
 
 export async function GET(request: Request) {
   const requestId = getRequestId(request);
@@ -153,7 +164,6 @@ export async function GET(request: Request) {
         prisma.clinicalNote.findMany({
           where: {
             appointment: { professionalId: professional.id },
-            content: { contains: query, mode: "insensitive" },
           },
           include: {
             appointment: {
@@ -165,7 +175,7 @@ export async function GET(request: Request) {
             },
           },
           orderBy: { updatedAt: "desc" },
-          take: queryTake,
+          take: NOTE_SEARCH_WINDOW,
         }),
       ]);
 
@@ -184,7 +194,10 @@ export async function GET(request: Request) {
           description: `${appointment.timeSlot.startAt.toLocaleDateString("es-CO")} · ${appointment.status}`,
           href: `/portal/professional?appointment=${appointment.id}`,
         })),
-        ...notes.map((note) => {
+        ...notes
+          .filter((note) => normalizeForSearch(note.content).includes(normalizeForSearch(query)))
+          .slice(0, queryTake)
+          .map((note) => {
           const patientName = `${note.appointment?.patient?.user.name ?? "Paciente"} ${
             note.appointment?.patient?.user.lastName ?? ""
           }`.trim();
@@ -250,7 +263,9 @@ export async function GET(request: Request) {
                 ],
               },
             },
+            // Filas aún sin cifrar (antes de la migración) y búsqueda exacta por hash (DOG-18).
             { documentId: { contains: query, mode: "insensitive" } },
+            ...(documentIdSearchHash(query) ? [{ documentIdHash: documentIdSearchHash(query) }] : []),
           ],
         },
         include: { user: { select: searchUserSelect } },
