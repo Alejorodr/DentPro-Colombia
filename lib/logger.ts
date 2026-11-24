@@ -20,14 +20,24 @@ const SENSITIVE_KEYS = [
   "databaseurl",
   "headers",
   "header",
+  // Datos clínicos y de identidad del paciente (DOG-16): nunca a logs ni a Sentry.
+  "allerg",
+  "diagnos",
+  "prescri",
+  "clinical",
+  "medical",
+  "notes",
+  "document",
+  "insurance",
+  "consent",
 ];
 
-function sanitizeString(value: string): string {
+export function sanitizeString(value: string): string {
   const maskedEmails = value.replace(EMAIL_REGEX, (_match, user, domain) => `${user[0] ?? "*"}***@${domain}`);
   return maskedEmails.replace(PHONE_REGEX, "***");
 }
 
-function sanitizeValue(value: unknown): unknown {
+export function sanitizeValue(value: unknown): unknown {
   if (typeof value === "string") {
     return sanitizeString(value);
   }
