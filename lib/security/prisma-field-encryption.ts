@@ -21,6 +21,8 @@ export const ENCRYPTED_FIELDS: Record<string, Record<string, "text" | "json">> =
   MedicalAllergy: { substance: "text", notes: "text" },
   Prescription: { content: "json" },
   PrescriptionItem: { name: "text", dosage: "text", frequency: "text", instructions: "text" },
+  // Cola de correos (DOG-13): el cuerpo lleva enlaces de restablecimiento y datos de la cita.
+  EmailOutbox: { html: "text", text: "text" },
 };
 
 const WRITE_OPERATIONS = new Set([

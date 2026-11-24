@@ -106,7 +106,7 @@ async function issuePasswordReset(email: string, requestId: string) {
       const baseUrl = getAppBaseUrl();
       const resetLink = `${baseUrl}/auth/reset-password?token=${token}`;
 
-      await sendPasswordResetEmail({ to: user.email, resetLink });
+      await sendPasswordResetEmail({ to: user.email, resetLink, expiresAt });
     }
   } catch (error) {
     Sentry.captureException(error);

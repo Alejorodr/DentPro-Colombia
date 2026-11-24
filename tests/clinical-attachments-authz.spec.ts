@@ -86,7 +86,11 @@ describe("clinical attachments authz hardening", () => {
     expect(response.status).toBe(200);
     expect(response.headers.get("cache-control")).toBe("private, no-store");
     expect(response.headers.get("x-content-type-options")).toBe("nosniff");
-    expect(mockGet).toHaveBeenCalledWith("clinical/a-1/xray.pdf", { access: "private", useCache: false });
+    expect(mockGet).toHaveBeenCalledWith("clinical/a-1/xray.pdf", {
+      access: "private",
+      useCache: false,
+      abortSignal: expect.any(AbortSignal),
+    });
   });
 
   it("returns 404 for professional trying to delete attachment outside own scope", async () => {

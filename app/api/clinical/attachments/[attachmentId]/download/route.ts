@@ -6,6 +6,9 @@ import { getPrismaClient } from "@/lib/prisma";
 import { requireSession } from "@/lib/authz";
 import { AccessLogAction } from "@prisma/client";
 import { get } from "@vercel/blob";
+import { withAbortTimeout } from "@/lib/http";
+
+const BLOB_DOWNLOAD_TIMEOUT_MS = 15_000;
 
 export async function GET(request: Request, { params }: { params: Promise<{ attachmentId: string }> }) {
   const sessionResult = await requireSession();
@@ -78,7 +81,11 @@ export async function GET(request: Request, { params }: { params: Promise<{ atta
     metadata: { attachmentId },
   });
 
-  const blob = await get(attachment.storageKey, { access: "private", useCache: false });
+  // El límite cubre hasta recibir la respuesta de Blob; el stream del archivo sigue sin cortarse.
+  const blob = await withAbortTimeout(
+    (abortSignal) => get(attachment.storageKey, { access: "private", useCache: false, abortSignal }),
+    BLOB_DOWNLOAD_TIMEOUT_MS,
+  );
   if (!blob || blob.statusCode !== 200 || !blob.stream) {
     return errorResponse("Adjunto no disponible.", 410);
   }
