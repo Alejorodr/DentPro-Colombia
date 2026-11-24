@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 
-import { Moon, Sun } from "@/components/ui/Icon";
+import { MorphToggleIcon } from "@/components/ui/Icon";
 
 type Theme = "light" | "dark";
 
@@ -130,11 +130,7 @@ export function ThemeToggle() {
       title={label}
       onClick={handleToggle}
     >
-      {isDark ? (
-        <Moon aria-hidden="true" className="h-5 w-5" weight="bold" />
-      ) : (
-        <Sun aria-hidden="true" className="h-5 w-5" weight="bold" />
-      )}
+      <MorphToggleIcon name="theme" active={isDark} aria-hidden="true" className="h-5 w-5" weight="bold" />
     </button>
   );
 }

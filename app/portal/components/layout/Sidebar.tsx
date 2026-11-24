@@ -3,10 +3,9 @@
 import Image from "next/image";
 import Link from "next/link";
 
-import { useRef } from "react";
 
 import { SignOut, X } from "@/components/ui/Icon";
-import type { Icon, IconHandle } from "@/components/ui/Icon";
+import type { Icon } from "@/components/ui/Icon";
 import { Button } from "@/components/ui/Button";
 
 const iconWeight = "bold" as const;
@@ -64,11 +63,7 @@ export function resolveActiveHref(pathname: string, search: string, entries: Nav
 }
 
 function SidebarNavLink({ active, item }: { active: boolean; item: NavItem }) {
-  const iconRef = useRef<IconHandle>(null);
   const ItemIcon = item.icon;
-
-  const startIconAnimation = () => iconRef.current?.startAnimation();
-  const stopIconAnimation = () => iconRef.current?.stopAnimation();
 
   return (
     <Link
@@ -80,18 +75,10 @@ function SidebarNavLink({ active, item }: { active: boolean; item: NavItem }) {
           ? "bg-brand-teal/10 text-brand-teal dark:bg-accent-cyan/10 dark:text-accent-cyan"
           : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-surface-muted/70"
       }`}
-      onBlur={stopIconAnimation}
-      onFocus={startIconAnimation}
-      onMouseEnter={startIconAnimation}
-      onMouseLeave={stopIconAnimation}
-      onPointerDown={startIconAnimation}
     >
       <ItemIcon
-        ref={iconRef}
         aria-hidden="true"
         className="h-5 w-5"
-        isAnimated={false}
-        nativeAnimation
         weight={iconWeight}
       />
       {item.label}
