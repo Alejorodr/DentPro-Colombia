@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import type { MarketingIconKey } from "@/lib/marketing/homepage-types";
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
 import { IconSelect } from "@/app/portal/admin/content/components/IconSelect";
+import { SkeletonRows } from "@/app/portal/components/ui/Skeleton";
 
 type ServicesCopyForm = {
   servicesTitle: string;
@@ -222,7 +223,7 @@ export function AdminServicesCopyPanel() {
   };
 
   if (loading) {
-    return <p className="text-sm text-slate-600 dark:text-slate-300">Cargando servicios...</p>;
+    return <SkeletonRows label="Cargando servicios" />;
   }
 
   return (
@@ -268,7 +269,7 @@ export function AdminServicesCopyPanel() {
         {rowError ? <p className="text-sm text-red-600 dark:text-red-400">{rowError}</p> : null}
 
         {servicesLoading ? (
-          <p className="text-sm text-slate-500 dark:text-slate-400">Cargando servicios...</p>
+          <SkeletonRows label="Cargando servicios" />
         ) : services.length === 0 ? (
           <p className="rounded-2xl border border-dashed border-slate-200 p-6 text-center text-sm text-slate-500 dark:border-surface-muted">
             No hay servicios registrados. Creá uno desde Servicios y tarifas.
@@ -329,7 +330,7 @@ export function AdminServicesCopyPanel() {
                     <div className="space-y-2">
                       <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Highlights</p>
                       {highlightsLoading ? (
-                        <p className="text-sm text-slate-500 dark:text-slate-400">Cargando highlights...</p>
+                        <SkeletonRows label="Cargando highlights" />
                       ) : (
                         <>
                           {highlights.map((h) => (

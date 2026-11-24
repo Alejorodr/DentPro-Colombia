@@ -40,19 +40,26 @@ export function AppointmentsList({ initialAppointments, role }: AppointmentsList
   const [rescheduleTargetId, setRescheduleTargetId] = useState<string | null>(null);
 
   const updateStatus = async (id: string, status: string) => {
+    const previous = appointments.find((item) => item.id === id);
+    if (!previous) return;
     setBusyId(id);
-    const response = await fetchWithTimeout(`/api/appointments/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status }),
-    });
+    // DOG-12: el estado cambia al instante y se revierte si el servidor lo rechaza.
+    setAppointments((prev) => prev.map((item) => (item.id === id ? { ...item, status } : item)));
 
-    if (response.ok) {
+    try {
+      const response = await fetchWithTimeout(`/api/appointments/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      if (!response.ok) throw new Error(`status ${response.status}`);
       const updated = await response.json();
       setAppointments((prev) => prev.map((item) => (item.id === id ? updated : item)));
+    } catch {
+      setAppointments((prev) => prev.map((item) => (item.id === id ? previous : item)));
+    } finally {
+      setBusyId(null);
     }
-
-    setBusyId(null);
   };
 
   const openReschedule = (id: string) => {

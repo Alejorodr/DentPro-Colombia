@@ -11,6 +11,7 @@ import { useModalDialog } from "@/app/portal/components/ui/useModalDialog";
 import { ArrowLeft, ArrowRight } from "@/components/ui/Icon";
 import { RoleModal, type Specialty } from "./RoleModal";
 import { PatientDetailModal } from "./PatientDetailModal";
+import { SkeletonRows } from "@/app/portal/components/ui/Skeleton";
 
 type UserRecord = {
   id: string;
@@ -503,7 +504,7 @@ export function AdminUsersPanel({ roleFilter, roleLock }: AdminUsersPanelProps) 
         {error ? <p className="mt-4 text-sm text-red-600 dark:text-red-400">{error}</p> : null}
 
         {loading ? (
-          <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">Cargando usuarios...</p>
+          <SkeletonRows label="Cargando usuarios" />
         ) : (
           <div className="mt-4 space-y-3">
             {displayedUsers.map((user) => {

@@ -11,6 +11,7 @@ import { NewAppointmentModal } from "@/app/portal/receptionist/components/NewApp
 import { Skeleton } from "@/app/portal/components/ui/Skeleton";
 import { ActivityFeed } from "@/app/portal/components/activity/ActivityFeed";
 import { fetchWithRetry } from "@/lib/http";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 
 const viewOptions = [
   { value: "day", label: "Día" },
@@ -121,6 +122,9 @@ export function ReceptionistSchedule() {
   const [specialtyFilter, setSpecialtyFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [patientQuery, setPatientQuery] = useState("");
+  // DOG-12: la agenda se consulta cuando el texto deja de cambiar, no en cada tecla.
+  const debouncedPatientQuery = useDebouncedValue(patientQuery.trim(), 300);
+  const latestRequestRef = useRef(0);
   const [groupByProfessional, setGroupByProfessional] = useState(() => searchParams.get("group") === "professional");
   const [isLoadingSchedule, setIsLoadingSchedule] = useState(false);
   const previousFilterKeyRef = useRef<string>("");
@@ -138,6 +142,9 @@ export function ReceptionistSchedule() {
   const summaryDays = useMemo(() => (view === "month" ? [] : buildRangeDays(range.from, range.to)), [range.from, range.to, view]);
 
   const refresh = useCallback(async (pageOverride?: number) => {
+    // Solo la última petición actualiza la vista: una respuesta lenta no pisa a una más nueva.
+    const requestId = ++latestRequestRef.current;
+    const isLatest = () => requestId === latestRequestRef.current;
     setError(null);
     setIsLoadingSchedule(true);
 
@@ -158,22 +165,24 @@ export function ReceptionistSchedule() {
       if (statusFilter !== "all") {
         params.set("status", statusFilter);
       }
-      if (patientQuery.trim()) {
-        params.set("patientQuery", patientQuery.trim());
+      if (debouncedPatientQuery) {
+        params.set("patientQuery", debouncedPatientQuery);
       }
       const response = await fetchWithRetry(`/api/analytics/receptionist?${params.toString()}`);
+      if (!isLatest()) return;
       if (!response.ok) {
         setError("No se pudo cargar la agenda. Intenta actualizar.");
         return;
       }
       const payload = (await response.json()) as AnalyticsResponse;
+      if (!isLatest()) return;
       setData(payload);
     } catch {
-      setError("No se pudo cargar la agenda. Intenta actualizar.");
+      if (isLatest()) setError("No se pudo cargar la agenda. Intenta actualizar.");
     } finally {
-      setIsLoadingSchedule(false);
+      if (isLatest()) setIsLoadingSchedule(false);
     }
-  }, [patientQuery, professionalFilter, range.from, range.to, selectedDate, specialtyFilter, statusFilter]);
+  }, [debouncedPatientQuery, professionalFilter, range.from, range.to, selectedDate, specialtyFilter, statusFilter]);
 
   const activeFiltersKey = useMemo(
     () =>
@@ -184,9 +193,9 @@ export function ReceptionistSchedule() {
         professionalFilter,
         specialtyFilter,
         statusFilter,
-        patientQuery: patientQuery.trim(),
+        patientQuery: debouncedPatientQuery,
       }),
-    [patientQuery, professionalFilter, range.from, range.to, selectedDate, specialtyFilter, statusFilter],
+    [debouncedPatientQuery, professionalFilter, range.from, range.to, selectedDate, specialtyFilter, statusFilter],
   );
 
   useEffect(() => {

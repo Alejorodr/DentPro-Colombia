@@ -7,6 +7,7 @@ import { fetchWithTimeout } from "@/lib/http";
 import { STATUS_COLORS } from "@/app/portal/components/ui/statusColors";
 import { useModalDialog } from "@/app/portal/components/ui/useModalDialog";
 import { X } from "@/components/ui/Icon";
+import { SkeletonRows } from "@/app/portal/components/ui/Skeleton";
 
 export type Specialty = {
   id: string;
@@ -436,7 +437,7 @@ export function RoleModal({
                 Servicios que ofrece
               </p>
               {servicesLoading ? (
-                <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Cargando servicios...</p>
+                <SkeletonRows label="Cargando servicios" />
               ) : (
                 <div className="mt-2 space-y-2">
                   {specialtyServices.map((service) => {

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
+import { SkeletonRows } from "@/app/portal/components/ui/Skeleton";
 
 type PatientProfile = {
   phone?: string | null;
@@ -111,7 +112,7 @@ export function ClientProfileForm() {
   };
 
   if (!profile) {
-    return <p className="text-sm text-slate-500">Cargando perfil...</p>;
+    return <SkeletonRows label="Cargando perfil" />;
   }
 
   return (

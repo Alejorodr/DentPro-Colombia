@@ -10,6 +10,7 @@ import { AdminImageField } from "@/app/portal/admin/content/components/AdminImag
 import { fetchWithRetry, fetchWithTimeout, getApiErrorMessage } from "@/lib/http";
 import { SectionVisibilityToggle } from "@/app/portal/admin/content/components/SectionVisibilityToggle";
 import { STATUS_COLORS } from "@/app/portal/components/ui/statusColors";
+import { SkeletonRows } from "@/app/portal/components/ui/Skeleton";
 
 type CampaignRecord = {
   id: string;
@@ -267,7 +268,7 @@ export function AdminCampaignsPanel() {
         </button>
       </Card>
 
-      {loading ? <Card><p className="text-sm text-slate-600 dark:text-slate-300">Cargando campañas...</p></Card> : null}
+      {loading ? <Card><SkeletonRows label="Cargando campañas" /></Card> : null}
 
       <Card className="space-y-4">
         <div>

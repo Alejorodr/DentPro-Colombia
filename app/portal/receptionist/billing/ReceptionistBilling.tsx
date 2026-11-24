@@ -6,6 +6,7 @@ import { Card } from "@/app/portal/components/ui/Card";
 import { Table } from "@/app/portal/components/ui/Table";
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
 import { PaymentMethod, PaymentStatus } from "@prisma/client";
+import { SkeletonRows } from "@/app/portal/components/ui/Skeleton";
 
 const formatCurrency = (cents: number) =>
   new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(cents / 100);
@@ -220,7 +221,7 @@ export function ReceptionistBilling({ isAdmin = false }: ReceptionistBillingProp
             </div>
 
             {loading ? (
-              <p className="text-sm text-slate-500">Cargando…</p>
+              <SkeletonRows label="Cargando" />
             ) : data.appointments.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-slate-200 p-6 text-center text-sm text-slate-500">
                 No hay citas facturables para este día.

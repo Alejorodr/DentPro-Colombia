@@ -23,6 +23,7 @@ import { AdminHomepageLegalLinksPanel } from "@/app/portal/admin/content/AdminHo
 import { AdminHomepageFaqPanel } from "@/app/portal/admin/content/AdminHomepageFaqPanel";
 import { AdminHomepageNavLinksPanel } from "@/app/portal/admin/content/AdminHomepageNavLinksPanel";
 import { ContentSidebar, DEFAULT_SECTION, findSectionLabel } from "@/app/portal/admin/content/ContentSidebar";
+import { SkeletonRows } from "@/app/portal/components/ui/Skeleton";
 
 function SectionPanel({ section }: { section: string }) {
   switch (section) {
@@ -109,7 +110,7 @@ function ContentShellInner() {
 
 export function ContentShell() {
   return (
-    <Suspense fallback={<p className="text-sm text-slate-500 dark:text-slate-400">Cargando...</p>}>
+    <Suspense fallback={<SkeletonRows label="Cargando" />}>
       <ContentShellInner />
     </Suspense>
   );

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
+import { SkeletonRows } from "@/app/portal/components/ui/Skeleton";
 
 type Template = {
   id: string;
@@ -62,7 +63,7 @@ export function ClientConsentsPanel() {
   };
 
   if (loading) {
-    return <p className="text-sm text-slate-500">Cargando consentimientos...</p>;
+    return <SkeletonRows label="Cargando consentimientos" />;
   }
 
   return (

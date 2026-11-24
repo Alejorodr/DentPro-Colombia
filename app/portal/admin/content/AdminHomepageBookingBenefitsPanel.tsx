@@ -7,6 +7,7 @@ import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
 import { MARKETING_ICON_KEYS } from "@/lib/marketing/homepage-types";
 
 import { IconSelect } from "./components/IconSelect";
+import { SkeletonRows } from "@/app/portal/components/ui/Skeleton";
 
 type BookingBenefitItem = {
   id: string;
@@ -182,7 +183,7 @@ export function AdminHomepageBookingBenefitsPanel() {
         </button>
       </Card>
 
-      {loading ? <Card><p className="text-sm text-slate-600 dark:text-slate-300">Cargando beneficios...</p></Card> : null}
+      {loading ? <Card><SkeletonRows label="Cargando beneficios" /></Card> : null}
 
       {bookingBenefits.map((bookingBenefit, index) => (
         <Card key={bookingBenefit.id} className="space-y-4">

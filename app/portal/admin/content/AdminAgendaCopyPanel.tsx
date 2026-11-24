@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
+import { SkeletonRows } from "@/app/portal/components/ui/Skeleton";
 
 type AgendaCopyForm = {
   bookingTitle: string;
@@ -84,7 +85,7 @@ export function AdminAgendaCopyPanel() {
   };
 
   if (loading) {
-    return <p className="text-sm text-slate-600 dark:text-slate-300">Cargando sección de agenda...</p>;
+    return <SkeletonRows label="Cargando sección de agenda" />;
   }
 
   return (

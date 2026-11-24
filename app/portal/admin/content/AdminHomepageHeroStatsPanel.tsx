@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Card } from "@/app/portal/components/ui/Card";
 import { SectionVisibilityToggle } from "@/app/portal/admin/content/components/SectionVisibilityToggle";
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
+import { SkeletonRows } from "@/app/portal/components/ui/Skeleton";
 
 type HeroStatItem = {
   id: string;
@@ -198,7 +199,7 @@ export function AdminHomepageHeroStatsPanel() {
         </button>
       </Card>
 
-      {loading ? <Card><p className="text-sm text-slate-600 dark:text-slate-300">Cargando estadísticas...</p></Card> : null}
+      {loading ? <Card><SkeletonRows label="Cargando estadísticas" /></Card> : null}
 
       {heroStats.map((heroStat, index) => (
         <Card key={heroStat.id} className="space-y-4">

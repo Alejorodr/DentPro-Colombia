@@ -12,6 +12,7 @@ import { AppointmentTable } from "@/app/portal/receptionist/components/Appointme
 import { CalendarMonth } from "@/app/portal/receptionist/components/CalendarMonth";
 import { NewAppointmentModal } from "@/app/portal/receptionist/components/NewAppointmentModal";
 import { fetchWithRetry } from "@/lib/http";
+import { SkeletonRows, SkeletonStatGrid } from "@/app/portal/components/ui/Skeleton";
 
 const viewOptions = [
   { value: "day", label: "Día" },
@@ -238,7 +239,7 @@ export function ReceptionistDashboard() {
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {loading && stats.length === 0 ? (
-          <Card className="md:col-span-2 xl:col-span-4">Cargando métricas…</Card>
+          <SkeletonStatGrid label="Cargando métricas" />
         ) : (
           stats.map((stat) => <StatCard key={stat.label} {...stat} />)
         )}
@@ -319,7 +320,7 @@ export function ReceptionistDashboard() {
               onRefresh={() => refresh(page)}
             />
           ) : (
-            <p className="text-sm text-slate-500 dark:text-slate-400">Cargando agenda…</p>
+            <SkeletonRows label="Cargando agenda" />
           )}
         </Card>
       </section>

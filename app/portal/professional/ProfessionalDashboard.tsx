@@ -71,6 +71,15 @@ export function ProfessionalDashboard() {
   const [calendarView, setCalendarView] = useState<"list" | "grid">("grid");
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const autoSaveRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // DOG-12: la cita seleccionada se lee por ref al cargar la agenda, así elegir otra cita no
+  // vuelve a descargar todo el día. `savedNotesRef` evita autoguardar una nota que nadie editó.
+  const selectedAppointmentIdRef = useRef<string | null>(selectedAppointmentId);
+  const savedNotesRef = useRef<string>("");
+
+  // Declarado antes que la carga de la agenda: los efectos corren en orden.
+  useEffect(() => {
+    selectedAppointmentIdRef.current = selectedAppointmentId;
+  }, [selectedAppointmentId]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -90,8 +99,9 @@ export function ProfessionalDashboard() {
         if (requestedAppointment && data.appointments?.some((item) => item.id === requestedAppointment)) {
           setSelectedAppointmentId(requestedAppointment);
         } else if (data.appointments?.length) {
-          const hasSelected = selectedAppointmentId
-            ? data.appointments.some((item) => item.id === selectedAppointmentId)
+          const currentSelection = selectedAppointmentIdRef.current;
+          const hasSelected = currentSelection
+            ? data.appointments.some((item) => item.id === currentSelection)
             : false;
           if (!hasSelected) {
             setSelectedAppointmentId(data.appointments[0].id);
@@ -109,7 +119,7 @@ export function ProfessionalDashboard() {
     return () => {
       active = false;
     };
-  }, [searchParams, selectedDate, selectedAppointmentId]);
+  }, [searchParams, selectedDate]);
 
   useEffect(() => {
     if (!selectedAppointmentId) {
@@ -127,6 +137,7 @@ export function ProfessionalDashboard() {
         if (!active) return;
         setAppointmentDetail(data);
         const latestNote = data.clinicalNotes.at(0)?.content ?? "";
+        savedNotesRef.current = latestNote;
         setNotesContent(latestNote);
       } catch (error) {
         console.error(error);
@@ -143,11 +154,12 @@ export function ProfessionalDashboard() {
   const persistNotes = useCallback(async () => {
     if (!selectedAppointmentId) return;
     try {
-      await fetchWithTimeout(`/api/professional/appointment/${selectedAppointmentId}/notes`, {
+      const response = await fetchWithTimeout(`/api/professional/appointment/${selectedAppointmentId}/notes`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ content: notesContent }),
       });
+      if (response.ok) savedNotesRef.current = notesContent;
       setLastSavedAt(new Date());
     } catch (error) {
       console.error(error);
@@ -156,7 +168,7 @@ export function ProfessionalDashboard() {
 
   // Auto-save notes 2 s after the user stops typing
   useEffect(() => {
-    if (!selectedAppointmentId || !notesContent) return;
+    if (!selectedAppointmentId || !notesContent || notesContent === savedNotesRef.current) return;
     if (autoSaveRef.current) clearTimeout(autoSaveRef.current);
     autoSaveRef.current = setTimeout(() => {
       void persistNotes();
