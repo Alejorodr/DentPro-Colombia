@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Eye, EyeSlash } from "@/components/ui/Icon";
+import { MorphToggleIcon } from "@/components/ui/Icon";
 import { fetchWithTimeout } from "@/lib/http";
 
 type VisibilityKey = "showSpecialists" | "showCampaigns" | "showHeroStats";
@@ -56,11 +56,14 @@ export function SectionVisibilityToggle({ label, fieldKey, initialValue }: Props
         />
       </button>
       <div className="flex items-center gap-2">
-        {visible ? (
-          <Eye size={16} weight="bold" className="text-brand-teal" />
-        ) : (
-          <EyeSlash size={16} weight="bold" className="text-slate-400" />
-        )}
+        <MorphToggleIcon
+          name="visibility"
+          active={!visible}
+          size={16}
+          weight="bold"
+          aria-hidden="true"
+          className={visible ? "text-brand-teal transition-colors" : "text-slate-400 transition-colors"}
+        />
         <div>
           <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">
             {label}

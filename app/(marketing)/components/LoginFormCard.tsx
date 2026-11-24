@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { getSession, signIn, useSession } from "next-auth/react";
-import { ArrowRight, EnvelopeSimple, Eye, EyeSlash, Lock, ShieldCheck, WarningCircle } from "@/components/ui/Icon";
+import { ArrowRight, EnvelopeSimple, MorphToggleIcon, Lock, ShieldCheck, WarningCircle } from "@/components/ui/Icon";
 import { Button } from "@/components/ui/Button";
 import { GoogleColorLogo } from "@/components/ui/GoogleColorLogo";
 
@@ -258,10 +258,7 @@ export function LoginFormCard({
               aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
               tabIndex={0}
             >
-              {showPassword
-                ? <EyeSlash className="h-4 w-4" weight="bold" aria-hidden="true" />
-                : <Eye className="h-4 w-4" weight="bold" aria-hidden="true" />
-              }
+              <MorphToggleIcon name="visibility" active={showPassword} className="h-4 w-4" weight="bold" aria-hidden="true" />
             </button>
           </div>
         </div>

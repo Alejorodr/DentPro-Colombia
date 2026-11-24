@@ -105,7 +105,7 @@ export function ContactSection({
               const isWhatsapp = channel.type === "WHATSAPP";
 
               return (
-                <p key={channel.id} className="flex items-center gap-3">
+                <div key={channel.id} className="flex items-center gap-3">
                   <span className="icon-badge text-brand-light dark:text-accent-cyan">
                     <ChannelIcon className="h-5 w-5" weight="bold" aria-hidden="true" />
                   </span>
@@ -117,7 +117,7 @@ export function ContactSection({
                   >
                     {channel.label}
                   </a>
-                </p>
+                </div>
               );
             })}
           </div>
