@@ -57,6 +57,10 @@ const env = {
   SHADOW_DATABASE_URL: LOCAL_SHADOW_DB,
   // AUTH_JWT_SECRET/AUTH_SECRET de .env.local quedan en "": lib/auth/secret.ts los trata como ausentes.
   NEXTAUTH_SECRET: "test-secret",
+  // DOG-18: claves de prueba (bytes en cero/uno) para que las E2E ejerciten el cifrado.
+  FIELD_ENCRYPTION_KEY: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+  FIELD_ENCRYPTION_KEY_ID: "e2e",
+  FIELD_HASH_KEY: "AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE=",
   NEXTAUTH_URL: "http://127.0.0.1:3000",
   NEXT_PUBLIC_APP_URL: "http://localhost:3000",
   AUTH_TRUST_HOST: "true",
