@@ -151,7 +151,6 @@
 - `PATCH|DELETE /api/specialties/[id]`: ADMINISTRADOR.
 - `GET|POST /api/admin/templates`: ADMINISTRADOR.
 - `GET|PATCH|DELETE /api/admin/templates/[id]`: ADMINISTRADOR.
-- `GET /api/admin/metrics/appointments`: ADMINISTRADOR.
 - `GET /api/admin/audit/access-logs`: ADMINISTRADOR.
 - `GET /api/admin/patients/[id]/export`: ADMINISTRADOR.
 - `GET|POST /api/admin/holidays`: ADMINISTRADOR.
