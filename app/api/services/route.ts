@@ -6,6 +6,9 @@ import { errorResponse } from "@/app/api/_utils/response";
 import { buildPaginatedResponse, getPaginationParams } from "@/app/api/_utils/pagination";
 import { parseJson } from "@/app/api/_utils/validation";
 import { noHtml, requiredText } from "@/app/api/admin/homepage/_lib";
+import { unstable_cache } from "next/cache";
+
+import { CATALOG_CACHE_VERSION, CATALOG_REVALIDATE_SECONDS, CATALOG_TAGS } from "@/lib/cache/catalog";
 import { getPrismaClient } from "@/lib/prisma";
 import { MARKETING_ICON_KEYS } from "@/lib/marketing/homepage-types";
 import { Prisma } from "@prisma/client";
@@ -28,12 +31,7 @@ const serviceSchema = z.object({
   homepageSortOrder: z.number().int().min(0).optional(),
 });
 
-export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const activeOnly = searchParams.get("active") === "true";
-  const query = searchParams.get("q")?.trim();
-  const { page, pageSize, skip, take } = getPaginationParams(searchParams);
-
+async function queryServices(activeOnly: boolean, query: string | undefined, skip: number, take: number) {
   const prisma = getPrismaClient();
   const where: Prisma.ServiceWhereInput = {
     ...(activeOnly ? { active: true } : {}),
@@ -47,14 +45,29 @@ export async function GET(request: Request) {
       : {}),
   };
   const [services, total] = await Promise.all([
-    prisma.service.findMany({
-      where,
-      orderBy: { name: "asc" },
-      skip,
-      take,
-    }),
+    prisma.service.findMany({ where, orderBy: { name: "asc" }, skip, take }),
     prisma.service.count({ where }),
   ]);
+  return { services, total };
+}
+
+// DOG-14: los formularios de reserva piden siempre la misma lista; se cachea por
+// (activos, página) y se invalida al escribir en Service. Las búsquedas libres no se cachean.
+const listServicesCached = unstable_cache(
+  (activeOnly: boolean, skip: number, take: number) => queryServices(activeOnly, undefined, skip, take),
+  ["services-list", CATALOG_CACHE_VERSION],
+  { tags: [CATALOG_TAGS.services], revalidate: CATALOG_REVALIDATE_SECONDS },
+);
+
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const activeOnly = searchParams.get("active") === "true";
+  const query = searchParams.get("q")?.trim();
+  const { page, pageSize, skip, take } = getPaginationParams(searchParams);
+
+  const { services, total } = query
+    ? await queryServices(activeOnly, query, skip, take)
+    : await listServicesCached(activeOnly, skip, take);
 
   return NextResponse.json(buildPaginatedResponse(services, page, pageSize, total));
 }

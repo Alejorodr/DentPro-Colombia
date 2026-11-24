@@ -1,6 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import { unstable_cache } from "next/cache";
+
+import { CATALOG_CACHE_VERSION, CATALOG_REVALIDATE_SECONDS, CATALOG_TAGS } from "@/lib/cache/catalog";
 import { getPrismaClient } from "@/lib/prisma";
 
 type Campaign = {
@@ -12,28 +15,39 @@ type Campaign = {
   ctaUrl?: string | null;
 };
 
+// DOG-14: se cachean las campañas activas que no han terminado y la ventana de fechas se
+// filtra en cada request, así una campaña programada aparece a tiempo aunque la caché sea vieja.
+// Las fechas viajan como ISO porque la caché guarda JSON.
+const getActiveCampaigns = unstable_cache(
+  async () => {
+    const rows = await getPrismaClient().campaign.findMany({
+      where: { active: true, endAt: { gte: new Date() } },
+      orderBy: { createdAt: "desc" },
+      take: 50,
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        imageUrl: true,
+        ctaText: true,
+        ctaUrl: true,
+        startAt: true,
+        endAt: true,
+      },
+    });
+    return rows.map((row) => ({ ...row, startAt: row.startAt.toISOString(), endAt: row.endAt.toISOString() }));
+  },
+  ["homepage-campaigns", CATALOG_CACHE_VERSION],
+  { tags: [CATALOG_TAGS.homepage], revalidate: CATALOG_REVALIDATE_SECONDS },
+);
+
 export async function CampaignCarousel() {
   if (!process.env.DATABASE_URL) return null;
-  const now = new Date();
-  const prisma = getPrismaClient();
+  const now = new Date().toISOString();
 
-  const campaigns = (await prisma.campaign.findMany({
-    where: {
-      active: true,
-      startAt: { lte: now },
-      endAt: { gte: now },
-    },
-    orderBy: { createdAt: "desc" },
-    take: 6,
-    select: {
-      id: true,
-      title: true,
-      description: true,
-      imageUrl: true,
-      ctaText: true,
-      ctaUrl: true,
-    },
-  })) as Campaign[];
+  const campaigns: Campaign[] = (await getActiveCampaigns())
+    .filter((campaign) => campaign.startAt <= now && campaign.endAt >= now)
+    .slice(0, 6);
 
   if (campaigns.length === 0) {
     return null;
