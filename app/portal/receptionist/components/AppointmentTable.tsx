@@ -47,13 +47,28 @@ interface AppointmentTableProps {
 }
 
 
-export function AppointmentTable({ appointments, page, totalPages, onPageChange, onRefresh, initialEventsAppointmentId = null, groupByProfessional = false }: AppointmentTableProps) {
+export function AppointmentTable({ appointments: sourceAppointments, page, totalPages, onPageChange, onRefresh, initialEventsAppointmentId = null, groupByProfessional = false }: AppointmentTableProps) {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [rescheduleId, setRescheduleId] = useState<string | null>(null);
   const [eventsAppointmentId, setEventsAppointmentId] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [cancelTarget, setCancelTarget] = useState<string | null>(null);
   const [cancelReason, setCancelReason] = useState("");
+  // DOG-12: estado optimista por cita, encima de lo que manda el padre. Se limpia cuando el
+  // padre recarga la lista (ya trae el estado real) o se revierte si el servidor rechaza el cambio.
+  const [optimisticStatus, setOptimisticStatus] = useState<Record<string, AppointmentStatus>>({});
+
+  useEffect(() => {
+    setOptimisticStatus({});
+  }, [sourceAppointments]);
+
+  const appointments = useMemo(
+    () =>
+      sourceAppointments.map((appointment) =>
+        optimisticStatus[appointment.id] ? { ...appointment, status: optimisticStatus[appointment.id] } : appointment,
+      ),
+    [optimisticStatus, sourceAppointments],
+  );
 
   useEffect(() => {
     if (initialEventsAppointmentId) {
@@ -68,21 +83,35 @@ export function AppointmentTable({ appointments, page, totalPages, onPageChange,
 
     setBusyId(id);
     setFeedback(null);
-    const response = await fetchWithTimeout(`/api/appointments/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status, action, ...(notes ? { notes } : {}) }),
-    });
+    setOptimisticStatus((prev) => ({ ...prev, [id]: status }));
+    const revert = () =>
+      setOptimisticStatus((prev) => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
 
-    if (response.ok) {
-      setFeedback("Estado actualizado correctamente.");
-      onRefresh();
-    } else {
-      const payload = (await response.json().catch(() => null)) as { error?: string } | null;
-      setFeedback(payload?.error ?? "No se pudo actualizar el estado. Intenta nuevamente.");
+    try {
+      const response = await fetchWithTimeout(`/api/appointments/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status, action, ...(notes ? { notes } : {}) }),
+      });
+
+      if (response.ok) {
+        setFeedback("Estado actualizado correctamente.");
+        onRefresh();
+      } else {
+        revert();
+        const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+        setFeedback(payload?.error ?? "No se pudo actualizar el estado. Intenta nuevamente.");
+      }
+    } catch {
+      revert();
+      setFeedback("No se pudo actualizar el estado. Intenta nuevamente.");
+    } finally {
+      setBusyId(null);
     }
-
-    setBusyId(null);
   };
 
   const confirmCancel = async () => {

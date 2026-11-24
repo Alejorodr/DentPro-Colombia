@@ -6,6 +6,7 @@ import { fetchWithRetry } from "@/lib/http";
 import { useModalDialog } from "@/app/portal/components/ui/useModalDialog";
 import { ClinicalHistoryPanel } from "@/app/portal/professional/patients/[id]/ClinicalHistoryPanel";
 import { X } from "@/components/ui/Icon";
+import { SkeletonRows } from "@/app/portal/components/ui/Skeleton";
 
 type PatientDetail = {
   id: string;
@@ -81,7 +82,7 @@ export function PatientDetailModal({ patientId, onClose }: { patientId: string; 
 
         <div className="flex-1 overflow-y-auto p-6">
           {error ? <p className="text-sm text-red-600 dark:text-red-400">{error}</p> : null}
-          {loading ? <p className="text-sm text-slate-500 dark:text-slate-400">Cargando historial clínico...</p> : null}
+          {loading ? <SkeletonRows label="Cargando historial clínico" /> : null}
           {patient ? <ClinicalHistoryPanel patientId={patient.id} /> : null}
         </div>
       </div>

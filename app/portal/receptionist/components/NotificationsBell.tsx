@@ -87,31 +87,49 @@ export function NotificationsBell() {
     };
   }, []);
 
+  // DOG-12: actualización optimista. La vista cambia al instante y se revierte si el servidor falla.
+  const requestOk = async (input: string, init: RequestInit) => {
+    try {
+      return (await fetchWithTimeout(input, init)).ok;
+    } catch {
+      return false;
+    }
+  };
+
   const markAsRead = async (id: string) => {
-    const response = await fetchWithTimeout(`/api/notifications/${id}`, { method: "PATCH" });
-    if (response.ok) {
-      setNotifications((prev) => prev.map((item) => (item.id === id ? { ...item, readAt: new Date().toISOString() } : item)));
-      setUnreadCount((prev) => Math.max(prev - 1, 0));
+    const target = notifications.find((item) => item.id === id);
+    if (!target || target.readAt) return;
+    setNotifications((prev) => prev.map((item) => (item.id === id ? { ...item, readAt: new Date().toISOString() } : item)));
+    setUnreadCount((prev) => Math.max(prev - 1, 0));
+
+    if (!(await requestOk(`/api/notifications/${id}`, { method: "PATCH" }))) {
+      setNotifications((prev) => prev.map((item) => (item.id === id ? { ...item, readAt: target.readAt ?? null } : item)));
+      setUnreadCount((prev) => prev + 1);
     }
   };
 
   const markAllAsRead = async () => {
-    const response = await fetchWithTimeout("/api/notifications/read-all", { method: "PATCH" });
-    if (!response.ok) return;
+    const previousNotifications = notifications;
+    const previousUnread = unreadCount;
     setNotifications((prev) => prev.map((item) => (item.readAt ? item : { ...item, readAt: new Date().toISOString() })));
     setUnreadCount(0);
+
+    if (!(await requestOk("/api/notifications/read-all", { method: "PATCH" }))) {
+      setNotifications(previousNotifications);
+      setUnreadCount(previousUnread);
+    }
   };
 
   const deleteNotification = async (id: string) => {
-    const response = await fetchWithTimeout(`/api/notifications/${id}`, { method: "DELETE" });
-    if (response.ok) {
-      setNotifications((prev) => {
-        const removed = prev.find((item) => item.id === id);
-        if (removed && !removed.readAt) {
-          setUnreadCount((count) => Math.max(count - 1, 0));
-        }
-        return prev.filter((item) => item.id !== id);
-      });
+    const index = notifications.findIndex((item) => item.id === id);
+    if (index === -1) return;
+    const removed = notifications[index];
+    setNotifications((prev) => prev.filter((item) => item.id !== id));
+    if (!removed.readAt) setUnreadCount((count) => Math.max(count - 1, 0));
+
+    if (!(await requestOk(`/api/notifications/${id}`, { method: "DELETE" }))) {
+      setNotifications((prev) => (prev.some((item) => item.id === id) ? prev : [...prev.slice(0, index), removed, ...prev.slice(index)]));
+      if (!removed.readAt) setUnreadCount((count) => count + 1);
     }
   };
 

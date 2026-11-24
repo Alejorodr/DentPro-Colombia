@@ -7,6 +7,7 @@ import {
   CLINICAL_ATTACHMENT_MAX_BYTES,
 } from "@/lib/clinical/attachments";
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
+import { SkeletonRows } from "@/app/portal/components/ui/Skeleton";
 
 const MAX_LABEL = `${Math.round(CLINICAL_ATTACHMENT_MAX_BYTES / (1024 * 1024))}MB`;
 
@@ -108,7 +109,7 @@ export function ClinicalHistoryPanel({ patientId }: { patientId: string }) {
   };
 
   if (loading) {
-    return <p className="text-sm text-slate-500">Cargando episodios...</p>;
+    return <SkeletonRows label="Cargando episodios" />;
   }
 
   return (

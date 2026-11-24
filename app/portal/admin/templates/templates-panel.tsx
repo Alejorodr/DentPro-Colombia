@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
+import { SkeletonRows } from "@/app/portal/components/ui/Skeleton";
 const templateTypes = [
   { value: "CONSENT", label: "Consentimiento" },
   { value: "QUOTE", label: "Presupuesto" },
@@ -114,7 +115,7 @@ export function AdminTemplatesPanel() {
   };
 
   if (loading) {
-    return <p className="text-sm text-slate-500">Cargando plantillas...</p>;
+    return <SkeletonRows label="Cargando plantillas" />;
   }
 
   return (

@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Card } from "@/app/portal/components/ui/Card";
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
 import { ArrowDown, ArrowUp } from "@/components/ui/Icon";
+import { SkeletonRows } from "@/app/portal/components/ui/Skeleton";
 
 type FaqItem = {
   id: string;
@@ -220,7 +221,7 @@ export function AdminHomepageFaqPanel() {
 
       {loading ? (
         <Card>
-          <p className="text-sm text-slate-600 dark:text-slate-300">Cargando preguntas frecuentes...</p>
+          <SkeletonRows label="Cargando preguntas frecuentes" />
         </Card>
       ) : null}
 

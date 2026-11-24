@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Card } from "@/app/portal/components/ui/Card";
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
+import { SkeletonRows } from "@/app/portal/components/ui/Skeleton";
 
 type BookingOptionItem = {
   id: string;
@@ -179,7 +180,7 @@ export function AdminHomepageBookingOptionsPanel() {
         </button>
       </Card>
 
-      {loading ? <Card><p className="text-sm text-slate-600 dark:text-slate-300">Cargando opciones...</p></Card> : null}
+      {loading ? <Card><SkeletonRows label="Cargando opciones" /></Card> : null}
 
       {bookingOptions.map((bookingOption, index) => (
         <Card key={bookingOption.id} className="space-y-4">

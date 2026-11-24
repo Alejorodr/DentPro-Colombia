@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { fetchWithRetry } from "@/lib/http";
 import { StatusBadge } from "@/app/portal/components/ui/StatusBadge";
+import { SkeletonRows } from "@/app/portal/components/ui/Skeleton";
 
 type AuditStatus = "success" | "failure";
 
@@ -106,7 +107,7 @@ export function AdminAuditPanel() {
 
       <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xs dark:border-surface-muted/60 dark:bg-surface-base">
         {loading ? (
-          <p className="text-sm text-slate-500">Cargando logs...</p>
+          <SkeletonRows label="Cargando logs" />
         ) : error ? (
           <p className="text-sm text-red-600">{error}</p>
         ) : items.length === 0 ? (

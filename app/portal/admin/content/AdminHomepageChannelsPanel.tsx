@@ -7,6 +7,7 @@ import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
 import type { HomepagePlacement } from "@/lib/marketing/homepage-types";
 
 import { PlacementCheckboxes } from "./components/PlacementCheckboxes";
+import { SkeletonRows } from "@/app/portal/components/ui/Skeleton";
 
 const CHANNEL_TYPES = ["WHATSAPP", "PHONE", "EMAIL"] as const;
 
@@ -221,7 +222,7 @@ export function AdminHomepageChannelsPanel() {
         </button>
       </Card>
 
-      {loading ? <Card><p className="text-sm text-slate-600 dark:text-slate-300">Cargando canales...</p></Card> : null}
+      {loading ? <Card><SkeletonRows label="Cargando canales" /></Card> : null}
 
       {channels.map((channel, index) => (
         <Card key={channel.id} className="space-y-4">

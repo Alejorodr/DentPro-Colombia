@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { AdminImageField } from "@/app/portal/admin/content/components/AdminImageField";
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
+import { SkeletonRows } from "@/app/portal/components/ui/Skeleton";
 
 type HeroForm = {
   heroBadge: string;
@@ -105,7 +106,7 @@ export function AdminHeroPanel() {
   };
 
   if (loading) {
-    return <p className="text-sm text-slate-600 dark:text-slate-300">Cargando hero principal...</p>;
+    return <SkeletonRows label="Cargando hero principal" />;
   }
 
   return (

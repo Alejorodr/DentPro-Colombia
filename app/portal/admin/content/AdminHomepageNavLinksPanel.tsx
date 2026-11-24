@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Card } from "@/app/portal/components/ui/Card";
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
+import { SkeletonRows } from "@/app/portal/components/ui/Skeleton";
 
 type NavLinkItem = {
   id: string;
@@ -181,7 +182,7 @@ export function AdminHomepageNavLinksPanel() {
         </button>
       </Card>
 
-      {loading ? <Card><p className="text-sm text-slate-600 dark:text-slate-300">Cargando enlaces...</p></Card> : null}
+      {loading ? <Card><SkeletonRows label="Cargando enlaces" /></Card> : null}
 
       {navLinks.map((navLink, index) => (
         <Card key={navLink.id} className="space-y-4">

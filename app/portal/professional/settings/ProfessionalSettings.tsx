@@ -6,6 +6,7 @@ import { ShieldCheck } from "@/components/ui/Icon";
 
 import { useProfessionalPreferences } from "@/app/portal/professional/components/ProfessionalContext";
 import { fetchWithRetry } from "@/lib/http";
+import { SkeletonRows } from "@/app/portal/components/ui/Skeleton";
 
 interface ProfileInfo {
   name: string;
@@ -51,7 +52,7 @@ export function ProfessionalSettings() {
               </p>
             </div>
           ) : (
-            <p className="mt-4 text-sm text-slate-500">Cargando perfil…</p>
+            <SkeletonRows label="Cargando perfil" />
           )}
         </div>
 

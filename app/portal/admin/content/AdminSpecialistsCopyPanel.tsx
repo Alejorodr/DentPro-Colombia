@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
 import { AdminImageField } from "@/app/portal/admin/content/components/AdminImageField";
+import { SkeletonRows } from "@/app/portal/components/ui/Skeleton";
 
 type SpecialistsCopyForm = {
   specialistsBadge: string;
@@ -171,7 +172,7 @@ export function AdminSpecialistsCopyPanel() {
   };
 
   if (loading) {
-    return <p className="text-sm text-slate-600 dark:text-slate-300">Cargando equipo...</p>;
+    return <SkeletonRows label="Cargando equipo" />;
   }
 
   return (
@@ -228,7 +229,7 @@ export function AdminSpecialistsCopyPanel() {
         {rowError ? <p className="text-sm text-red-600 dark:text-red-400">{rowError}</p> : null}
 
         {professionalsLoading ? (
-          <p className="text-sm text-slate-500 dark:text-slate-400">Cargando equipo...</p>
+          <SkeletonRows label="Cargando equipo" />
         ) : professionals.length === 0 ? (
           <p className="rounded-2xl border border-dashed border-slate-200 p-6 text-center text-sm text-slate-500 dark:border-surface-muted">
             No hay profesionales registrados. Crea uno desde Usuarios.

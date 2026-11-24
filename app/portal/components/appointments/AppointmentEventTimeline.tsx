@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 import { getAppointmentEventLabel } from "@/lib/appointments/activity";
 import { fetchWithRetry } from "@/lib/http";
+import { SkeletonRows } from "@/app/portal/components/ui/Skeleton";
 
 type AppointmentEventItem = {
   id: string;
@@ -54,7 +55,7 @@ export function AppointmentEventTimeline({ appointmentId }: { appointmentId: str
   }, [appointmentId]);
 
   if (isLoading) {
-    return <p className="text-xs text-slate-500">Cargando timeline...</p>;
+    return <SkeletonRows label="Cargando timeline" />;
   }
 
   if (error) {

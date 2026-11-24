@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
+import { SkeletonRows } from "@/app/portal/components/ui/Skeleton";
 
 type Professional = {
   id: string;
@@ -675,7 +676,7 @@ export default function AdminSchedulingPage() {
         </section>
       ) : null}
 
-      {loading ? <p className="text-sm text-slate-500">Cargando configuración...</p> : null}
+      {loading ? <SkeletonRows label="Cargando configuración" /> : null}
     </div>
   );
 }

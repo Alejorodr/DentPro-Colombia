@@ -58,7 +58,13 @@ export async function fetchWithTimeout(
   const controller = new AbortController();
   const timeoutMs = resolveTimeoutMs(options.timeoutMs);
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-  const signal = init.signal ?? controller.signal;
+  // Si quien llama trae su propio signal (p. ej. para cancelar búsquedas viejas), se combina
+  // con el del timeout en vez de reemplazarlo: antes el timeout se perdía en ese caso.
+  const signal = init.signal
+    ? typeof AbortSignal.any === "function"
+      ? AbortSignal.any([init.signal, controller.signal])
+      : init.signal
+    : controller.signal;
 
   try {
     return await fetch(input, { ...init, signal });
