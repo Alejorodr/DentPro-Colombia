@@ -245,7 +245,7 @@ export function ReceptionistDashboard() {
         )}
       </section>
 
-      <section className="grid gap-6 lg:grid-cols-[1.1fr_2fr]">
+      <section className="grid grid-cols-1 gap-6 lg:grid-cols-[1.1fr_2fr]">
         <div className="space-y-4">
           <CalendarMonth
             month={month}

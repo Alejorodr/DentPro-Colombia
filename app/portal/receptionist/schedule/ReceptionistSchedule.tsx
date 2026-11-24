@@ -278,7 +278,7 @@ export function ReceptionistSchedule() {
           <button type="button" className="rounded-full bg-brand-teal px-4 py-2 text-xs font-semibold uppercase text-white" onClick={() => setIsNewOpen(true)}>Registrar paciente / turno</button>
         </div>
       </section>
-      <section className="grid gap-6 lg:grid-cols-[1.1fr_2fr]">
+      <section className="grid grid-cols-1 gap-6 lg:grid-cols-[1.1fr_2fr]">
         <CalendarMonth
           month={month}
           selectedDate={selectedDate}
