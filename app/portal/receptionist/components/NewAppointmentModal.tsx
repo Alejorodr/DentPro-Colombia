@@ -6,7 +6,7 @@ import { X } from "@/components/ui/Icon";
 import { AppointmentStatus } from "@prisma/client";
 
 import { formatDateInput } from "@/lib/dates/tz";
-import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
+import { fetchAllPages, fetchWithRetry, fetchWithTimeout } from "@/lib/http";
 
 type PatientOption = { id: string; user: { name: string; lastName: string; email: string } };
 
@@ -73,19 +73,14 @@ export function NewAppointmentModal({ open, onClose, onCreated }: NewAppointment
     }
 
     const loadOptions = async () => {
-      const [professionalsResponse, servicesResponse] = await Promise.all([
-        fetchWithRetry("/api/professionals?pageSize=50"),
-        fetchWithRetry("/api/services?active=true&pageSize=50"),
+      // DOG-23: todas las páginas; con una sola, lo que pasara de 50 no aparecía en el selector.
+      const [professionalItems, serviceItems] = await Promise.all([
+        fetchAllPages<ProfessionalOption>("/api/professionals"),
+        fetchAllPages<ServiceOption>("/api/services?active=true"),
       ]);
 
-      if (professionalsResponse.ok) {
-        const data = (await professionalsResponse.json()) as { data: ProfessionalOption[] };
-        setProfessionals(data.data ?? []);
-      }
-      if (servicesResponse.ok) {
-        const data = (await servicesResponse.json()) as { data: ServiceOption[] };
-        setServices(data.data ?? []);
-      }
+      if (professionalItems) setProfessionals(professionalItems);
+      if (serviceItems) setServices(serviceItems);
     };
 
     void loadOptions();

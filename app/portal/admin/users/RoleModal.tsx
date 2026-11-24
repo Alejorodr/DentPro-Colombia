@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { roleLabels, userRoles, type UserRole } from "@/lib/auth/roles";
-import { fetchWithTimeout } from "@/lib/http";
+import { fetchAllPages, fetchWithTimeout } from "@/lib/http";
 import { STATUS_COLORS } from "@/app/portal/components/ui/statusColors";
 import { useModalDialog } from "@/app/portal/components/ui/useModalDialog";
 import { X } from "@/components/ui/Icon";
@@ -103,22 +103,21 @@ export function RoleModal({
 
     void (async () => {
       try {
-        const [servicesResponse, assignmentsResponse] = await Promise.all([
-          fetchWithTimeout("/api/services?pageSize=100"),
+        const [serviceItems, assignmentsResponse] = await Promise.all([
+          fetchAllPages<Service>("/api/services"),
           fetchWithTimeout(`/api/admin/scheduling?professionalId=${professionalId}`),
         ]);
 
         if (cancelled) return;
 
-        if (servicesResponse.ok) {
-          const body = (await servicesResponse.json()) as { data: Service[] };
-          setServices(body.data ?? []);
+        if (serviceItems) {
+          setServices(serviceItems);
         }
         if (assignmentsResponse.ok) {
           const body = (await assignmentsResponse.json()) as { assignments: Assignment[] };
           setAssignments(body.assignments ?? []);
         }
-        if (!servicesResponse.ok || !assignmentsResponse.ok) {
+        if (!serviceItems || !assignmentsResponse.ok) {
           setAssignmentError("No pudimos cargar los servicios de esta especialidad.");
         }
       } catch {

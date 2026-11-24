@@ -134,6 +134,46 @@ export async function fetchWithRetry(
   return fetchWithTimeout(input, init, options);
 }
 
+type PaginatedPayload<T> = { data?: T[]; totalPages?: number };
+
+/** Tope del servidor por página (app/api/_utils/pagination.ts). */
+const SERVER_MAX_PAGE_SIZE = 50;
+
+/**
+ * DOG-23: trae todas las páginas de un endpoint paginado. Sirve para selectores de
+ * catálogo (profesionales, servicios), que antes pedían `pageSize=50` o `100` y, por el
+ * tope de 50 del servidor, perdían en silencio todo lo que pasara de la primera página.
+ *
+ * Devuelve `null` si alguna página falla, para que quien llama conserve su estado.
+ * `maxPages` acota el total (50 × 20 = 1.000 elementos) por si el catálogo se desborda.
+ */
+export async function fetchAllPages<T>(
+  path: string,
+  { maxPages = 20, init }: { maxPages?: number; init?: RequestInit } = {},
+): Promise<T[] | null> {
+  const url = new URL(path, "http://local.invalid");
+  url.searchParams.set("pageSize", String(SERVER_MAX_PAGE_SIZE));
+  const pagePath = (page: number) => {
+    url.searchParams.set("page", String(page));
+    return `${url.pathname}${url.search}`;
+  };
+
+  const readPage = async (page: number) => {
+    const response = await fetchWithRetry(pagePath(page), init);
+    if (!response.ok) return null;
+    return (await response.json()) as PaginatedPayload<T>;
+  };
+
+  const first = await readPage(1);
+  if (!first) return null;
+
+  const lastPage = Math.min(first.totalPages ?? 1, maxPages);
+  const rest = await Promise.all(Array.from({ length: Math.max(lastPage - 1, 0) }, (_, index) => readPage(index + 2)));
+  if (rest.some((page) => page === null)) return null;
+
+  return [first, ...(rest as PaginatedPayload<T>[])].flatMap((page) => page.data ?? []);
+}
+
 export async function getApiErrorMessage(response: Response, fallbackMessage: string) {
   const payload = (await response.json().catch(() => null)) as ApiErrorPayload | null;
   return payload?.error ?? fallbackMessage;
