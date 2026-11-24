@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { AppointmentsList } from "@/app/portal/components/AppointmentsList";
-import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
+import { fetchAllPages, fetchWithRetry, fetchWithTimeout } from "@/lib/http";
 
 type AppointmentItem = Parameters<typeof AppointmentsList>[0]["initialAppointments"][number];
 
@@ -64,7 +64,7 @@ export function ReceptionistPanel() {
     void loadAppointments(1);
     const [specialtiesResponse, professionalsResponse] = await Promise.all([
       fetchWithRetry("/api/specialties"),
-      fetchWithRetry("/api/professionals?pageSize=50"),
+      fetchAllPages<Professional>("/api/professionals"),
     ]);
 
     if (specialtiesResponse.ok) {
@@ -72,9 +72,8 @@ export function ReceptionistPanel() {
       setSpecialties(data);
     }
 
-    if (professionalsResponse.ok) {
-      const data = (await professionalsResponse.json()) as { data: Professional[] };
-      setProfessionals(data.data ?? []);
+    if (professionalsResponse) {
+      setProfessionals(professionalsResponse);
     }
   }, []);
 

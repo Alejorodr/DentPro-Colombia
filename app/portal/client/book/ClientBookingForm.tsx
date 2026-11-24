@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
-import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
+import { fetchAllPages, fetchWithRetry, fetchWithTimeout } from "@/lib/http";
 import { Card } from "@/app/portal/components/ui/Card";
 import {
   ACTIVE_CAP_MESSAGE,
@@ -124,9 +124,8 @@ export function ClientBookingForm({ activeAppointmentsCount = 0 }: ClientBooking
   }, []);
 
   useEffect(() => {
-    void fetchWithRetry("/api/services?active=true&pageSize=50")
-      .then((res) => (res.ok ? res.json() : []))
-      .then((data: { data?: Service[] }) => setServices(data.data ?? []))
+    void fetchAllPages<Service>("/api/services?active=true")
+      .then((items) => setServices(items ?? []))
       .catch(() => setServices([]));
   }, []);
 

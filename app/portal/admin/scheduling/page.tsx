@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
+import { fetchAllPages, fetchWithRetry, fetchWithTimeout } from "@/lib/http";
 import { SkeletonRows } from "@/app/portal/components/ui/Skeleton";
 
 type Professional = {
@@ -103,22 +103,19 @@ export default function AdminSchedulingPage() {
   const [editingScheduleId, setEditingScheduleId] = useState<string | null>(null);
 
   const loadBaseData = useCallback(async () => {
-    const [profRes, servicesRes] = await Promise.all([
-      fetchWithRetry("/api/professionals?pageSize=100"),
-      fetchWithRetry("/api/services?pageSize=100"),
+    // DOG-23: `pageSize=100` recibía solo 50 (tope del servidor); ahora se traen todas las páginas.
+    const [incomingProfessionals, allServices] = await Promise.all([
+      fetchAllPages<Professional>("/api/professionals"),
+      fetchAllPages<Service>("/api/services"),
     ]);
 
-    if (!profRes.ok || !servicesRes.ok) {
+    if (!incomingProfessionals || !allServices) {
       setError("No se pudieron cargar profesionales y servicios.");
       return;
     }
 
-    const profData = (await profRes.json()) as { data: Professional[] };
-    const servicesData = (await servicesRes.json()) as { data: Service[] };
-
-    const incomingProfessionals = profData.data ?? [];
     setProfessionals(incomingProfessionals);
-    setServices((servicesData.data ?? []).filter((service) => service.active));
+    setServices(allServices.filter((service) => service.active));
 
     setSelectedProfessionalId((current) =>
       !current && incomingProfessionals.length > 0 ? incomingProfessionals[0].id : current,
