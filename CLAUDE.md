@@ -14,9 +14,9 @@ app/
 │   ├── components/       # Hero, Navbar, Services, Specialists, BookingForm, Contact
 │   └── page.tsx          # Entry point del marketing site
 ├── portal/               # Portal clínico multi-rol
-│   ├── paciente/         # Vista paciente — citas, historial, consentimientos
-│   ├── profesional/      # Agenda, fichas clínicas, recetas, resultados
-│   ├── recepcion/        # Dashboard, turnos, gestión de pacientes, facturación
+│   ├── client/           # Vista paciente — citas, historial, consentimientos
+│   ├── professional/     # Agenda, fichas clínicas, recetas, resultados
+│   ├── receptionist/     # Dashboard, turnos, gestión de pacientes, facturación
 │   └── admin/            # KPIs, ingresos, staff, servicios, CMS, auditoría
 ├── api/                  # Rutas API — auth, citas, pacientes, etc.
 ├── globals.css           # Tokens Tailwind v4 — colores, sombras, radios, gradientes
@@ -28,7 +28,8 @@ components/
 
 lib/
 ├── marketing/            # Defaults del homepage, datos de servicios y especialistas
-└── portal/               # Lógica de roles, auth helpers
+├── auth/                 # Roles, sesión, credenciales y guardas de auth
+└── portal/               # Datos del dashboard del paciente
 
 design-system/            # Sistema de diseño exportado desde Claude Design
 ├── README.md             # Guías de marca, voz, color, tipografía, iconografía
@@ -46,10 +47,10 @@ design-system/            # Sistema de diseño exportado desde Claude Design
 
 | Capa | Tecnología |
 |---|---|
-| Framework | Next.js 15 App Router |
+| Framework | Next.js 16 App Router (build con webpack) |
 | Estilos | Tailwind CSS v4 |
 | Iconos | AnimateIcons/Lucide (`@animateicons/react` + `lucide-react`) |
-| Auth | NextAuth (Credentials provider) |
+| Auth | NextAuth v5 (Credentials + Google) |
 | Idioma | Español (Colombia), `lang="es"`, `locale="es_CO"` |
 | Fuentes | Outfit (headings), Inter (body) |
 

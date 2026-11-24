@@ -28,7 +28,6 @@ import {
   HouseIcon,
   LayoutGridIcon,
   LockIcon,
-  LogInIcon,
   LogOutIcon,
   MailIcon,
   MapPinIcon,
@@ -74,7 +73,6 @@ import {
   ChevronRight as LucideChevronRight,
   CircleAlert,
   CircleCheck as LucideCircleCheck,
-  CircleQuestionMark,
   CircleX,
   Clipboard as LucideClipboard,
   Clock as LucideClock,
@@ -86,14 +84,12 @@ import {
   FileText as LucideFileText,
   Filter as LucideFilter,
   FlaskConical,
-  Gem,
   Headset as LucideHeadset,
   History as LucideHistory,
   House as LucideHouse,
   LayoutGrid as LucideLayoutGrid,
   LoaderCircle,
   Lock as LucideLock,
-  LogIn as LucideLogIn,
   LogOut as LucideLogOut,
   Mail as LucideMail,
   MapPin as LucideMapPin,
@@ -133,7 +129,7 @@ import { cn } from "@/lib/utils";
 
 type IconWeight = "bold" | "duotone" | "fill" | "light" | "regular" | "thin";
 
-export type IconProps = Omit<SVGProps<SVGSVGElement>, "color" | "ref"> & {
+type IconProps = Omit<SVGProps<SVGSVGElement>, "color" | "ref"> & {
   color?: string;
   duration?: number;
   isAnimated?: boolean;
@@ -465,7 +461,7 @@ const ToothFallback = createCustomSvgIcon(
   "Tooth",
 );
 
-function createBrandIcon(name: "facebook" | "google" | "instagram" | "linkedin" | "tiktok" | "whatsapp"): Icon {
+function createBrandIcon(name: "facebook" | "instagram" | "linkedin" | "tiktok" | "whatsapp"): Icon {
   const BrandIcon = forwardRef<IconHandle, IconProps>(({
     className,
     color = "currentColor",
@@ -535,13 +531,6 @@ function createBrandIcon(name: "facebook" | "google" | "instagram" | "linkedin" 
               <path d="M16.7 7.5h.01" strokeWidth={strokeWidth + 1} />
             </>
           ) : null}
-          {name === "google" ? (
-            <>
-              <path d="M20.2 12.2H12" strokeWidth={strokeWidth} />
-              <path d="M17.6 17.3A7.2 7.2 0 1 1 17.7 6.8" strokeWidth={strokeWidth} />
-              <path d="M20.2 12.2a7.2 7.2 0 0 1-2.6 5.1" strokeWidth={strokeWidth} />
-            </>
-          ) : null}
           {name === "linkedin" ? (
             <>
               <path d="M6.5 10.5V18" strokeWidth={strokeWidth} />
@@ -598,7 +587,6 @@ export const DeviceMobile = createAnimatedIcon(SmartphoneIcon, LucideSmartphone,
 export const Eye = createAnimatedIcon(EyeIcon, LucideEye, "Eye");
 export const EyeSlash = createAnimatedIcon(EyeOffIcon, LucideEyeOff, "EyeSlash");
 export const FacebookLogo = createBrandIcon("facebook");
-export const GoogleLogo = createBrandIcon("google");
 export const FileArrowUp = createAnimatedIcon(UploadIcon, LucideUpload, "FileArrowUp");
 export const FileText = createAnimatedIcon(FileTextIcon, LucideFileText, "FileText");
 export const Flask = createLucideIcon(FlaskConical, "Flask");
@@ -620,10 +608,8 @@ export const PencilSimple = createAnimatedIcon(PencilIcon, LucidePencil, "Pencil
 export const Phone = createAnimatedIcon(PhoneIcon, LucidePhone, "Phone");
 export const Plus = createAnimatedIcon(PlusIcon, LucidePlus, "Plus");
 export const Printer = createAnimatedIcon(PrinterIcon, LucidePrinter, "Printer");
-export const Question = createLucideIcon(CircleQuestionMark, "Question");
 export const ShieldCheck = createAnimatedIcon(ShieldCheckIcon, LucideShieldCheck, "ShieldCheck");
 export const ShieldWarning = createLucideIcon(ShieldAlert, "ShieldWarning");
-export const SignIn = createAnimatedIcon(LogInIcon, LucideLogIn, "SignIn");
 export const SignOut = createAnimatedIcon(LogOutIcon, LucideLogOut, "SignOut");
 export const Smiley = createLucideIcon(Smile, "Smiley");
 export const Sparkle = createAnimatedIcon(SparklesIcon, LucideSparkles, "Sparkle");
@@ -645,4 +631,3 @@ export const WarningCircle = createLucideIcon(CircleAlert, "WarningCircle");
 export const WhatsappLogo = createBrandIcon("whatsapp");
 export const X = createAnimatedIcon(XIcon, LucideX, "X");
 export const XCircle = createLucideIcon(CircleX ?? LucideXCircle, "XCircle");
-export const GemIcon = createLucideIcon(Gem, "GemIcon");

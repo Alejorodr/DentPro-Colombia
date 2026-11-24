@@ -9,7 +9,7 @@
  */
 type AuthSecretEnv = Readonly<Record<string, string | undefined>>;
 
-export const AUTH_SECRET_ENV_KEYS = ["AUTH_JWT_SECRET", "NEXTAUTH_SECRET", "AUTH_SECRET"] as const;
+const AUTH_SECRET_ENV_KEYS = ["AUTH_JWT_SECRET", "NEXTAUTH_SECRET", "AUTH_SECRET"] as const;
 
 export function readConfiguredAuthSecret(env: AuthSecretEnv = process.env): string | undefined {
   for (const key of AUTH_SECRET_ENV_KEYS) {

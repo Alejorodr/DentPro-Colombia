@@ -13,7 +13,7 @@ export type UnavailabilityReason =
   | "OVERLAPS_APPOINTMENT"
   | "BUFFER_CONFLICT";
 
-export interface EffectiveAvailabilitySlot {
+interface EffectiveAvailabilitySlot {
   id: string;
   professionalId: string;
   startAt: Date;

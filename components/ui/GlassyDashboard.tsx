@@ -53,7 +53,7 @@ import {
 
 export type GlassyStatusTone = "scheduled" | "confirmed" | "active" | "completed" | "closed";
 
-export type GlassyAppointment = {
+type GlassyAppointment = {
   id: string;
   patient: string;
   professional: string;
@@ -65,7 +65,7 @@ export type GlassyAppointment = {
   tone: GlassyStatusTone;
 };
 
-export type GlassyStaffMember = {
+type GlassyStaffMember = {
   id: string;
   name: string;
   subtitle: string;
@@ -98,7 +98,7 @@ export type GlassyDashboardData = {
   staff: GlassyStaffMember[];
 };
 
-export type GlassyDashboardProps = {
+type GlassyDashboardProps = {
   data: GlassyDashboardData;
   /** Enlace a la gestión detallada de citas. */
   appointmentsHref?: string;
@@ -1127,5 +1127,3 @@ export function GlassyDashboard({
     </div>
   );
 }
-
-export default GlassyDashboard;

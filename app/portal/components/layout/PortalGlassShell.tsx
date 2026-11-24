@@ -11,7 +11,7 @@ import { List, SignOut, Tooth, WhatsappLogo, X, type Icon as IconComponent } fro
 import { AvatarFallback } from "@/app/portal/components/ui/AvatarFallback";
 import { resolveActiveHref } from "@/app/portal/components/layout/Sidebar";
 
-export type PortalGlassNavItem = { label: string; href: string; icon: IconComponent };
+type PortalGlassNavItem = { label: string; href: string; icon: IconComponent };
 
 type PortalGlassShellProps = {
   children: ReactNode;
@@ -232,5 +232,3 @@ function MobileMenu({
     </dialog>
   );
 }
-
-export default PortalGlassShell;

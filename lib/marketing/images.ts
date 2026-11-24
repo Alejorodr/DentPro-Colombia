@@ -12,7 +12,7 @@ const MARKETING_IMAGE_EXTENSION_MAP: Record<(typeof MARKETING_IMAGE_ALLOWED_TYPE
   "image/webp": "webp",
 };
 
-export const MARKETING_UPLOAD_FOLDERS = [
+const MARKETING_UPLOAD_FOLDERS = [
   "marketing/homepage/hero",
   "marketing/homepage/testimonial",
   "marketing/specialists",

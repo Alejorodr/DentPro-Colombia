@@ -41,7 +41,7 @@ package-lock.json
 .agents/
 .claude/
 skills-lock.json
-graphify-out/
+.playwright-mcp/
 
 # AI local outputs
 .ai/codex/results/

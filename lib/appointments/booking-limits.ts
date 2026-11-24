@@ -9,9 +9,9 @@ import { AppointmentStatus } from "@prisma/client";
  * - Patients can hold at most MAX_ACTIVE_APPOINTMENTS_PER_PATIENT active future
  *   appointments (SCHEDULED/CONFIRMED). Staff bookings are exempt from the cap.
  */
-export const PATIENT_BOOKING_LEAD_TIME_MINUTES = 120;
+const PATIENT_BOOKING_LEAD_TIME_MINUTES = 120;
 export const MAX_ACTIVE_APPOINTMENTS_PER_PATIENT = 3;
-export const ACTIVE_APPOINTMENT_STATUSES: AppointmentStatus[] = [
+const ACTIVE_APPOINTMENT_STATUSES: AppointmentStatus[] = [
   AppointmentStatus.SCHEDULED,
   AppointmentStatus.CONFIRMED,
 ];
