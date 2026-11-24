@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { FileText } from "@/components/ui/Icon";
 import { AttachmentKind } from "@prisma/client";
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
+import { PatientSearchSelect, type PatientOption } from "@/app/portal/professional/components/PatientSearchSelect";
 
 interface AttachmentItem {
   id: string;
@@ -15,16 +16,10 @@ interface AttachmentItem {
   patient?: { id: string; name: string; lastName: string } | null;
 }
 
-interface PatientOption {
-  id: string;
-  name: string;
-  lastName: string;
-}
-
 export function ProfessionalDocuments() {
   const [attachments, setAttachments] = useState<AttachmentItem[]>([]);
-  const [patients, setPatients] = useState<PatientOption[]>([]);
-  const [selectedPatientId, setSelectedPatientId] = useState("");
+  const [selectedPatient, setSelectedPatient] = useState<PatientOption | null>(null);
+  const selectedPatientId = selectedPatient?.id ?? "";
   const [uploadError, setUploadError] = useState<string | null>(null);
 
   const loadAttachments = async () => {
@@ -36,13 +31,6 @@ export function ProfessionalDocuments() {
 
   useEffect(() => {
     void loadAttachments();
-    const loadPatients = async () => {
-      const response = await fetchWithRetry("/api/professional/patients?pageSize=50");
-      if (!response.ok) return;
-      const data = (await response.json()) as { data: PatientOption[] };
-      setPatients(data.data ?? []);
-    };
-    void loadPatients();
   }, []);
 
   const handleUpload = async (file?: File | null, url?: string | null) => {
@@ -102,18 +90,7 @@ export function ProfessionalDocuments() {
           <h2 className="text-lg font-semibold">Subir documento</h2>
         </div>
         <div className="mt-4 space-y-2">
-          <select
-            value={selectedPatientId}
-            onChange={(event) => setSelectedPatientId(event.target.value)}
-            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600 dark:border-surface-muted/60 dark:bg-surface-base dark:text-slate-100"
-          >
-            <option value="">Seleccionar paciente (opcional)</option>
-            {patients.map((patient) => (
-              <option key={patient.id} value={patient.id}>
-                {patient.name} {patient.lastName}
-              </option>
-            ))}
-          </select>
+          <PatientSearchSelect value={selectedPatient} onChange={setSelectedPatient} />
           <input
             type="file"
             accept="image/*,.pdf"
