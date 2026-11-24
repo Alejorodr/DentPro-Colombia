@@ -598,7 +598,7 @@
   backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
 }
 .gd-tooltip span { display: flex; justify-content: space-between; gap: 10px; }
-.gd-axis { display: flex; justify-content: space-between; gap: 4px; margin: 9px 0 0 58px; font-size: 10px; color: var(--gd-muted); }
+.gd-axis { display: flex; justify-content: space-between; gap: 4px; margin: 9px 0 0 58px; font-size: 10px; color: var(--gd-muted); overflow: hidden; }
 .gd-axis span { white-space: nowrap; }
 
 .gd-ring-wrap { display: grid; gap: 10px; }
@@ -782,10 +782,19 @@
 }
 @media (max-width: 480px) {
   .gd-metric-grid, .gd-lanes, .gd-summary { grid-template-columns: minmax(0, 1fr); }
-  .gd-axis span:nth-child(even) { visibility: hidden; }
+  /* DOG-26: las etiquetas ocultas dejaban de verse pero seguían ocupando ancho y el eje se salía a 320 px. */
+  .gd-axis span:nth-child(even), .gd-axis span[style*="hidden"] { display: none; }
+  /* La última fecha (hoy) siempre se muestra. */
+  .gd-axis span:last-child { display: inline; visibility: visible !important; }
   .gd-mix button { grid-template-columns: 90px minmax(0, 1fr) 36px; }
   .gd-balance-actions { grid-template-columns: 1fr; }
   .gd-brand small { display: none; }
+  /* DOG-26: a 320 px el nombre se montaba bajo los iconos de la barra; ahora se recorta. */
+  .gd-brand > span:last-child { min-inline-size: 0; }
+  .gd-brand strong { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+}
+@media (max-width: 360px) {
+  .gd-axis span:nth-child(4n+3):not(:last-child) { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
   .gd-app *, .gd-app *::before, .gd-app *::after { animation-duration: .01ms !important; animation-delay: 0ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
