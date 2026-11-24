@@ -13,6 +13,7 @@ Estado: revisado el 2026-11-24. Los P0 y P1 ya fueron implementados y se conserv
 - `prisma generate` duplicado en Vercel (DOG-21): ya estaba resuelto; el `postinstall` se salta con `VERCEL=1`.
 - Matriz de responsables por dominio (DOG-24): sección 7 de `docs/ARCHITECTURE_MAP.md`.
 - Tests contractuales por rol (DOG-22): `tests/api-role-contracts.test.ts`.
+- Buscador de pacientes en documentos y resultados de laboratorio del profesional (DOG-29): `PatientSearchSelect`.
 
 ## Mejoras opcionales
 
@@ -22,8 +23,3 @@ Estado: revisado el 2026-11-24. Los P0 y P1 ya fueron implementados y se conserv
    - Riesgo: medio; actualmente el acceso depende de credenciales y controles de rol.
    - Impacto: alto para endurecer ADMINISTRADOR/PROFESIONAL.
    - Validación: flujo MFA completo, recuperación, auditoría y pruebas de autenticación.
-
-2. **Buscador de pacientes en documentos y resultados de laboratorio del profesional**
-   - Riesgo: bajo hoy; medio cuando un profesional pase de 50 pacientes.
-   - Impacto: medio. `ProfessionalDocuments` y `ProfessionalLabResults` piden `/api/professional/patients?pageSize=50` y el selector no muestra a quien pase de 50.
-   - Validación: selector con búsqueda en el servidor (como `ProfessionalPatients`) y cobertura de UI.
