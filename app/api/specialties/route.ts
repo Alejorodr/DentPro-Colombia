@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import { unstable_cache } from "next/cache";
+
+import { CATALOG_CACHE_VERSION, CATALOG_REVALIDATE_SECONDS, CATALOG_TAGS } from "@/lib/cache/catalog";
 import { getPrismaClient } from "@/lib/prisma";
 import { getSessionUser, isAuthorized } from "@/app/api/_utils/auth";
 import { errorResponse } from "@/app/api/_utils/response";
@@ -13,6 +16,13 @@ const specialtySchema = z.object({
   active: z.boolean().optional(),
 });
 
+// DOG-14: catálogo pequeño y casi fijo; se invalida al escribir en Specialty.
+const listSpecialties = unstable_cache(
+  () => getPrismaClient().specialty.findMany({ orderBy: { name: "asc" } }),
+  ["specialties-list", CATALOG_CACHE_VERSION],
+  { tags: [CATALOG_TAGS.specialties], revalidate: CATALOG_REVALIDATE_SECONDS },
+);
+
 export async function GET() {
   const sessionUser = await getSessionUser();
 
@@ -20,9 +30,7 @@ export async function GET() {
     return errorResponse("No autorizado.", 401);
   }
 
-  const prisma = getPrismaClient();
-
-  const specialties = await prisma.specialty.findMany({ orderBy: { name: "asc" } });
+  const specialties = await listSpecialties();
   return NextResponse.json(specialties);
 }
 

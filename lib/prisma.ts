@@ -1,6 +1,7 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 
+import { catalogTagsForWrite, invalidateCatalogTags } from "@/lib/cache/catalog";
 import { decryptResult, encryptWriteArgs } from "@/lib/security/prisma-field-encryption";
 import { Pool } from "pg";
 
@@ -243,6 +244,8 @@ function makeClient(): PrismaClient {
           try {
             const result = READ_ACTIONS.has(operation) ? await withRetry(run) : await run();
             recordSuccess();
+            // DOG-14: cualquier escritura en un catálogo cacheado lo invalida, venga de la ruta que venga.
+            invalidateCatalogTags(catalogTagsForWrite(model, operation));
             return decryptResult(result);
           } catch (error) {
             if (isRetryablePrismaError(error)) {

@@ -1,4 +1,8 @@
 import type { PrismaClient } from "@prisma/client";
+import { unstable_cache } from "next/cache";
+import { cache } from "react";
+
+import { CATALOG_CACHE_VERSION, CATALOG_REVALIDATE_SECONDS, CATALOG_TAGS } from "@/lib/cache/catalog";
 
 import { getPrismaClient } from "@/lib/prisma";
 import {
@@ -17,11 +21,31 @@ function normalizeMapEmbed(url: string | null | undefined) {
   return url;
 }
 
+/**
+ * DOG-14: el home se renderiza en cada request (el CSP lleva nonce), así que sin caché
+ * cada visita lanzaba estas 13 consultas, dos veces (metadata y página). Ahora se leen
+ * de la caché de datos de Next; `cache` de React además evita la segunda lectura
+ * dentro del mismo request. Se invalida al editar desde el admin (ver lib/cache/catalog.ts).
+ */
+const getCachedHomepageContent = unstable_cache(
+  () => loadHomepageContent(getPrismaClient()),
+  ["homepage-content", CATALOG_CACHE_VERSION],
+  { tags: [CATALOG_TAGS.homepage], revalidate: CATALOG_REVALIDATE_SECONDS },
+);
+
+const getHomepageContentForRequest = cache(() => getCachedHomepageContent());
+
 export async function getHomepageContent(prismaClient?: PrismaClient): Promise<HomepageNormalizedContent> {
-  if (!prismaClient && !process.env.DATABASE_URL) {
+  if (prismaClient) {
+    return loadHomepageContent(prismaClient);
+  }
+  if (!process.env.DATABASE_URL) {
     return HOMEPAGE_DEFAULT_CONTENT;
   }
-  const prisma = prismaClient ?? getPrismaClient();
+  return getHomepageContentForRequest();
+}
+
+async function loadHomepageContent(prisma: PrismaClient): Promise<HomepageNormalizedContent> {
 
   const [
     settings,
