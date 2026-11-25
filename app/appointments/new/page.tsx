@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { NewAppointmentForm } from "@/app/appointments/new/NewAppointmentForm";
 import { getActiveAppointmentCountForUser } from "@/lib/appointments/patient-active-count";
+import { DogbyteCreditFooter } from "@/components/ui/DogbyteCredit";
 
 export const metadata: Metadata = {
   title: "Reservar turno",
@@ -42,13 +43,16 @@ export default async function NewAppointmentPage({
     session.user.role === "PACIENTE" ? await getActiveAppointmentCountForUser(session.user.id) : 0;
 
   return (
-    <div className="mx-auto w-full max-w-4xl space-y-6 px-6 py-10">
-      <header className="space-y-2">
-        <p className="text-xs font-semibold uppercase tracking-wide text-brand-teal">Nuevo turno</p>
-        <h1 className="text-2xl font-semibold text-slate-900">Agenda una cita</h1>
-        <p className="text-sm text-slate-600">Selecciona especialidad, profesional y horario disponible.</p>
-      </header>
-      <NewAppointmentForm role={session.user.role} activeAppointmentsCount={activeAppointmentsCount} />
-    </div>
+    <>
+      <div className="mx-auto w-full max-w-4xl space-y-6 px-6 py-10">
+        <header className="space-y-2">
+          <p className="text-xs font-semibold uppercase tracking-wide text-brand-teal">Nuevo turno</p>
+          <h1 className="text-2xl font-semibold text-slate-900">Agenda una cita</h1>
+          <p className="text-sm text-slate-600">Selecciona especialidad, profesional y horario disponible.</p>
+        </header>
+        <NewAppointmentForm role={session.user.role} activeAppointmentsCount={activeAppointmentsCount} />
+      </div>
+      <DogbyteCreditFooter />
+    </>
   );
 }

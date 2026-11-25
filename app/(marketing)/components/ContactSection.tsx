@@ -11,6 +11,7 @@ import { resolveMarketingIcon } from "./icon-registry";
 import { buildEmailHref, buildPhoneHref, buildWhatsappHref } from "@/lib/marketing/homepage-adapter";
 
 import { fadeUpVariant, fadeUpVariantReduced } from "@/lib/motion/variants";
+import { DogbyteCredit } from "@/components/ui/DogbyteCredit";
 
 type ChannelType = "WHATSAPP" | "PHONE" | "EMAIL";
 
@@ -216,12 +217,7 @@ export function ContactSection({
               </a>
             ))}
             <CookiePreferencesButton className="text-left hover:text-white dark:hover:text-accent-cyan" />
-            <span className="text-slate-500 dark:text-slate-600">
-              Desarrollado por{" "}
-              <span className="font-semibold text-slate-400 dark:text-slate-500">
-                DOGBYTE
-              </span>
-            </span>
+            <DogbyteCredit tone="dark" className="text-slate-500 dark:text-slate-600" />
           </div>
         </div>
       </div>
