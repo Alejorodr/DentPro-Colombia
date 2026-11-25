@@ -12,7 +12,9 @@ import {
   UserCircle,
   Clock,
   Users,
+  Cookie,
 } from "@/components/ui/Icon";
+import { CookiePreferencesButton } from "@/components/privacy/CookiePreferencesButton";
 
 export const metadata: Metadata = {
   title: "Política de Tratamiento de Datos Personales | DentPro Colombia",
@@ -32,6 +34,7 @@ const tocItems = [
   { id: "seguridad", label: "Seguridad de la información" },
   { id: "transferencia", label: "Transferencia a terceros" },
   { id: "conservacion", label: "Tiempo de conservación" },
+  { id: "cookies", label: "Cookies y almacenamiento local" },
   { id: "modificaciones", label: "Modificaciones a la política" },
   { id: "contacto", label: "Contacto y canal de atención" },
 ];
@@ -60,7 +63,7 @@ export default function PoliticaTratamientoDatos() {
             Política de Tratamiento de Datos Personales
           </h1>
           <p className="text-base text-slate-500 dark:text-slate-400">
-            Última actualización: junio de 2026 · Vigente desde: junio de 2026
+            Última actualización: noviembre de 2026 · Vigente desde: junio de 2026
           </p>
         </div>
 
@@ -780,12 +783,69 @@ export default function PoliticaTratamientoDatos() {
               </div>
             </section>
 
-            {/* 12. Modificaciones */}
+            {/* 12. Cookies y almacenamiento local (DOG-36) */}
+            <section id="cookies" className="scroll-mt-28 space-y-4">
+              <div className="flex items-center gap-2.5">
+                <Cookie className="h-5 w-5 text-brand-teal dark:text-accent-cyan" weight="bold" />
+                <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+                  12. Cookies y almacenamiento local
+                </h2>
+              </div>
+              <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+                El sitio web de DentPro Colombia no usa cookies publicitarias ni de seguimiento entre
+                sitios. Solo guarda en el navegador lo necesario para funcionar y, si el titular lo
+                acepta, permite que un servicio de terceros (el mapa de Google) cargue sus propias
+                cookies.
+              </p>
+              <div className="space-y-3">
+                {[
+                  {
+                    tipo: "Esenciales — siempre activas",
+                    detalle:
+                      "Cookies de sesión del portal de pacientes y personal clínico (NextAuth: sesión, protección CSRF y redirección tras iniciar sesión), con los atributos HttpOnly, Secure y SameSite. Se borran al cerrar sesión o al vencer la sesión. También se usa el almacenamiento local del navegador para recordar el tema claro u oscuro y la decisión sobre cookies.",
+                  },
+                  {
+                    tipo: "Seguridad de formularios — siempre activa",
+                    detalle:
+                      "Los formularios de inicio de sesión, registro y restablecimiento de contraseña usan una verificación invisible contra bots (Vercel BotID). Sirve solo para proteger las cuentas y no se usa con fines comerciales.",
+                  },
+                  {
+                    tipo: "Medición anónima — sin cookies",
+                    detalle:
+                      "Vercel Web Analytics y Speed Insights miden visitas y rendimiento del sitio de forma agregada, sin cookies ni identificadores persistentes del visitante.",
+                  },
+                  {
+                    tipo: "Servicios de terceros — opcional",
+                    detalle:
+                      "El mapa de Google Maps de la sección de contacto solo se carga si el titular lo acepta en el aviso de cookies o pulsa “Cargar mapa”. Al cargarse, Google puede guardar sus propias cookies conforme a su política de privacidad. Sin aceptar, el titular puede abrir la ubicación directamente en Google Maps.",
+                  },
+                ].map(({ tipo, detalle }) => (
+                  <div
+                    key={tipo}
+                    className="rounded-xl border border-slate-200/80 bg-white/70 p-4 dark:border-surface-muted dark:bg-surface-elevated/50"
+                  >
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-brand-teal dark:text-accent-cyan">
+                      {tipo}
+                    </p>
+                    <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+                      {detalle}
+                    </p>
+                  </div>
+                ))}
+              </div>
+              <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+                El titular puede cambiar su decisión en cualquier momento desde el enlace
+                “Gestionar cookies” del pie de página o aquí mismo:
+              </p>
+              <CookiePreferencesButton className="btn-secondary" />
+            </section>
+
+            {/* 13. Modificaciones */}
             <section id="modificaciones" className="scroll-mt-28 space-y-4">
               <div className="flex items-center gap-2.5">
                 <FileText className="h-5 w-5 text-brand-teal dark:text-accent-cyan" weight="bold" />
                 <h2 className="text-xl font-bold text-slate-900 dark:text-white">
-                  12. Modificaciones a la política
+                  13. Modificaciones a la política
                 </h2>
               </div>
               <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">
@@ -817,12 +877,12 @@ export default function PoliticaTratamientoDatos() {
               </p>
             </section>
 
-            {/* 13. Contacto */}
+            {/* 14. Contacto */}
             <section id="contacto" className="scroll-mt-28 space-y-4">
               <div className="flex items-center gap-2.5">
                 <EnvelopeSimple className="h-5 w-5 text-brand-teal dark:text-accent-cyan" weight="bold" />
                 <h2 className="text-xl font-bold text-slate-900 dark:text-white">
-                  13. Contacto y canal de atención
+                  14. Contacto y canal de atención
                 </h2>
               </div>
               <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">

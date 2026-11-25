@@ -8,6 +8,7 @@ import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
 import { AppProviders } from "./providers";
+import { CookieConsent } from "@/components/privacy/CookieConsent";
 import { SITE_URL } from "@/lib/site/site-url";
 
 const inter = Inter({
@@ -138,6 +139,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <Suspense fallback={null}>
           <AppProviders>
             {children}
+            <CookieConsent />
             {shouldLoadVercelInsights ? (
               <>
                 <Analytics />
