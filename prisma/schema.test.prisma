@@ -116,7 +116,6 @@ model Service {
   priceCents      Int
   durationMinutes Int?
   active          Boolean       @default(true)
-  cupsCode        String?
   specialtyId     String?
   specialty       Specialty?    @relation(fields: [specialtyId], references: [id], onDelete: SetNull)
   appointments    Appointment[]

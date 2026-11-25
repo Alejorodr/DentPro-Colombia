@@ -67,6 +67,7 @@ const navByRole: Record<UserRole, NavItem[]> = {
     { label: "Usuarios", href: "/portal/admin/users", icon: Users },
     { label: "Especialidades", href: "/portal/admin/specialties", icon: Stethoscope },
     { label: "Servicios y tarifas", href: "/portal/admin/services", icon: CreditCard },
+    { label: "Catálogo CUPS", href: "/portal/admin/cups", icon: ClipboardText },
     { label: "Gestión de agenda", href: "/portal/admin/scheduling", icon: CalendarCheck },
     { label: "Contenido", href: "/portal/admin/content", icon: SquaresFour },
     { label: "Plantillas clínicas", href: "/portal/admin/templates", icon: FileText },
