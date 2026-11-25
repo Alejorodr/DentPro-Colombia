@@ -5,6 +5,7 @@ import { getHomepageContent } from "@/lib/marketing/homepage";
 import { HOMEPAGE_DEFAULT_CONTENT } from "@/lib/marketing/homepage-defaults";
 import { adaptHomepageContent } from "@/lib/marketing/homepage-adapter";
 import { getGoogleReviews } from "@/lib/google/google-reviews";
+import { DogbyteCreditFooter } from "@/components/ui/DogbyteCredit";
 
 export const revalidate = 3600;
 
@@ -42,6 +43,7 @@ export default async function ServiciosLayout({ children }: { children: React.Re
         login={{ href: "/auth/login", label: "Iniciar sesión" }}
       />
       <main>{children}</main>
+      <DogbyteCreditFooter />
       <FloatingActions {...marketingContent.floatingActions} />
     </>
   );

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { DogbyteCreditFooter } from "@/components/ui/DogbyteCredit";
 
 export const metadata: Metadata = {
   robots: {
@@ -14,5 +15,10 @@ export const metadata: Metadata = {
 };
 
 export default function AuthLayout({ children }: { children: ReactNode }) {
-  return children;
+  return (
+    <>
+      {children}
+      <DogbyteCreditFooter />
+    </>
+  );
 }

@@ -15,6 +15,7 @@ import {
   Cookie,
 } from "@/components/ui/Icon";
 import { CookiePreferencesButton } from "@/components/privacy/CookiePreferencesButton";
+import { DogbyteCreditFooter } from "@/components/ui/DogbyteCredit";
 
 export const metadata: Metadata = {
   title: "Política de Tratamiento de Datos Personales | DentPro Colombia",
@@ -1000,6 +1001,7 @@ export default function PoliticaTratamientoDatos() {
           </div>
         </div>
       </div>
+      <DogbyteCreditFooter />
     </div>
   );
 }

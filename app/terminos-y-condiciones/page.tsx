@@ -14,6 +14,7 @@ import {
   Users,
   CalendarBlank,
 } from "@/components/ui/Icon";
+import { DogbyteCreditFooter } from "@/components/ui/DogbyteCredit";
 
 export const metadata: Metadata = {
   title: "Términos y condiciones — DentPro Colombia",
@@ -1033,6 +1034,7 @@ export default function TerminosYCondicionesPage() {
           </div>
         </div>
       </div>
+      <DogbyteCreditFooter />
     </div>
   );
 }

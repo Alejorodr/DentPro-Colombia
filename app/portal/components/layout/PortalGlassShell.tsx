@@ -10,6 +10,7 @@ import { GlassyDock } from "@/components/ui/GlassyDock";
 import { List, SignOut, Tooth, WhatsappLogo, X, type Icon as IconComponent } from "@/components/ui/Icon";
 import { AvatarFallback } from "@/app/portal/components/ui/AvatarFallback";
 import { resolveActiveHref } from "@/app/portal/components/layout/Sidebar";
+import { DogbyteCredit } from "@/components/ui/DogbyteCredit";
 
 type PortalGlassNavItem = { label: string; href: string; icon: IconComponent };
 
@@ -150,6 +151,7 @@ export function PortalGlassShell({
         <footer className="gd-footer">
           <span>DentPro Colombia · Chía, Cundinamarca</span>
           <Link href="/">Ver sitio público</Link>
+          <DogbyteCredit />
         </footer>
       </div>
 
