@@ -142,6 +142,7 @@ pnpm secrets:scan -- staged   # solo lo preparado para commit
 - **Release:** solo con aprobación explícita del dueño. Un único PR `develop` → `main`, CI verde, merge, `pnpm version-packages` y etiqueta `vX.Y.Z`.
 - **Hotfix urgente de producción:** rama desde `main`, PR directo a `main`, y luego merge de `main` en `develop`.
 - **Dependabot:** mensual y agrupado; sus PRs se unifican en el siguiente release. Las alertas de seguridad se atienden aparte.
+- **Base local:** `.env.local` apunta a la branch **Dev** de Neon (base `neondb`; la shadow de Prisma es `prisma_shadow` en la misma branch). Nunca a producción: las URLs de producción viven fuera del repo, en `~/.dentpro/prod.env`, y solo se usan en los pasos del release (DOG-41).
 - Nunca correr E2E contra Neon (prod ni dev): siembran usuarios con contraseñas públicas. Usar `pnpm e2e:local`.
 
 ---
