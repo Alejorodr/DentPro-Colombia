@@ -125,6 +125,11 @@ function tooManyRequestsResponse(retryAfterSeconds: number) {
 // de 10/min por IP con uso normal (o de toda una sede tras la misma IP) y devolvía 429.
 const RATE_LIMITED_AUTH_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 
+// El segundo paso (DOG-28) ya exige sesión y tiene su propio límite por usuario (5 cada 15 min).
+// Contarlo también por IP duplicaba el costo de cada ingreso del personal, que sale por la misma
+// IP de la sede, y bloqueaba ingresos legítimos seguidos.
+const MFA_API_PREFIX = "/api/auth/mfa/";
+
 function failClosedResponse(reason: string) {
   if (!warnedAuthRateLimitFallback) {
     console.error(`[ratelimit] Proxy auth rate limit unavailable (${reason}); failing closed.`);
@@ -139,6 +144,7 @@ function failClosedResponse(reason: string) {
 export async function applyAuthRateLimit(request: NextRequest): Promise<NextResponse | null> {
   if (!request.nextUrl.pathname.startsWith("/api/auth/")) return null;
   if (!RATE_LIMITED_AUTH_METHODS.has(request.method)) return null;
+  if (request.nextUrl.pathname.startsWith(MFA_API_PREFIX)) return null;
 
   const ip = resolveClientIp(request);
 
