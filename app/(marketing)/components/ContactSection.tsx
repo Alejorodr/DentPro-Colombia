@@ -2,6 +2,8 @@
 
 import { motion, useReducedMotion } from "motion/react";
 
+import { ConsentedMapEmbed } from "@/components/privacy/ConsentedMapEmbed";
+import { CookiePreferencesButton } from "@/components/privacy/CookiePreferencesButton";
 import { Copyright } from "@/components/ui/Icon";
 
 import type { MarketingIconName } from "./icon-types";
@@ -11,6 +13,10 @@ import { buildEmailHref, buildPhoneHref, buildWhatsappHref } from "@/lib/marketi
 import { fadeUpVariant, fadeUpVariantReduced } from "@/lib/motion/variants";
 
 type ChannelType = "WHATSAPP" | "PHONE" | "EMAIL";
+
+/** Enlace externo a Google Maps: no carga nada de Google en este sitio (DOG-36). */
+const MAP_DIRECTIONS_HREF =
+  "https://www.google.com/maps/search/?api=1&query=DentPro%20Colombia%20Cra.%207%20%2313-180%20Ch%C3%ADa";
 
 interface ContactChannel {
   id: string;
@@ -184,13 +190,10 @@ export function ContactSection({
           </ul>
           {mapEmbedUrl ? (
             <div className="contact-map mt-8">
-              <iframe
+              <ConsentedMapEmbed
                 src={mapEmbedUrl}
                 title="Ubicación DentPro Colombia"
-                className="aspect-4/3 h-full w-full rounded-2xl border-0"
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-                allowFullScreen
+                directionsHref={MAP_DIRECTIONS_HREF}
               />
             </div>
           ) : null}
@@ -212,6 +215,7 @@ export function ContactSection({
                 {link.label}
               </a>
             ))}
+            <CookiePreferencesButton className="text-left hover:text-white dark:hover:text-accent-cyan" />
             <span className="text-slate-500 dark:text-slate-600">
               Desarrollado por{" "}
               <span className="font-semibold text-slate-400 dark:text-slate-500">

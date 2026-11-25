@@ -67,7 +67,7 @@ import {
   XIcon,
 } from "@animateicons/react/lucide";
 import { SmileIcon as HugeSmileIcon, TiktokIcon, WhatsappIcon } from "@animateicons/react/huge";
-import { Baby as LucideBaby, Copyright as LucideCopyright, LoaderCircle } from "lucide-react";
+import { Baby as LucideBaby, Cookie as LucideCookie, Copyright as LucideCopyright, LoaderCircle } from "lucide-react";
 
 import { AnimatedToothIcon } from "@/components/ui/AnimatedToothIcon";
 
@@ -333,6 +333,7 @@ export const CircleNotch = createLucideIcon(LoaderCircle, "CircleNotch");
 export const ClipboardText = createAnimatedIcon(ClipboardIcon, "ClipboardText");
 export const ClockCounterClockwise = createAnimatedIcon(HistoryIcon, "ClockCounterClockwise");
 export const Clock = createAnimatedIcon(ClockIcon, "Clock");
+export const Cookie = createLucideIcon(LucideCookie, "Cookie");
 export const Copyright = createLucideIcon(LucideCopyright, "Copyright");
 export const CreditCard = createAnimatedIcon(CreditCardIcon, "CreditCard");
 export const DiamondsFour = createAnimatedIcon(DiamondIcon, "DiamondsFour");
