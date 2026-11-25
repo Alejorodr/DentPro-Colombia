@@ -3,6 +3,8 @@
 // luego se abre desde el portal del paciente es XSS almacenado: se valida al escribir y
 // otra vez al leer, porque pueden existir filas antiguas guardadas sin validación.
 
+import { decodeBase64Header, matchesFileSignature } from "@/lib/security/file-signature";
+
 const SAFE_DATA_URL_MIME_TYPES = new Set(["application/pdf", "image/jpeg", "image/png", "image/webp"]);
 
 export function isSafeAttachmentUrl(url: string): boolean {
@@ -18,7 +20,11 @@ export function isSafeAttachmentDataUrl(value: string, mimeType?: string | null)
   if (!match || !SAFE_DATA_URL_MIME_TYPES.has(match[1].toLowerCase())) {
     return false;
   }
-  return !mimeType || mimeType.toLowerCase() === match[1].toLowerCase();
+  if (mimeType && mimeType.toLowerCase() !== match[1].toLowerCase()) {
+    return false;
+  }
+  // DOG-33: el contenido debe empezar con la firma del tipo declarado en el dataUrl.
+  return matchesFileSignature(decodeBase64Header(match[2]), match[1]);
 }
 
 /** Devuelve los enlaces con los inseguros reemplazados por null (para respuestas y vistas). */

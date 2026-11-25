@@ -1,4 +1,5 @@
 import { withAbortTimeout } from "@/lib/http";
+import { matchesFileSignature } from "@/lib/security/file-signature";
 
 // Adjuntos de hasta 10 MB: 60 s bastan incluso con conexiones lentas.
 const BLOB_UPLOAD_TIMEOUT_MS = 60_000;
@@ -14,6 +15,14 @@ const CLINICAL_ATTACHMENT_EXTENSION_MAP: Record<(typeof CLINICAL_ATTACHMENT_ALLO
 
 export function isAllowedClinicalAttachmentType(type: string) {
   return CLINICAL_ATTACHMENT_ALLOWED_TYPES.includes(type as (typeof CLINICAL_ATTACHMENT_ALLOWED_TYPES)[number]);
+}
+
+/**
+ * `true` solo si el tipo está permitido y el contenido empieza con su firma (DOG-33).
+ * El tipo MIME lo declara el navegador; la firma dice qué hay realmente dentro.
+ */
+export function matchesClinicalAttachmentSignature(bytes: Uint8Array, declaredType: string): boolean {
+  return isAllowedClinicalAttachmentType(declaredType) && matchesFileSignature(bytes, declaredType);
 }
 
 export function sanitizeClinicalAttachmentFilename(originalName: string, mimeType: string): string {

@@ -10,6 +10,7 @@ import {
   buildClinicalAttachmentChecksum,
   buildClinicalAttachmentStorageKey,
   isAllowedClinicalAttachmentType,
+  matchesClinicalAttachmentSignature,
   sanitizeClinicalAttachmentFilename,
   uploadToBlob,
 } from "@/lib/clinical/attachments";
@@ -147,10 +148,22 @@ export async function POST(request: Request, { params }: { params: Promise<{ epi
     );
   }
 
+  const fileBuffer = Buffer.from(await file.arrayBuffer());
+
+  // DOG-33: el tipo declarado no basta; el contenido debe empezar con la firma de ese tipo.
+  if (!matchesClinicalAttachmentSignature(fileBuffer, file.type)) {
+    return NextResponse.json(
+      {
+        error: "El contenido del archivo no corresponde a un PDF, JPG o PNG válido.",
+        details: { file: ["El contenido no coincide con el tipo de archivo."] },
+      },
+      { status: 400 },
+    );
+  }
+
   const sanitizedFilename = sanitizeClinicalAttachmentFilename(file.name, file.type);
   const key = buildClinicalAttachmentStorageKey({ episodeId, filename: sanitizedFilename });
   const checksum = await buildClinicalAttachmentChecksum(file);
-  const fileBuffer = Buffer.from(await file.arrayBuffer());
 
   // Clinical files must live in a private Blob store; downloads are streamed through the authorized API.
   const storageKey = await uploadToBlob(fileBuffer, key, file.type);

@@ -322,7 +322,12 @@ export function ProfessionalDashboard() {
           dataUrl: dataUrl ?? null,
         }),
       });
-      if (!response.ok) return;
+      if (!response.ok) {
+        // DOG-33: muestra por qué se rechazó el adjunto (ej. el contenido no es PDF/JPG/PNG/WEBP).
+        const body = (await response.json().catch(() => null)) as { error?: string } | null;
+        setUploadError(body?.error ?? "No se pudo subir el adjunto.");
+        return;
+      }
       const data = (await response.json()) as { attachment: ProfessionalAppointmentDetail["attachments"][number] };
       setAppointmentDetail((prev) => (prev ? { ...prev, attachments: [data.attachment, ...prev.attachments] } : prev));
     } catch (error) {
