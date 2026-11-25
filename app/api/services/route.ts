@@ -12,7 +12,6 @@ import { CATALOG_CACHE_VERSION, CATALOG_REVALIDATE_SECONDS, CATALOG_TAGS } from 
 import { getPrismaClient } from "@/lib/prisma";
 import { MARKETING_ICON_KEYS } from "@/lib/marketing/homepage-types";
 import { SERVICE_DETAIL_SLUGS } from "@/lib/marketing/service-detail-pages";
-import { cupsCodeSchema } from "@/lib/regulatory/colombia";
 import { Prisma } from "@prisma/client";
 
 const serviceSchema = z.object({
@@ -32,7 +31,6 @@ const serviceSchema = z.object({
   showOnHomepage: z.boolean().optional(),
   homepageSortOrder: z.number().int().min(0).optional(),
   detailSlug: z.enum(SERVICE_DETAIL_SLUGS).nullable().optional(),
-  cupsCode: cupsCodeSchema.nullable().optional(),
 });
 
 async function queryServices(activeOnly: boolean, query: string | undefined, skip: number, take: number) {
@@ -100,7 +98,6 @@ export async function POST(request: Request) {
       showOnHomepage: body.showOnHomepage ?? false,
       homepageSortOrder: body.homepageSortOrder ?? 0,
       detailSlug: body.detailSlug ?? null,
-      cupsCode: body.cupsCode ?? null,
     },
   });
 

@@ -3,7 +3,6 @@ import { describe, expect, it } from "vitest";
 import {
   DEFAULT_DOCUMENT_TYPE,
   DOCUMENT_TYPES,
-  cupsCodeSchema,
   documentTypeLabel,
   documentTypeSchema,
   formatDocument,
@@ -11,7 +10,7 @@ import {
   rethusNumberSchema,
 } from "@/lib/regulatory/colombia";
 
-// DOG-34: tipo de documento (RIPS), RETHUS y CUPS.
+// DOG-34: tipo de documento (RIPS) y RETHUS.
 
 describe("tipos de documento", () => {
   it("usa los códigos RIPS, sin repetidos, con CC por defecto", () => {
@@ -51,23 +50,5 @@ describe("rethusNumberSchema", () => {
     expect(rethusNumberSchema.safeParse("12<script>").success).toBe(false);
     expect(rethusNumberSchema.safeParse("12").success).toBe(false);
     expect(rethusNumberSchema.safeParse("9".repeat(31)).success).toBe(false);
-  });
-});
-
-describe("cupsCodeSchema", () => {
-  it("acepta 6 dígitos con o sin separadores", () => {
-    expect(cupsCodeSchema.parse("997002")).toBe("997002");
-    expect(cupsCodeSchema.parse("89.0.2.03")).toBe("890203");
-    expect(cupsCodeSchema.parse("890 203")).toBe("890203");
-  });
-
-  it("convierte la cadena vacía en null", () => {
-    expect(cupsCodeSchema.parse("")).toBeNull();
-  });
-
-  it("rechaza códigos que no tienen 6 dígitos", () => {
-    expect(cupsCodeSchema.safeParse("12345").success).toBe(false);
-    expect(cupsCodeSchema.safeParse("1234567").success).toBe(false);
-    expect(cupsCodeSchema.safeParse("ABC123").success).toBe(false);
   });
 });

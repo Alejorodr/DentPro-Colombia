@@ -2,7 +2,7 @@ import { z } from "zod";
 
 /**
  * Datos de normativa de salud colombiana (DOG-34): tipo de documento del paciente (RIPS),
- * registro RETHUS del profesional y código CUPS del servicio.
+ * registro RETHUS del profesional. Los procedimientos CUPS viven en `cups-odontologia.ts` (DOG-42).
  */
 
 /**
@@ -59,18 +59,5 @@ export const rethusNumberSchema = z
   .transform((value) => value.replace(/\s+/g, "").toUpperCase())
   .refine((value) => value === "" || /^[A-Z0-9-]{4,30}$/.test(value), {
     message: "El número RETHUS solo admite letras, números y guiones (4 a 30 caracteres).",
-  })
-  .transform((value) => (value === "" ? null : value));
-
-/**
- * Código CUPS: 6 dígitos. Se aceptan los separadores con que suele escribirse (`89.0.2.03`,
- * `890 203`) y se guarda solo con los dígitos. Cadena vacía → `null`.
- */
-export const cupsCodeSchema = z
-  .string()
-  .trim()
-  .transform((value) => value.replace(/[\s.-]/g, ""))
-  .refine((value) => value === "" || /^\d{6}$/.test(value), {
-    message: "El código CUPS debe tener 6 dígitos.",
   })
   .transform((value) => (value === "" ? null : value));

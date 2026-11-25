@@ -19,7 +19,6 @@ type ServiceRecord = {
   iconKey?: string | null;
   showOnHomepage: boolean;
   homepageSortOrder: number;
-  cupsCode?: string | null;
 };
 
 type SpecialtyOption = { id: string; name: string };
@@ -31,7 +30,6 @@ type ServiceForm = {
   duration: string;
   active: boolean;
   specialtyId: string;
-  cupsCode: string;
 };
 
 const emptyForm: ServiceForm = {
@@ -41,7 +39,6 @@ const emptyForm: ServiceForm = {
   duration: "",
   active: true,
   specialtyId: "",
-  cupsCode: "",
 };
 
 const formatCurrency = (cents: number) =>
@@ -96,7 +93,6 @@ export function AdminServicesPanel() {
       duration: service.durationMinutes != null ? String(service.durationMinutes) : "",
       active: service.active,
       specialtyId: service.specialtyId ?? "",
-      cupsCode: service.cupsCode ?? "",
     });
     setError(null);
   };
@@ -118,7 +114,6 @@ export function AdminServicesPanel() {
         durationMinutes: createForm.duration ? Number(createForm.duration) : null,
         active: createForm.active,
         specialtyId: createForm.specialtyId || null,
-        cupsCode: createForm.cupsCode.trim() || null,
       }),
     });
     if (response.ok) {
@@ -147,7 +142,6 @@ export function AdminServicesPanel() {
         durationMinutes: editForm.duration ? Number(editForm.duration) : null,
         active: editForm.active,
         specialtyId: editForm.specialtyId || null,
-        cupsCode: editForm.cupsCode.trim() || null,
       }),
     });
     if (response.ok) {
@@ -259,9 +253,6 @@ export function AdminServicesPanel() {
                       </div>
                       {service.description ? (
                         <p className="text-xs text-slate-400">{service.description}</p>
-                      ) : null}
-                      {service.cupsCode ? (
-                        <p className="text-xs tabular-nums text-slate-500 dark:text-slate-400">CUPS {service.cupsCode}</p>
                       ) : null}
                     </td>
                     <td className="px-4 py-3 text-xs text-slate-500">
@@ -484,23 +475,6 @@ function ServiceModal({
             </select>
           </label>
 
-          <label className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-            Código CUPS
-            <input
-              className="input mt-2 h-10 w-full text-sm normal-case tabular-nums"
-              inputMode="numeric"
-              autoComplete="off"
-              maxLength={12}
-              placeholder="Ej. 997002"
-              aria-describedby="service-cups-hint"
-              value={form.cupsCode}
-              onChange={set("cupsCode")}
-              disabled={saving}
-            />
-            <span id="service-cups-hint" className="mt-1 block text-[11px] font-normal normal-case tracking-normal text-slate-500 dark:text-slate-400">
-              6 dígitos de la Clasificación Única de Procedimientos en Salud.
-            </span>
-          </label>
 
           <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
             <input
