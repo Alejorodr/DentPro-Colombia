@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
+import { MFA_PAGE_PATH } from "@/lib/auth/mfa";
 import { getDefaultDashboardPath } from "@/lib/auth/roles";
 import { ChangePasswordForm } from "./ChangePasswordForm";
 
@@ -9,6 +10,10 @@ export default async function ChangePasswordPage() {
 
   if (!session?.user) {
     redirect("/auth/login");
+  }
+
+  if (session.user.mfaPending) {
+    redirect(MFA_PAGE_PATH);
   }
 
   const defaultDashboardPath = getDefaultDashboardPath(session.user.role ?? "PACIENTE");

@@ -22,6 +22,7 @@ type UserRecord = {
   lastName: string;
   role: UserRole;
   active: boolean;
+  mfaEnabled?: boolean;
   hasLocalPassword: boolean;
   _isGoogleUser: boolean;
   patient?: { id?: string; phone?: string | null; documentType?: string | null; documentId?: string | null } | null;
@@ -182,6 +183,7 @@ export function AdminUsersPanel({ roleFilter, roleLock }: AdminUsersPanelProps) 
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [resetModal, setResetModal] = useState<{ userId: string; userEmail: string } | null>(null);
+  const [mfaResetConfirmId, setMfaResetConfirmId] = useState<string | null>(null);
 
   const canSubmit = useMemo(() => {
     const effectiveRole = roleLock ?? formState.role;
@@ -315,6 +317,21 @@ export function AdminUsersPanel({ roleFilter, roleLock }: AdminUsersPanelProps) 
       setError(body?.error ?? "No pudimos dar de baja al usuario.");
     }
 
+    setSaving(false);
+  };
+
+  // DOG-28: restablecer el segundo factor obliga a la persona a inscribirse de nuevo.
+  const resetMfa = async (user: UserRecord) => {
+    setSaving(true);
+    setError(null);
+    const response = await fetchWithTimeout(`/api/users/${user.id}/mfa`, { method: "DELETE" });
+    if (response.ok) {
+      setUsers((prev) => prev.map((item) => (item.id === user.id ? { ...item, mfaEnabled: false } : item)));
+    } else {
+      const body = (await response.json().catch(() => null)) as { error?: string } | null;
+      setError(body?.error ?? "No pudimos restablecer la verificación en dos pasos.");
+    }
+    setMfaResetConfirmId(null);
     setSaving(false);
   };
 
@@ -609,6 +626,28 @@ export function AdminUsersPanel({ roleFilter, roleLock }: AdminUsersPanelProps) 
                         >
                           Resetear password
                         </button>
+                      ) : null}
+                      {user.mfaEnabled ? (
+                        mfaResetConfirmId === user.id ? (
+                          <button
+                            type="button"
+                            className="rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-xs font-semibold uppercase text-amber-800"
+                            onClick={() => void resetMfa(user)}
+                            disabled={saving}
+                          >
+                            Confirmar: restablecer 2 pasos
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold uppercase text-slate-600 dark:border-surface-muted/70 dark:text-slate-200"
+                            onClick={() => setMfaResetConfirmId(user.id)}
+                            disabled={saving}
+                            title="Borra su app autenticadora y sus códigos de respaldo. Tendrá que configurarla de nuevo al entrar."
+                          >
+                            Restablecer 2 pasos
+                          </button>
+                        )
                       ) : null}
                       <button
                         type="button"

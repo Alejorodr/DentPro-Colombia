@@ -34,6 +34,8 @@ export async function seedRoleSession(context: BrowserContext, role: SessionRole
       email: seededUser.email,
       userId: seededUser.id,
       sub: seededUser.id,
+      // DOG-28: la sesión sembrada ya pasó el segundo paso (los seeds E2E inscriben el MFA).
+      mfaVerified: true,
     },
   });
 

@@ -196,9 +196,37 @@ model User {
   auditLogs                    AuditLog[]
   accounts                     Account[]
   sessions                     Session[]
+  mfa                          UserMfa?
 
   @@index([role])
   @@index([active])
+}
+
+/// Segundo factor por app autenticadora (DOG-28). Mientras `enabledAt` es null la inscripción
+/// está a medias: el secreto existe pero todavía no se confirmó con un código.
+model UserMfa {
+  userId       String          @id @db.Uuid
+  /// Secreto TOTP en base32. Se guarda cifrado (ENCRYPTED_FIELDS).
+  secret       String
+  enabledAt    DateTime?
+  /// Último paso TOTP aceptado: impide reutilizar un código interceptado.
+  lastUsedStep Int?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  user         User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  backupCodes  MfaBackupCode[]
+}
+
+/// Códigos de respaldo de un solo uso (DOG-28). Solo se guarda el hash bcrypt.
+model MfaBackupCode {
+  id        String    @id @default(uuid())
+  userId    String    @db.Uuid
+  codeHash  String
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  mfa       UserMfa   @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model Account {

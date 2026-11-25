@@ -2,6 +2,7 @@ import { test, expect, type Page } from "@playwright/test";
 
 import { seedAdminSession } from "./utils/session";
 import { loginFromPortal } from "./utils/login";
+import { completeSeededMfaChallenge } from "./utils/mfa";
 import { seedTestData } from "./utils/seed";
 import { E2E_ROUTES, E2E_TEST_IDS } from "./utils/constants";
 
@@ -38,6 +39,8 @@ test("@smoke seed admin then login redirects to admin dashboard", async ({
   await seedTestData(request);
   await submitLogin(page, { email: seedEmail, password: seedPassword });
 
+  // DOG-28: el administrador pasa por el segundo paso antes de entrar al portal.
+  await completeSeededMfaChallenge(page);
   await expect(page).toHaveURL(/\/portal\/admin/);
   await expect(
     page.getByTestId(E2E_TEST_IDS.adminDashboardTitle),
@@ -78,6 +81,7 @@ test("login with bypass credentials returns session", async ({ page }) => {
     password: authUser.password,
   });
 
+  await completeSeededMfaChallenge(page);
   await expect(page).toHaveURL(/\/portal\/admin/);
 
   const sessionResponse = await page.request.get("/api/auth/session");

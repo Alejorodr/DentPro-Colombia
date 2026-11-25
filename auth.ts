@@ -19,6 +19,7 @@ type AuthenticatedUser = {
   professionalId?: string | null;
   patientId?: string | null;
   mustChangePassword?: boolean;
+  mfaPending?: boolean;
 };
 
 export type AuthSession = { user?: AuthenticatedUser | null } | null;
@@ -77,6 +78,8 @@ export async function auth(): Promise<AuthSession> {
             role: persistedUser.role,
             professionalId: persistedUser.professionalId ?? null,
             patientId: persistedUser.patientId ?? null,
+            // El bypass de E2E (solo local) representa una sesión ya verificada.
+            mfaPending: false,
           },
         };
       }

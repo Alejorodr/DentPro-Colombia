@@ -5,6 +5,7 @@ import { AppointmentStatus, InsuranceStatus, Prisma, ProfessionalScheduleStatus,
 import { getPrismaClient } from "@/lib/prisma";
 import { upsertSlotAppointment } from "@/lib/appointments/upsert-slot-appointment";
 import { logAuditEvent } from "@/lib/audit";
+import { enrollSeededUsersInE2EMfa } from "@/lib/auth/e2e-mfa";
 import { logger } from "@/lib/logger";
 import { refreshFutureInventoryForAllProfessionals } from "@/lib/scheduling/slot-inventory";
 import {
@@ -241,6 +242,11 @@ export async function POST(request: Request) {
     );
 
     const professionalUsers = createdUsers.filter((user) => user.role === Role.PROFESIONAL);
+    // DOG-28: solo en E2E local, para que las sesiones sembradas de estos roles no queden pendientes.
+    await enrollSeededUsersInE2EMfa(
+      prisma,
+      createdUsers.filter((user) => user.role === Role.ADMINISTRADOR || user.role === Role.PROFESIONAL).map((user) => user.id),
+    );
     await Promise.all(
       professionalUsers.map((user, index) =>
         prisma.professionalProfile.upsert({

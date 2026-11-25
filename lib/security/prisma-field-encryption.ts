@@ -23,6 +23,8 @@ export const ENCRYPTED_FIELDS: Record<string, Record<string, "text" | "json">> =
   PrescriptionItem: { name: "text", dosage: "text", frequency: "text", instructions: "text" },
   // Cola de correos (DOG-13): el cuerpo lleva enlaces de restablecimiento y datos de la cita.
   EmailOutbox: { html: "text", text: "text" },
+  // Segundo factor (DOG-28): con el secreto TOTP se generan códigos válidos.
+  UserMfa: { secret: "text" },
 };
 
 const WRITE_OPERATIONS = new Set([
