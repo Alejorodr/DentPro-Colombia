@@ -62,7 +62,11 @@ async function loadHomepageContent(prisma: PrismaClient): Promise<HomepageNormal
     faqs,
     navLinks,
     channels,
-  ] = await prisma.$transaction([
+  ] = await Promise.all([
+    // Lecturas independientes, sin transacción: un `$transaction` en lote espera como máximo
+    // 2 s para abrir la transacción, y en el build (muchos workers contra Neon) o con el
+    // compute frío fallaba con "Unable to start a transaction in the given time". No hace
+    // falta una instantánea consistente para el contenido público; el pool encola las consultas.
     prisma.homepageSettings.findUnique({ where: { id: HOMEPAGE_SETTINGS_SINGLETON_ID } }),
     prisma.service.findMany({
       where: { showOnHomepage: true, active: true },

@@ -69,8 +69,13 @@ describe("field-encryption", () => {
 
   it("falla si el texto cifrado fue alterado", () => {
     const sealed = encryptText("dato");
-    const tampered = sealed.slice(0, -2) + (sealed.endsWith("A") ? "BB" : "AA");
-    expect(() => decryptValue(tampered)).toThrow();
+    // Se altera un byte real del ciphertext. Cambiar caracteres del base64 a ciegas era
+    // intermitente: el último carácter lleva bits de relleno y a veces no cambiaba nada.
+    const parts = sealed.split(":");
+    const ciphertext = Buffer.from(parts[parts.length - 1], "base64url");
+    ciphertext[0] ^= 0x01;
+    parts[parts.length - 1] = ciphertext.toString("base64url");
+    expect(() => decryptValue(parts.join(":"))).toThrow();
   });
 
   it("falla con un mensaje claro si falta la clave del valor", () => {

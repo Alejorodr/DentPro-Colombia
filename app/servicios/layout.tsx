@@ -2,6 +2,7 @@ import { Navbar } from "@/app/(marketing)/components/Navbar";
 import { InfoBar } from "@/app/(marketing)/components/InfoBar";
 import { FloatingActions } from "@/app/(marketing)/components/FloatingActions";
 import { getHomepageContent } from "@/lib/marketing/homepage";
+import { HOMEPAGE_DEFAULT_CONTENT } from "@/lib/marketing/homepage-defaults";
 import { adaptHomepageContent } from "@/lib/marketing/homepage-adapter";
 import { getGoogleReviews } from "@/lib/google/google-reviews";
 
@@ -17,7 +18,8 @@ const navbarLinks = [
 
 export default async function ServiciosLayout({ children }: { children: React.ReactNode }) {
   const [homepageContent, googleReviews] = await Promise.all([
-    getHomepageContent(),
+    // Igual que el home: si la base no responde, se usa el contenido por defecto en vez de un error.
+    getHomepageContent().catch(() => HOMEPAGE_DEFAULT_CONTENT),
     getGoogleReviews(),
   ]);
 
