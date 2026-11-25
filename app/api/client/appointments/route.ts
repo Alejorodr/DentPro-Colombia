@@ -14,6 +14,7 @@ import { requireRole, requireSession } from "@/lib/authz";
 import { assertSlotBookable } from "@/lib/scheduling/effective-availability";
 import {
   BookingLimitError,
+  SlotAlreadyBookedError,
   assertPatientBookingCapInTransaction,
   checkSlotLeadTime,
 } from "@/lib/appointments/booking-limits";
@@ -144,7 +145,7 @@ export async function POST(request: Request) {
       });
 
       if (updatedSlot.count === 0) {
-        throw new Error("Slot reservado");
+        throw new SlotAlreadyBookedError();
       }
 
       const details = payload.patientDetails;
@@ -206,6 +207,16 @@ export async function POST(request: Request) {
 
     return NextResponse.json(appointment, { status: 201 });
   } catch (error) {
+    if (error instanceof SlotAlreadyBookedError) {
+      logger.warn({
+        event: "client.appointment.slot_taken",
+        route: "/api/client/appointments",
+        requestId,
+        userId: sessionResult.user.id,
+        status: error.status,
+      });
+      return errorResponse(error.message, error.status);
+    }
     if (error instanceof BookingLimitError) {
       logger.warn({
         event: "client.appointment.limit_reached",

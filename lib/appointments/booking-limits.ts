@@ -24,6 +24,16 @@ export const ACTIVE_CAP_MESSAGE = `Ya tienes ${MAX_ACTIVE_APPOINTMENTS_PER_PATIE
 export type BookingRuleViolation = { status: 422; message: string };
 
 /** Thrown inside booking transactions so the route can map it to a 422. */
+/** Otra reserva tomó el horario entre la validación y la transacción (DOG-39). */
+export class SlotAlreadyBookedError extends Error {
+  readonly status = 409 as const;
+
+  constructor(message = "Ese horario acaba de ser reservado. Elige otro horario.") {
+    super(message);
+    this.name = "SlotAlreadyBookedError";
+  }
+}
+
 export class BookingLimitError extends Error {
   readonly status = 422 as const;
 

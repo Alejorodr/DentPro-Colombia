@@ -91,10 +91,12 @@ test("patient can book an appointment from the portal", async ({
     date.setDate(now.getDate() + index);
     return formatDateInput(date);
   });
-  let dateValue = dateCandidates[0];
-  let chosenSlotId = "";
   const nowMs = Date.now();
 
+  // DOG-39: con varios workers (o --repeat-each) esta prueba corre en paralelo con la misma
+  // paciente. Si todas eligen el primer horario libre, una reserva y las demás reciben 409.
+  // Se reúnen los horarios futuros de la semana y cada corrida toma uno distinto.
+  const futureSlots: Array<{ id: string; date: string }> = [];
   for (const candidate of dateCandidates) {
     const slotsResponse = await request.get(
       `/api/slots?serviceId=${selectedService.id}&date=${candidate}`,
@@ -103,18 +105,18 @@ test("patient can book an appointment from the portal", async ({
     const payload = (await slotsResponse.json()) as {
       slots?: Array<{ id: string; startAt: string }>;
     };
-    const slots = payload.slots ?? [];
-    const futureSlot =
-      slots.find((slot) => new Date(slot.startAt).getTime() > nowMs) ?? null;
-
-    if (futureSlot) {
-      dateValue = candidate;
-      chosenSlotId = futureSlot.id;
-      break;
+    for (const slot of payload.slots ?? []) {
+      if (new Date(slot.startAt).getTime() > nowMs) {
+        futureSlots.push({ id: slot.id, date: candidate });
+      }
     }
   }
 
-  expect(chosenSlotId).toBeTruthy();
+  expect(futureSlots.length).toBeGreaterThan(0);
+  const { parallelIndex, repeatEachIndex } = test.info();
+  const pickIndex = (parallelIndex * 31 + repeatEachIndex * 7 + Math.floor(Math.random() * 5)) % futureSlots.length;
+  const dateValue = futureSlots[pickIndex].date;
+  const chosenSlotId = futureSlots[pickIndex].id;
   await page.getByTestId(`date-${dateValue}`).click();
 
   const slotButton = page.getByTestId(`slot-${chosenSlotId}`);
