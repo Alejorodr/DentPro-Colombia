@@ -6,12 +6,14 @@ import { InsuranceStatus } from "@prisma/client";
 import { getSessionUser } from "@/app/api/_utils/auth";
 import { errorResponse } from "@/app/api/_utils/response";
 import { parseJson } from "@/app/api/_utils/validation";
+import { documentTypeSchema } from "@/lib/regulatory/colombia";
 
 const updateProfileSchema = z.object({
   name: z.string().trim().min(1).max(120).optional(),
   lastName: z.string().trim().min(1).max(120).optional(),
   email: z.string().trim().email().max(120).optional(),
   phone: z.string().trim().max(30).optional(),
+  documentType: documentTypeSchema.optional(),
   documentId: z.string().trim().max(40).optional(),
   address: z.string().trim().max(200).optional(),
   city: z.string().trim().max(80).optional(),
@@ -81,6 +83,7 @@ export async function PATCH(request: Request) {
               upsert: {
                 create: {
                   phone: payload.phone?.trim() || null,
+                  documentType: payload.documentType,
                   documentId: payload.documentId?.trim() || null,
                   address: payload.address?.trim() || null,
                   city: payload.city?.trim() || null,
@@ -93,6 +96,7 @@ export async function PATCH(request: Request) {
                 },
                 update: {
                   phone: payload.phone?.trim() || undefined,
+                  documentType: payload.documentType,
                   documentId: payload.documentId?.trim() || undefined,
                   address: payload.address?.trim() || undefined,
                   city: payload.city?.trim() || undefined,

@@ -8,12 +8,14 @@ import { getPrismaClient } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import { redactSensitiveAuthFields } from "@/lib/security/redaction";
 import { logAuditEvent } from "@/lib/audit";
+import { documentTypeSchema } from "@/lib/regulatory/colombia";
 
 const updatePatientSchema = z.object({
   name: z.string().trim().min(1).max(120).optional(),
   lastName: z.string().trim().min(1).max(120).optional(),
   email: z.string().trim().email().max(120).optional(),
   phone: z.string().trim().max(30).optional(),
+  documentType: documentTypeSchema.optional(),
   documentId: z.string().trim().max(40).optional(),
   active: z.boolean().optional(),
 });
@@ -65,6 +67,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
         patient: {
           update: {
             phone: payload.phone?.trim() || undefined,
+            documentType: payload.documentType,
             documentId: payload.documentId?.trim() || undefined,
             active: typeof payload.active === "boolean" ? payload.active : undefined,
           },

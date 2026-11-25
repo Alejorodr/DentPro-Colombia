@@ -52,6 +52,23 @@ enum UnavailabilityStatus {
   CANCELLED
 }
 
+/// Tipos de identificación de la tabla RIPS del Ministerio de Salud (DOG-34).
+enum DocumentType {
+  CC
+  TI
+  RC
+  CN
+  CE
+  PA
+  PE
+  PT
+  DE
+  CD
+  SC
+  AS
+  MS
+}
+
 enum InsuranceStatus {
   ACTIVE
   INACTIVE
@@ -234,6 +251,8 @@ model ProfessionalProfile {
   homepageImageAlt      String?
   showOnHomepage        Boolean                          @default(false)
   homepageSortOrder     Int                              @default(0)
+  /// Registro Único Nacional del Talento Humano en Salud. Opcional al crear (DOG-34).
+  rethusNumber           String?
   user                   User                             @relation(fields: [userId], references: [id], onDelete: Restrict)
   specialty              Specialty                        @relation(fields: [specialtyId], references: [id], onDelete: Restrict)
   timeSlots              TimeSlot[]
@@ -253,6 +272,7 @@ model PatientProfile {
   id                  String               @id @default(uuid())
   userId              String               @unique @db.Uuid
   phone               String?
+  documentType        DocumentType         @default(CC)
   documentId          String?
   /// HMAC del documento normalizado para buscarlo sin descifrar (DOG-18).
   documentIdHash      String?
@@ -289,6 +309,8 @@ model Service {
   showOnHomepage       Boolean               @default(false)
   homepageSortOrder    Int                   @default(0)
   detailSlug           String?
+  /// Clasificación Única de Procedimientos en Salud: 6 dígitos, uno por servicio (DOG-34).
+  cupsCode             String?
   specialtyId          String?
   specialty            Specialty?            @relation(fields: [specialtyId], references: [id], onDelete: SetNull)
   appointments         Appointment[]

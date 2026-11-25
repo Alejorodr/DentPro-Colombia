@@ -6,6 +6,7 @@ import { getPrismaClient, isDatabaseUnavailableError } from "@/lib/prisma";
 import { createReceptionNotifications } from "@/lib/notifications";
 import { AppointmentStatus, TimeSlotStatus } from "@prisma/client";
 import { parseJson } from "@/app/api/_utils/validation";
+import { documentTypeSchema } from "@/lib/regulatory/colombia";
 import { enforceRateLimit } from "@/app/api/_utils/ratelimit";
 import { getRequestId } from "@/app/api/_utils/request";
 import { logger } from "@/lib/logger";
@@ -31,6 +32,7 @@ const patientDetailsSchema = z.object({
   lastName: z.string().trim().max(80).optional(),
   email: z.string().trim().email().max(120).optional(),
   phone: z.string().trim().max(30).optional(),
+  documentType: documentTypeSchema.optional(),
   documentId: z.string().trim().max(40).optional(),
 });
 
@@ -157,6 +159,7 @@ export async function POST(request: Request) {
             patient: {
               update: {
                 phone: details.phone?.trim() || undefined,
+                documentType: details.documentType,
                 documentId: details.documentId?.trim() || undefined,
               },
             },

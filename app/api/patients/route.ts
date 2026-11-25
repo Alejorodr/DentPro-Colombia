@@ -10,6 +10,7 @@ import { Prisma } from "@prisma/client";
 import { requireRole, requireSession } from "@/lib/authz";
 import { PASSWORD_POLICY_MESSAGE, PASSWORD_POLICY_REGEX } from "@/lib/auth/password-policy";
 import { logAuditEvent } from "@/lib/audit";
+import { documentTypeSchema } from "@/lib/regulatory/colombia";
 
 const createPatientSchema = z.object({
   email: z.string().trim().email().max(120),
@@ -17,6 +18,7 @@ const createPatientSchema = z.object({
   name: z.string().trim().min(1).max(120),
   lastName: z.string().trim().min(1).max(120),
   phone: z.string().trim().max(30).optional(),
+  documentType: documentTypeSchema.optional(),
   documentId: z.string().trim().max(40).optional(),
 });
 
@@ -60,6 +62,7 @@ export async function GET(request: Request) {
         active: true,
         patientCode: true,
         phone: true,
+        documentType: true,
         documentId: true,
         user: {
           select: {
@@ -113,6 +116,7 @@ export async function POST(request: Request) {
         patient: {
           create: {
             phone: payload.phone?.trim() || null,
+            documentType: payload.documentType,
             documentId: payload.documentId?.trim() || null,
             active: true,
           },
@@ -132,6 +136,7 @@ export async function POST(request: Request) {
             active: true,
             patientCode: true,
             phone: true,
+            documentType: true,
             documentId: true,
           },
         },

@@ -40,6 +40,7 @@ export type RoleModalUser = {
   role: UserRole;
   professional?: {
     id: string;
+    rethusNumber?: string | null;
     specialty?: { id: string; name: string } | null;
     homepageBioShort?: string | null;
     homepageImageUrl?: string | null;
@@ -78,6 +79,7 @@ export function RoleModal({
   const [lastName, setLastName] = useState(user.lastName);
   const [email, setEmail] = useState(user.email);
   const [specialtyId, setSpecialtyId] = useState(user.professional?.specialty?.id ?? "");
+  const [rethusNumber, setRethusNumber] = useState(user.professional?.rethusNumber ?? "");
   const [status, setStatus] = useState<SaveStatus>("idle");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -163,6 +165,8 @@ export function RoleModal({
           lastName: lastName.trim(),
           email: email.trim(),
           specialtyId: role === "PROFESIONAL" ? specialtyId : undefined,
+          // "" borra el registro; el servidor normaliza y valida el formato.
+          rethusNumber: role === "PROFESIONAL" ? rethusNumber : undefined,
         }),
       });
 
@@ -427,6 +431,30 @@ export function RoleModal({
                   + Crear especialidad
                 </button>
               )}
+            </section>
+          ) : null}
+
+          {role === "PROFESIONAL" ? (
+            <section>
+              <label
+                htmlFor="role-modal-rethus"
+                className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
+              >
+                Número RETHUS
+              </label>
+              <input
+                id="role-modal-rethus"
+                className="input mt-2 h-11 text-sm tabular-nums"
+                autoComplete="off"
+                maxLength={40}
+                aria-describedby="role-modal-rethus-hint"
+                value={rethusNumber}
+                onChange={(event) => setRethusNumber(event.target.value)}
+                disabled={status === "loading"}
+              />
+              <p id="role-modal-rethus-hint" className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                Registro Único Nacional del Talento Humano en Salud. Puedes completarlo después.
+              </p>
             </section>
           ) : null}
 

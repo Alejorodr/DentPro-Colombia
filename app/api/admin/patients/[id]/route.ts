@@ -23,6 +23,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     select: {
       id: true,
       patientCode: true,
+      documentType: true,
       documentId: true,
       phone: true,
       user: { select: { name: true, lastName: true } },

@@ -1,4 +1,5 @@
 import { requireRole } from "@/lib/auth/require-role";
+import { formatDocument } from "@/lib/regulatory/colombia";
 import { getProfessionalProfile, professionalHasPatientAccess } from "@/lib/clinical/access";
 import { getPrismaClient } from "@/lib/prisma";
 
@@ -16,6 +17,7 @@ export default async function ProfessionalPatientPage({ params }: { params: Prom
       select: {
         id: true,
         patientCode: true,
+        documentType: true,
         documentId: true,
         phone: true,
         user: { select: { name: true, lastName: true } },
@@ -48,7 +50,7 @@ export default async function ProfessionalPatientPage({ params }: { params: Prom
             <p className="text-sm text-slate-500 dark:text-slate-300">ID: {patient.patientCode ?? patient.id}</p>
           </div>
           <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-500 shadow-xs dark:border-surface-muted/60 dark:bg-surface-base dark:text-slate-300">
-            <p>Documento: {patient.documentId ?? "Sin documento"}</p>
+            <p>Documento: {formatDocument(patient.documentType, patient.documentId) ?? "Sin documento"}</p>
             <p>Contacto: {patient.phone ?? "Sin teléfono"}</p>
           </div>
         </div>

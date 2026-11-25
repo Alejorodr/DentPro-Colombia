@@ -14,6 +14,7 @@ export type PatientExportPayload = {
     lastName: string;
     email: string;
     phone: string | null;
+    documentType: string;
     documentId: string | null;
     dateOfBirth: Date | null;
     gender: string | null;
@@ -87,6 +88,7 @@ export async function buildPatientExport(
       id: true,
       userId: true,
       phone: true,
+      documentType: true,
       documentId: true,
       dateOfBirth: true,
       gender: true,
@@ -184,6 +186,7 @@ export async function buildPatientExport(
       lastName: patient.user.lastName,
       email: patient.user.email,
       phone: patient.phone ?? null,
+      documentType: patient.documentType,
       documentId: patient.documentId ?? null,
       dateOfBirth: patient.dateOfBirth ?? null,
       gender: patient.gender ?? null,

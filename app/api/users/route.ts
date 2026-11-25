@@ -13,6 +13,7 @@ import { Prisma } from "@prisma/client";
 import { redactSensitiveAuthFields } from "@/lib/security/redaction";
 import { logApiError } from "@/app/api/_utils/observability";
 import { logAuditEvent } from "@/lib/audit";
+import { documentTypeSchema, rethusNumberSchema } from "@/lib/regulatory/colombia";
 
 const createUserSchema = z.object({
   email: z.string().trim().email().max(120),
@@ -21,7 +22,9 @@ const createUserSchema = z.object({
   name: z.string().trim().min(1).max(120),
   lastName: z.string().trim().min(1).max(120),
   phone: z.string().trim().max(30).optional(),
+  documentType: documentTypeSchema.optional(),
   documentId: z.string().trim().max(40).optional(),
+  rethusNumber: rethusNumberSchema.optional(),
   specialtyId: z.string().uuid().optional(),
   slotDurationMinutes: z.number().int().min(5).max(240).optional(),
 });
@@ -140,6 +143,7 @@ export async function POST(request: Request) {
           ? {
               create: {
                 phone: payload.phone?.trim() || null,
+                documentType: payload.documentType,
                 documentId: payload.documentId?.trim() || null,
                 active: true,
               },
@@ -150,6 +154,7 @@ export async function POST(request: Request) {
               create: {
                 specialty: { connect: { id: professionalSpecialtyId! } },
                 slotDurationMinutes: payload.slotDurationMinutes ?? null,
+                rethusNumber: payload.rethusNumber ?? null,
                 active: true,
               },
             }

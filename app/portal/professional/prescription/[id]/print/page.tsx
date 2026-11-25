@@ -5,6 +5,7 @@ import { getProfessionalProfile } from "@/lib/clinical/access";
 import { logClinicalAccess } from "@/lib/clinical/access-log";
 import { getPrismaClient } from "@/lib/prisma";
 import { AccessLogAction } from "@prisma/client";
+import { formatDocument } from "@/lib/regulatory/colombia";
 
 export default async function PrescriptionPrintPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await requireRole("PROFESIONAL");
@@ -25,8 +26,15 @@ export default async function PrescriptionPrintPage({ params }: { params: Promis
       content: true,
       issuedAt: true,
       createdAt: true,
-      patient: { select: { patientCode: true, user: { select: { name: true, lastName: true } } } },
-      professional: { select: { user: { select: { name: true, lastName: true } } } },
+      patient: {
+        select: {
+          patientCode: true,
+          documentType: true,
+          documentId: true,
+          user: { select: { name: true, lastName: true } },
+        },
+      },
+      professional: { select: { rethusNumber: true, user: { select: { name: true, lastName: true } } } },
       episode: { select: { reason: true } },
     },
   });
@@ -66,6 +74,11 @@ export default async function PrescriptionPrintPage({ params }: { params: Promis
           <p className="font-semibold">
             {prescription.patient?.user.name} {prescription.patient?.user.lastName}
           </p>
+          {prescription.patient?.documentId ? (
+            <p className="text-slate-500 tabular-nums">
+              {formatDocument(prescription.patient.documentType, prescription.patient.documentId)}
+            </p>
+          ) : null}
           <p className="text-slate-500">ID: {prescription.patient?.patientCode ?? prescription.patientId}</p>
         </div>
         <div>
@@ -73,6 +86,9 @@ export default async function PrescriptionPrintPage({ params }: { params: Promis
           <p className="font-semibold">
             {prescription.professional?.user.name} {prescription.professional?.user.lastName}
           </p>
+          {prescription.professional?.rethusNumber ? (
+            <p className="text-slate-500 tabular-nums">RETHUS {prescription.professional.rethusNumber}</p>
+          ) : null}
           <p className="text-slate-500">
             Emitida: {(prescription.issuedAt ?? prescription.createdAt).toLocaleDateString("es-CO")}
           </p>

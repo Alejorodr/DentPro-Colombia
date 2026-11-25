@@ -4,9 +4,12 @@ import { useEffect, useState } from "react";
 
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
 import { SkeletonRows } from "@/app/portal/components/ui/Skeleton";
+import { DocumentTypeSelect } from "@/components/ui/DocumentTypeSelect";
+import { DEFAULT_DOCUMENT_TYPE, isDocumentTypeCode, type DocumentTypeCode } from "@/lib/regulatory/colombia";
 
 type PatientProfile = {
   phone?: string | null;
+  documentType?: string | null;
   documentId?: string | null;
   address?: string | null;
   city?: string | null;
@@ -39,6 +42,7 @@ export function ClientProfileForm() {
     lastName: "",
     email: "",
     phone: "",
+    documentType: DEFAULT_DOCUMENT_TYPE as DocumentTypeCode,
     documentId: "",
     address: "",
     city: "",
@@ -66,6 +70,7 @@ export function ClientProfileForm() {
           lastName: data.lastName ?? "",
           email: data.email ?? "",
           phone: data.patient?.phone ?? "",
+          documentType: isDocumentTypeCode(data.patient?.documentType) ? data.patient.documentType : DEFAULT_DOCUMENT_TYPE,
           documentId: data.patient?.documentId ?? "",
           address: data.patient?.address ?? "",
           city: data.patient?.city ?? "",
@@ -156,7 +161,16 @@ export function ClientProfileForm() {
           />
         </label>
         <label className="space-y-2 text-sm font-semibold text-slate-700 dark:text-slate-200">
-          Documento
+          Tipo de documento
+          <DocumentTypeSelect
+            className="input h-11 text-sm"
+            value={formState.documentType}
+            disabled={saving}
+            onValueChange={(documentType) => setFormState((prev) => ({ ...prev, documentType }))}
+          />
+        </label>
+        <label className="space-y-2 text-sm font-semibold text-slate-700 dark:text-slate-200">
+          Número de documento
           <input
             className="input h-11 text-sm"
             value={formState.documentId}
