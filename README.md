@@ -54,7 +54,7 @@ pnpm exec prisma migrate deploy
 4. Ejecuta el seed:
 
 ```bash
-pnpm run prisma:seed
+pnpm db:seed
 ```
 
 ### Credenciales demo (seed)
@@ -79,14 +79,14 @@ Los adjuntos clínicos se almacenan en Vercel Blob y se referencian por `storage
 
 ## Seed del admin (manual)
 
-El seed garantiza que exista un usuario ADMINISTRADOR con el correo que indiques. Ejecuta el seed manualmente cuando quieras crear o actualizar la cuenta admin:
+El seed garantiza que exista un usuario ADMINISTRADOR con el correo que indiques. Define `ADMIN_SEED_EMAIL` y `ADMIN_SEED_PASSWORD` (o `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD`) en `.env.local` y ejecuta el seed cuando quieras crear o actualizar la cuenta admin. Ponlas en el archivo y no en la línea de comandos: `prisma.config.ts` carga `.env.local` por encima del entorno.
 
 ```bash
-SEED_ADMIN_EMAIL=admin@tu-dominio.com SEED_ADMIN_PASSWORD="TuPasswordSegura" pnpm run prisma:seed
+pnpm db:seed
 ```
 
-- Si el usuario existe, se asegura el rol `ADMINISTRADOR` y se actualiza la contraseña solo si `SEED_ADMIN_PASSWORD` está presente.
-- Si no existe, `SEED_ADMIN_PASSWORD` es obligatorio para crearlo.
+- Si el usuario existe, se asegura el rol `ADMINISTRADOR` y se actualiza la contraseña solo si `ADMIN_SEED_PASSWORD` está presente.
+- Si no existe, `ADMIN_SEED_PASSWORD` es obligatorio para crearlo.
 - El seed no se ejecuta automáticamente en deploys.
 
 ## Recuperación de contraseña

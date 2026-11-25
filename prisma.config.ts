@@ -42,6 +42,9 @@ export default defineConfig({
   schema: "prisma/schema.prisma",
   migrations: {
     path: "prisma/migrations",
+    // Prisma 7 solo lee el seed desde aquí (ignora "prisma.seed" de package.json). tsx resuelve
+    // los alias `@/...` que usa el seed; el comando hereda el entorno ya cargado arriba (DOG-43).
+    seed: "tsx prisma/seed.ts",
   },
   datasource: {
     // Para deploy (migrate deploy) necesita SI o SI una url aquí:
