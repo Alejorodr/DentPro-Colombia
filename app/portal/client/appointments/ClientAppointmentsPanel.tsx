@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { RescheduleModal } from "@/app/portal/components/RescheduleModal";
 import { StatusBadge } from "@/app/portal/components/ui/StatusBadge";
 import { CalendarBlank, CheckCircle, Clock, WarningCircle, XCircle } from "@/components/ui/Icon";
+import { CLINIC_TIME_ZONE } from "@/lib/dates/tz";
 
 type AppointmentItem = {
   id: string;
@@ -17,7 +18,7 @@ type AppointmentItem = {
 
 
 function formatDateTime(date: string) {
-  return new Date(date).toLocaleString("es-CO", {
+  return new Date(date).toLocaleString("es-CO", { timeZone: CLINIC_TIME_ZONE,
     dateStyle: "medium",
     timeStyle: "short",
   });

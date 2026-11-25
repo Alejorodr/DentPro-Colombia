@@ -7,13 +7,13 @@ import { roleLabels, userRoles, type UserRole } from "@/lib/auth/roles";
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
 import { STATUS_COLORS } from "@/app/portal/components/ui/statusColors";
 import { Card } from "@/app/portal/components/ui/Card";
-import { useModalDialog } from "@/app/portal/components/ui/useModalDialog";
 import { ArrowLeft, ArrowRight } from "@/components/ui/Icon";
 import { RoleModal, type Specialty } from "./RoleModal";
 import { PatientDetailModal } from "./PatientDetailModal";
 import { SkeletonRows } from "@/app/portal/components/ui/Skeleton";
 import { DocumentTypeSelect } from "@/components/ui/DocumentTypeSelect";
 import { DEFAULT_DOCUMENT_TYPE, type DocumentTypeCode } from "@/lib/regulatory/colombia";
+import { PortalDialog } from "@/app/portal/components/ui/PortalDialog";
 
 type UserRecord = {
   id: string;
@@ -66,7 +66,6 @@ function ResetPasswordModal({
   userEmail: string;
   onClose: () => void;
 }) {
-  const containerRef = useModalDialog(onClose);
   const [status, setStatus] = useState<"idle" | "loading" | "done" | "error">("idle");
   const [password, setPassword] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -96,69 +95,59 @@ function ResetPasswordModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      {/* Deliberately not <Card>: this modal uses a heavier border-white/70 + shadow-xl treatment
-          for contrast against the dark backdrop overlay, not the standard portal Card look. */}
-      <div
-        ref={containerRef}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="reset-password-modal-title"
-        className="w-full max-w-sm rounded-2xl border border-white/70 bg-white p-6 shadow-xl"
-      >
-        <h3 id="reset-password-modal-title" className="text-base font-semibold text-slate-900">Resetear contraseña</h3>
-        <p className="mt-1 text-sm text-slate-600">{userEmail}</p>
+    <PortalDialog onClose={onClose} labelledBy="reset-password-modal-title" size="sm" className="overflow-y-auto rounded-2xl border border-white/70 bg-white p-6 shadow-xl">
+      <h3 id="reset-password-modal-title" className="text-base font-semibold text-slate-900">Resetear contraseña</h3>
+      <p className="mt-1 text-sm text-slate-600">{userEmail}</p>
 
-        {status === "idle" && (
-          <div className="mt-4 space-y-3">
-            <p className="text-sm text-slate-600">
-              Se generará una contraseña temporal. El usuario deberá cambiarla al iniciar sesión.
-            </p>
+      {status === "idle" && (
+        <div className="mt-4 space-y-3">
+          <p className="text-sm text-slate-600">
+            Se generará una contraseña temporal. El usuario deberá cambiarla al iniciar sesión.
+          </p>
+          <button
+            type="button"
+            className="w-full rounded-full bg-brand-teal py-2 text-sm font-semibold text-white"
+            onClick={() => void handleReset()}
+          >
+            Generar contraseña temporal
+          </button>
+        </div>
+      )}
+
+      {status === "loading" && (
+        <p className="mt-4 text-sm text-slate-500">Generando...</p>
+      )}
+
+      {status === "done" && password && (
+        <div className="mt-4 space-y-3">
+          <p className="text-xs font-semibold uppercase tracking-wide text-amber-600">
+            Muéstrasela al usuario ahora — no podrás verla de nuevo.
+          </p>
+          <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 p-3">
+            <code className="flex-1 select-all font-mono text-sm text-slate-900">{password}</code>
             <button
               type="button"
-              className="w-full rounded-full bg-brand-teal py-2 text-sm font-semibold text-white"
-              onClick={() => void handleReset()}
+              onClick={handleCopy}
+              className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600"
             >
-              Generar contraseña temporal
+              {copied ? "Copiado" : "Copiar"}
             </button>
           </div>
-        )}
+        </div>
+      )}
 
-        {status === "loading" && (
-          <p className="mt-4 text-sm text-slate-500">Generando...</p>
-        )}
+      {status === "error" && (
+        <p className="mt-4 text-sm text-red-600">{errorMsg}</p>
+      )}
 
-        {status === "done" && password && (
-          <div className="mt-4 space-y-3">
-            <p className="text-xs font-semibold uppercase tracking-wide text-amber-600">
-              Muéstrasela al usuario ahora — no podrás verla de nuevo.
-            </p>
-            <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 p-3">
-              <code className="flex-1 select-all font-mono text-sm text-slate-900">{password}</code>
-              <button
-                type="button"
-                onClick={handleCopy}
-                className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600"
-              >
-                {copied ? "Copiado" : "Copiar"}
-              </button>
-            </div>
-          </div>
-        )}
-
-        {status === "error" && (
-          <p className="mt-4 text-sm text-red-600">{errorMsg}</p>
-        )}
-
-        <button
-          type="button"
-          className="mt-4 w-full rounded-full border border-slate-200 py-2 text-sm font-semibold text-slate-600"
-          onClick={onClose}
-        >
-          Listo
-        </button>
-      </div>
-    </div>
+      <button
+        type="button"
+        className="mt-4 w-full rounded-full border border-slate-200 py-2 text-sm font-semibold text-slate-600"
+        onClick={onClose}
+      >
+        Listo
+      </button>
+    </PortalDialog>
   );
 }
 

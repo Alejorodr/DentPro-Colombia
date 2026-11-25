@@ -8,6 +8,7 @@ import {
 } from "@/lib/clinical/attachments";
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
 import { SkeletonRows } from "@/app/portal/components/ui/Skeleton";
+import { CLINIC_TIME_ZONE } from "@/lib/dates/tz";
 
 const MAX_LABEL = `${Math.round(CLINICAL_ATTACHMENT_MAX_BYTES / (1024 * 1024))}MB`;
 
@@ -205,7 +206,7 @@ function EpisodeCard({ episode }: { episode: EpisodeSummary }) {
   const [visibleAttachment, setVisibleAttachment] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const formattedDate = useMemo(() => new Date(episode.date).toLocaleDateString("es-CO"), [episode.date]);
+  const formattedDate = useMemo(() => new Date(episode.date).toLocaleDateString("es-CO", { timeZone: CLINIC_TIME_ZONE }), [episode.date]);
 
   const loadDetails = useCallback(async () => {
     setLoading(true);
@@ -370,7 +371,7 @@ function EpisodeCard({ episode }: { episode: EpisodeSummary }) {
                   <p className="font-semibold text-slate-700 dark:text-slate-200">{note.type}</p>
                   <p className="mt-1 text-slate-600 dark:text-slate-300">{note.content}</p>
                   <p className="mt-2 text-[11px] text-slate-400">
-                    {note.authorName} · {new Date(note.createdAt).toLocaleString("es-CO")}
+                    {note.authorName} · {new Date(note.createdAt).toLocaleString("es-CO", { timeZone: CLINIC_TIME_ZONE })}
                   </p>
                 </li>
               ))
@@ -418,7 +419,7 @@ function EpisodeCard({ episode }: { episode: EpisodeSummary }) {
                     {prescription.content?.text ?? "Sin detalle"}
                   </p>
                   <p className="mt-2 text-[11px] text-slate-400">
-                    Emitida {new Date(prescription.issuedAt).toLocaleDateString("es-CO")}
+                    Emitida {new Date(prescription.issuedAt).toLocaleDateString("es-CO", { timeZone: CLINIC_TIME_ZONE })}
                   </p>
                   <a
                     href={`/portal/professional/prescription/${prescription.id}/print`}

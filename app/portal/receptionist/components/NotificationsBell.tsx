@@ -7,6 +7,7 @@ import { Bell, Trash } from "@/components/ui/Icon";
 import { Skeleton } from "@/app/portal/components/ui/Skeleton";
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
 import { groupNotificationsByDate } from "@/lib/notifications/groupNotifications";
+import { CLINIC_TIME_ZONE } from "@/lib/dates/tz";
 
 type NotificationItem = {
   id: string;
@@ -231,7 +232,7 @@ export function NotificationsBell() {
                             {notification.body ? (
                               <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{notification.body}</p>
                             ) : null}
-                            <p className="mt-1 text-[11px] text-slate-400">{new Date(notification.createdAt).toLocaleString("es-CO")}</p>
+                            <p className="mt-1 text-[11px] text-slate-400">{new Date(notification.createdAt).toLocaleString("es-CO", { timeZone: CLINIC_TIME_ZONE })}</p>
                             {href ? (
                               <Link className="mt-1 inline-flex text-xs font-semibold text-brand-teal" href={href}>
                                 Ver en agenda

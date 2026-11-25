@@ -279,6 +279,34 @@
   }
 }
 
+/* DOG-40: modales nativos. Sin esto, desplazarse sobre el fondo o dentro del diálogo mueve la
+   página de atrás (mejora progresiva: sin bloquear el scroll de html/body). */
+:is(.cookie-dialog, .portal-dialog):modal {
+  overscroll-behavior: contain;
+}
+
+:is(.cookie-dialog, .portal-dialog)::backdrop {
+  overflow: hidden;
+  overscroll-behavior: contain;
+}
+
+.portal-dialog {
+  &::backdrop {
+    background-color: rgb(15 23 42 / 0.5);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    transition:
+      opacity 0.15s ease-out,
+      scale 0.15s ease-out;
+
+    @starting-style {
+      opacity: 0;
+      scale: 0.97;
+    }
+  }
+}
+
 .cookie-dialog {
   &::backdrop {
     background-color: rgb(15 23 42 / 0.6);

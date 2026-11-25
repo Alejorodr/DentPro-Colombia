@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 
 import { MagnifyingGlass } from "@/components/ui/Icon";
 import { fetchWithRetry } from "@/lib/http";
+import { CLINIC_TIME_ZONE } from "@/lib/dates/tz";
 
 interface PatientItem {
   id: string;
@@ -79,7 +80,7 @@ export function ProfessionalPatients() {
                 </div>
                 <div className="text-right text-xs text-slate-400">
                   <p>ID: {patient.patientCode ?? "-"}</p>
-                  <p>{patient.lastVisit ? `Last visit: ${new Date(patient.lastVisit).toLocaleDateString("es-CO")}` : ""}</p>
+                  <p>{patient.lastVisit ? `Última visita: ${new Date(patient.lastVisit).toLocaleDateString("es-CO", { timeZone: CLINIC_TIME_ZONE })}` : ""}</p>
                 </div>
                 <Link
                   href={`/portal/professional/patients/${patient.id}`}

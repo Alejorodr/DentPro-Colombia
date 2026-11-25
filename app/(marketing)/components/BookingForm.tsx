@@ -10,6 +10,7 @@ import { resolveMarketingIcon } from "./icon-registry";
 import { buildEmailHref, buildPhoneHref, buildWhatsappHref } from "@/lib/marketing/homepage-adapter";
 
 import { fadeUpVariant, fadeUpVariantReduced } from "@/lib/motion/variants";
+import { CLINIC_TIME_ZONE } from "@/lib/dates/tz";
 
 interface SelectOption {
   value: string;
@@ -116,8 +117,8 @@ export function BookingFormSection({
 
         const mapped = (payload.slots ?? []).map((slot) => {
           const date = new Date(slot.startsAt);
-          const day = date.toLocaleDateString("es-CO", { weekday: "short", day: "2-digit", month: "short" });
-          const hour = date.toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" });
+          const day = date.toLocaleDateString("es-CO", { timeZone: CLINIC_TIME_ZONE, weekday: "short", day: "2-digit", month: "short" });
+          const hour = date.toLocaleTimeString("es-CO", { timeZone: CLINIC_TIME_ZONE, hour: "2-digit", minute: "2-digit" });
           return `${day} · ${hour} · ${slot.specialty} · ${slot.professional}`;
         });
 

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { fetchAllPages, fetchWithRetry, fetchWithTimeout } from "@/lib/http";
 import { SkeletonRows } from "@/app/portal/components/ui/Skeleton";
+import { CLINIC_TIME_ZONE } from "@/lib/dates/tz";
 
 type Professional = {
   id: string;
@@ -639,7 +640,7 @@ export default function AdminSchedulingPage() {
               {adjustments.length === 0 ? <p className="text-slate-500">Sin ajustes registrados.</p> : adjustments.map((item) => (
                 <div key={item.id} className="rounded-xl border border-slate-200 p-3">
                   <p className="font-medium">{item.dayOfWeek !== null ? weekDays[item.dayOfWeek] : "Sin día"} · {item.startTime ?? "--:--"} - {item.endTime ?? "--:--"}</p>
-                  <p className="text-xs text-slate-500">Desde {new Date(item.effectiveFrom).toLocaleDateString("es-CO")} · Estado: {item.status}</p>
+                  <p className="text-xs text-slate-500">Desde {new Date(item.effectiveFrom).toLocaleDateString("es-CO", { timeZone: CLINIC_TIME_ZONE })} · Estado: {item.status}</p>
                   {item.status === "CHANGES_REQUESTED" ? (
                     <div className="mt-2 flex flex-wrap gap-2">
                       <button className="btn btn-secondary" type="button" onClick={() => void handleReviewAdjustment(item.id, "approve")}>Aprobar</button>
@@ -657,7 +658,7 @@ export default function AdminSchedulingPage() {
               {unavailability.length === 0 ? <p className="text-slate-500">Sin novedades registradas.</p> : unavailability.map((item) => (
                 <div key={item.id} className="rounded-xl border border-slate-200 p-3">
                   <p className="font-medium">{item.type}</p>
-                  <p className="text-xs text-slate-500">{new Date(item.startsAt).toLocaleString("es-CO")} → {new Date(item.endsAt).toLocaleString("es-CO")}</p>
+                  <p className="text-xs text-slate-500">{new Date(item.startsAt).toLocaleString("es-CO", { timeZone: CLINIC_TIME_ZONE })} → {new Date(item.endsAt).toLocaleString("es-CO", { timeZone: CLINIC_TIME_ZONE })}</p>
                   <p className="text-xs text-slate-500">Estado: {item.status}</p>
                   {item.status === "PENDING" ? (
                     <div className="mt-2 flex flex-wrap gap-2">

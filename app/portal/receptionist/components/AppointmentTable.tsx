@@ -24,6 +24,8 @@ import { RescheduleModal } from "@/app/portal/components/RescheduleModal";
 import { AppointmentEventTimeline } from "@/app/portal/components/appointments/AppointmentEventTimeline";
 import { fetchWithTimeout } from "@/lib/http";
 import { toOperationalStatus } from "@/lib/appointments/status";
+import { PortalDialog } from "@/app/portal/components/ui/PortalDialog";
+import { CLINIC_TIME_ZONE } from "@/lib/dates/tz";
 
 type AppointmentSummary = {
   id: string;
@@ -122,7 +124,7 @@ export function AppointmentTable({ appointments: sourceAppointments, page, total
   };
 
   const timeline = useMemo(() => {
-    return [...appointments].sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime());
+    return appointments.toSorted((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime());
   }, [appointments]);
 
 
@@ -184,7 +186,7 @@ export function AppointmentTable({ appointments: sourceAppointments, page, total
                         return (
                           <div key={`timeline-${appointment.id}`} className="flex items-center justify-between rounded-xl border border-slate-100 px-3 py-2 text-xs">
                             <span>
-                              {new Date(appointment.startAt).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })} · {appointment.patient?.name ?? "Paciente"}
+                              {new Date(appointment.startAt).toLocaleTimeString("es-CO", { timeZone: CLINIC_TIME_ZONE, hour: "2-digit", minute: "2-digit" })} · {appointment.patient?.name ?? "Paciente"}
                             </span>
                             <span className={`rounded-full border px-2 py-1 font-semibold ${(STATUS_COLORS[slot] ?? DEFAULT_STATUS_COLOR).border} ${(STATUS_COLORS[slot] ?? DEFAULT_STATUS_COLOR).badge}`}>{(STATUS_COLORS[slot] ?? DEFAULT_STATUS_COLOR).label}</span>
                           </div>
@@ -201,7 +203,7 @@ export function AppointmentTable({ appointments: sourceAppointments, page, total
                   return (
                     <div key={`timeline-${appointment.id}`} className="flex items-center justify-between rounded-xl border-l-4 border-l-brand-teal border border-slate-200 bg-white px-3 py-2 text-xs shadow-xs">
                       <span>
-                        {new Date(appointment.startAt).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })} · {appointment.patient?.name ?? "Paciente"}
+                        {new Date(appointment.startAt).toLocaleTimeString("es-CO", { timeZone: CLINIC_TIME_ZONE, hour: "2-digit", minute: "2-digit" })} · {appointment.patient?.name ?? "Paciente"}
                       </span>
                       <span className={`rounded-full border px-2 py-1 font-semibold ${(STATUS_COLORS[slot] ?? DEFAULT_STATUS_COLOR).border} ${(STATUS_COLORS[slot] ?? DEFAULT_STATUS_COLOR).badge}`}>{(STATUS_COLORS[slot] ?? DEFAULT_STATUS_COLOR).label}</span>
                     </div>
@@ -226,7 +228,7 @@ export function AppointmentTable({ appointments: sourceAppointments, page, total
               {appointments.map((appointment) => {
                 const start = new Date(appointment.startAt);
                 const end = new Date(appointment.endAt);
-                const timeLabel = `${start.toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })} - ${end.toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })}`;
+                const timeLabel = `${start.toLocaleTimeString("es-CO", { timeZone: CLINIC_TIME_ZONE, hour: "2-digit", minute: "2-digit" })} - ${end.toLocaleTimeString("es-CO", { timeZone: CLINIC_TIME_ZONE, hour: "2-digit", minute: "2-digit" })}`;
                 return (
                   <tr key={appointment.id} className="bg-white dark:bg-surface-elevated/60">
                     <td className="px-4 py-3 font-semibold text-slate-900 dark:text-white">{timeLabel}</td>
@@ -297,40 +299,38 @@ export function AppointmentTable({ appointments: sourceAppointments, page, total
       <RescheduleModal appointmentId={rescheduleId} open={Boolean(rescheduleId)} onClose={() => setRescheduleId(null)} onUpdated={() => onRefresh()} />
 
       {cancelTarget ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 px-4">
-          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl dark:bg-surface-elevated">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Confirmar cancelación</p>
-            <h3 className="mt-1 text-lg font-semibold text-slate-900 dark:text-white">¿Cancelar esta cita?</h3>
-            <p className="mt-1 text-sm text-slate-500">Esta acción no se puede deshacer.</p>
-            <label className="mt-4 block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-              Motivo de cancelación (opcional)
-              <textarea
-                value={cancelReason}
-                onChange={(event) => setCancelReason(event.target.value)}
-                placeholder="Ej. Paciente no puede asistir, reagendamiento solicitado…"
-                rows={3}
-                className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm normal-case text-slate-700 focus:outline-none focus:ring-2 focus:ring-rose-300 dark:border-surface-muted dark:bg-surface-base dark:text-slate-200"
-              />
-            </label>
-            <div className="mt-5 flex justify-end gap-2">
-              <button
-                type="button"
-                className="rounded-full border border-slate-200 px-4 py-2 text-xs font-semibold uppercase text-slate-600 dark:border-surface-muted dark:text-slate-200"
-                onClick={() => { setCancelTarget(null); setCancelReason(""); }}
-              >
-                Volver
-              </button>
-              <button
-                type="button"
-                className="rounded-full bg-rose-600 px-4 py-2 text-xs font-semibold uppercase text-white disabled:opacity-50"
-                onClick={confirmCancel}
-                disabled={busyId === cancelTarget}
-              >
-                {busyId === cancelTarget ? "Cancelando…" : "Sí, cancelar cita"}
-              </button>
-            </div>
+        <PortalDialog onClose={() => { setCancelTarget(null); setCancelReason(""); }} labelledBy="cancel-appointment-title" size="md">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Confirmar cancelación</p>
+          <h3 id="cancel-appointment-title" className="mt-1 text-lg font-semibold text-slate-900 dark:text-white">¿Cancelar esta cita?</h3>
+          <p className="mt-1 text-sm text-slate-500">Esta acción no se puede deshacer.</p>
+          <label className="mt-4 block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            Motivo de cancelación (opcional)
+            <textarea
+              value={cancelReason}
+              onChange={(event) => setCancelReason(event.target.value)}
+              placeholder="Ej. Paciente no puede asistir, reagendamiento solicitado…"
+              rows={3}
+              className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm normal-case text-slate-700 focus:outline-none focus:ring-2 focus:ring-rose-300 dark:border-surface-muted dark:bg-surface-base dark:text-slate-200"
+            />
+          </label>
+          <div className="mt-5 flex justify-end gap-2">
+            <button
+              type="button"
+              className="rounded-full border border-slate-200 px-4 py-2 text-xs font-semibold uppercase text-slate-600 dark:border-surface-muted dark:text-slate-200"
+              onClick={() => { setCancelTarget(null); setCancelReason(""); }}
+            >
+              Volver
+            </button>
+            <button
+              type="button"
+              className="rounded-full bg-rose-600 px-4 py-2 text-xs font-semibold uppercase text-white disabled:opacity-50"
+              onClick={confirmCancel}
+              disabled={busyId === cancelTarget}
+            >
+              {busyId === cancelTarget ? "Cancelando…" : "Sí, cancelar cita"}
+            </button>
           </div>
-        </div>
+        </PortalDialog>
       ) : null}
     </div>
   );

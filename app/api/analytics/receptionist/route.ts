@@ -168,7 +168,7 @@ export async function GET(request: Request) {
       };
     }
 
-    const sortedSlots = [...slots].sort((a, b) => a.startAt.getTime() - b.startAt.getTime());
+    const sortedSlots = slots.toSorted((a, b) => a.startAt.getTime() - b.startAt.getTime());
     const firstStart = sortedSlots[0].startAt;
     const lastEnd = sortedSlots[sortedSlots.length - 1].endAt;
     const currentSlot = sortedSlots.find(

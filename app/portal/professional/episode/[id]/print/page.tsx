@@ -6,6 +6,7 @@ import { logClinicalAccess } from "@/lib/clinical/access-log";
 import { getPrismaClient } from "@/lib/prisma";
 import { AccessLogAction } from "@prisma/client";
 import { sanitizeConsentHtml } from "@/lib/security/sanitize-html";
+import { CLINIC_TIME_ZONE } from "@/lib/dates/tz";
 
 export default async function EpisodePrintPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await requireRole("PROFESIONAL");
@@ -78,7 +79,7 @@ export default async function EpisodePrintPage({ params }: { params: Promise<{ i
           <p className="font-semibold">
             {episode.professional.user.name} {episode.professional.user.lastName}
           </p>
-          <p className="text-slate-500">Fecha: {episode.date.toLocaleDateString("es-CO")}</p>
+          <p className="text-slate-500">Fecha: {episode.date.toLocaleDateString("es-CO", { timeZone: CLINIC_TIME_ZONE })}</p>
         </div>
       </section>
 

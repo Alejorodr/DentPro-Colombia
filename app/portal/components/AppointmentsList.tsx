@@ -5,6 +5,7 @@ import { useState } from "react";
 import type { UserRole } from "@/lib/auth/roles";
 import { fetchWithTimeout } from "@/lib/http";
 import { RescheduleModal, type RescheduledAppointment } from "@/app/portal/components/RescheduleModal";
+import { CLINIC_TIME_ZONE } from "@/lib/dates/tz";
 
 type AppointmentItem = {
   id: string;
@@ -30,7 +31,7 @@ interface AppointmentsListProps {
 function formatDateRange(startAt: string, endAt: string) {
   const start = new Date(startAt);
   const end = new Date(endAt);
-  return `${start.toLocaleDateString()} ${start.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} - ${end.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+  return `${start.toLocaleDateString("es-CO", { timeZone: CLINIC_TIME_ZONE })} ${start.toLocaleTimeString("es-CO", { timeZone: CLINIC_TIME_ZONE, hour: "2-digit", minute: "2-digit" })} - ${end.toLocaleTimeString("es-CO", { timeZone: CLINIC_TIME_ZONE, hour: "2-digit", minute: "2-digit" })}`;
 }
 
 export function AppointmentsList({ initialAppointments, role }: AppointmentsListProps) {

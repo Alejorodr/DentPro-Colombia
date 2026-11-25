@@ -97,6 +97,12 @@ design-system/            # Sistema de diseño exportado desde Claude Design
 - Precios: `Intl.NumberFormat("es-CO", { style: "currency", currency: "COP" })` — sin decimales: `$1.250.000`.
 - Fechas: `Lun–Sáb 8:00–19:00`, `Sáb 14 dic · 9:00 a. m.`
 - Teléfono: `+57 323 796 8435`
+- Zona horaria: todo instante (citas, registros, notificaciones) se formatea con `timeZone: CLINIC_TIME_ZONE` (`America/Bogota`, en `lib/dates/tz.ts`). El servidor de Vercel corre en UTC: sin la zona, las horas salen 5 horas corridas. Solo los días de calendario armados en el navegador (selectores de fecha) van sin zona.
+
+### Soporte de navegadores y plataforma web (DOG-40)
+- **Baseline amplio** sin fallbacks. Funciones **Baseline nuevas o aún no Baseline**: solo con detección y degradación elegante, siguiendo el fallback de la guía de `modern-web-guidance`. No se agregan polyfills ni dependencias si existe una solución nativa.
+- **Modales**: siempre `PortalDialog` (`app/portal/components/ui/PortalDialog.tsx`), que usa `<dialog>` nativo con `showModal()`. Nada de overlays `fixed inset-0` hechos a mano, `role="dialog"`, `aria-modal` ni trampas de foco manuales. Clic afuera para cerrar (`dismissible`) solo en diálogos de lectura o confirmación, nunca en formularios.
+- **Formularios**: cada campo con `<label>` asociado y `autocomplete` correcto (`username` + `current-password` en login, `new-password` al crear o cambiar contraseña, `one-time-code` en códigos). Un Enter manejado a mano chequea `isComposing` (IME).
 
 ---
 

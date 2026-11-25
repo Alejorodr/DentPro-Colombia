@@ -10,6 +10,7 @@ import {
   MAX_ACTIVE_APPOINTMENTS_PER_PATIENT,
   isSlotBookableByPatient,
 } from "@/lib/appointments/booking-limits";
+import { CLINIC_TIME_ZONE } from "@/lib/dates/tz";
 
 type Professional = {
   id: string;
@@ -223,7 +224,7 @@ export function NewAppointmentForm({ role, activeAppointmentsCount = 0 }: NewApp
             <option value="">Selecciona</option>
             {availableSlots.map((slot) => (
               <option key={slot.id} value={slot.id}>
-                {new Date(slot.startAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} - {new Date(slot.endAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                {new Date(slot.startAt).toLocaleTimeString("es-CO", { timeZone: CLINIC_TIME_ZONE, hour: "2-digit", minute: "2-digit" })} - {new Date(slot.endAt).toLocaleTimeString("es-CO", { timeZone: CLINIC_TIME_ZONE, hour: "2-digit", minute: "2-digit" })}
               </option>
             ))}
           </select>

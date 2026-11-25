@@ -9,6 +9,7 @@ import {
 import { enqueueEmail } from "@/lib/email/outbox";
 import { isEmailEnabledForUser } from "@/lib/notification-preferences";
 import { logger } from "@/lib/logger";
+import { CLINIC_TIME_ZONE } from "@/lib/dates/tz";
 
 export type AppointmentEmailType = "confirmation" | "reminder" | "reschedule" | "cancellation";
 
@@ -38,11 +39,11 @@ type Recipient = {
 };
 
 function formatDateLabel(date: Date) {
-  return date.toLocaleDateString("es-CO", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+  return date.toLocaleDateString("es-CO", { timeZone: CLINIC_TIME_ZONE, weekday: "long", year: "numeric", month: "long", day: "numeric" });
 }
 
 function formatTimeLabel(startAt: Date, endAt: Date) {
-  return `${startAt.toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })} - ${endAt.toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })}`;
+  return `${startAt.toLocaleTimeString("es-CO", { timeZone: CLINIC_TIME_ZONE, hour: "2-digit", minute: "2-digit" })} - ${endAt.toLocaleTimeString("es-CO", { timeZone: CLINIC_TIME_ZONE, hour: "2-digit", minute: "2-digit" })}`;
 }
 
 function buildEmailData(appointment: AppointmentSnapshot) {

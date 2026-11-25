@@ -90,6 +90,14 @@ describe("middleware", () => {
     expect(statuses.slice(10)).toEqual([429, 429]);
   });
 
+  it("leaves the MFA step to its per-user limit instead of the per-IP auth limit (DOG-28)", async () => {
+    for (let i = 0; i < 10; i += 1) {
+      await middleware(req("/api/auth/callback/credentials", "1.2.3.11", "POST"));
+    }
+    expect((await middleware(req("/api/auth/callback/credentials", "1.2.3.11", "POST"))).status).toBe(429);
+    expect((await middleware(req("/api/auth/mfa/verify", "1.2.3.11", "POST"))).status).toBe(200);
+  });
+
   it("uses the conservative fallback when Upstash fetch throws", async () => {
     vi.stubEnv("UPSTASH_REDIS_REST_URL", "https://upstash.io");
     vi.stubEnv("UPSTASH_REDIS_REST_TOKEN", "tok");

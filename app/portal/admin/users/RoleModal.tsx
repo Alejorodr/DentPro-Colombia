@@ -5,9 +5,9 @@ import { useEffect, useMemo, useState } from "react";
 import { roleLabels, userRoles, type UserRole } from "@/lib/auth/roles";
 import { fetchAllPages, fetchWithTimeout } from "@/lib/http";
 import { STATUS_COLORS } from "@/app/portal/components/ui/statusColors";
-import { useModalDialog } from "@/app/portal/components/ui/useModalDialog";
 import { X } from "@/components/ui/Icon";
 import { SkeletonRows } from "@/app/portal/components/ui/Skeleton";
+import { PortalDialog } from "@/app/portal/components/ui/PortalDialog";
 
 export type Specialty = {
   id: string;
@@ -73,7 +73,6 @@ export function RoleModal({
   onSaved: () => void;
   onSpecialtyCreated: (specialty: Specialty) => void;
 }) {
-  const containerRef = useModalDialog(onClose);
   const [role, setRole] = useState<UserRole>(roleLock ?? user.role);
   const [name, setName] = useState(user.name);
   const [lastName, setLastName] = useState(user.lastName);
@@ -269,285 +268,277 @@ export function RoleModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 px-4">
-      <div
-        ref={containerRef}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="role-modal-title"
-        className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl dark:bg-surface-elevated"
-      >
-        <div className="flex items-start justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Usuarios</p>
-            <h3 id="role-modal-title" className="text-lg font-semibold text-slate-900 dark:text-white">
-              Ficha de usuario · {user.name} {user.lastName}
-            </h3>
+    <PortalDialog onClose={onClose} labelledBy="role-modal-title" size="lg">
+      <div className="flex items-start justify-between">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Usuarios</p>
+          <h3 id="role-modal-title" className="text-lg font-semibold text-slate-900 dark:text-white">
+            Ficha de usuario · {user.name} {user.lastName}
+          </h3>
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 text-slate-500 dark:border-surface-muted"
+          aria-label="Cerrar"
+        >
+          <X aria-hidden="true" className="h-4 w-4" weight="bold" />
+        </button>
+      </div>
+
+      <div className="mt-5 space-y-4">
+        <section className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <label className="text-sm">
+            <span className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              Nombre
+            </span>
+            <input
+              className="input mt-2 h-11 text-sm"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              disabled={status === "loading"}
+            />
+          </label>
+          <label className="text-sm">
+            <span className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              Apellido
+            </span>
+            <input
+              className="input mt-2 h-11 text-sm"
+              value={lastName}
+              onChange={(event) => setLastName(event.target.value)}
+              disabled={status === "loading"}
+            />
+          </label>
+          <label className="text-sm sm:col-span-2">
+            <span className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              Correo
+            </span>
+            <input
+              type="email"
+              className="input mt-2 h-11 text-sm"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              disabled={status === "loading"}
+            />
+          </label>
+        </section>
+        <section>
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Rol</p>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <span
+              className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase ${STATUS_COLORS.Active.badge}`}
+            >
+              Actual: {roleLabels[user.role]}
+            </span>
           </div>
+          {roleLock ? (
+            <div className="input mt-2 flex h-11 items-center text-sm text-slate-600 dark:text-slate-300">
+              {roleLabels[roleLock]}
+            </div>
+          ) : (
+            <select
+              className="input mt-2 h-11 text-sm"
+              value={role}
+              onChange={(event) => {
+                setRole(event.target.value as UserRole);
+                setStatus("idle");
+              }}
+              disabled={status === "loading"}
+            >
+              {userRoles.map((r) => (
+                <option key={r} value={r}>
+                  {roleLabels[r]}
+                </option>
+              ))}
+            </select>
+          )}
+        </section>
+
+        {role === "PROFESIONAL" ? (
+          <section>
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              Especialidad
+            </p>
+            <select
+              className="input mt-2 h-11 text-sm"
+              value={specialtyId}
+              onChange={(event) => setSpecialtyId(event.target.value)}
+              disabled={status === "loading"}
+            >
+              <option value="">Selecciona una especialidad</option>
+              {specialties.map((specialty) => (
+                <option key={specialty.id} value={specialty.id}>
+                  {specialty.name}
+                </option>
+              ))}
+            </select>
+
+            {showCreateSpecialty ? (
+              <div className="mt-3 space-y-2 rounded-xl border border-slate-200 p-3 dark:border-surface-muted">
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <input
+                    className="input h-10 text-sm"
+                    placeholder="Nombre"
+                    value={newSpecialtyName}
+                    onChange={(event) => setNewSpecialtyName(event.target.value)}
+                    disabled={creatingSpecialty}
+                  />
+                  <input
+                    className="input h-10 text-sm"
+                    placeholder="Duración base (min)"
+                    value={newSpecialtyDuration}
+                    onChange={(event) => setNewSpecialtyDuration(event.target.value)}
+                    disabled={creatingSpecialty}
+                  />
+                </div>
+                {createSpecialtyError ? (
+                  <p className="text-xs text-red-600 dark:text-red-400">{createSpecialtyError}</p>
+                ) : null}
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    className="rounded-full bg-brand-teal px-3 py-1.5 text-xs font-semibold uppercase text-white disabled:opacity-60"
+                    onClick={() => void handleCreateSpecialty()}
+                    disabled={creatingSpecialty}
+                  >
+                    {creatingSpecialty ? "Creando..." : "Crear"}
+                  </button>
+                  <button
+                    type="button"
+                    className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold uppercase text-slate-600 dark:border-surface-muted dark:text-slate-200"
+                    onClick={() => setShowCreateSpecialty(false)}
+                    disabled={creatingSpecialty}
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                className="mt-2 text-xs font-semibold text-brand-teal hover:underline dark:text-accent-cyan"
+                onClick={() => setShowCreateSpecialty(true)}
+              >
+                + Crear especialidad
+              </button>
+            )}
+          </section>
+        ) : null}
+
+        {role === "PROFESIONAL" ? (
+          <section>
+            <label
+              htmlFor="role-modal-rethus"
+              className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
+            >
+              Número RETHUS
+            </label>
+            <input
+              id="role-modal-rethus"
+              className="input mt-2 h-11 text-sm tabular-nums"
+              autoComplete="off"
+              maxLength={40}
+              aria-describedby="role-modal-rethus-hint"
+              value={rethusNumber}
+              onChange={(event) => setRethusNumber(event.target.value)}
+              disabled={status === "loading"}
+            />
+            <p id="role-modal-rethus-hint" className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+              Registro Único Nacional del Talento Humano en Salud. Puedes completarlo después.
+            </p>
+          </section>
+        ) : null}
+
+        {role === "PROFESIONAL" && professionalId && specialtyId ? (
+          <section>
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              Servicios que ofrece
+            </p>
+            {servicesLoading ? (
+              <SkeletonRows label="Cargando servicios" />
+            ) : (
+              <div className="mt-2 space-y-2">
+                {specialtyServices.map((service) => {
+                    const assignment = assignments.find((a) => a.serviceId === service.id);
+                    const isActive = assignment?.active ?? false;
+                    const isBookable = assignment?.onlineBookable ?? false;
+                    const isSaving = assignmentSaving === service.id;
+                    return (
+                      <div
+                        key={service.id}
+                        className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200 p-3 text-sm dark:border-surface-muted"
+                      >
+                        <div>
+                          <p className="font-semibold text-slate-900 dark:text-white">{service.name}</p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400">
+                            {currencyFormatter.format(service.priceCents / 100)}
+                            {service.durationMinutes ? ` · ${service.durationMinutes} min` : ""}
+                          </p>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            disabled={isSaving}
+                            onClick={() => void toggleServiceAssignment(service, "active")}
+                            className={`rounded-full border px-3 py-1 text-xs font-semibold uppercase ${
+                              isActive
+                                ? STATUS_COLORS.Active.border + " " + STATUS_COLORS.Active.text
+                                : STATUS_COLORS.Inactive.border + " " + STATUS_COLORS.Inactive.text
+                            }`}
+                          >
+                            {isActive ? "Activo" : "Inactivo"}
+                          </button>
+                          <button
+                            type="button"
+                            disabled={isSaving || !isActive}
+                            onClick={() => void toggleServiceAssignment(service, "onlineBookable")}
+                            className={`rounded-full border px-3 py-1 text-xs font-semibold uppercase disabled:opacity-40 ${
+                              isBookable
+                                ? "border-brand-teal text-brand-teal"
+                                : "border-slate-200 text-slate-500 dark:border-surface-muted dark:text-slate-400"
+                            }`}
+                          >
+                            {isBookable ? "Reservable online" : "No reservable online"}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                {specialtyServices.length === 0 ? (
+                  <p className="text-sm text-slate-500 dark:text-slate-400">
+                    No hay servicios cargados para esta especialidad todavía.
+                  </p>
+                ) : null}
+              </div>
+            )}
+            {assignmentError ? <p className="mt-2 text-sm text-red-600 dark:text-red-400">{assignmentError}</p> : null}
+          </section>
+        ) : null}
+
+        {errorMsg ? <p className="text-sm text-red-600 dark:text-red-400">{errorMsg}</p> : null}
+        {status === "done" ? (
+          <p className="text-sm text-emerald-600 dark:text-emerald-400">Rol actualizado correctamente.</p>
+        ) : null}
+
+        <div className="flex justify-end gap-2">
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 text-slate-500 dark:border-surface-muted"
-            aria-label="Cerrar"
+            className="rounded-full border border-slate-200 px-4 py-2 text-xs font-semibold uppercase text-slate-600 dark:border-surface-muted dark:text-slate-200"
           >
-            <X aria-hidden="true" className="h-4 w-4" weight="bold" />
+            Cerrar
+          </button>
+          <button
+            type="button"
+            onClick={() => void handleSave()}
+            disabled={!canSave || status === "loading"}
+            className="rounded-full bg-brand-teal px-4 py-2 text-xs font-semibold uppercase text-white disabled:opacity-50"
+          >
+            {status === "loading" ? "Guardando..." : "Guardar rol"}
           </button>
         </div>
-
-        <div className="mt-5 space-y-4">
-          <section className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <label className="text-sm">
-              <span className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                Nombre
-              </span>
-              <input
-                className="input mt-2 h-11 text-sm"
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-                disabled={status === "loading"}
-              />
-            </label>
-            <label className="text-sm">
-              <span className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                Apellido
-              </span>
-              <input
-                className="input mt-2 h-11 text-sm"
-                value={lastName}
-                onChange={(event) => setLastName(event.target.value)}
-                disabled={status === "loading"}
-              />
-            </label>
-            <label className="text-sm sm:col-span-2">
-              <span className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                Correo
-              </span>
-              <input
-                type="email"
-                className="input mt-2 h-11 text-sm"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                disabled={status === "loading"}
-              />
-            </label>
-          </section>
-          <section>
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Rol</p>
-            <div className="mt-2 flex flex-wrap items-center gap-2">
-              <span
-                className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase ${STATUS_COLORS.Active.badge}`}
-              >
-                Actual: {roleLabels[user.role]}
-              </span>
-            </div>
-            {roleLock ? (
-              <div className="input mt-2 flex h-11 items-center text-sm text-slate-600 dark:text-slate-300">
-                {roleLabels[roleLock]}
-              </div>
-            ) : (
-              <select
-                className="input mt-2 h-11 text-sm"
-                value={role}
-                onChange={(event) => {
-                  setRole(event.target.value as UserRole);
-                  setStatus("idle");
-                }}
-                disabled={status === "loading"}
-              >
-                {userRoles.map((r) => (
-                  <option key={r} value={r}>
-                    {roleLabels[r]}
-                  </option>
-                ))}
-              </select>
-            )}
-          </section>
-
-          {role === "PROFESIONAL" ? (
-            <section>
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                Especialidad
-              </p>
-              <select
-                className="input mt-2 h-11 text-sm"
-                value={specialtyId}
-                onChange={(event) => setSpecialtyId(event.target.value)}
-                disabled={status === "loading"}
-              >
-                <option value="">Selecciona una especialidad</option>
-                {specialties.map((specialty) => (
-                  <option key={specialty.id} value={specialty.id}>
-                    {specialty.name}
-                  </option>
-                ))}
-              </select>
-
-              {showCreateSpecialty ? (
-                <div className="mt-3 space-y-2 rounded-xl border border-slate-200 p-3 dark:border-surface-muted">
-                  <div className="grid gap-2 sm:grid-cols-2">
-                    <input
-                      className="input h-10 text-sm"
-                      placeholder="Nombre"
-                      value={newSpecialtyName}
-                      onChange={(event) => setNewSpecialtyName(event.target.value)}
-                      disabled={creatingSpecialty}
-                    />
-                    <input
-                      className="input h-10 text-sm"
-                      placeholder="Duración base (min)"
-                      value={newSpecialtyDuration}
-                      onChange={(event) => setNewSpecialtyDuration(event.target.value)}
-                      disabled={creatingSpecialty}
-                    />
-                  </div>
-                  {createSpecialtyError ? (
-                    <p className="text-xs text-red-600 dark:text-red-400">{createSpecialtyError}</p>
-                  ) : null}
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      className="rounded-full bg-brand-teal px-3 py-1.5 text-xs font-semibold uppercase text-white disabled:opacity-60"
-                      onClick={() => void handleCreateSpecialty()}
-                      disabled={creatingSpecialty}
-                    >
-                      {creatingSpecialty ? "Creando..." : "Crear"}
-                    </button>
-                    <button
-                      type="button"
-                      className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold uppercase text-slate-600 dark:border-surface-muted dark:text-slate-200"
-                      onClick={() => setShowCreateSpecialty(false)}
-                      disabled={creatingSpecialty}
-                    >
-                      Cancelar
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  className="mt-2 text-xs font-semibold text-brand-teal hover:underline dark:text-accent-cyan"
-                  onClick={() => setShowCreateSpecialty(true)}
-                >
-                  + Crear especialidad
-                </button>
-              )}
-            </section>
-          ) : null}
-
-          {role === "PROFESIONAL" ? (
-            <section>
-              <label
-                htmlFor="role-modal-rethus"
-                className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
-              >
-                Número RETHUS
-              </label>
-              <input
-                id="role-modal-rethus"
-                className="input mt-2 h-11 text-sm tabular-nums"
-                autoComplete="off"
-                maxLength={40}
-                aria-describedby="role-modal-rethus-hint"
-                value={rethusNumber}
-                onChange={(event) => setRethusNumber(event.target.value)}
-                disabled={status === "loading"}
-              />
-              <p id="role-modal-rethus-hint" className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                Registro Único Nacional del Talento Humano en Salud. Puedes completarlo después.
-              </p>
-            </section>
-          ) : null}
-
-          {role === "PROFESIONAL" && professionalId && specialtyId ? (
-            <section>
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                Servicios que ofrece
-              </p>
-              {servicesLoading ? (
-                <SkeletonRows label="Cargando servicios" />
-              ) : (
-                <div className="mt-2 space-y-2">
-                  {specialtyServices.map((service) => {
-                      const assignment = assignments.find((a) => a.serviceId === service.id);
-                      const isActive = assignment?.active ?? false;
-                      const isBookable = assignment?.onlineBookable ?? false;
-                      const isSaving = assignmentSaving === service.id;
-                      return (
-                        <div
-                          key={service.id}
-                          className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200 p-3 text-sm dark:border-surface-muted"
-                        >
-                          <div>
-                            <p className="font-semibold text-slate-900 dark:text-white">{service.name}</p>
-                            <p className="text-xs text-slate-500 dark:text-slate-400">
-                              {currencyFormatter.format(service.priceCents / 100)}
-                              {service.durationMinutes ? ` · ${service.durationMinutes} min` : ""}
-                            </p>
-                          </div>
-                          <div className="flex gap-2">
-                            <button
-                              type="button"
-                              disabled={isSaving}
-                              onClick={() => void toggleServiceAssignment(service, "active")}
-                              className={`rounded-full border px-3 py-1 text-xs font-semibold uppercase ${
-                                isActive
-                                  ? STATUS_COLORS.Active.border + " " + STATUS_COLORS.Active.text
-                                  : STATUS_COLORS.Inactive.border + " " + STATUS_COLORS.Inactive.text
-                              }`}
-                            >
-                              {isActive ? "Activo" : "Inactivo"}
-                            </button>
-                            <button
-                              type="button"
-                              disabled={isSaving || !isActive}
-                              onClick={() => void toggleServiceAssignment(service, "onlineBookable")}
-                              className={`rounded-full border px-3 py-1 text-xs font-semibold uppercase disabled:opacity-40 ${
-                                isBookable
-                                  ? "border-brand-teal text-brand-teal"
-                                  : "border-slate-200 text-slate-500 dark:border-surface-muted dark:text-slate-400"
-                              }`}
-                            >
-                              {isBookable ? "Reservable online" : "No reservable online"}
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  {specialtyServices.length === 0 ? (
-                    <p className="text-sm text-slate-500 dark:text-slate-400">
-                      No hay servicios cargados para esta especialidad todavía.
-                    </p>
-                  ) : null}
-                </div>
-              )}
-              {assignmentError ? <p className="mt-2 text-sm text-red-600 dark:text-red-400">{assignmentError}</p> : null}
-            </section>
-          ) : null}
-
-          {errorMsg ? <p className="text-sm text-red-600 dark:text-red-400">{errorMsg}</p> : null}
-          {status === "done" ? (
-            <p className="text-sm text-emerald-600 dark:text-emerald-400">Rol actualizado correctamente.</p>
-          ) : null}
-
-          <div className="flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-full border border-slate-200 px-4 py-2 text-xs font-semibold uppercase text-slate-600 dark:border-surface-muted dark:text-slate-200"
-            >
-              Cerrar
-            </button>
-            <button
-              type="button"
-              onClick={() => void handleSave()}
-              disabled={!canSave || status === "loading"}
-              className="rounded-full bg-brand-teal px-4 py-2 text-xs font-semibold uppercase text-white disabled:opacity-50"
-            >
-              {status === "loading" ? "Guardando..." : "Guardar rol"}
-            </button>
-          </div>
-        </div>
       </div>
-    </div>
+    </PortalDialog>
   );
 }
