@@ -299,7 +299,9 @@ function EpisodeCard({ episode }: { episode: EpisodeSummary }) {
         body: formData,
       });
       if (!response.ok) {
-        throw new Error("No se pudo subir el archivo.");
+        // DOG-33: el servidor explica por qué rechazó el archivo (ej. contenido que no es PDF/JPG/PNG).
+        const body = (await response.json().catch(() => null)) as { error?: string } | null;
+        throw new Error(body?.error ?? "No se pudo subir el archivo.");
       }
       event.currentTarget.reset();
       setVisibleAttachment(false);
