@@ -1,9 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import Image from "next/image";
-
-import { Star } from "@/components/ui/Icon";
+import { Stars, TestimonialCarousel, type Testimonial } from "@/components/ui/TestimonialCarousel";
 import type { GoogleReviewsSummary } from "@/lib/google/google-reviews";
 
 type FallbackTestimonial = {
@@ -18,185 +15,59 @@ type HeroGoogleReviewRotatorProps = {
   fallback: FallbackTestimonial;
 };
 
-const ROTATION_INTERVAL_MS = 10_000;
-const FADE_DURATION_MS = 250;
-
-export function HeroGoogleReviewRotator({
-  googleReviews,
-  fallback,
-}: HeroGoogleReviewRotatorProps) {
+/**
+ * Reseñas del hero (DOG-35): pila de tarjetas que se descartan arrastrando, superpuesta al pie
+ * de la foto. Usa las reseñas de Google; si Google no responde, muestra el testimonio por defecto.
+ */
+export function HeroGoogleReviewRotator({ googleReviews, fallback }: HeroGoogleReviewRotatorProps) {
   const reviews = googleReviews?.reviews ?? [];
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [visible, setVisible] = useState(true);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => {
-    if (reviews.length < 2) return;
+  const testimonials: Testimonial[] =
+    reviews.length > 0
+      ? reviews.map((review) => ({
+          id: review.id,
+          name: review.authorName,
+          text: review.text,
+          avatar: review.authorPhotoUri,
+          rating: review.rating,
+          meta: review.relativeTime,
+          href: review.authorUri,
+        }))
+      : [{ id: "fallback", name: fallback.author, text: fallback.quote, meta: fallback.role }];
 
-    const interval = window.setInterval(() => {
-      setVisible(false);
-      timeoutRef.current = setTimeout(() => {
-        setCurrentIndex((prev) => (prev + 1) % reviews.length);
-        setVisible(true);
-      }, FADE_DURATION_MS);
-    }, ROTATION_INTERVAL_MS);
-
-    return () => {
-      window.clearInterval(interval);
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    };
-  }, [reviews.length]);
-
-  if (!googleReviews || reviews.length === 0) {
-    const initials = fallback.author
-      .split(" ")
-      .slice(0, 2)
-      .map((w) => w[0])
-      .join("")
-      .toUpperCase();
-    return (
-      <>
-        <p className="min-h-[5.5rem] text-slate-600 dark:text-slate-200">"{fallback.quote}"</p>
-        <div className="flex items-center gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-brand-teal/15 text-sm font-semibold text-brand-teal dark:bg-accent-cyan/15 dark:text-accent-cyan">
-            {initials}
-          </div>
-          <div>
-            <p className="font-semibold text-slate-900 dark:text-white">{fallback.author}</p>
-            <p className="text-xs text-slate-500 dark:text-slate-300">{fallback.role}</p>
-          </div>
-        </div>
-      </>
-    );
-  }
-
-  const review = reviews[currentIndex] ?? reviews[0];
-  const reviewStars = Math.max(0, Math.min(5, Math.round(review.rating)));
-  const globalRating = typeof googleReviews.rating === "number" ? googleReviews.rating.toFixed(1) : null;
+  const globalRating = typeof googleReviews?.rating === "number" ? googleReviews.rating : null;
 
   return (
-    <>
-      {/* Global rating — shown prominently at the top */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          {globalRating ? (
-            <span className="text-lg font-bold text-slate-900 dark:text-white">{globalRating}</span>
-          ) : null}
-          <span className="flex items-center gap-0.5 text-gold-bright" aria-hidden="true">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <Star key={i} className="h-4 w-4" weight="fill" />
-            ))}
-          </span>
-          {typeof googleReviews.userRatingCount === "number" ? (
-            <span className="text-xs text-slate-500 dark:text-slate-400">
-              {googleReviews.userRatingCount.toLocaleString("es-CO")} reseñas
-            </span>
-          ) : null}
-        </div>
-        {googleReviews.googleMapsUri ? (
-          <a
-            href={googleReviews.googleMapsUri}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-[11px] font-semibold text-brand-teal underline decoration-brand-teal/40 underline-offset-2 hover:text-brand-indigo dark:text-accent-cyan"
-          >
-            Google Maps
-          </a>
-        ) : (
-          <span className="text-[11px] text-slate-400">Google Maps</span>
-        )}
-      </div>
+    <div className="grid gap-3">
+      <TestimonialCarousel testimonials={testimonials} />
 
-      {/* Review text with fade transition */}
-      <div
-        className="min-h-[5.5rem] transition-opacity"
-        style={{
-          opacity: visible ? 1 : 0,
-          transitionDuration: `${FADE_DURATION_MS}ms`,
-        }}
-      >
-        <div
-          className="mb-1 flex items-center gap-0.5"
-          aria-label={`Calificación: ${review.rating} de 5 estrellas`}
-        >
-          {Array.from({ length: 5 }).map((_, i) => (
-            <Star
-              key={i}
-              className={i < reviewStars ? "h-4 w-4 text-gold-bright" : "h-4 w-4 text-slate-300 dark:text-slate-600"}
-              weight="fill"
-            />
-          ))}
-        </div>
-        <p className="text-slate-600 dark:text-slate-200">"{review.text}"</p>
-      </div>
-
-      {/* Author */}
-      <div
-        className="flex items-center gap-4 transition-opacity"
-        style={{
-          opacity: visible ? 1 : 0,
-          transitionDuration: `${FADE_DURATION_MS}ms`,
-        }}
-      >
-        {review.authorPhotoUri ? (
-          <Image
-            src={review.authorPhotoUri}
-            alt={review.authorName}
-            width={48}
-            height={48}
-            className="h-12 w-12 rounded-full object-cover"
-            referrerPolicy="no-referrer"
-          />
-        ) : (
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-brand-teal/15 text-sm font-semibold text-brand-teal dark:bg-accent-cyan/15 dark:text-accent-cyan">
-            {review.authorName.slice(0, 2).toUpperCase()}
+      {googleReviews && reviews.length > 0 ? (
+        <div className="flex items-center justify-between gap-3 rounded-full border border-white/70 bg-white/90 px-4 py-2 text-sm shadow-lg shadow-slate-900/10 backdrop-blur-sm dark:border-accent-cyan/10 dark:bg-surface-elevated/90">
+          <div className="flex items-center gap-2">
+            {globalRating !== null ? (
+              <span className="font-bold text-slate-900 dark:text-white">{globalRating.toFixed(1)}</span>
+            ) : null}
+            <Stars rating={globalRating ?? 5} />
+            {typeof googleReviews.userRatingCount === "number" ? (
+              <span className="whitespace-nowrap text-xs text-slate-500 dark:text-slate-400">
+                {googleReviews.userRatingCount.toLocaleString("es-CO")} reseñas
+              </span>
+            ) : null}
           </div>
-        )}
-        <div>
-          {review.authorUri ? (
+          {googleReviews.googleMapsUri ? (
             <a
-              href={review.authorUri}
+              href={googleReviews.googleMapsUri}
               target="_blank"
               rel="noopener noreferrer"
-              className="font-semibold text-slate-900 underline decoration-brand-teal/50 underline-offset-2 hover:text-brand-teal dark:text-white dark:hover:text-accent-cyan"
+              className="whitespace-nowrap text-[11px] font-semibold text-brand-teal underline decoration-brand-teal/40 underline-offset-2 hover:text-brand-indigo dark:text-accent-cyan"
             >
-              {review.authorName}
+              Google Maps
             </a>
           ) : (
-            <p className="font-semibold text-slate-900 dark:text-white">{review.authorName}</p>
+            <span className="text-[11px] text-slate-400">Google Maps</span>
           )}
-          {review.relativeTime ? (
-            <p className="text-xs text-slate-500 dark:text-slate-300">{review.relativeTime}</p>
-          ) : null}
-        </div>
-      </div>
-
-      {/* Dot indicators */}
-      {reviews.length > 1 ? (
-        <div className="flex items-center gap-1.5" role="tablist" aria-label="Reseñas">
-          {reviews.map((_, i) => (
-            <button
-              key={i}
-              role="tab"
-              aria-selected={i === currentIndex}
-              aria-label={`Reseña ${i + 1} de ${reviews.length}`}
-              onClick={() => {
-                setVisible(false);
-                if (timeoutRef.current) clearTimeout(timeoutRef.current);
-                timeoutRef.current = setTimeout(() => {
-                  setCurrentIndex(i);
-                  setVisible(true);
-                }, FADE_DURATION_MS);
-              }}
-              className={`h-1.5 rounded-full transition-all duration-300 ${
-                i === currentIndex
-                  ? "w-4 bg-brand-teal dark:bg-accent-cyan"
-                  : "w-1.5 bg-slate-300 hover:bg-slate-400 dark:bg-slate-600 dark:hover:bg-slate-500"
-              }`}
-            />
-          ))}
         </div>
       ) : null}
-    </>
+    </div>
   );
 }

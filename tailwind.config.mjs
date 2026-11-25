@@ -26,6 +26,10 @@ const config = {
         card: {
           dark: "#10243d",
         },
+        // Solo para las estrellas de calificación (excepción aprobada, DOG-35).
+        gold: {
+          bright: "#e6b450",
+        },
       },
       boxShadow: {
         glow: "0 28px 70px -25px rgba(10, 61, 145, 0.45)",

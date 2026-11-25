@@ -79,14 +79,14 @@ export function InfoBar({ location, schedule, channels, socials, googleRating }:
                 className="inline-flex items-center gap-1.5 rounded-full bg-brand-light/80 px-3 py-1 text-xs font-semibold text-slate-700 transition hover:bg-brand-light dark:bg-surface-muted/80 dark:text-slate-200 dark:hover:bg-surface-muted"
                 aria-label={`${googleRating.rating.toFixed(1)} de 5 en Google — ${googleRating.count} reseñas`}
               >
-                <Star className="h-3.5 w-3.5 text-gold-bright" weight="fill" aria-hidden="true" />
+                <Star className="h-3.5 w-3.5 text-gold-bright [&_svg]:fill-current" weight="fill" aria-hidden="true" />
                 {googleRating.rating.toFixed(1)}
                 <span className="text-slate-400 dark:text-slate-500">·</span>
                 {googleRating.count.toLocaleString("es-CO")} en Google
               </a>
             ) : (
               <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-light/80 px-3 py-1 text-xs font-semibold text-slate-700 dark:bg-surface-muted/80 dark:text-slate-200">
-                <Star className="h-3.5 w-3.5 text-gold-bright" weight="fill" aria-hidden="true" />
+                <Star className="h-3.5 w-3.5 text-gold-bright [&_svg]:fill-current" weight="fill" aria-hidden="true" />
                 {googleRating.rating.toFixed(1)}
                 <span className="text-slate-400 dark:text-slate-500">·</span>
                 {googleRating.count.toLocaleString("es-CO")} en Google

@@ -62,6 +62,7 @@ design-system/            # Sistema de diseño exportado desde Claude Design
 - Paleta azul-doble: `#031536` midnight → `#0a3d91` brand-teal → `#1f6cd3` brand-indigo → `#4cc3f1` brand-sky → `#5bd0ff` accent-cyan → `#e6f4ff` brand-light.
 - **Sin verdes, sin morados, sin cálidos**. Solo slate para neutros.
 - Dorado (`#c8901f`) solo en logos impresos, nunca en UI.
+- **Excepción aprobada**: dorado `gold-bright` (`#e6b450`) para las estrellas de calificación de reseñas (hero, InfoBar) — pedido explícito del dueño en DOG-35; no usarlo en ningún otro elemento de UI.
 - **Excepción aprobada**: rojo (`red-*`) para mensajes de error/validación (ej. login fallido) — no migrar a azul-marca, el rojo mantiene la urgencia visual del error.
 - **Excepción aprobada**: verde/emerald (`emerald-*`/`green-*`) para mensajes de éxito en formularios — paralelo a la excepción de rojo-error, misma lógica (urgencia/confirmación visual, no decorativo).
 - **Excepción aprobada**: rojo/rose para alertas clínicas de seguridad del paciente (ej. alergias críticas en `ProfessionalDashboard.tsx`) — la urgencia visual es intencional y no debe migrarse a azul-marca.
