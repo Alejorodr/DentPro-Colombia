@@ -191,7 +191,7 @@ export function AdminHomepageFaqPanel() {
             </span>
             <textarea
               className="input min-h-24 text-sm"
-              placeholder="Podés reservar tu turno..."
+              placeholder="Puedes reservar tu turno..."
               value={newFaq.answer}
               onChange={(e) => setNewFaq((prev) => ({ ...prev, answer: e.target.value }))}
               disabled={saving}

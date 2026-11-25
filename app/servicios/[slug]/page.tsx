@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 
 import { SERVICES, getServiceBySlug } from "@/lib/marketing/services-data";
 import { safeJsonLd } from "@/lib/security/json-ld";
+import { SITE_URL } from "@/lib/site/site-url";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -20,7 +21,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   if (!service) return {};
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://dentprocolombia.com";
+  const siteUrl = SITE_URL;
 
   return {
     title: `${service.name} en Chía`,
@@ -42,7 +43,7 @@ export default async function ServicePage({ params }: Props) {
 
   if (!service) notFound();
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://dentprocolombia.com";
+  const siteUrl = SITE_URL;
 
   const jsonLd = {
     "@context": "https://schema.org",

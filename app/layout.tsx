@@ -8,6 +8,7 @@ import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
 import { AppProviders } from "./providers";
+import { SITE_URL } from "@/lib/site/site-url";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -21,7 +22,7 @@ const outfit = Outfit({
   display: "swap",
 });
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://dentprocolombia.com";
+const siteUrl = SITE_URL;
 
 // Reemplazar por /og-image.jpg cuando tengas una foto real de la clínica (1200×630px)
 const OG_IMAGE = {

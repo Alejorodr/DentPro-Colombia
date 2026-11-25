@@ -11,6 +11,7 @@ import { unstable_cache } from "next/cache";
 import { CATALOG_CACHE_VERSION, CATALOG_REVALIDATE_SECONDS, CATALOG_TAGS } from "@/lib/cache/catalog";
 import { getPrismaClient } from "@/lib/prisma";
 import { MARKETING_ICON_KEYS } from "@/lib/marketing/homepage-types";
+import { SERVICE_DETAIL_SLUGS } from "@/lib/marketing/service-detail-pages";
 import { Prisma } from "@prisma/client";
 
 const serviceSchema = z.object({
@@ -29,6 +30,7 @@ const serviceSchema = z.object({
   iconKey: z.enum(MARKETING_ICON_KEYS).nullable().optional(),
   showOnHomepage: z.boolean().optional(),
   homepageSortOrder: z.number().int().min(0).optional(),
+  detailSlug: z.enum(SERVICE_DETAIL_SLUGS).nullable().optional(),
 });
 
 async function queryServices(activeOnly: boolean, query: string | undefined, skip: number, take: number) {
@@ -95,6 +97,7 @@ export async function POST(request: Request) {
       iconKey: body.iconKey ?? null,
       showOnHomepage: body.showOnHomepage ?? false,
       homepageSortOrder: body.homepageSortOrder ?? 0,
+      detailSlug: body.detailSlug ?? null,
     },
   });
 

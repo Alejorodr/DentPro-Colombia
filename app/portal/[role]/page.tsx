@@ -1,12 +1,13 @@
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
-import { auth } from "@/auth";
-import { getDefaultDashboardPath, roleFromSlug, roleLabels } from "@/lib/auth/roles";
-import { AppointmentsList } from "@/app/portal/components/AppointmentsList";
-import { getAppointmentsForRole } from "@/lib/appointments";
+import { getDefaultDashboardPath, roleFromSlug } from "@/lib/auth/roles";
 
-export default async function PortalRolePage({ params }: { params: Promise<{ role: string }> }) {
+/**
+ * Alias de rol en español o inglés (/portal/paciente, /portal/administrador...). Las rutas
+ * canónicas (/portal/client, /portal/admin...) son carpetas propias y tienen prioridad; aquí
+ * solo se redirige al portal real del rol, que ya aplica su propia guarda de sesión.
+ */
+export default async function PortalRoleAliasPage({ params }: { params: Promise<{ role: string }> }) {
   const { role } = await params;
   const requestedRole = roleFromSlug(role);
 
@@ -14,59 +15,5 @@ export default async function PortalRolePage({ params }: { params: Promise<{ rol
     notFound();
   }
 
-  const session = await auth();
-
-  if (!session?.user?.role) {
-    redirect(`/auth/login?callbackUrl=/portal/${role}`);
-  }
-
-  if (session.user.role !== requestedRole) {
-    redirect(getDefaultDashboardPath(session.user.role));
-  }
-
-  const appointments = await getAppointmentsForRole({
-    userId: session.user.id ?? "",
-    role: requestedRole,
-    take: 20,
-  });
-  const normalizedAppointments = appointments.map((appointment) => ({
-    ...appointment,
-    timeSlot: {
-      ...appointment.timeSlot,
-      startAt: appointment.timeSlot.startAt.toISOString(),
-      endAt: appointment.timeSlot.endAt.toISOString(),
-    },
-  }));
-
-  return (
-    <div className="space-y-6">
-      <header className="space-y-2">
-        <p className="text-xs font-semibold uppercase tracking-wide text-brand-teal">Portal {roleLabels[requestedRole]}</p>
-        <h1 className="text-2xl font-semibold text-slate-900">Resumen de agenda</h1>
-        <p className="text-sm text-slate-600">
-          Gestiona tus citas y tareas prioritarias desde un solo lugar.
-        </p>
-      </header>
-
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div>
-            <h2 className="text-lg font-semibold text-slate-900">Citas próximas</h2>
-            <p className="text-sm text-slate-600">Últimos 20 turnos según tu rol.</p>
-          </div>
-          {requestedRole === "PACIENTE" ? (
-            <Link
-              href="/appointments/new"
-              className="rounded-full bg-brand-teal px-4 py-2 text-xs font-semibold uppercase tracking-wide text-white"
-            >
-              Crear turno
-            </Link>
-          ) : null}
-        </div>
-        <div className="mt-6">
-          <AppointmentsList initialAppointments={normalizedAppointments} role={requestedRole} />
-        </div>
-      </section>
-    </div>
-  );
+  redirect(getDefaultDashboardPath(requestedRole));
 }
