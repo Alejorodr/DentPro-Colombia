@@ -1,4 +1,5 @@
 import type { DatabaseUser } from "./users";
+import { isMfaPending } from "./mfa";
 import { isUserRole, type UserRole } from "./roles";
 
 type SessionTokenClaims = {
@@ -10,6 +11,7 @@ type SessionTokenClaims = {
   name?: unknown;
   email?: unknown;
   picture?: unknown;
+  mfaVerified?: unknown;
 };
 
 export type ResolvedSessionUser = {
@@ -21,6 +23,8 @@ export type ResolvedSessionUser = {
   professionalId: string | null;
   patientId: string | null;
   mustChangePassword: boolean;
+  /** El rol exige segundo factor y esta sesión todavía no lo completó (DOG-28). */
+  mfaPending: boolean;
 };
 
 function getTokenUserId(token: SessionTokenClaims): string {
@@ -55,5 +59,10 @@ export function resolveSessionUser(
     professionalId: currentUser.professionalId ?? null,
     patientId: currentUser.patientId ?? null,
     mustChangePassword: currentUser.mustChangePassword,
+    mfaPending: isMfaPending({
+      role: currentUser.role,
+      sessionVerified: token.mfaVerified === true,
+      mfaEnabled: currentUser.mfaEnabled ?? false,
+    }),
   };
 }

@@ -20,6 +20,11 @@ export async function requireSession(): Promise<{ user: SessionUser } | { error:
     return { error: { status: 401, message: "No autorizado." } };
   }
 
+  // DOG-28: con la contraseña sola no se accede a nada hasta completar el segundo factor.
+  if (session?.user?.mfaPending) {
+    return { error: { status: 401, message: "Completa la verificación en dos pasos." } };
+  }
+
   return { user: { id, role } };
 }
 

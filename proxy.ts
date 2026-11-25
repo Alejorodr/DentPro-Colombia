@@ -8,6 +8,7 @@ import {
   isLocalE2EAuthRuntime,
   isProductionRuntime,
 } from "@/lib/auth/runtime";
+import { MFA_PAGE_PATH, requiresMfa } from "@/lib/auth/mfa";
 import { getDefaultDashboardPath, isUserRole, roleFromSlug, type UserRole } from "@/lib/auth/roles";
 import { readConfiguredAuthSecret } from "@/lib/auth/secret";
 import { errorResponse } from "@/app/api/_utils/response";
@@ -223,6 +224,9 @@ export default async function proxy(request: NextRequest) {
   const cookieName = getSessionCookieName(getInferredAuthBaseUrl());
   const token = await getToken({ req: request, secret, cookieName });
   let role = resolveRole(token);
+  // DOG-28: sesión con contraseña válida pero sin el segundo factor. Solo mira el token; el
+  // servidor además revisa en la base que el MFA siga activo (restablecimientos).
+  const mfaPending = role !== null && requiresMfa(role) && token?.mfaVerified !== true;
   const testRoleCookie = request.cookies.get("dentpro-test-role")?.value ?? "";
   const isProductionEnv = process.env.NODE_ENV === "production" || process.env.VERCEL_ENV === "production";
   const allowE2EBypass = isLocalE2EAuthRuntime(host);
@@ -246,7 +250,7 @@ export default async function proxy(request: NextRequest) {
 
   if (isLoginRoute && role) {
     const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = getDefaultDashboardPath(role);
+    redirectUrl.pathname = mfaPending ? MFA_PAGE_PATH : getDefaultDashboardPath(role);
     redirectUrl.search = "";
     return withRequestId(NextResponse.redirect(redirectUrl), requestId, csp);
   }
@@ -264,7 +268,7 @@ export default async function proxy(request: NextRequest) {
   const isClinicalApiRoute = matchesPrefix(pathname, CLINICAL_SESSION_ONLY_PREFIX);
 
   if (isAdminApiRoute || isClinicalApiRoute) {
-    if (!role) {
+    if (!role || mfaPending) {
       return withRequestId(errorResponse("No autorizado.", 401), requestId, csp);
     }
     if (isAdminApiRoute && role !== "ADMINISTRADOR") {
@@ -284,6 +288,14 @@ export default async function proxy(request: NextRequest) {
     redirectUrl.pathname = "/auth/login";
     const callbackPath = `${pathname}${request.nextUrl.search}`;
     redirectUrl.searchParams.set("callbackUrl", callbackPath);
+    return withRequestId(NextResponse.redirect(redirectUrl), requestId, csp);
+  }
+
+  if (mfaPending) {
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname = MFA_PAGE_PATH;
+    redirectUrl.search = "";
+    redirectUrl.searchParams.set("callbackUrl", `${pathname}${request.nextUrl.search}`);
     return withRequestId(NextResponse.redirect(redirectUrl), requestId, csp);
   }
 
