@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { fetchWithRetry } from "@/lib/http";
 import { StatusBadge } from "@/app/portal/components/ui/StatusBadge";
 import { SkeletonRows } from "@/app/portal/components/ui/Skeleton";
+import { CLINIC_TIME_ZONE } from "@/lib/dates/tz";
 
 type AuditStatus = "success" | "failure";
 
@@ -119,7 +120,7 @@ export function AdminAuditPanel() {
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
                     <p className="font-semibold text-slate-900 dark:text-white">{item.action}</p>
-                    <p className="text-xs text-slate-500">{new Date(item.createdAt).toLocaleString("es-CO")}</p>
+                    <p className="text-xs text-slate-500">{new Date(item.createdAt).toLocaleString("es-CO", { timeZone: CLINIC_TIME_ZONE })}</p>
                   </div>
                   <StatusBadge status={item.status} />
                 </div>

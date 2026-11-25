@@ -8,6 +8,7 @@ import { Bell, MagnifyingGlass, MoonStars, ShieldCheck } from "@/components/ui/I
 import { useProfessionalPreferences } from "@/app/portal/professional/components/ProfessionalContext";
 import { fetchWithRetry } from "@/lib/http";
 import { logger } from "@/lib/logger";
+import { CLINIC_TIME_ZONE } from "@/lib/dates/tz";
 
 interface SearchResult {
   id: string;
@@ -183,7 +184,7 @@ export function ProfessionalNotifications() {
                     <p className="text-xs text-slate-500 dark:text-slate-400">{notification.body}</p>
                   ) : null}
                   <p className="mt-1 text-[11px] text-slate-400">
-                    {new Date(notification.createdAt).toLocaleString("es-CO")}
+                    {new Date(notification.createdAt).toLocaleString("es-CO", { timeZone: CLINIC_TIME_ZONE })}
                   </p>
                 </li>
               ))}

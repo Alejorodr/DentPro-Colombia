@@ -97,6 +97,8 @@ export function AdminGlobalSearch() {
           onKeyDown={(event) => {
             if (event.key === "Enter") {
               event.preventDefault();
+              // Enter también confirma la composición de un IME: no buscar a mitad de palabra.
+              if (event.nativeEvent.isComposing || event.keyCode === 229) return;
               handleSubmit();
             }
           }}

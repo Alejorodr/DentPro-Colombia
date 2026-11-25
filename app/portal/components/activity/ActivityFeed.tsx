@@ -7,6 +7,7 @@ import { Bell, CalendarCheck, CheckCircle, Clock, WarningCircle } from "@/compon
 import { Skeleton } from "@/app/portal/components/ui/Skeleton";
 import { STATUS_COLORS } from "@/app/portal/components/ui/statusColors";
 import { fetchWithRetry } from "@/lib/http";
+import { CLINIC_TIME_ZONE } from "@/lib/dates/tz";
 
 type ActivityFeedItem = {
   id: string;
@@ -119,7 +120,7 @@ export function ActivityFeed({
                 <div className="min-w-0 flex-1">
                   <p className="font-semibold text-slate-800 dark:text-white">{item.message}</p>
                   <p className="text-slate-500 dark:text-slate-400">{item.patientName ? `${item.patientName} · ` : ""}{item.actor}</p>
-                  <p className="text-[11px] text-slate-400">{new Date(item.timestamp).toLocaleString("es-CO")}</p>
+                  <p className="text-[11px] text-slate-400">{new Date(item.timestamp).toLocaleString("es-CO", { timeZone: CLINIC_TIME_ZONE })}</p>
                   {item.link ? <Link href={item.link} className="text-[11px] font-semibold text-brand-teal">Ver detalle</Link> : null}
                 </div>
               </div>

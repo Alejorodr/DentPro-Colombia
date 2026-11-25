@@ -192,7 +192,7 @@ export function RegisterForm({ googleEnabled = false }: RegisterFormProps) {
           error={fieldErrors.email}
           icon={<EnvelopeSimple className="h-4 w-4" aria-hidden="true" />}
           placeholder="tu@correo.com"
-          autoComplete="email"
+          autoComplete="username"
         />
 
         <FieldInput

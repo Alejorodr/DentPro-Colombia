@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useRouter } from "next/navigation";
 import { fetchWithTimeout } from "@/lib/http";
 
@@ -11,6 +11,7 @@ interface ChangePasswordFormProps {
 
 export function ChangePasswordForm({ isMandatory, defaultDashboardPath }: ChangePasswordFormProps) {
   const router = useRouter();
+  const fieldId = useId();
   const [form, setForm] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -56,11 +57,13 @@ export function ChangePasswordForm({ isMandatory, defaultDashboardPath }: Change
 
       <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
         <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
+          <label htmlFor={`${fieldId}-currentPassword`} className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
             Contraseña actual
           </label>
           <input
+            id={`${fieldId}-currentPassword`}
             type="password"
+            autoComplete="current-password"
             className="input h-11 w-full text-sm"
             value={form.currentPassword}
             onChange={(e) => setForm((p) => ({ ...p, currentPassword: e.target.value }))}
@@ -69,11 +72,13 @@ export function ChangePasswordForm({ isMandatory, defaultDashboardPath }: Change
           />
         </div>
         <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
+          <label htmlFor={`${fieldId}-newPassword`} className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
             Nueva contraseña
           </label>
           <input
+            id={`${fieldId}-newPassword`}
             type="password"
+            autoComplete="new-password"
             className="input h-11 w-full text-sm"
             value={form.newPassword}
             onChange={(e) => setForm((p) => ({ ...p, newPassword: e.target.value }))}
@@ -82,11 +87,13 @@ export function ChangePasswordForm({ isMandatory, defaultDashboardPath }: Change
           />
         </div>
         <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
+          <label htmlFor={`${fieldId}-confirmPassword`} className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
             Confirmar contraseña
           </label>
           <input
+            id={`${fieldId}-confirmPassword`}
             type="password"
+            autoComplete="new-password"
             className="input h-11 w-full text-sm"
             value={form.confirmPassword}
             onChange={(e) => setForm((p) => ({ ...p, confirmPassword: e.target.value }))}

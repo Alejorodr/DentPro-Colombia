@@ -10,6 +10,7 @@ import {
   MAX_ACTIVE_APPOINTMENTS_PER_PATIENT,
   isSlotBookableByPatient,
 } from "@/lib/appointments/booking-limits";
+import { CLINIC_TIME_ZONE } from "@/lib/dates/tz";
 
 type Service = {
   id: string;
@@ -409,7 +410,7 @@ export function ClientBookingForm({ activeAppointmentsCount = 0 }: ClientBooking
                         data-testid={`slot-${slot.id}`}
                       >
                         <span className="block">
-                          {new Date(slot.startAt).toLocaleTimeString("es-CO", {
+                          {new Date(slot.startAt).toLocaleTimeString("es-CO", { timeZone: CLINIC_TIME_ZONE,
                             hour: "2-digit",
                             minute: "2-digit",
                           })}
@@ -449,7 +450,7 @@ export function ClientBookingForm({ activeAppointmentsCount = 0 }: ClientBooking
               <p className="text-xs uppercase tracking-wide text-slate-400">Fecha y hora</p>
               <p className="mt-0.5 font-semibold text-slate-900 dark:text-white">
                 {selectedSlot
-                  ? new Date(selectedSlot.startAt).toLocaleDateString("es-CO", {
+                  ? new Date(selectedSlot.startAt).toLocaleDateString("es-CO", { timeZone: CLINIC_TIME_ZONE,
                       weekday: "long",
                       day: "2-digit",
                       month: "long",
@@ -458,7 +459,7 @@ export function ClientBookingForm({ activeAppointmentsCount = 0 }: ClientBooking
               </p>
               {selectedSlot ? (
                 <p className="text-xs text-slate-500 dark:text-slate-300">
-                  {new Date(selectedSlot.startAt).toLocaleTimeString("es-CO", {
+                  {new Date(selectedSlot.startAt).toLocaleTimeString("es-CO", { timeZone: CLINIC_TIME_ZONE,
                     hour: "2-digit",
                     minute: "2-digit",
                   })}{" "}

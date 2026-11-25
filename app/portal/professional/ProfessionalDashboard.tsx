@@ -27,6 +27,7 @@ import type {
   ProfessionalAppointmentDetail,
   ProfessionalDashboardAppointment,
 } from "@/app/portal/professional/types";
+import { CLINIC_TIME_ZONE } from "@/lib/dates/tz";
 
 
 type TabKey = "overview" | "imaging" | "history";
@@ -362,7 +363,7 @@ export function ProfessionalDashboard() {
     }
   };
 
-  const formattedDate = new Date(selectedDate + "T12:00:00").toLocaleDateString("es-CO", {
+  const formattedDate = new Date(selectedDate + "T12:00:00").toLocaleDateString("es-CO", { timeZone: CLINIC_TIME_ZONE,
     weekday: "long",
     day: "numeric",
     month: "long",
@@ -466,7 +467,7 @@ export function ProfessionalDashboard() {
                     >
                       <div className="flex items-center justify-between text-xs text-slate-500">
                         <span>
-                          {new Date(appointment.startAt).toLocaleTimeString("es-CO", {
+                          {new Date(appointment.startAt).toLocaleTimeString("es-CO", { timeZone: CLINIC_TIME_ZONE,
                             hour: "2-digit",
                             minute: "2-digit",
                             hour12: false,
@@ -548,7 +549,7 @@ export function ProfessionalDashboard() {
                     <p className="text-xs uppercase tracking-wide text-slate-400">Última visita</p>
                     <p className="mt-2 text-lg font-semibold text-slate-900 dark:text-white">
                       {appointmentDetail.history[0]?.startAt
-                        ? new Date(appointmentDetail.history[0].startAt).toLocaleDateString("es-CO", {
+                        ? new Date(appointmentDetail.history[0].startAt).toLocaleDateString("es-CO", { timeZone: CLINIC_TIME_ZONE,
                             month: "short",
                             day: "numeric",
                             year: "numeric",
@@ -596,7 +597,7 @@ export function ProfessionalDashboard() {
                         >
                           <div>
                             <p className="font-medium text-slate-900 dark:text-white">{item.filename}</p>
-                            <p className="text-xs text-slate-500">{new Date(item.createdAt).toLocaleString("es-CO")}</p>
+                            <p className="text-xs text-slate-500">{new Date(item.createdAt).toLocaleString("es-CO", { timeZone: CLINIC_TIME_ZONE })}</p>
                           </div>
                           {item.url ? (
                             <Link className="text-xs font-semibold text-brand-indigo" href={item.url} target="_blank" rel="noopener noreferrer">
@@ -628,7 +629,7 @@ export function ProfessionalDashboard() {
                           <StatusBadge status={history.status} />
                         </div>
                         <p className="text-xs text-slate-500">
-                          {new Date(history.startAt).toLocaleDateString("es-CO", {
+                          {new Date(history.startAt).toLocaleDateString("es-CO", { timeZone: CLINIC_TIME_ZONE,
                             year: "numeric",
                             month: "short",
                             day: "numeric",
@@ -709,7 +710,7 @@ export function ProfessionalDashboard() {
             <div className="mt-4 flex items-center justify-between text-xs text-slate-500">
               <span>
                 {lastSavedAt
-                  ? `Auto-guardado ${lastSavedAt.toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })}`
+                  ? `Auto-guardado ${lastSavedAt.toLocaleTimeString("es-CO", { timeZone: CLINIC_TIME_ZONE, hour: "2-digit", minute: "2-digit" })}`
                   : appointmentDetail?.clinicalNotes.at(0)?.updatedAt
                     ? "Guardado"
                     : "Sin notas aún"}

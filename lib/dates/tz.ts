@@ -1,4 +1,7 @@
-const DEFAULT_TIME_ZONE = "America/Bogota";
+/** Zona horaria de la clínica. Todo instante (citas, registros) se muestra en esta zona, también
+ * cuando se renderiza en el servidor, que en Vercel corre en UTC (DOG-40). */
+export const CLINIC_TIME_ZONE = "America/Bogota";
+const DEFAULT_TIME_ZONE = CLINIC_TIME_ZONE;
 
 export type ZonedDateParts = {
   year: number;

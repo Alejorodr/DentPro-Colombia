@@ -6,6 +6,7 @@ import { logClinicalAccess } from "@/lib/clinical/access-log";
 import { getPrismaClient } from "@/lib/prisma";
 import { AccessLogAction } from "@prisma/client";
 import { formatDocument } from "@/lib/regulatory/colombia";
+import { CLINIC_TIME_ZONE } from "@/lib/dates/tz";
 
 export default async function PrescriptionPrintPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await requireRole("PROFESIONAL");
@@ -90,7 +91,7 @@ export default async function PrescriptionPrintPage({ params }: { params: Promis
             <p className="text-slate-500 tabular-nums">RETHUS {prescription.professional.rethusNumber}</p>
           ) : null}
           <p className="text-slate-500">
-            Emitida: {(prescription.issuedAt ?? prescription.createdAt).toLocaleDateString("es-CO")}
+            Emitida: {(prescription.issuedAt ?? prescription.createdAt).toLocaleDateString("es-CO", { timeZone: CLINIC_TIME_ZONE })}
           </p>
         </div>
       </section>

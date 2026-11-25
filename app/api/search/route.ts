@@ -11,6 +11,7 @@ import { logger } from "@/lib/logger";
 import { documentIdSearchHash } from "@/lib/security/field-encryption";
 import { requireRole, requireSession } from "@/lib/authz";
 import * as Sentry from "@sentry/nextjs";
+import { CLINIC_TIME_ZONE } from "@/lib/dates/tz";
 
 const searchUserSelect = {
   id: true,
@@ -191,7 +192,7 @@ export async function GET(request: Request) {
           type: "Cita",
           id: appointment.id,
           label: `${appointment.patient?.user.name ?? "Paciente"} ${appointment.patient?.user.lastName ?? ""}`.trim(),
-          description: `${appointment.timeSlot.startAt.toLocaleDateString("es-CO")} · ${appointment.status}`,
+          description: `${appointment.timeSlot.startAt.toLocaleDateString("es-CO", { timeZone: CLINIC_TIME_ZONE })} · ${appointment.status}`,
           href: `/portal/professional?appointment=${appointment.id}`,
         })),
         ...notes
@@ -394,7 +395,7 @@ export async function GET(request: Request) {
         type: isAdminScope ? "Appointments" : "Turno",
         id: appointment.id,
         label: `${appointment.patient?.user.name ?? "Paciente"} ${appointment.patient?.user.lastName ?? ""}`.trim(),
-        description: `${appointment.status === AppointmentStatus.CANCELLED ? "Cancelado" : appointment.status} · ${appointment.timeSlot.startAt.toLocaleDateString("es-CO")}`,
+        description: `${appointment.status === AppointmentStatus.CANCELLED ? "Cancelado" : appointment.status} · ${appointment.timeSlot.startAt.toLocaleDateString("es-CO", { timeZone: CLINIC_TIME_ZONE })}`,
         href: isAdminScope ? "/portal/admin/appointments" : "/portal/receptionist/schedule",
       })),
       ...(isAdminScope

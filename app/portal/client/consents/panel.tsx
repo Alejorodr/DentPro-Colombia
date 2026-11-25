@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
 import { SkeletonRows } from "@/app/portal/components/ui/Skeleton";
+import { CLINIC_TIME_ZONE } from "@/lib/dates/tz";
 
 type Template = {
   id: string;
@@ -92,12 +93,12 @@ export function ClientConsentsPanel() {
                   <div>
                     <h2 className="text-lg font-semibold text-slate-900 dark:text-white">{template.title}</h2>
                     <p className="text-xs text-slate-400">
-                      Actualizado {new Date(template.updatedAt).toLocaleDateString("es-CO")}
+                      Actualizado {new Date(template.updatedAt).toLocaleDateString("es-CO", { timeZone: CLINIC_TIME_ZONE })}
                     </p>
                   </div>
                   {signed ? (
                     <span className="rounded-full bg-brand-light px-3 py-1 text-xs font-semibold text-brand-teal dark:bg-accent-cyan/15 dark:text-accent-cyan">
-                      Aceptado {new Date(signed.acceptedAt).toLocaleDateString("es-CO")}
+                      Aceptado {new Date(signed.acceptedAt).toLocaleDateString("es-CO", { timeZone: CLINIC_TIME_ZONE })}
                     </span>
                   ) : (
                     <button

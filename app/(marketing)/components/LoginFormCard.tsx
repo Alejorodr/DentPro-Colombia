@@ -210,7 +210,8 @@ export function LoginFormCard({
               id="login-email"
               name="email"
               type="email"
-              autoComplete="email"
+              autoComplete="username"
+              spellCheck={false}
               required
               autoFocus={autoFocusEmail}
               value={email}

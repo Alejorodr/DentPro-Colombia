@@ -11,6 +11,7 @@ import { PASSWORD_POLICY_MESSAGE, PASSWORD_POLICY_REGEX } from "@/lib/auth/passw
 import { STATUS_COLORS } from "@/app/portal/components/ui/statusColors";
 import { DocumentTypeSelect } from "@/components/ui/DocumentTypeSelect";
 import { DEFAULT_DOCUMENT_TYPE, formatDocument, isDocumentTypeCode, type DocumentTypeCode } from "@/lib/regulatory/colombia";
+import { PortalDialog } from "@/app/portal/components/ui/PortalDialog";
 
 const emptyForm = {
   name: "",
@@ -270,81 +271,79 @@ export function ReceptionistPatients({ canEditEmail = false }: { canEditEmail?: 
       </Card>
 
       {editing ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 px-4">
-          <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl dark:bg-surface-elevated">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Editar paciente</p>
-              <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
-                {editing.user.name} {editing.user.lastName}
-              </h3>
-            </div>
-            <div className="mt-4 grid gap-4 md:grid-cols-2">
-              {[
-                { key: "name", label: "Nombre", value: editing.user.name },
-                { key: "lastName", label: "Apellido", value: editing.user.lastName },
-                { key: "email", label: "Correo", value: editing.user.email },
-                { key: "phone", label: "Teléfono", value: editing.phone ?? "" },
-                { key: "documentId", label: "Documento", value: editing.documentId ?? "" },
-              ].map((field) => (
-                <input
-                  key={field.key}
-                  className="input h-11 text-sm disabled:cursor-not-allowed disabled:opacity-60"
-                  placeholder={field.label}
-                  value={field.value}
-                  disabled={field.key === "email" && !canEditEmail}
-                  title={field.key === "email" && !canEditEmail ? "Solo un administrador puede cambiar el correo." : undefined}
-                  onChange={(event) =>
-                    setEditing((prev) =>
-                      prev
-                        ? {
-                            ...prev,
-                            ...(field.key === "name" || field.key === "lastName" || field.key === "email"
-                              ? { user: { ...prev.user, [field.key]: event.target.value } }
-                              : { [field.key]: event.target.value }),
-                          }
-                        : null,
-                    )
-                  }
-                />
-              ))}
-              <DocumentTypeSelect
-                className="input h-11 text-sm"
-                aria-label="Tipo de documento"
-                value={isDocumentTypeCode(editing.documentType) ? editing.documentType : DEFAULT_DOCUMENT_TYPE}
-                onValueChange={(value) => setEditing((prev) => (prev ? { ...prev, documentType: value } : null))}
-                disabled={saving}
-              />
-              <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                <input
-                  type="checkbox"
-                  checked={editing.active}
-                  onChange={(event) =>
-                    setEditing((prev) => (prev ? { ...prev, active: event.target.checked } : null))
-                  }
-                />
-                Activo
-              </label>
-            </div>
-            {error ? <p className="mt-3 text-sm text-red-600">{error}</p> : null}
-            <div className="mt-6 flex justify-end gap-2">
-              <button
-                type="button"
-                className="rounded-full border border-slate-200 px-4 py-2 text-xs font-semibold uppercase text-slate-600"
-                onClick={() => setEditing(null)}
-              >
-                Cancelar
-              </button>
-              <button
-                type="button"
-                className="rounded-full bg-brand-teal px-4 py-2 text-xs font-semibold uppercase text-white"
-                onClick={updatePatient}
-                disabled={saving}
-              >
-                Guardar cambios
-              </button>
-            </div>
+        <PortalDialog onClose={() => setEditing(null)} labelledBy="patient-edit-title" size="lg">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Editar paciente</p>
+            <h3 id="patient-edit-title" className="text-lg font-semibold text-slate-900 dark:text-white">
+              {editing.user.name} {editing.user.lastName}
+            </h3>
           </div>
-        </div>
+          <div className="mt-4 grid gap-4 md:grid-cols-2">
+            {[
+              { key: "name", label: "Nombre", value: editing.user.name },
+              { key: "lastName", label: "Apellido", value: editing.user.lastName },
+              { key: "email", label: "Correo", value: editing.user.email },
+              { key: "phone", label: "Teléfono", value: editing.phone ?? "" },
+              { key: "documentId", label: "Documento", value: editing.documentId ?? "" },
+            ].map((field) => (
+              <input
+                key={field.key}
+                className="input h-11 text-sm disabled:cursor-not-allowed disabled:opacity-60"
+                placeholder={field.label}
+                value={field.value}
+                disabled={field.key === "email" && !canEditEmail}
+                title={field.key === "email" && !canEditEmail ? "Solo un administrador puede cambiar el correo." : undefined}
+                onChange={(event) =>
+                  setEditing((prev) =>
+                    prev
+                      ? {
+                          ...prev,
+                          ...(field.key === "name" || field.key === "lastName" || field.key === "email"
+                            ? { user: { ...prev.user, [field.key]: event.target.value } }
+                            : { [field.key]: event.target.value }),
+                        }
+                      : null,
+                  )
+                }
+              />
+            ))}
+            <DocumentTypeSelect
+              className="input h-11 text-sm"
+              aria-label="Tipo de documento"
+              value={isDocumentTypeCode(editing.documentType) ? editing.documentType : DEFAULT_DOCUMENT_TYPE}
+              onValueChange={(value) => setEditing((prev) => (prev ? { ...prev, documentType: value } : null))}
+              disabled={saving}
+            />
+            <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              <input
+                type="checkbox"
+                checked={editing.active}
+                onChange={(event) =>
+                  setEditing((prev) => (prev ? { ...prev, active: event.target.checked } : null))
+                }
+              />
+              Activo
+            </label>
+          </div>
+          {error ? <p className="mt-3 text-sm text-red-600">{error}</p> : null}
+          <div className="mt-6 flex justify-end gap-2">
+            <button
+              type="button"
+              className="rounded-full border border-slate-200 px-4 py-2 text-xs font-semibold uppercase text-slate-600"
+              onClick={() => setEditing(null)}
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              className="rounded-full bg-brand-teal px-4 py-2 text-xs font-semibold uppercase text-white"
+              onClick={updatePatient}
+              disabled={saving}
+            >
+              Guardar cambios
+            </button>
+          </div>
+        </PortalDialog>
       ) : null}
     </div>
   );

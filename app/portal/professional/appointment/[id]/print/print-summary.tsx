@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { CLINIC_TIME_ZONE } from "@/lib/dates/tz";
 
 interface AppointmentPrintData {
   id: string;
@@ -60,7 +61,7 @@ export function PrintSummary({ appointment }: PrintSummaryProps) {
         <div className="rounded-2xl border border-slate-200 p-4">
           <h2 className="text-sm font-semibold uppercase text-slate-400">Cita</h2>
           <p className="mt-2 text-sm text-slate-600">
-            {appointment.timeSlot.startAt.toLocaleString("es-CO")} - {appointment.timeSlot.endAt.toLocaleTimeString("es-CO")}
+            {appointment.timeSlot.startAt.toLocaleString("es-CO", { timeZone: CLINIC_TIME_ZONE })} - {appointment.timeSlot.endAt.toLocaleTimeString("es-CO", { timeZone: CLINIC_TIME_ZONE })}
           </p>
           <p className="text-sm text-slate-600">Servicio: {appointment.serviceName ?? appointment.reason}</p>
           <p className="text-sm text-slate-600">Profesional: {professionalName}</p>
