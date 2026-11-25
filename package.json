@@ -20,7 +20,6 @@
     "e2e": "pnpm run test:e2e",
     "prisma": "prisma",
     "db:seed": "prisma db seed",
-    "prisma:seed": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' prisma/seed.ts",
     "postinstall": "node scripts/prisma-generate-safe.mjs",
     "typecheck": "tsc --noEmit",
     "secrets:scan": "node scripts/scan-secrets.mjs",
@@ -90,7 +89,7 @@
     "postcss": "^8.5.33",
     "prisma": "^7.10.1",
     "tailwindcss": "^4.3.5",
-    "ts-node": "^10.9.2",
+    "tsx": "^4.23.15",
     "typescript": "6.0.3",
     "vite": "^8.3.8",
     "vitest": "^5.1.1"
@@ -99,9 +98,6 @@
     "cookie": "0.7.2",
     "diff": "8.0.3",
     "hono": "4.11.4"
-  },
-  "prisma": {
-    "seed": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' prisma/seed.ts"
   },
   "packageManager": "pnpm@10.34.5",
   "pnpm": {
