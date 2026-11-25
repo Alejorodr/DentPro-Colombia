@@ -175,7 +175,7 @@ export function AdminHomepageHeroStatsPanel() {
         <p className="text-sm text-slate-600 dark:text-slate-300">
           Son los datos cortos (ej. "500+ pacientes atendidos") que aparecen en una fila debajo del texto principal, en la
           portada del sitio. Cada estadística tiene una etiqueta (el número o dato) y una descripción corta debajo. Si no
-          activás ninguna, se muestran 3 estadísticas por defecto.
+          activas ninguna, se muestran 3 estadísticas por defecto.
         </p>
       </section>
 

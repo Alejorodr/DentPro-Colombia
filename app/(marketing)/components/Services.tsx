@@ -3,21 +3,12 @@
 import Link from "next/link";
 import { motion, useReducedMotion } from "motion/react";
 
-import { CheckCircle } from "@/components/ui/Icon";
+import { ArrowRight, CheckCircle } from "@/components/ui/Icon";
 
 import { fadeUpVariant, fadeUpVariantReduced, staggerContainerVariant, staggerItemVariant } from "@/lib/motion/variants";
 
 import type { MarketingIconName } from "./icon-types";
 import { resolveMarketingIcon } from "./icon-registry";
-
-const SERVICE_HREFS: Record<string, string> = {
-  "Limpieza y profilaxis": "/servicios/limpieza-dental",
-  "Ortodoncia digital": "/servicios/ortodoncia",
-  "Implantes y cirugía": "/servicios/implantes",
-  "Estética dental": "/servicios/estetica-dental",
-  "Endodoncia avanzada": "/servicios/endodoncia",
-  "Odontopediatría": "/servicios/odontopediatria",
-};
 
 interface ServiceItem {
   id: string;
@@ -25,6 +16,7 @@ interface ServiceItem {
   description: string;
   icon: MarketingIconName;
   highlights: string[];
+  detailHref: string | null;
 }
 
 interface ServicesProps {
@@ -60,7 +52,7 @@ export function ServicesSection({ badge, title, description, services }: Service
         >
           {services.map((service) => {
             const ServiceIcon = resolveMarketingIcon(service.icon);
-            const href = SERVICE_HREFS[service.title];
+            const href = service.detailHref;
 
             return (
               <motion.article
@@ -91,7 +83,16 @@ export function ServicesSection({ badge, title, description, services }: Service
                       </li>
                     ))}
                   </ul>
-                  <div className="mt-auto pt-6">
+                  <div className="mt-auto flex flex-col gap-3 pt-6">
+                    {href ? (
+                      <Link
+                        href={href}
+                        className="inline-flex items-center justify-center gap-1.5 text-sm font-semibold text-brand-indigo hover:text-brand-teal dark:text-accent-cyan dark:hover:text-brand-sky"
+                      >
+                        Conoce el tratamiento
+                        <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                      </Link>
+                    ) : null}
                     <Link href="/appointments/new" className="btn-secondary w-full justify-center text-sm">
                       Reservar cita
                     </Link>

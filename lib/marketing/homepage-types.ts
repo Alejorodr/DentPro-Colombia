@@ -32,6 +32,8 @@ type HomepageServiceContent = {
   description: string;
   icon: MarketingIconKey;
   highlights: string[];
+  /** Página de detalle en /servicios/[slug], o null si el servicio no tiene. */
+  detailHref: string | null;
 };
 
 type HomepageSpecialistContent = {

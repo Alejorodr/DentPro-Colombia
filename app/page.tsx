@@ -16,6 +16,7 @@ import { adaptHomepageContent, buildBookingChannels } from "@/lib/marketing/home
 import { getGoogleReviews } from "@/lib/google/google-reviews";
 import { HOMEPAGE_DEFAULT_CONTENT } from "@/lib/marketing/homepage-defaults";
 import { safeJsonLd } from "@/lib/security/json-ld";
+import { SITE_URL } from "@/lib/site/site-url";
 
 const DEFAULT_META_TITLE = "Odontología especializada en Chía | Agenda online";
 const DEFAULT_META_DESCRIPTION =
@@ -62,7 +63,7 @@ export default async function Home() {
     "@context": "https://schema.org",
     "@type": "Dentist",
     name: homepageContent.brand.name,
-    url: "https://dentprocolombia.com",
+    url: SITE_URL,
     telephone: phoneChannel ? `+${phoneChannel.value}` : "+573237968435",
     email: homepageContent.channels.find((c) => c.type === "EMAIL")?.value ?? "dentprocolombia@gmail.com",
     description:

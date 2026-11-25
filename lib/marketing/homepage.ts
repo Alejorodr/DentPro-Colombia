@@ -11,6 +11,7 @@ import {
   sanitizeMarketingIcon,
 } from "@/lib/marketing/homepage-defaults";
 import type { HomepageNormalizedContent } from "@/lib/marketing/homepage-types";
+import { serviceDetailHref } from "@/lib/marketing/service-detail-pages";
 
 function normalizeMapEmbed(url: string | null | undefined) {
   if (!url) {
@@ -176,6 +177,7 @@ async function loadHomepageContent(prisma: PrismaClient): Promise<HomepageNormal
         description: s.description ?? "",
         icon: sanitizeMarketingIcon(s.iconKey ?? "", "Sparkle"),
         highlights: s.homepageHighlights.map((h) => h.text),
+        detailHref: serviceDetailHref(s.detailSlug),
       })),
     },
     specialists: {

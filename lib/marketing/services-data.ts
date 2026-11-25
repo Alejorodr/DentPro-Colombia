@@ -36,7 +36,7 @@ export const SERVICES: ServiceData[] = [
       },
       {
         title: "Simulación virtual del resultado",
-        description: "Antes de iniciar el tratamiento podés ver cómo quedarán tus dientes.",
+        description: "Antes de iniciar el tratamiento puedes ver cómo quedarán tus dientes.",
       },
       {
         title: "Alineadores invisibles o brackets",
@@ -56,7 +56,7 @@ export const SERVICES: ServiceData[] = [
       {
         question: "¿Los alineadores invisibles son tan efectivos como los brackets?",
         answer:
-          "Para la mayoría de los casos, sí. Los alineadores tienen la ventaja de ser removibles y casi invisibles. Los brackets son preferibles para casos de alta complejidad. Nuestro ortodoncista evaluará cuál es mejor para vos.",
+          "Para la mayoría de los casos, sí. Los alineadores tienen la ventaja de ser removibles y casi invisibles. Los brackets son preferibles para casos de alta complejidad. Nuestro ortodoncista evaluará cuál es mejor para ti.",
       },
       {
         question: "¿A partir de qué edad se puede hacer ortodoncia?",
@@ -110,7 +110,7 @@ export const SERVICES: ServiceData[] = [
       {
         question: "¿El proceso de implantes es doloroso?",
         answer:
-          "La cirugía se realiza con anestesia local, por lo que no sentís dolor durante el procedimiento. En los días posteriores puede haber molestias leves que se manejan con analgésicos comunes.",
+          "La cirugía se realiza con anestesia local, por lo que no sientes dolor durante el procedimiento. En los días posteriores puede haber molestias leves que se manejan con analgésicos comunes.",
       },
       {
         question: "¿Cuánto tiempo tarda el proceso completo?",
@@ -169,7 +169,7 @@ export const SERVICES: ServiceData[] = [
       {
         question: "¿Puedo ver cómo quedaré antes de empezar?",
         answer:
-          "Sí. Trabajamos con diseño digital de sonrisa y mockup en resina que podés probar físicamente en la boca. Así confirmás el resultado antes de cualquier procedimiento definitivo.",
+          "Sí. Trabajamos con diseño digital de sonrisa y mockup en resina que puedes probar físicamente en la boca. Así confirmas el resultado antes de cualquier procedimiento definitivo.",
       },
     ],
     image: {
@@ -213,7 +213,7 @@ export const SERVICES: ServiceData[] = [
       {
         question: "¿Un tratamiento de conducto duele?",
         answer:
-          "Con la anestesia moderna, el procedimiento es prácticamente indoloro. Podés sentir presión pero no dolor agudo. Después de la sesión puede haber sensibilidad leve que cede en 1–3 días.",
+          "Con la anestesia moderna, el procedimiento es prácticamente indoloro. Puedes sentir presión pero no dolor agudo. Después de la sesión puede haber sensibilidad leve que cede en 1–3 días.",
       },
       {
         question: "¿Cuándo necesito un tratamiento de conducto?",
@@ -277,7 +277,7 @@ export const SERVICES: ServiceData[] = [
       {
         question: "¿Duele la limpieza dental?",
         answer:
-          "En la mayoría de los casos no. Puede haber sensibilidad si hay mucho sarro acumulado o encías inflamadas, pero es tolerable. Si tenés mucha sensibilidad te aplicamos gel anestésico previo.",
+          "En la mayoría de los casos no. Puede haber sensibilidad si hay mucho sarro acumulado o encías inflamadas, pero es tolerable. Si tienes mucha sensibilidad te aplicamos gel anestésico previo.",
       },
     ],
     image: {

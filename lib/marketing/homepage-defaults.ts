@@ -70,6 +70,7 @@ export const HOMEPAGE_DEFAULT_CONTENT: HomepageNormalizedContent = {
     services: [
       {
         id: "fallback-limpieza-profilaxis",
+        detailHref: "/servicios/limpieza-dental",
         title: "Limpieza y profilaxis",
         description: "Higiene profesional con ultrasonido y pulido remineralizante.",
         icon: "Sparkle",
@@ -81,6 +82,7 @@ export const HOMEPAGE_DEFAULT_CONTENT: HomepageNormalizedContent = {
       },
       {
         id: "fallback-ortodoncia-digital",
+        detailHref: "/servicios/ortodoncia",
         title: "Ortodoncia digital",
         description: "Alineadores invisibles y brackets autoligables según tus objetivos.",
         icon: "Smiley",
@@ -92,6 +94,7 @@ export const HOMEPAGE_DEFAULT_CONTENT: HomepageNormalizedContent = {
       },
       {
         id: "fallback-implantes-cirugia",
+        detailHref: "/servicios/implantes",
         title: "Implantes y cirugía",
         description: "Rehabilitación fija con implantes guiados por computadora.",
         icon: "Stethoscope",
@@ -103,6 +106,7 @@ export const HOMEPAGE_DEFAULT_CONTENT: HomepageNormalizedContent = {
       },
       {
         id: "fallback-estetica-dental",
+        detailHref: "/servicios/estetica-dental",
         title: "Estética dental",
         description: "Carillas cerámicas, blanqueamiento y diseño de sonrisa armónico.",
         icon: "DiamondsFour",
@@ -114,6 +118,7 @@ export const HOMEPAGE_DEFAULT_CONTENT: HomepageNormalizedContent = {
       },
       {
         id: "fallback-endodoncia-avanzada",
+        detailHref: "/servicios/endodoncia",
         title: "Endodoncia avanzada",
         description: "Tratamientos de conducto con microscopio y obturación termoplástica.",
         icon: "Tooth",
@@ -125,6 +130,7 @@ export const HOMEPAGE_DEFAULT_CONTENT: HomepageNormalizedContent = {
       },
       {
         id: "fallback-odontopediatria",
+        detailHref: "/servicios/odontopediatria",
         title: "Odontopediatría",
         description: "Prevención y tratamientos amigables para los más pequeños.",
         icon: "Baby",
@@ -257,7 +263,7 @@ export const HOMEPAGE_DEFAULT_CONTENT: HomepageNormalizedContent = {
     {
       question: "¿Cómo agendo una cita en DentPro?",
       answer:
-        "Podés reservar tu turno directamente en línea desde el botón 'Reservar turno' de esta página — el sistema confirma disponibilidad en tiempo real y te envía un correo de confirmación. También podés escribirnos por WhatsApp al 323 796 8435 o llamarnos al mismo número.",
+        "Puedes reservar tu turno directamente en línea desde el botón 'Reservar turno' de esta página — el sistema confirma disponibilidad en tiempo real y te envía un correo de confirmación. También puedes escribirnos por WhatsApp al 323 796 8435 o llamarnos al mismo número.",
     },
     {
       question: "¿Cuánto cuesta la primera consulta?",
@@ -267,7 +273,7 @@ export const HOMEPAGE_DEFAULT_CONTENT: HomepageNormalizedContent = {
     {
       question: "¿Atienden urgencias dentales?",
       answer:
-        "Sí. Reservamos cupos de urgencia todos los días de la semana. Si tenés dolor intenso, fractura o pérdida de una pieza, escribinos por WhatsApp y te damos turno el mismo día o al siguiente.",
+        "Sí. Reservamos cupos de urgencia todos los días de la semana. Si tienes dolor intenso, fractura o pérdida de una pieza, escribinos por WhatsApp y te damos turno el mismo día o al siguiente.",
     },
     {
       question: "¿Tienen convenios con seguros o EPS?",
@@ -277,7 +283,7 @@ export const HOMEPAGE_DEFAULT_CONTENT: HomepageNormalizedContent = {
     {
       question: "¿Qué debo llevar a mi primera cita?",
       answer:
-        "Documento de identidad, radiografías recientes (si tenés), y cualquier tratamiento o medicación que estés tomando actualmente. Si sos menor de edad, un acudiente debe acompañarte.",
+        "Documento de identidad, radiografías recientes (si tienes), y cualquier tratamiento o medicación que estés tomando actualmente. Si eres menor de edad, un acudiente debe acompañarte.",
     },
     {
       question: "¿Ofrecen planes de pago o financiación?",

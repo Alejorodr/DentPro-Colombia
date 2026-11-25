@@ -288,6 +288,7 @@ model Service {
   iconKey              String?
   showOnHomepage       Boolean               @default(false)
   homepageSortOrder    Int                   @default(0)
+  detailSlug           String?
   specialtyId          String?
   specialty            Specialty?            @relation(fields: [specialtyId], references: [id], onDelete: SetNull)
   appointments         Appointment[]

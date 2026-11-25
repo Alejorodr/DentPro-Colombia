@@ -34,7 +34,7 @@ export function FAQSection({ items }: FAQSectionProps) {
         >
           <span className="badge">Preguntas frecuentes</span>
           <h2 className="mt-4 text-3xl font-bold text-slate-900 dark:text-white">
-            Todo lo que necesitás saber
+            Todo lo que necesitas saber
           </h2>
           <p className="mt-3 text-lg text-slate-600 dark:text-slate-300">
             Respondemos las dudas más comunes antes de tu primera visita.
