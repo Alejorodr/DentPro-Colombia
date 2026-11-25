@@ -9,6 +9,8 @@ import { Table } from "@/app/portal/components/ui/Table";
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
 import { PASSWORD_POLICY_MESSAGE, PASSWORD_POLICY_REGEX } from "@/lib/auth/password-policy";
 import { STATUS_COLORS } from "@/app/portal/components/ui/statusColors";
+import { DocumentTypeSelect } from "@/components/ui/DocumentTypeSelect";
+import { DEFAULT_DOCUMENT_TYPE, formatDocument, isDocumentTypeCode, type DocumentTypeCode } from "@/lib/regulatory/colombia";
 
 const emptyForm = {
   name: "",
@@ -19,10 +21,13 @@ const emptyForm = {
   documentId: "",
 };
 
+const emptyDocumentType: DocumentTypeCode = DEFAULT_DOCUMENT_TYPE;
+
 type PatientRecord = {
   id: string;
   userId: string;
   phone?: string | null;
+  documentType?: string | null;
   documentId?: string | null;
   active: boolean;
   user: { name: string; lastName: string; email: string };
@@ -32,6 +37,7 @@ export function ReceptionistPatients({ canEditEmail = false }: { canEditEmail?: 
   const [patients, setPatients] = useState<PatientRecord[]>([]);
   const [query, setQuery] = useState("");
   const [form, setForm] = useState(emptyForm);
+  const [documentType, setDocumentType] = useState<DocumentTypeCode>(emptyDocumentType);
   const [saving, setSaving] = useState(false);
   const [editing, setEditing] = useState<PatientRecord | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -82,12 +88,14 @@ export function ReceptionistPatients({ canEditEmail = false }: { canEditEmail?: 
         password: form.password,
         role: "PACIENTE",
         phone: form.phone,
+        documentType,
         documentId: form.documentId,
       }),
     });
 
     if (response.ok) {
       setForm(emptyForm);
+      setDocumentType(emptyDocumentType);
       await loadPatients();
     } else {
       const body = (await response.json().catch(() => null)) as { error?: string } | null;
@@ -112,6 +120,7 @@ export function ReceptionistPatients({ canEditEmail = false }: { canEditEmail?: 
         lastName: editing.user.lastName,
         email: editing.user.email,
         phone: editing.phone,
+        documentType: isDocumentTypeCode(editing.documentType) ? editing.documentType : undefined,
         documentId: editing.documentId,
         active: editing.active,
       }),
@@ -182,6 +191,13 @@ export function ReceptionistPatients({ canEditEmail = false }: { canEditEmail?: 
               disabled={saving}
             />
           ))}
+          <DocumentTypeSelect
+            className="input h-11 text-sm"
+            aria-label="Tipo de documento"
+            value={documentType}
+            onValueChange={setDocumentType}
+            disabled={saving}
+          />
         </div>
         <button
           type="button"
@@ -216,7 +232,7 @@ export function ReceptionistPatients({ canEditEmail = false }: { canEditEmail?: 
                   {patient.user.name} {patient.user.lastName}
                 </td>
                 <td className="px-4 py-3">{patient.user.email}</td>
-                <td className="px-4 py-3">{patient.documentId ?? "-"}</td>
+                <td className="px-4 py-3 tabular-nums">{formatDocument(patient.documentType, patient.documentId) ?? "-"}</td>
                 <td className="px-4 py-3">
                   <span
                     className={`rounded-full px-3 py-1 text-xs font-semibold ${
@@ -291,6 +307,13 @@ export function ReceptionistPatients({ canEditEmail = false }: { canEditEmail?: 
                   }
                 />
               ))}
+              <DocumentTypeSelect
+                className="input h-11 text-sm"
+                aria-label="Tipo de documento"
+                value={isDocumentTypeCode(editing.documentType) ? editing.documentType : DEFAULT_DOCUMENT_TYPE}
+                onValueChange={(value) => setEditing((prev) => (prev ? { ...prev, documentType: value } : null))}
+                disabled={saving}
+              />
               <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                 <input
                   type="checkbox"

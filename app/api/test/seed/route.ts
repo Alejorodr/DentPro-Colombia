@@ -201,8 +201,8 @@ export async function POST(request: Request) {
 
     const patient = await prisma.patientProfile.upsert({
       where: { userId: patientUser.id },
-      update: { phone: "3005550001", documentId: "CC10001", active: true },
-      create: { userId: patientUser.id, phone: "3005550001", documentId: "CC10001", active: true },
+      update: { phone: "3005550001", documentType: "CC", documentId: "10001", active: true },
+      create: { userId: patientUser.id, phone: "3005550001", documentType: "CC", documentId: "10001", active: true },
     });
 
     const now = new Date();

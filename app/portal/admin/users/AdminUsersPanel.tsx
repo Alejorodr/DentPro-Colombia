@@ -12,6 +12,8 @@ import { ArrowLeft, ArrowRight } from "@/components/ui/Icon";
 import { RoleModal, type Specialty } from "./RoleModal";
 import { PatientDetailModal } from "./PatientDetailModal";
 import { SkeletonRows } from "@/app/portal/components/ui/Skeleton";
+import { DocumentTypeSelect } from "@/components/ui/DocumentTypeSelect";
+import { DEFAULT_DOCUMENT_TYPE, type DocumentTypeCode } from "@/lib/regulatory/colombia";
 
 type UserRecord = {
   id: string;
@@ -22,9 +24,10 @@ type UserRecord = {
   active: boolean;
   hasLocalPassword: boolean;
   _isGoogleUser: boolean;
-  patient?: { id?: string; phone?: string | null; documentId?: string | null } | null;
+  patient?: { id?: string; phone?: string | null; documentType?: string | null; documentId?: string | null } | null;
   professional?: {
     id: string;
+    rethusNumber?: string | null;
     specialty?: { id: string; name: string } | null;
     homepageBioShort?: string | null;
     homepageImageUrl?: string | null;
@@ -41,9 +44,11 @@ const defaultFormState = {
   lastName: "",
   role: "PACIENTE" as UserRole,
   phone: "",
+  documentType: DEFAULT_DOCUMENT_TYPE as DocumentTypeCode,
   documentId: "",
   specialtyId: "",
   slotDurationMinutes: "",
+  rethusNumber: "",
 };
 
 interface AdminUsersPanelProps {
@@ -248,7 +253,9 @@ export function AdminUsersPanel({ roleFilter, roleLock }: AdminUsersPanelProps) 
       lastName: formState.lastName,
       role: resolvedRole,
       phone: resolvedRole === "PACIENTE" ? formState.phone : undefined,
+      documentType: resolvedRole === "PACIENTE" ? formState.documentType : undefined,
       documentId: resolvedRole === "PACIENTE" ? formState.documentId : undefined,
+      rethusNumber: resolvedRole === "PROFESIONAL" && formState.rethusNumber.trim() ? formState.rethusNumber : undefined,
       specialtyId: resolvedRole === "PROFESIONAL" ? formState.specialtyId : undefined,
       slotDurationMinutes:
         resolvedRole === "PROFESIONAL" && formState.slotDurationMinutes
@@ -393,6 +400,17 @@ export function AdminUsersPanel({ roleFilter, roleLock }: AdminUsersPanelProps) 
               disabled={saving}
             />
           ) : null}
+          {(roleLock ?? formState.role) === "PROFESIONAL" ? (
+            <input
+              className="input h-11 text-sm"
+              placeholder="Número RETHUS (opcional)"
+              aria-label="Número RETHUS (opcional, se puede completar después)"
+              autoComplete="off"
+              value={formState.rethusNumber}
+              onChange={(event) => setFormState((prev) => ({ ...prev, rethusNumber: event.target.value }))}
+              disabled={saving}
+            />
+          ) : null}
           {(roleLock ?? formState.role) === "PACIENTE" ? (
             <input
               className="input h-11 text-sm"
@@ -403,9 +421,19 @@ export function AdminUsersPanel({ roleFilter, roleLock }: AdminUsersPanelProps) 
             />
           ) : null}
           {(roleLock ?? formState.role) === "PACIENTE" ? (
+            <DocumentTypeSelect
+              className="input h-11 text-sm"
+              aria-label="Tipo de documento"
+              value={formState.documentType}
+              onValueChange={(documentType) => setFormState((prev) => ({ ...prev, documentType }))}
+              disabled={saving}
+            />
+          ) : null}
+          {(roleLock ?? formState.role) === "PACIENTE" ? (
             <input
               className="input h-11 text-sm"
-              placeholder="Documento"
+              placeholder="Número de documento"
+              aria-label="Número de documento"
               value={formState.documentId}
               onChange={(event) => setFormState((prev) => ({ ...prev, documentId: event.target.value }))}
               disabled={saving}
@@ -534,6 +562,11 @@ export function AdminUsersPanel({ roleFilter, roleLock }: AdminUsersPanelProps) 
                             Google
                           </span>
                         )}
+                        {user.role === "PROFESIONAL" && user.professional && !user.professional.rethusNumber ? (
+                          <span className="inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold uppercase text-amber-800 dark:bg-amber-500/15 dark:text-amber-200">
+                            Sin RETHUS
+                          </span>
+                        ) : null}
                       </div>
                     </div>
                     <div className="flex flex-wrap gap-2">

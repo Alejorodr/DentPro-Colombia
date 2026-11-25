@@ -13,6 +13,7 @@ import { Prisma } from "@prisma/client";
 import { redactSensitiveAuthFields } from "@/lib/security/redaction";
 import { logAuditEvent } from "@/lib/audit";
 import { optionalImageUrl, optionalText } from "@/app/api/admin/homepage/_lib";
+import { documentTypeSchema, rethusNumberSchema } from "@/lib/regulatory/colombia";
 
 const updateUserSchema = z.object({
   email: z.string().trim().email().max(120).optional(),
@@ -21,10 +22,13 @@ const updateUserSchema = z.object({
   name: z.string().trim().min(1).max(120).optional(),
   lastName: z.string().trim().min(1).max(120).optional(),
   phone: z.string().trim().max(30).optional(),
+  documentType: documentTypeSchema.optional(),
   documentId: z.string().trim().max(40).optional(),
   active: z.boolean().optional(),
   specialtyId: z.string().uuid().optional(),
   slotDurationMinutes: z.number().int().min(5).max(240).nullable().optional(),
+  // undefined = no tocar; "" = borrar (el esquema lo convierte en null).
+  rethusNumber: rethusNumberSchema.optional(),
   homepageBioShort: optionalText(600).optional(),
   homepageImageUrl: optionalImageUrl().optional(),
   homepageImageAlt: optionalText(180).optional(),
@@ -167,6 +171,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
         data: {
           userId: id,
           phone: payload.phone?.trim() || null,
+          documentType: payload.documentType,
           documentId: payload.documentId?.trim() || null,
           active: typeof payload.active === "boolean" ? payload.active : true,
         },
@@ -176,6 +181,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
         where: { userId: id },
         data: {
           phone: payload.phone?.trim() || undefined,
+          documentType: payload.documentType,
           documentId: payload.documentId?.trim() || undefined,
           active: patientActive,
         },
@@ -206,6 +212,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
           user: { connect: { id } },
           specialty: { connect: { id: payload.specialtyId } },
           slotDurationMinutes: payload.slotDurationMinutes ?? null,
+          rethusNumber: payload.rethusNumber ?? null,
           active: professionalActive,
           homepageBioShort: payload.homepageBioShort,
           homepageImageUrl: payload.homepageImageUrl,
@@ -220,6 +227,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
         data: {
           specialty: payload.specialtyId ? { connect: { id: payload.specialtyId } } : undefined,
           slotDurationMinutes: payload.slotDurationMinutes ?? undefined,
+          rethusNumber: payload.rethusNumber,
           active: professionalActive,
           homepageBioShort: payload.homepageBioShort,
           homepageImageUrl: payload.homepageImageUrl,

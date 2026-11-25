@@ -85,6 +85,9 @@ const PROFESSIONAL_SEED = [
     name: "Laura",
     lastName: "Rojas",
     specialtyName: "Odontología General",
+    // Registro de demostración (DOG-34). Los demás profesionales quedan sin RETHUS
+    // para que se vea el aviso de dato pendiente.
+    rethusNumber: "DEMO-0001",
   },
   {
     email: "demo-profesional2@dentpro.co",
@@ -108,7 +111,7 @@ const PATIENT_SEED = [
     dateOfBirth: new Date(1992, 5, 12),
     gender: "Femenino",
     phone: "+57 310 555 9812",
-    documentId: "CC10928312",
+    documentId: "10928312",
     insuranceProvider: "Colsanitas Dental Plan",
     insuranceStatus: InsuranceStatus.ACTIVE,
     address: "Cra. 7 #13-180",
@@ -122,7 +125,7 @@ const PATIENT_SEED = [
     dateOfBirth: new Date(1988, 9, 4),
     gender: "Femenino",
     phone: "+57 313 222 1109",
-    documentId: "CC4488123",
+    documentId: "4488123",
     insuranceProvider: "Sura Odonto",
     insuranceStatus: InsuranceStatus.ACTIVE,
     address: "Av. Pradilla #12-40",
@@ -136,7 +139,7 @@ const PATIENT_SEED = [
     dateOfBirth: new Date(1985, 2, 21),
     gender: "Masculino",
     phone: "+57 320 771 2200",
-    documentId: "CC5589012",
+    documentId: "5589012",
     insuranceProvider: "Coomeva",
     insuranceStatus: InsuranceStatus.UNKNOWN,
     address: "Cra. 5 #12-30",
@@ -150,7 +153,7 @@ const PATIENT_SEED = [
     dateOfBirth: new Date(1997, 10, 2),
     gender: "Femenino",
     phone: "+57 301 662 1031",
-    documentId: "CC7722331",
+    documentId: "7722331",
     insuranceProvider: "Compensar",
     insuranceStatus: InsuranceStatus.ACTIVE,
     address: "Calle 9 #12-22",
@@ -164,7 +167,7 @@ const PATIENT_SEED = [
     dateOfBirth: new Date(1990, 8, 14),
     gender: "Femenino",
     phone: "+57 314 550 8844",
-    documentId: "CC3321129",
+    documentId: "3321129",
     insuranceProvider: "Sanitas Dental",
     insuranceStatus: InsuranceStatus.ACTIVE,
     address: "Av. Chilacos #8-88",
@@ -178,7 +181,7 @@ const PATIENT_SEED = [
     dateOfBirth: new Date(1979, 3, 19),
     gender: "Masculino",
     phone: "+57 311 902 3377",
-    documentId: "CC9902123",
+    documentId: "9902123",
     insuranceProvider: "Medisanitas",
     insuranceStatus: InsuranceStatus.INACTIVE,
     address: "Calle 4 #10-66",
@@ -331,11 +334,13 @@ async function ensureProfessional({
   name,
   lastName,
   specialtyName,
+  rethusNumber,
 }: {
   email: string;
   name: string;
   lastName: string;
   specialtyName: string;
+  rethusNumber?: string;
 }) {
   const passwordHash = await hashSeedPassword(getSeedEnv("PROFESSIONAL_SEED_PASSWORD") ?? "DentProDemo!1");
   const professional = await prisma.user.upsert({
@@ -357,6 +362,7 @@ async function ensureProfessional({
               name: specialtyName,
             },
           },
+          rethusNumber: rethusNumber ?? null,
           active: true,
         },
       },

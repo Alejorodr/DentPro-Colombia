@@ -1,5 +1,6 @@
 "use client";
 
+import { formatDocument } from "@/lib/regulatory/colombia";
 import { useEffect, useState } from "react";
 
 import { fetchWithRetry } from "@/lib/http";
@@ -11,6 +12,7 @@ import { SkeletonRows } from "@/app/portal/components/ui/Skeleton";
 type PatientDetail = {
   id: string;
   patientCode: string | null;
+  documentType?: string | null;
   documentId: string | null;
   phone: string | null;
   user: { name: string; lastName: string };
@@ -66,7 +68,7 @@ export function PatientDetailModal({ patientId, onClose }: { patientId: string; 
             </h3>
             {patient ? (
               <p className="text-sm text-slate-500 dark:text-slate-300">
-                Documento: {patient.documentId ?? "Sin documento"} · Teléfono: {patient.phone ?? "Sin teléfono"}
+                Documento: {formatDocument(patient.documentType, patient.documentId) ?? "Sin documento"} · Teléfono: {patient.phone ?? "Sin teléfono"}
               </p>
             ) : null}
           </div>
