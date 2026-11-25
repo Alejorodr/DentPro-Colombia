@@ -45,7 +45,8 @@ export function buildClinicalAttachmentStorageKey(params: {
 }): string {
   const { episodeId, filename } = params;
   const uuid = crypto.randomUUID();
-  return `clinical/${episodeId}/${uuid}-${filename}`;
+  // DOG-32: prefijo propio para los privados; `clinical/` queda solo para los adjuntos viejos.
+  return `clinical-private/${episodeId}/${uuid}-${filename}`;
 }
 
 export async function buildClinicalAttachmentChecksum(file: File): Promise<string> {

@@ -39,23 +39,106 @@ async function loadClinicalAttachments() {
   }) as unknown as Promise<ClinicalAttachmentRecord[]>;
 }
 
+type BlobInfo = { pathname: string; url: string; size: number };
+
+/**
+ * Hoy la subida también guarda en `clinical/…`, pero como privada (`access: "private"`),
+ * así que el prefijo no basta para saber si un adjunto está expuesto (DOG-32). Un blob
+ * está expuesto si su URL se puede leer sin credenciales: eso es lo que se migra.
+ */
+async function isPubliclyReadable(url: string) {
+  const response = await fetch(url, { method: "HEAD", cache: "no-store" });
+  return response.ok;
+}
+
+async function listLegacyPrefixBlobs() {
+  const { list } = await import("@vercel/blob");
+  const blobs = new Map<string, BlobInfo>();
+  let cursor: string | undefined;
+  do {
+    const page = await list({ prefix: PUBLIC_PREFIX, cursor, mode: "expanded" });
+    for (const blob of page.blobs) {
+      blobs.set(blob.pathname, blob);
+    }
+    cursor = page.hasMore ? page.cursor : undefined;
+  } while (cursor);
+  return blobs;
+}
+
+type Classification = {
+  exposed: Array<{ attachment: ClinicalAttachmentRecord; blob: BlobInfo }>;
+  privateUnderLegacyPrefix: string[];
+  missingInBlob: string[];
+  alreadyPrivatePrefix: number;
+};
+
+async function classify(attachments: ClinicalAttachmentRecord[]): Promise<Classification> {
+  const blobs = await listLegacyPrefixBlobs();
+  const result: Classification = { exposed: [], privateUnderLegacyPrefix: [], missingInBlob: [], alreadyPrivatePrefix: 0 };
+
+  for (const attachment of attachments) {
+    if (attachment.storageKey.startsWith(PRIVATE_PREFIX)) {
+      result.alreadyPrivatePrefix += 1;
+      continue;
+    }
+    const blob = blobs.get(attachment.storageKey.replace(/^\//, ""));
+    if (!blob) {
+      result.missingInBlob.push(attachment.id);
+      continue;
+    }
+    if (await isPubliclyReadable(blob.url)) {
+      result.exposed.push({ attachment, blob });
+    } else {
+      result.privateUnderLegacyPrefix.push(attachment.id);
+    }
+  }
+  return result;
+}
+
 async function run() {
   const execute = hasFlag("--execute");
   const attachments = await loadClinicalAttachments();
+  const underLegacyPrefix = attachments.filter((item) => !item.storageKey.startsWith(PRIVATE_PREFIX)).length;
+
+  if (!execute && !process.env.BLOB_READ_WRITE_TOKEN) {
+    console.log(
+      JSON.stringify(
+        {
+          mode: "dry-run (solo base de datos)",
+          clinicalAttachments: attachments.length,
+          underClinicalPrefix: underLegacyPrefix,
+          alreadyPrivatePrefix: attachments.length - underLegacyPrefix,
+          note:
+            "Los adjuntos bajo clinical/ pueden ser privados (las subidas actuales usan ese prefijo). Define BLOB_READ_WRITE_TOKEN para verificar cuáles están realmente expuestos.",
+        },
+        null,
+        2,
+      ),
+    );
+    return;
+  }
+
+  const classification = await classify(attachments);
+  const summary = {
+    clinicalAttachments: attachments.length,
+    exposed: classification.exposed.length,
+    privateUnderClinicalPrefix: classification.privateUnderLegacyPrefix.length,
+    alreadyPrivatePrefix: classification.alreadyPrivatePrefix,
+    missingInBlob: classification.missingInBlob.length,
+    missingIds: classification.missingInBlob,
+  };
 
   if (!execute) {
-    const alreadyPrivate = attachments.filter((item) => item.storageKey.startsWith(PRIVATE_PREFIX)).length;
-    const legacy = attachments.length - alreadyPrivate;
     console.log(
       JSON.stringify(
         {
           mode: "dry-run",
-          clinicalAttachments: attachments.length,
-          alreadyPrivate,
-          requiringInventoryOrMigration: legacy,
-          publicPrefix: PUBLIC_PREFIX,
-          privatePrefix: PRIVATE_PREFIX,
-          nextStep: "Review this inventory and run with --execute plus SECURITY_BLOB_MIGRATION_APPROVED=1 only against isolated storage.",
+          ...summary,
+          exposedIds: classification.exposed.map((item) => item.attachment.id),
+          nextStep:
+            classification.exposed.length === 0
+              ? "No hay adjuntos expuestos: no hace falta migrar."
+              : "Respalda la base (branch de Neon) y corre con --execute y SECURITY_BLOB_MIGRATION_APPROVED=1.",
         },
         null,
         2,
@@ -68,36 +151,12 @@ async function run() {
     throw new Error("Refusing to migrate: set SECURITY_BLOB_MIGRATION_APPROVED=1 after reviewing the dry-run.");
   }
 
-  const { del, list, put } = await import("@vercel/blob");
-  const blobs = new Map<string, { pathname: string; url: string; size: number }>();
-  let cursor: string | undefined;
-
-  do {
-    const page = await list({ prefix: PUBLIC_PREFIX, cursor, mode: "expanded" });
-    for (const blob of page.blobs) {
-      blobs.set(blob.pathname, blob);
-    }
-    cursor = page.hasMore ? page.cursor : undefined;
-  } while (cursor);
-
+  const { del, put } = await import("@vercel/blob");
   const prisma = getPrismaClient();
   let migrated = 0;
-  let skipped = 0;
-  const pending: string[] = [];
 
-  for (const attachment of attachments) {
-    if (attachment.storageKey.startsWith(PRIVATE_PREFIX)) {
-      skipped += 1;
-      continue;
-    }
-
-    const source = blobs.get(attachment.storageKey);
-    if (!source) {
-      pending.push(attachment.id);
-      continue;
-    }
-
-    const response = await fetch(source.url);
+  for (const { attachment, blob } of classification.exposed) {
+    const response = await fetch(blob.url, { cache: "no-store" });
     if (!response.ok) {
       throw new Error(`Unable to read source blob for attachment ${attachment.id}: HTTP ${response.status}`);
     }
@@ -118,11 +177,11 @@ async function run() {
       where: { id: attachment.id },
       data: { storageKey: target.pathname },
     });
-    await del(source.url);
+    await del(blob.url);
     migrated += 1;
   }
 
-  console.log(JSON.stringify({ mode: "execute", migrated, skipped, pending: pending.length, pendingIds: pending }, null, 2));
+  console.log(JSON.stringify({ mode: "execute", migrated, ...summary }, null, 2));
 }
 
 run().catch((error) => {

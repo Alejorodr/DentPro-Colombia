@@ -49,7 +49,7 @@ If your provider requires libpq-compatible parameters:
 
 ## Migración de adjuntos clínicos
 - `ClinicalAttachment.data` quedó como columna nullable y obsoleta: la app ya no la lee ni la escribe, los binarios viven en Vercel Blob privado.
-- Los adjuntos que sigan en el prefijo público `clinical/` se migran con `scripts/security/migrate-clinical-blobs.ts` (ver DOG-32).
+- Los adjuntos clínicos expuestos (URL legible sin credenciales) se migran con `scripts/security/migrate-clinical-blobs.ts` (ver DOG-32). Desde DOG-32 las subidas nuevas usan `clinical-private/`; las anteriores siguen en `clinical/` y pueden ser privadas: el script verifica cada una.
 
 ## Notes
 - Nunca commitear `.env` ni `.env.production`; solo mantener `.env.example` con placeholders.

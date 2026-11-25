@@ -81,6 +81,7 @@ describe("POST /api/clinical/episodes/[episodeId]/attachments — magic bytes", 
 
     expect(response.status).toBe(201);
     expect(mockPut).toHaveBeenCalledTimes(1);
+    expect(mockPut.mock.calls[0][0]).toMatch(/^clinical-private\/ep-1\//);
   });
 
   it("rechaza con 400 un HTML renombrado como PDF y no lo sube", async () => {
