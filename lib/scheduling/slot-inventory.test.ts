@@ -124,4 +124,54 @@ describe("refreshFutureInventoryForProfessional", () => {
     expect(result).toMatchObject({ removed: 0, created: 0 });
     expect(tx.timeSlot.deleteMany).not.toHaveBeenCalled();
   });
+
+  it("keeps today's grid aligned to the schedule start when refreshed mid-day (DOG-65)", async () => {
+    // Horario lunes 9:00–11:00 en Bogotá (14:00Z–16:00Z), turnos de 45 min → 14:00Z y 14:45Z.
+    // La regeneración corre a las 14:20Z: antes la grilla arrancaba en ese instante (14:20, 15:05)
+    // y borraba el turno válido de las 14:45, con lo que una reserva en curso recibía 404.
+    const kept = { id: "slot-1445", startAt: new Date("2026-03-30T14:45:00.000Z"), endAt: new Date("2026-03-30T15:30:00.000Z") };
+    const tx = {
+      timeSlot: {
+        findMany: vi.fn().mockResolvedValue([kept]),
+        deleteMany: vi.fn(),
+        createMany: vi.fn().mockResolvedValue({ count: 0 }),
+      },
+    };
+    const prismaMock = {
+      professionalProfile: {
+        findUnique: vi.fn().mockResolvedValue({
+          id: "prof-1",
+          active: true,
+          slotDurationMinutes: 45,
+          specialty: { defaultSlotDurationMinutes: 45 },
+        }),
+      },
+      professionalWorkingSchedule: {
+        findMany: vi.fn().mockResolvedValue([{ id: "sched-1", dayOfWeek: 1, startTime: "09:00", endTime: "11:00", effectiveFrom: null, effectiveTo: null }]),
+      },
+      professionalScheduleAdjustment: { findMany: vi.fn().mockResolvedValue([]) },
+      professionalService: { findMany: vi.fn().mockResolvedValue([{ appointmentDurationMinutes: 45, bufferBeforeMinutes: 0, bufferAfterMinutes: 0, service: { durationMinutes: 45 } }]) },
+      professionalUnavailability: { findMany: vi.fn().mockResolvedValue([]) },
+      appointment: { findMany: vi.fn().mockResolvedValue([]) },
+      clinicHoliday: { findMany: vi.fn().mockResolvedValue([]) },
+      $transaction: vi.fn(async (cb: (trx: typeof tx) => unknown) => cb(tx)),
+    } as any;
+
+    const result = await refreshFutureInventoryForProfessional({
+      professionalId: "prof-1",
+      rangeStart: new Date("2026-03-30T14:00:00.000Z"),
+      rangeEnd: new Date("2026-03-31T05:00:00.000Z"),
+      now: new Date("2026-03-30T14:20:00.000Z"),
+      prisma: prismaMock,
+    });
+
+    expect(tx.timeSlot.deleteMany).not.toHaveBeenCalled();
+    expect(result).toMatchObject({ removed: 0 });
+    // Solo se materializa el turno que todavía no empezó, alineado a la grilla del horario.
+    expect(tx.timeSlot.createMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: [expect.objectContaining({ startAt: kept.startAt, endAt: kept.endAt })],
+      }),
+    );
+  });
 });
