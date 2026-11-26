@@ -25,7 +25,7 @@ test.describe("Clinical cross-role flows", () => {
       await expect(page.getByText(/Estado actualizado correctamente/i)).toBeVisible();
     }
 
-    await expect(page.getByTestId(E2E_TEST_IDS.receptionistActivityFeed)).toBeVisible();
+    await expect(page.getByTestId(E2E_TEST_IDS.receptionistActivityFeed).filter({ visible: true })).toBeVisible();
   });
 
   test("recepción consulta centro de actividad y paginación", async ({ page, context, request }) => {
@@ -44,11 +44,12 @@ test.describe("Clinical cross-role flows", () => {
   test("paciente y recepción navegan sus portales operativos", async ({ page, context, request }) => {
     await prepareRoleContext({ request, context, role: "PACIENTE" });
     await openRolePortal({ role: "PACIENTE", page });
-    await expect(page.getByTestId(E2E_TEST_IDS.clientDashboardPage)).toBeVisible();
+    await expect(page.getByTestId(E2E_TEST_IDS.clientDashboardPage).filter({ visible: true })).toBeVisible();
 
     await prepareRoleContext({ request, context, role: "RECEPCIONISTA" });
     await openReceptionistSchedule(page);
     await expect(getVisibleByTestId(page, E2E_TEST_IDS.receptionistSchedulePage)).toBeVisible();
-    await expect(page.getByText(/Turnos ordenados por hora/i)).toBeVisible();
+    // DOG-65: durante el streaming React deja una copia oculta del contenido (igual que DOG-48).
+    await expect(page.getByText(/Turnos ordenados por hora/i).filter({ visible: true })).toBeVisible();
   });
 });

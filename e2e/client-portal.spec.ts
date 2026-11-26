@@ -130,7 +130,8 @@ test("patient can book an appointment from the portal", async ({
   );
   await page.getByTestId(E2E_TEST_IDS.confirmAppointment).click();
   const response = await responsePromise;
-  expect(response.status()).toBe(201);
+  // DOG-65: con el cuerpo en el mensaje, un 404 dice cuál fue (slot, servicio o perfil).
+  expect(response.status(), await response.text()).toBe(201);
   const createdAppointment = (await response.json()) as { id?: string };
   expect(createdAppointment.id).toBeTruthy();
 

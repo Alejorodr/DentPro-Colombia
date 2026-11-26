@@ -80,8 +80,9 @@ function buildWorkingIntervals(params: {
 
       if (endAt <= dateStart || startAt >= dateEnd || endAt <= startAt) continue;
 
+      // DOG-65: el inicio no se recorta a `dateStart`; la grilla parte de la hora real del turno.
       intervals.push({
-        startAt: startAt < dateStart ? dateStart : startAt,
+        startAt,
         endAt: endAt > dateEnd ? dateEnd : endAt,
       });
     }
@@ -101,7 +102,7 @@ function buildWorkingIntervals(params: {
 
       if (endAt <= dateStart || startAt >= dateEnd || endAt <= startAt) continue;
       intervals.push({
-        startAt: startAt < dateStart ? dateStart : startAt,
+        startAt,
         endAt: endAt > dateEnd ? dateEnd : endAt,
       });
     }
@@ -253,7 +254,11 @@ export async function refreshFutureInventoryForProfessional(params: {
     return Math.min(minValue, total);
   }, Number.POSITIVE_INFINITY);
   const slotDuration = Number.isFinite(duration) && duration > 0 ? duration : fallbackDuration;
-  const slots = buildSlotsFromIntervals(effective, slotDuration);
+  // DOG-65: la grilla se arma desde el inicio del turno y después se descartan los horarios que ya
+  // empezaron. Antes la grilla de hoy arrancaba en `rangeStart` (el instante de la regeneración):
+  // cada refresco movía los horarios libres de hoy a horas corridas con IDs nuevos, y una reserva
+  // en curso recibía 404 "Slot no encontrado".
+  const slots = buildSlotsFromIntervals(effective, slotDuration).filter((slot) => slot.startAt >= rangeStart);
 
   // DOG-39: solo se borran los horarios libres que ya no corresponden al inventario nuevo.
   // Antes se borraban todos y se recreaban con IDs nuevos: un paciente que había elegido
