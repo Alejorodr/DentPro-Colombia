@@ -52,7 +52,10 @@ export default async function Home() {
       initials: marketingContent.brand.initials,
       logoUrl: marketingContent.brand.logoUrl ?? undefined,
     },
-    links: homepageContent.navLinks,
+    // DOG-62: sin la sección de especialistas, su enlace del menú no llevaría a nada.
+    links: homepageContent.navLinks.filter(
+      (link) => homepageContent.showSpecialists || link.href !== "#especialistas",
+    ),
     cta: NAV_CTA,
     login: NAV_LOGIN,
   };
@@ -85,7 +88,7 @@ export default async function Home() {
       {
         "@type": "OpeningHoursSpecification",
         dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
-        opens: "08:00",
+        opens: "09:00",
         closes: "19:00",
       },
     ],

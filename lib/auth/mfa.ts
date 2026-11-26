@@ -6,11 +6,11 @@ import type { UserRole } from "@/lib/auth/roles";
  * Reglas del segundo factor (DOG-28). Obligatorio para los roles que ven datos clínicos o
  * administrativos de todos los pacientes.
  */
-export const MFA_REQUIRED_ROLES: readonly UserRole[] = ["ADMINISTRADOR", "PROFESIONAL"];
+const MFA_REQUIRED_ROLES: readonly UserRole[] = ["ADMINISTRADOR", "PROFESIONAL"];
 
 export const MFA_ISSUER = "DentPro Colombia";
 export const MFA_PAGE_PATH = "/auth/mfa";
-export const BACKUP_CODE_COUNT = 10;
+const BACKUP_CODE_COUNT = 10;
 
 export function requiresMfa(role: UserRole | null | undefined): boolean {
   return !!role && MFA_REQUIRED_ROLES.includes(role);

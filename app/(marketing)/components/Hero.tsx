@@ -64,13 +64,15 @@ export function Hero({
       ref={heroRef}
       className="hero z-10 overflow-visible! bg-hero-light pt-12 pb-24 transition-colors duration-500 dark:bg-hero-dark sm:pt-12 sm:pb-24 md:pt-16 md:pb-28 lg:pt-20 lg:pb-32"
     >
-      <div className="container mx-auto grid items-center gap-12 px-6 md:gap-14 lg:grid-cols-2 lg:gap-16">
+      {/* DOG-62: grid-cols-1 (minmax(0,1fr)) y min-w-0 en los hijos: sin eso, un hijo ancho estiraba la
+          columna implícita más allá de la pantalla en celulares y cortaba el texto. */}
+      <div className="container mx-auto grid grid-cols-1 items-center gap-12 px-4 sm:px-6 md:gap-14 lg:grid-cols-2 lg:gap-16">
         {/* Deliberately un-animated: this block is the page's LCP element. Framer Motion bakes
             `initial` into the inline style during SSR, so any entrance fade would ship the hero
             copy at opacity:0 in the server HTML (blank hero until hydration, and permanently
             blank without JS). Scroll-reveal rationale does not apply above the fold. */}
-        <div className="relative z-10 space-y-8" data-hero-text-panel>
-          <h1 className="max-w-2xl text-4xl font-bold leading-tight text-slate-900 dark:text-white md:text-5xl">
+        <div className="relative z-10 min-w-0 space-y-8" data-hero-text-panel>
+          <h1 className="max-w-2xl text-balance text-[2rem] font-bold sm:text-4xl leading-tight text-slate-900 dark:text-white md:text-5xl">
             {title}
           </h1>
           <p className="max-w-xl text-lg text-slate-600 dark:text-slate-200">{description}</p>
@@ -95,7 +97,7 @@ export function Hero({
           </dl>
         </div>
         <motion.div
-          className="relative isolate mx-auto w-full max-w-[31rem] lg:max-h-[600px] lg:scale-95 xl:max-h-[640px] xl:scale-[0.98]"
+          className="relative isolate mx-auto w-full min-w-0 max-w-[31rem] lg:max-h-[600px] lg:scale-95 xl:max-h-[640px] xl:scale-[0.98]"
           style={{ y: parallaxY }}
         >
           <div className="relative z-10">

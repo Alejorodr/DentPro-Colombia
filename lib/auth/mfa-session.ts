@@ -13,11 +13,7 @@ import { getInferredAuthBaseUrl, getSessionCookieName, shouldUseSecureCookies } 
 /** Igual al `session.maxAge` por defecto de Auth.js (30 días); authConfig no lo cambia. */
 const SESSION_MAX_AGE_SECONDS = 30 * 24 * 60 * 60;
 
-export const MFA_VERIFIED_CLAIM = "mfaVerified";
-
-export function isSessionMfaVerified(token: Record<string, unknown> | null | undefined): boolean {
-  return token?.[MFA_VERIFIED_CLAIM] === true;
-}
+const MFA_VERIFIED_CLAIM = "mfaVerified";
 
 export async function markSessionMfaVerified(): Promise<boolean> {
   const cookieStore = await cookies();

@@ -96,7 +96,7 @@ export function ContactSection({
 
   return (
     <section id="contacto" className="bg-slate-900 py-20 text-white transition-colors duration-500 dark:bg-surface-base">
-      <div className="container mx-auto grid gap-12 px-6 lg:grid-cols-3">
+      <div className="container mx-auto grid grid-cols-1 gap-12 px-4 sm:px-6 lg:grid-cols-3 [&>*]:min-w-0">
         <motion.div
           className="space-y-6"
           initial="hidden"
@@ -156,7 +156,7 @@ export function ContactSection({
         >
           <h3 className="text-xl font-semibold">{supportTitle}</h3>
           <p className="mt-2 text-sm text-slate-300">
-            Nuestro equipo de Patient Care está listo para acompañarte antes, durante y después de cada visita.
+            Nuestro equipo de atención al paciente está listo para acompañarte antes, durante y después de cada visita.
           </p>
           <ul className="mt-6 space-y-4 text-sm text-slate-200">
             {supportItems.map((item) => {

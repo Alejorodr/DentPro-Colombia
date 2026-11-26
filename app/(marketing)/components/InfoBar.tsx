@@ -60,13 +60,13 @@ export function InfoBar({ location, schedule, channels, socials, googleRating }:
 
   return (
     <div className="border-b border-white/60 bg-white/80 text-sm text-slate-600 backdrop-blur-xs transition-colors duration-300 dark:border-surface-muted/60 dark:bg-surface-base/90 dark:text-slate-200">
-      <div className="container mx-auto flex flex-col gap-3 px-6 py-3 lg:flex-row lg:items-center lg:justify-between">
+      <div className="container mx-auto flex flex-col gap-3 px-4 py-2 sm:px-6 sm:py-3 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
           <span className="inline-flex items-center gap-2 rounded-full bg-brand-light/80 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-brand-indigo shadow-xs dark:bg-surface-muted/80 dark:text-accent-cyan">
             <LocationIcon className="h-4 w-4" weight="fill" aria-hidden="true" />
             {location.text}
           </span>
-          <span className="inline-flex items-center gap-2 text-slate-500 dark:text-slate-300">
+          <span className="hidden items-center gap-2 text-slate-500 sm:inline-flex dark:text-slate-300">
             <ScheduleIcon className="h-4 w-4" weight="fill" aria-hidden="true" />
             {schedule.text}
           </span>
@@ -94,7 +94,8 @@ export function InfoBar({ location, schedule, channels, socials, googleRating }:
             )
           ) : null}
         </div>
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+        {/* DOG-62: en celular, horario, canales y redes se repiten en contacto y en el botón flotante. */}
+        <div className="hidden flex-wrap items-center gap-x-4 gap-y-2 sm:flex">
           <div className="flex items-center gap-2 text-slate-400">
           {channels.map((channel) => {
             const ChannelIcon = resolveMarketingIcon(CHANNEL_ICON[channel.type]);

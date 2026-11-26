@@ -7,7 +7,7 @@ import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 
 const BASE32_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
 export const TOTP_PERIOD_SECONDS = 30;
-export const TOTP_DIGITS = 6;
+const TOTP_DIGITS = 6;
 /** Pasos aceptados antes y después del actual, para tolerar relojes desfasados (±30 s). */
 const DRIFT_STEPS = 1;
 

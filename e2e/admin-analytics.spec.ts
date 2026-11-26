@@ -10,7 +10,7 @@ test.describe("Admin analytics dashboard", () => {
 
     await page.goto("/portal/admin");
 
-    await expect(page.getByTestId("admin-dashboard-title")).toBeVisible();
+    await expect(page.getByTestId("admin-dashboard-title").filter({ visible: true })).toBeVisible();
 
     await expect(page.getByTestId("admin-kpi-appointments")).toContainText("Citas del período");
     await expect(page.getByTestId("admin-kpi-appointments")).toContainText(/^\D*\d+/m);

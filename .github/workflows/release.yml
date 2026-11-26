@@ -48,7 +48,7 @@ jobs:
 
       - name: Create or update release PR
         id: changesets
-        uses: changesets/action@c47fa68bd43bb8ae0bae7e558622593deebf5955 # v2.0.0-next.3 (commit)
+        uses: changesets/action@ae32849d5ba541f9ae29e40e22a623bc13562f51 # v2.1.2
         with:
           version-script: pnpm run version-packages
           commit-message: "chore(release): version packages"
@@ -59,8 +59,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      # Se decide por la versión de package.json y no por el mensaje del commit: los releases se
+      # mergean con merge commit (DOG-51), así que el último commit es "Merge pull request #…".
+      # Si la etiqueta de la versión actual ya existe (cualquier push que no sube versión), no hace nada.
       - name: Create Git tag and GitHub release
-        if: "${{ github.event_name == 'push' && startsWith(github.event.head_commit.message, 'chore(release): version packages') }}"
+        if: "${{ github.event_name == 'push' }}"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |

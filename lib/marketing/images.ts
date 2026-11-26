@@ -78,7 +78,15 @@ export function buildMarketingImageStorageKey(folder: MarketingUploadFolder, san
 export async function uploadPublicMarketingImage(file: File | Buffer, key: string, contentType: string) {
   const { put } = await import("@vercel/blob");
   const result = await withAbortTimeout(
-    (abortSignal) => put(key, file, { access: "public", addRandomSuffix: false, contentType, abortSignal }),
+    (abortSignal) =>
+      put(key, file, {
+        access: "public",
+        addRandomSuffix: false,
+        contentType,
+        abortSignal,
+        // Store público propio (DOG-54): el de BLOB_READ_WRITE_TOKEN es privado, para adjuntos clínicos.
+        token: process.env.CMS_BLOB_READ_WRITE_TOKEN,
+      }),
     BLOB_UPLOAD_TIMEOUT_MS,
   );
 

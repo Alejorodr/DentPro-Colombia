@@ -95,7 +95,7 @@ design-system/            # Sistema de diseño exportado desde Claude Design
 
 ### Moneda y fechas
 - Precios: `Intl.NumberFormat("es-CO", { style: "currency", currency: "COP" })` — sin decimales: `$1.250.000`.
-- Fechas: `Lun–Sáb 8:00–19:00`, `Sáb 14 dic · 9:00 a. m.`
+- Fechas: `Lun–Sáb 9:00–19:00`, `Sáb 14 dic · 9:00 a. m.`
 - Teléfono: `+57 323 796 8435`
 - Zona horaria: todo instante (citas, registros, notificaciones) se formatea con `timeZone: CLINIC_TIME_ZONE` (`America/Bogota`, en `lib/dates/tz.ts`). El servidor de Vercel corre en UTC: sin la zona, las horas salen 5 horas corridas. Solo los días de calendario armados en el navegador (selectores de fecha) van sin zona.
 
@@ -145,7 +145,12 @@ pnpm secrets:scan -- staged   # solo lo preparado para commit
 - **`main`** = última versión publicada y estable (lo que está en producción). Solo recibe releases.
 - **`develop`** = versión local más nueva: acumula los tickets terminados y probados. Se sube a GitHub **solo como respaldo** (no dispara CI). Vercel crea un preview de cada push a `develop`, conectado a la rama Dev de Neon (DOG-7).
 - **Por ticket:** rama corta desde `develop` (`feat/DOG-123-descripcion`, `fix/DOG-124-...`), verificación local completa (lint, typecheck, test, build y E2E si toca flujos), changeset (`pnpm changeset`) y merge a `develop` en local.
-- **Release:** solo con aprobación explícita del dueño. Un único PR `develop` → `main`, CI verde, merge, `pnpm version-packages` y etiqueta `vX.Y.Z`.
+- **Estados en Linear (DOG-59):** `Todo → In Progress → En develop → Done`. **En develop** = integrado y verificado en local, todavía no en producción. **Done** = en `main`, desplegado y verificado en producción. Un ticket nunca pasa a Done por estar solo en `develop`.
+- **Sección "Para producción" en cada ticket:** se escribe al pasar a En develop. Incluye migraciones, variables nuevas, riesgos, datos a cargar y qué probar en producción, o "Sin pasos especiales" si no aplica. No se abre un segundo ticket por cambio.
+- **Ticket del release:** lista los tickets que entran, junta sus secciones "Para producción" en un solo checklist, y cuelga como sub-tickets cada fallo, desvío o alerta del release, el CI de `main` o el deploy. Cuando la verificación en producción pasa, sus tickets van de En develop a Done y después se cierra el release. Si hay trabajo propio en producción (script sobre la base, carga de datos, recurso con costo), va en un sub-ticket aparte, con responsable.
+- **Todo fallo lleva ticket:** cualquier fallo, desvío o alerta (CI, deploy, producción, scripts, CodeQL, Dependabot) se documenta en Linear al detectarlo, aunque se arregle enseguida. No se cierra hasta verificar el arreglo donde falló. La etiqueta **`Producción`** marca lo que afecta o puede afectar a usuarios reales.
+- **Saneamiento (DOG-61):** todo archivo, documento, export, dependencia o línea sin uso que se detecte lleva un ticket con la etiqueta `Chore`, aunque se arregle en el momento. Va un ticket por detección (una corrida de knip o la revisión de un módulo), no uno por archivo. El ticket lleva una tabla con la decisión de cada hallazgo y su motivo: **Eliminar**, **Corregir** o **Conservar** (los falsos positivos se ignoran en `knip.jsonc` con un comentario). Si un hallazgo resulta ser un bug, va en un ticket aparte. Antes de cada release se corre `DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:54329/dentpro_e2e pnpm dlx knip@5` sobre `develop`.
+- **Release:** solo con aprobación explícita del dueño. Un único PR `develop` → `main`, CI verde y merge con **merge commit, nunca squash** (DOG-51: el squash separa las historias y hace reaparecer changesets ya publicados). Después, el PR `chore(release): version packages` (también con merge commit) y el workflow crea la etiqueta `vX.Y.Z`. Por último, `main` se trae a `develop` (`git merge origin/main`). El PR menciona el ticket del release solo en el cuerpo (`Refs DOG-123`), no en el título, para que la integración con GitHub no lo cierre al mergear (DOG-55). Paso a paso en `docs/RELEASES.md`.
 - **Hotfix urgente de producción:** rama desde `main`, PR directo a `main`, y luego merge de `main` en `develop`.
 - **Dependabot:** mensual y agrupado; sus PRs se unifican en el siguiente release. Las alertas de seguridad se atienden aparte.
 - **Base local:** `.env.local` apunta a la branch **Dev** de Neon (base `neondb`; la shadow de Prisma es `prisma_shadow` en la misma branch). Nunca a producción: las URLs de producción viven fuera del repo, en `~/.dentpro/prod.env`, y solo se usan en los pasos del release (DOG-41).
@@ -163,7 +168,7 @@ pnpm secrets:scan -- staged   # solo lo preparado para commit
 6. Odontopediatría
 
 **Sede**: Cra. 7 #13-180, Chía, Cundinamarca · **WhatsApp**: +57 323 796 8435  
-**Horario**: Lun–Sáb 8:00–19:00 · Domingos y festivos con cita previa
+**Horario**: Lun–Sáb 9:00–19:00 · Domingos y festivos con cita previa
 
 ---
 

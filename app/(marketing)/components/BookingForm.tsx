@@ -169,10 +169,10 @@ export function BookingFormSection({
             <div className="mt-8 grid gap-4 rounded-2xl border border-white/25 bg-white/10 p-5" data-testid="availability-block">
               <Link
                 href="/appointments/new"
-                className="flex flex-wrap items-center justify-center gap-3 rounded-2xl bg-white px-6 py-4 text-base font-bold text-brand-teal shadow-md transition hover:bg-brand-light dark:bg-accent-cyan dark:text-slate-900 dark:hover:bg-accent-cyan/90"
+                className="flex flex-wrap items-center justify-center gap-3 rounded-2xl bg-white px-4 py-4 text-center text-base font-bold text-brand-teal sm:px-6 shadow-md transition hover:bg-brand-light dark:bg-accent-cyan dark:text-slate-900 dark:hover:bg-accent-cyan/90"
               >
                 Ver disponibilidad y reservar
-                <span className="rounded-full border border-brand-teal/30 bg-brand-light px-2 py-0.5 text-xs font-semibold text-brand-teal">
+                <span className="whitespace-nowrap rounded-full border border-brand-teal/30 bg-brand-light px-2 py-0.5 text-xs font-semibold text-brand-teal">
                   Confirma en segundos
                 </span>
               </Link>
