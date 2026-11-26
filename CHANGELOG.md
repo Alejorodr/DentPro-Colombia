@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.0.2
+
+### Patch Changes
+
+- 1e44828: Las reseñas de Google del hero ya no se salen de la pantalla en celulares de 320 px (DOG-66).
+
 ## 2.0.1
 
 ### Patch Changes
