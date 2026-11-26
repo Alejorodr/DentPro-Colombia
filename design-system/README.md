@@ -40,7 +40,7 @@ Services offered (from `lib/marketing/homepage-defaults.ts`):
 - Endodoncia avanzada (root canal under microscope)
 - Odontopediatría (pediatric)
 
-Operating hours: **Lun–Sáb 8:00–19:00 · Domingos y festivos con cita previa**. WhatsApp +57 323 796 8435.
+Operating hours: **Lun–Sáb 9:00–19:00 · Domingos y festivos con cita previa**. WhatsApp +57 323 796 8435.
 
 ### Two products in one codebase
 
@@ -79,7 +79,7 @@ DentPro writes like a **modern Colombian dental clinic** that wants to feel both
 - CTAs are **verbs, tú-form**: `Agenda tu cita`, `Ver disponibilidad`, `Te contactamos`, `Reservar turno`, `Solicitar agenda`, `Iniciar sesión`.
 
 ### Numbers, dates, money
-- Dates `es-CO`: `Lun–Sáb 8:00-19:00`, `Sáb 14 dic · 9:00 a. m.`
+- Dates `es-CO`: `Lun–Sáb 9:00–19:00`, `Sáb 14 dic · 9:00 a. m.`
 - Currency: `Intl.NumberFormat("es-CO", { style: "currency", currency: "COP" })` — no decimals: `$1.250.000`.
 - Phone: `+57 323 796 8435` (e164 in `tel:`, spaced for display).
 

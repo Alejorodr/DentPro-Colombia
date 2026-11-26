@@ -17,7 +17,7 @@ export const HOMEPAGE_DEFAULT_CONTENT: HomepageNormalizedContent = {
   },
   infoBar: {
     location: { text: "Cra. 7 #13-180, Chía, Cundinamarca", icon: "MapPin" },
-    schedule: { text: "Lun–Sáb 8:00–19:00 · Domingos y festivos con cita previa", icon: "Clock" },
+    schedule: { text: "Lun–Sáb 9:00–19:00 · Domingos y festivos con cita previa", icon: "Clock" },
     whatsapp: { href: "https://wa.me/573237968435", label: "Agenda por WhatsApp", icon: "WhatsappLogo" },
     email: { href: "mailto:dentprocolombia@gmail.com", label: "dentprocolombia@gmail.com", icon: "EnvelopeSimple" },
     socials: [
@@ -44,7 +44,7 @@ export const HOMEPAGE_DEFAULT_CONTENT: HomepageNormalizedContent = {
     stats: [
       { label: "Chía · Cundinamarca", description: "consultorio propio en el municipio" },
       { label: "Agendamiento en línea", description: "citas confirmadas en minutos" },
-      { label: "Horario extendido", description: "Lun–Sáb 8:00–19:00" },
+      { label: "Horario extendido", description: "Lun–Sáb 9:00–19:00" },
     ],
     image: {
       src: "https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?auto=format&fit=crop&w=1200&q=80",
@@ -211,7 +211,7 @@ export const HOMEPAGE_DEFAULT_CONTENT: HomepageNormalizedContent = {
       { icon: "CreditCard", text: "Planes de financiación y convenios empresariales" },
     ],
     scheduleNote:
-      "Disponibilidad de lunes a sábado de 8:00 a 19:00 y domingos o festivos con cita previa en nuestra sede de Chía.",
+      "Disponibilidad de lunes a sábado de 9:00 a 19:00 y domingos o festivos con cita previa en nuestra sede de Chía.",
     consentNote:
       "Al enviar este formulario autorizas el tratamiento de tus datos según nuestra política de privacidad.",
   },

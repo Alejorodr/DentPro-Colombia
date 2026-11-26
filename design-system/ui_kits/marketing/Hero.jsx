@@ -35,7 +35,7 @@ function DPHero() {
           <dl className="dp-stat-grid">
             <div className="dp-stat"><dt>+2.500 sonrisas</dt><dd>atendidas en Cundinamarca</dd></div>
             <div className="dp-stat"><dt>98% satisfacción</dt><dd>de nuestros pacientes</dd></div>
-            <div className="dp-stat"><dt>Horario extendido</dt><dd>Lun–Sáb 8:00 am a 7:00 pm</dd></div>
+            <div className="dp-stat"><dt>Horario extendido</dt><dd>Lun–Sáb 9:00–19:00</dd></div>
           </dl>
         </div>
         <div style={{ position: "relative", maxWidth: 480, marginLeft: "auto" }}>

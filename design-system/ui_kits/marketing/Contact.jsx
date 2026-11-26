@@ -101,7 +101,7 @@ function DPFooter() {
             <li>Cra. 7 #13-180, Chía</li>
             <li>+57 323 796 8435</li>
             <li>dentprocolombia@gmail.com</li>
-            <li>Lun–Sáb 8:00–19:00</li>
+            <li>Lun–Sáb 9:00–19:00</li>
           </ul>
         </div>
       </div>

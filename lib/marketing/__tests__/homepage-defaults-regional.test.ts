@@ -18,7 +18,7 @@ const texts = collectStrings(HOMEPAGE_DEFAULT_CONTENT).filter(
 
 // DOG-63: el sitio se regionaliza para Colombia (ver CLAUDE.md: voz, horarios y moneda).
 describe("contenido por defecto del home, regionalizado para Colombia", () => {
-  it("los horarios usan 24 h y raya (8:00–19:00), no am/pm", () => {
+  it("los horarios usan 24 h y raya (9:00–19:00), no am/pm", () => {
     const offenders = texts.filter(([, text]) => /\d{1,2}(:\d{2})?\s?(am|pm)\b/i.test(text) || /\d:\d{2}-\d/.test(text));
     expect(offenders).toEqual([]);
   });

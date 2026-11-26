@@ -984,7 +984,7 @@ export default function TerminosYCondicionesPage() {
                     </p>
                   </div>
                   <p className="text-sm text-slate-700 dark:text-slate-200">
-                    Lun–Sáb 8:00–19:00
+                    Lun–Sáb 9:00–19:00
                   </p>
                   <p className="text-xs text-slate-500 dark:text-slate-400">
                     Domingos y festivos con cita previa

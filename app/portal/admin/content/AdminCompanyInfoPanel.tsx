@@ -97,7 +97,7 @@ export function AdminCompanyInfoPanel() {
         </label>
         <label className="space-y-1">
           <span className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Horario</span>
-          <input className="input h-11 text-sm" placeholder="Lun–Sáb 8:00-19:00" value={form.infoBarHours} onChange={(e) => setForm((p) => ({ ...p, infoBarHours: e.target.value }))} disabled={saving} />
+          <input className="input h-11 text-sm" placeholder="Lun–Sáb 9:00–19:00" value={form.infoBarHours} onChange={(e) => setForm((p) => ({ ...p, infoBarHours: e.target.value }))} disabled={saving} />
         </label>
       </div>
 

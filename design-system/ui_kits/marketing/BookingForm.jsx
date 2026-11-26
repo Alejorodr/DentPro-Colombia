@@ -83,7 +83,7 @@ function DPBooking() {
             color: "var(--fg-2)", fontSize: 13, lineHeight: 1.55,
           }}>
             <p style={{ margin: 0, fontWeight: 600, color: "var(--color-brand-indigo)" }}>Horario extendido</p>
-            <p style={{ margin: "8px 0 0" }}>Disponibilidad de lunes a sábado de 8:00 a 19:00 y domingos o festivos con cita previa en nuestra sede de Chía.</p>
+            <p style={{ margin: "8px 0 0" }}>Disponibilidad de lunes a sábado de 9:00 a 19:00 y domingos o festivos con cita previa en nuestra sede de Chía.</p>
           </div>
         </div>
       </div>

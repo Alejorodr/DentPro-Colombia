@@ -19,7 +19,7 @@ function DPInfoBar() {
           </span>
           <span style={{ display: "inline-flex", alignItems: "center", gap: 8, color: "var(--fg-3)" }}>
             <Clock size={14} />
-            Lun–Sáb 8:00–19:00 · Domingos y festivos con cita previa
+            Lun–Sáb 9:00–19:00 · Domingos y festivos con cita previa
           </span>
           <a href="https://wa.me/573237968435" target="_blank" rel="noopener" style={{ display: "inline-flex", alignItems: "center", gap: 8, color: "var(--color-brand-teal)", fontWeight: 600, textDecoration: "none" }}>
             <WhatsappLogo size={18} />
