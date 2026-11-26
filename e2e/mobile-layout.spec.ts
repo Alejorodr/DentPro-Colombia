@@ -58,12 +58,15 @@ for (const width of WIDTHS) {
 }
 
 test.describe("aviso de cookies a 320 px", () => {
-  test.use({ viewport: { width: 320, height: 700 } });
+  // Visitante nuevo: sin la decisión de cookies precargada en playwright.config.ts.
+  test.use({ viewport: { width: 320, height: 700 }, storageState: { cookies: [], origins: [] } });
 
   test("los botones del aviso caben en la pantalla", async ({ page }) => {
     await page.goto("/");
+    const banner = page.getByRole("region", { name: "Tu privacidad" });
+    await expect(banner).toBeVisible();
     for (const name of ["Personalizar", "Solo esenciales", "Aceptar todo"]) {
-      const box = await page.getByRole("button", { name, exact: true }).first().boundingBox();
+      const box = await banner.getByRole("button", { name, exact: true }).boundingBox();
       expect(box, name).not.toBeNull();
       expect(box!.x, name).toBeGreaterThanOrEqual(0);
       expect(box!.x + box!.width, name).toBeLessThanOrEqual(320);
