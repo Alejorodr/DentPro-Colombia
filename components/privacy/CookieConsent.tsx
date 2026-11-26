@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 
 import { useCookieConsent } from "./useCookieConsent";
 
-export const COOKIE_POLICY_HREF = "/politica-de-tratamiento-de-datos#cookies";
+const COOKIE_POLICY_HREF = "/politica-de-tratamiento-de-datos#cookies";
 
 /** El portal y las vistas de impresión no muestran el aviso (sus cookies son solo esenciales). */
 function isExcludedPath(pathname: string | null) {

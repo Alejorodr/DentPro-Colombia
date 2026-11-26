@@ -277,6 +277,7 @@ export function getPrismaClient(): PrismaClient {
   return prismaClient;
 }
 
+/** @public Solo para tests: lo usa `lib/__tests__/prisma.test.ts` con un import dinámico que knip no ve. */
 export function __resetPrismaClientForTests() {
   if (globalThis.__prisma) {
     void globalThis.__prisma.$disconnect().catch(() => {
@@ -295,4 +296,3 @@ export function __resetPrismaClientForTests() {
   prismaClient = null;
 }
 
-export { PrismaClient };
