@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.0.1
+
+### Patch Changes
+
+- 9022d14: CI estable: los E2E del dashboard admin esperan solo el título visible (el streaming de React lo muestra un instante duplicado en un contenedor oculto), CodeQL usa la misma versión en `init` y `analyze` (v4.39.4) y `changesets/action` pasa a v2.1.2.
+- 11e172e: El script `encrypt-existing-fields` ahora cifra también los secretos de verificación en dos pasos (`UserMfa`), cuya clave primaria es `userId` y no `id`. Antes fallaba al llegar a esa tabla.
+- ace2ff0: El script de cifrado de datos existentes tiene tests: comprueba contra el esquema de Prisma la clave primaria de cada modelo cifrado y la paginación por esa clave (DOG-53).
+- 12de7f5: Las imágenes del CMS se suben a un store de Blob público propio (`CMS_BLOB_READ_WRITE_TOKEN`), separado del store privado de adjuntos clínicos (DOG-54).
+- d4cb887: Saneamiento: se elimina una función sin uso, se quitan exports que solo usa su propio archivo y knip deja de contar los tipos usados en las firmas de su módulo (DOG-60).
+- f10df36: El sitio público se ve bien en celulares de 320 a 390 px: el hero y el contacto ya no se salen de la pantalla, el encabezado es más compacto, el menú móvil tiene fondo opaco, queda un solo botón flotante y el aviso de cookies cabe a 320 px (DOG-62).
+- ebfcb97: Textos del sitio regionalizados para Colombia: "atención al paciente" en vez de "Patient Care", y horarios por defecto en 24 h con raya (9:00–19:00, el horario real de la clínica) (DOG-63).
+
 ## 2.0.0
 
 ### Major Changes
