@@ -54,22 +54,26 @@ export function Navbar({ brand, links, cta, login }: NavbarProps) {
 
   return (
     <header className={`topbar transition-shadow duration-300 ${scrolled ? "shadow-lg shadow-slate-900/8 dark:shadow-surface-dark/60" : ""}`}>
-      <div className="container mx-auto flex items-center justify-between px-6 py-4">
-        <a href={brand.href} className="flex items-center gap-3 text-lg font-semibold text-brand-teal dark:text-accent-cyan">
+      <div className="container mx-auto flex items-center justify-between gap-3 px-4 py-3 sm:px-6 sm:py-4">
+        {/* DOG-62: en celular el nombre ocupa a lo sumo 2 líneas y cede espacio a los botones. */}
+        <a
+          href={brand.href}
+          className="flex min-w-0 items-center gap-2 text-base font-semibold leading-tight text-brand-teal sm:gap-3 sm:text-lg dark:text-accent-cyan"
+        >
           {brand.logoUrl ? (
             <Image
               src={brand.logoUrl}
               alt={brand.name}
               width={40}
               height={40}
-              className="h-10 w-10 rounded-full object-contain"
+              className="h-10 w-10 shrink-0 rounded-full object-contain"
             />
           ) : (
-            <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-brand-teal text-white">
+            <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-teal text-white">
               {brand.initials}
             </span>
           )}
-          {brand.name}
+          <span className="line-clamp-2">{brand.name}</span>
         </a>
         <nav className="hidden items-center gap-8 text-sm font-semibold text-slate-600 lg:flex dark:text-slate-200">
           {links.map((link) => (
@@ -82,7 +86,7 @@ export function Navbar({ brand, links, cta, login }: NavbarProps) {
             </a>
           ))}
         </nav>
-        <div className="flex items-center gap-2 sm:gap-4">
+        <div className="flex shrink-0 items-center gap-2 sm:gap-4">
           <ThemeToggle />
           {login ? (
             <a
@@ -110,8 +114,8 @@ export function Navbar({ brand, links, cta, login }: NavbarProps) {
         </div>
       </div>
       {isOpen ? (
-        <div className="mobile-menu open dark:bg-surface-base/95" id="mobileMenu">
-          <nav className="flex flex-col gap-4 px-6 pb-6 text-base font-semibold text-slate-700 dark:text-slate-100">
+        <div className="mobile-menu open" id="mobileMenu">
+          <nav className="flex flex-col gap-4 px-6 py-6 text-base font-semibold text-slate-700 dark:text-slate-100">
             {links.map((link) => (
               <a
                 key={`mobile-${link.href}`}

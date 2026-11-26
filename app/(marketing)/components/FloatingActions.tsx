@@ -52,7 +52,8 @@ const CalendarCheckIcon = resolveMarketingIcon("CalendarCheck");
 export function FloatingActions({ channels, socials }: FloatingActionsProps) {
   return (
     <div className="floating-actions" role="region" aria-label="Accesos rápidos">
-      {channels.map((channel) => {
+      {/* DOG-62: en celular solo queda el primer canal (WhatsApp); los demás tapaban el contenido. */}
+      {channels.map((channel, index) => {
         const ChannelIcon = resolveMarketingIcon(CHANNEL_ICON[channel.type]);
         const isWhatsapp = channel.type === "WHATSAPP";
 
@@ -60,7 +61,7 @@ export function FloatingActions({ channels, socials }: FloatingActionsProps) {
           <a
             key={channel.id}
             href={buildChannelHref(channel)}
-            className="group relative floating-action-btn"
+            className={`group relative floating-action-btn ${index > 0 ? "max-sm:hidden" : ""}`}
             aria-label={channel.label || CHANNEL_LABEL_FALLBACK[channel.type]}
             target={isWhatsapp ? "_blank" : undefined}
             rel={isWhatsapp ? "noopener noreferrer" : undefined}
@@ -79,7 +80,7 @@ export function FloatingActions({ channels, socials }: FloatingActionsProps) {
           <a
             key={social.href}
             href={social.href}
-            className="group relative floating-action-btn"
+            className="group relative floating-action-btn max-sm:hidden"
             aria-label={social.label}
             target="_blank"
             rel="noopener noreferrer"
@@ -93,7 +94,7 @@ export function FloatingActions({ channels, socials }: FloatingActionsProps) {
       })}
       <a
         href="#agenda"
-        className="group relative floating-action-btn"
+        className={`group relative floating-action-btn ${channels.length > 0 ? "max-sm:hidden" : ""}`}
         aria-label="Ir a agenda"
       >
         <CalendarCheckIcon className="h-6 w-6" weight="bold" aria-hidden="true" />

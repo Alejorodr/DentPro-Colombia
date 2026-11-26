@@ -44,7 +44,7 @@ export const HOMEPAGE_DEFAULT_CONTENT: HomepageNormalizedContent = {
     stats: [
       { label: "Chía · Cundinamarca", description: "consultorio propio en el municipio" },
       { label: "Agendamiento en línea", description: "citas confirmadas en minutos" },
-      { label: "Horario extendido", description: "Lun–Sáb 8:00 am a 7:00 pm" },
+      { label: "Horario extendido", description: "Lun–Sáb 8:00–19:00" },
     ],
     image: {
       src: "https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?auto=format&fit=crop&w=1200&q=80",

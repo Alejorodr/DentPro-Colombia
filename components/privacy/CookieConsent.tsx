@@ -97,11 +97,12 @@ function CookieBanner({ onAcceptAll, onEssentialOnly, onCustomize }: CookieBanne
             </p>
           </div>
         </div>
-        <div className="grid grid-cols-[auto_1fr_1fr] gap-1.5 md:flex md:gap-2 md:shrink-0 md:items-center">
+        {/* DOG-62: bajo 380 px los tres botones no caben en una fila; "Personalizar" baja a su propia fila. */}
+        <div className="grid grid-cols-2 gap-1.5 min-[380px]:grid-cols-[auto_1fr_1fr] md:flex md:gap-2 md:shrink-0 md:items-center">
           <button
             type="button"
             onClick={onCustomize}
-            className="rounded-full px-2 py-2 text-xs font-semibold text-slate-600 transition-colors hover:bg-brand-light/60 hover:text-brand-teal focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-indigo/70 dark:text-slate-300 dark:hover:bg-surface-muted dark:hover:text-accent-cyan md:px-4"
+            className="order-last col-span-2 rounded-full px-2 py-2 min-[380px]:order-none min-[380px]:col-span-1 text-xs font-semibold text-slate-600 transition-colors hover:bg-brand-light/60 hover:text-brand-teal focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-indigo/70 dark:text-slate-300 dark:hover:bg-surface-muted dark:hover:text-accent-cyan md:px-4"
           >
             Personalizar
           </button>
