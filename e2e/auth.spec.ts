@@ -42,8 +42,10 @@ test("@smoke seed admin then login redirects to admin dashboard", async ({
   // DOG-28: el administrador pasa por el segundo paso antes de entrar al portal.
   await completeSeededMfaChallenge(page);
   await expect(page).toHaveURL(/\/portal\/admin/);
+  // Solo el visible: mientras React termina el streaming, el contenido llega primero en un
+  // <div id="S:n" hidden> y convive un instante con el definitivo; el modo estricto fallaba.
   await expect(
-    page.getByTestId(E2E_TEST_IDS.adminDashboardTitle),
+    page.getByTestId(E2E_TEST_IDS.adminDashboardTitle).filter({ visible: true }),
   ).toBeVisible();
 });
 
@@ -59,13 +61,13 @@ test("login succeeds and persists across refresh", async ({
   });
   await expect(page).toHaveURL(/\/portal\/admin/);
   await expect(
-    page.getByTestId(E2E_TEST_IDS.adminDashboardTitle),
+    page.getByTestId(E2E_TEST_IDS.adminDashboardTitle).filter({ visible: true }),
   ).toBeVisible();
 
   await page.reload({ waitUntil: "domcontentloaded" });
   await expect(page).toHaveURL(/\/portal\/admin/);
   await expect(
-    page.getByTestId(E2E_TEST_IDS.adminDashboardTitle),
+    page.getByTestId(E2E_TEST_IDS.adminDashboardTitle).filter({ visible: true }),
   ).toBeVisible();
 });
 
