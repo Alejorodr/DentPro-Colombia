@@ -95,7 +95,7 @@ design-system/            # Sistema de diseño exportado desde Claude Design
 
 ### Moneda y fechas
 - Precios: `Intl.NumberFormat("es-CO", { style: "currency", currency: "COP" })` — sin decimales: `$1.250.000`.
-- Fechas: `Lun–Sáb 8:00–19:00`, `Sáb 14 dic · 9:00 a. m.`
+- Fechas: `Lun–Sáb 9:00–19:00`, `Sáb 14 dic · 9:00 a. m.`
 - Teléfono: `+57 323 796 8435`
 - Zona horaria: todo instante (citas, registros, notificaciones) se formatea con `timeZone: CLINIC_TIME_ZONE` (`America/Bogota`, en `lib/dates/tz.ts`). El servidor de Vercel corre en UTC: sin la zona, las horas salen 5 horas corridas. Solo los días de calendario armados en el navegador (selectores de fecha) van sin zona.
 
@@ -168,7 +168,7 @@ pnpm secrets:scan -- staged   # solo lo preparado para commit
 6. Odontopediatría
 
 **Sede**: Cra. 7 #13-180, Chía, Cundinamarca · **WhatsApp**: +57 323 796 8435  
-**Horario**: Lun–Sáb 8:00–19:00 · Domingos y festivos con cita previa
+**Horario**: Lun–Sáb 9:00–19:00 · Domingos y festivos con cita previa
 
 ---
 

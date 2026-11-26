@@ -141,7 +141,7 @@ export default function PoliticaTratamientoDatos() {
                     </a>
                   </li>
                   <li>
-                    <span className="font-semibold">Horario de atención:</span> Lunes–Sábado 8:00–19:00
+                    <span className="font-semibold">Horario de atención:</span> Lunes–Sábado 9:00–19:00
                   </li>
                 </ul>
               </div>
@@ -932,7 +932,7 @@ export default function PoliticaTratamientoDatos() {
                         +57 323 796 8435
                       </a>
                       <p className="text-xs text-slate-500 dark:text-slate-400">
-                        Lun–Sáb 8:00–19:00
+                        Lun–Sáb 9:00–19:00
                       </p>
                     </div>
                   </li>
