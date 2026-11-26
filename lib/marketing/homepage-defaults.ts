@@ -17,7 +17,7 @@ export const HOMEPAGE_DEFAULT_CONTENT: HomepageNormalizedContent = {
   },
   infoBar: {
     location: { text: "Cra. 7 #13-180, Chía, Cundinamarca", icon: "MapPin" },
-    schedule: { text: "Lun–Sáb 8:00-19:00 · Domingos y festivos con cita previa", icon: "Clock" },
+    schedule: { text: "Lun–Sáb 8:00–19:00 · Domingos y festivos con cita previa", icon: "Clock" },
     whatsapp: { href: "https://wa.me/573237968435", label: "Agenda por WhatsApp", icon: "WhatsappLogo" },
     email: { href: "mailto:dentprocolombia@gmail.com", label: "dentprocolombia@gmail.com", icon: "EnvelopeSimple" },
     socials: [
@@ -207,7 +207,7 @@ export const HOMEPAGE_DEFAULT_CONTENT: HomepageNormalizedContent = {
     benefits: [
       { icon: "CalendarCheck", text: "Horarios extendidos y recordatorios automáticos" },
       { icon: "ShieldCheck", text: "Especialistas certificados por asociaciones internacionales" },
-      { icon: "UsersThree", text: "Acompañamiento del equipo de Patient Care en todo momento" },
+      { icon: "UsersThree", text: "Acompañamiento del equipo de atención al paciente en todo momento" },
       { icon: "CreditCard", text: "Planes de financiación y convenios empresariales" },
     ],
     scheduleNote:
@@ -235,7 +235,7 @@ export const HOMEPAGE_DEFAULT_CONTENT: HomepageNormalizedContent = {
       { href: "https://www.facebook.com/dentprocol", label: "Facebook", icon: "FacebookLogo", placements: ["INFOBAR", "FOOTER"] },
       { href: "https://www.tiktok.com/@dentprocol", label: "TikTok", icon: "TiktokLogo", placements: ["INFOBAR", "FOOTER"] },
     ],
-    supportTitle: "Patient Care DentPro",
+    supportTitle: "Atención al paciente DentPro",
     supportItems: [
       { icon: "Headset", text: "Coordinación de citas y especialistas" },
       { icon: "ChartLineUp", text: "Seguimiento de tu evolución clínica" },

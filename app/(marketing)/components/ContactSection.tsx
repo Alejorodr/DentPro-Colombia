@@ -156,7 +156,7 @@ export function ContactSection({
         >
           <h3 className="text-xl font-semibold">{supportTitle}</h3>
           <p className="mt-2 text-sm text-slate-300">
-            Nuestro equipo de Patient Care está listo para acompañarte antes, durante y después de cada visita.
+            Nuestro equipo de atención al paciente está listo para acompañarte antes, durante y después de cada visita.
           </p>
           <ul className="mt-6 space-y-4 text-sm text-slate-200">
             {supportItems.map((item) => {
