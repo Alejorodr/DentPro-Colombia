@@ -40,29 +40,33 @@ async function countPlaintext(model: string, fields: Record<string, "text" | "js
   return Number(rows[0]?.total ?? 0);
 }
 
+/** Clave primaria de cada modelo cifrado cuando no se llama `id` (UserMfa usa `userId`, DOG-28). */
+const PRIMARY_KEYS: Record<string, string> = { UserMfa: "userId" };
+
 async function rewriteModel(model: string, fields: Record<string, "text" | "json">) {
   const delegate = delegateFor(model);
-  const select = Object.fromEntries([["id", true], ...Object.keys(fields).map((field) => [field, true])]);
+  const pk = PRIMARY_KEYS[model] ?? "id";
+  const select = Object.fromEntries([[pk, true], ...Object.keys(fields).map((field) => [field, true])]);
   let cursor: string | undefined;
   let rewritten = 0;
 
   for (;;) {
     const rows = await delegate.findMany({
       select,
-      orderBy: { id: "asc" },
+      orderBy: { [pk]: "asc" },
       take: BATCH_SIZE,
-      ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+      ...(cursor ? { cursor: { [pk]: cursor }, skip: 1 } : {}),
     });
     if (rows.length === 0) break;
 
     for (const row of rows) {
       const data = Object.fromEntries(Object.keys(fields).filter((field) => row[field] != null).map((field) => [field, row[field]]));
       if (Object.keys(data).length > 0) {
-        await delegate.update({ where: { id: row.id }, data });
+        await delegate.update({ where: { [pk]: row[pk] }, data });
         rewritten += 1;
       }
     }
-    cursor = rows[rows.length - 1]?.id as string;
+    cursor = rows[rows.length - 1]?.[pk] as string;
   }
   return rewritten;
 }
