@@ -19,7 +19,7 @@ const FILE_SIGNATURES: Record<string, readonly SignaturePart[]> = {
 };
 
 /** Bytes del inicio del archivo que bastan para comprobar cualquier firma conocida. */
-export const FILE_SIGNATURE_HEADER_BYTES = 16;
+const FILE_SIGNATURE_HEADER_BYTES = 16;
 
 /** `true` solo si `bytes` empieza con la firma del tipo declarado (y ese tipo es conocido). */
 export function matchesFileSignature(bytes: Uint8Array, declaredType: string): boolean {
