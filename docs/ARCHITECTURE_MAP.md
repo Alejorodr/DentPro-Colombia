@@ -151,7 +151,6 @@
 - `PATCH|DELETE /api/specialties/[id]`: ADMINISTRADOR.
 - `GET|POST /api/admin/templates`: ADMINISTRADOR.
 - `GET|PATCH|DELETE /api/admin/templates/[id]`: ADMINISTRADOR.
-- `GET /api/admin/metrics/appointments`: ADMINISTRADOR.
 - `GET /api/admin/audit/access-logs`: ADMINISTRADOR.
 - `GET /api/admin/patients/[id]/export`: ADMINISTRADOR.
 - `GET|POST /api/admin/holidays`: ADMINISTRADOR.
@@ -186,3 +185,24 @@
 - **Proxy/middleware**: `proxy.ts` (gating de `/portal/**`, login y APIs).
 - **Jobs/Cron**: `app/api/cron/appointments/reminders/route.ts`.
 - **Tests**: `tests/**` (Vitest unit/integration) y `e2e/**` (Playwright smoke/flujo).
+
+## 7) Responsables por módulo
+
+> Áreas responsables, no personas: son las mismas del diagrama de módulos (sección 2). Cuando haya un equipo, asigna una persona por área. La columna de tests indica dónde mirar antes de tocar el módulo.
+
+| Módulo | Área responsable | Archivos clave | Tests que lo cubren |
+|---|---|---|---|
+| Autenticación y sesión | Security/Platform | `auth.ts`, `lib/auth/**`, `proxy.ts`, `app/api/auth/**` | `tests/auth*`, `tests/credentials*`, `tests/forgot-password-timing*`, `tests/rate-limit-*`, `lib/auth/__tests__`, `e2e/auth.spec.ts`, `e2e/password-reset.spec.ts` |
+| Autorización por rol | Security/Platform | `lib/authz.ts`, `app/api/_utils/auth.ts`, `lib/auth/require-role.ts` | `tests/api-role-contracts.test.ts` (matriz por rol), `tests/roles*`, `tests/api.*authz*`, `e2e/role-portal-smoke.spec.ts` |
+| Seguridad transversal | Security/Platform | `lib/security/**` (CSP, cifrado de campos, JSON-LD), `scripts/scan-secrets.mjs` | `lib/security/__tests__`, `tests/ops-hardening*`, `tests/ops-ip-allowlist*`, `tests/e2e-auth-bypass-guard*` |
+| Citas y agenda | Full-stack (appointments) | `app/api/appointments/**`, `app/api/client/appointments/**`, `lib/appointments/**`, `lib/scheduling/**` | `tests/appointment*`, `tests/appointments-reschedule*`, `tests/booking-limits*`, `tests/release-cancelled-slots*`, `tests/slot-inventory-refresh*`, `tests/public-slots-contract*`, `tests/schedules-scope*`, `e2e/public-booking-flow.spec.ts`, `e2e/client-portal.spec.ts` |
+| Clínica (episodios, notas, recetas, adjuntos) | Full-stack (clinical) | `app/api/clinical/**`, `app/api/professional/appointment/**`, `lib/clinical/**` | `tests/clinical-*`, `tests/attachments*`, `e2e/clinical-role-flows.spec.ts` |
+| Administración y catálogo | Full-stack (admin) | `app/api/users/**`, `app/api/services/**`, `app/api/specialties/**`, `app/api/admin/**`, `app/portal/admin/**` | `tests/admin-*`, `tests/audit-log*`, `app/api/admin/homepage/_lib.test.ts`, `app/api/services/route.test.ts` |
+| Marketing y contenido del home | Frontend | `app/page.tsx`, `app/(marketing)/**`, `app/servicios/**`, `lib/marketing/**` | `lib/marketing/__tests__`, `tests/admin-homepage-*`, `e2e/marketing-home.spec.ts`, `e2e/smoke-home-no-blank.spec.ts` |
+| Caché de catálogos | Backend/Data | `lib/cache/catalog.ts`, invalidación en `lib/prisma.ts` | `lib/cache/__tests__`, `e2e/catalog-cache.spec.ts` |
+| Analytics y recepción | Full-stack (analytics) | `app/api/analytics/**`, `lib/analytics/**`, `app/portal/receptionist/**` | `tests/analytics-*`, `tests/receptionist-*`, `tests/activity-feed*`, `e2e/admin-analytics.spec.ts`, `e2e/receptionist-activity-smoke.spec.ts` |
+| Base de datos | Backend/Data | `prisma/schema.prisma`, `prisma/migrations/**`, `lib/prisma.ts`, `lib/db/**` | `tests/prisma-client*`, `tests/dentpro-prisma-adapter*`, `tests/vercel-prisma*`, `lib/db/__tests__` |
+| Correo y notificaciones | Backend + Operaciones | `lib/email.ts`, `lib/email/**` (cola de salida), `lib/notifications/**` | `lib/email/__tests__`, `tests/appointment-email*` |
+| Jobs y cron | Backend + Operaciones | `app/api/cron/**`, `vercel.json` | `tests/cron-*` |
+| Observabilidad y operación | Security/Platform | `lib/logger.ts`, `lib/monitoring/**`, `app/api/_monitoring/**`, `app/api/ops/**` | `tests/monitoring-route*`, `lib/monitoring/__tests__` |
+| CI/CD y releases | Security/Platform | `.github/workflows/**`, `.changeset/**`, `scripts/e2e-local.mjs`, `scripts/run-e2e.mjs` | Workflows `ci.yml`, `e2e-smoke.yml`, `e2e-nightly.yml`, `secret-scan.yml`, `codeql.yml` |

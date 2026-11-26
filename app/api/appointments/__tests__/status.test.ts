@@ -190,4 +190,19 @@ describe("PATCH /api/appointments/[id]/status", () => {
 
     expect(response.status).toBe(404);
   });
+
+  it.each([
+    ["null", "null"],
+    ["sin status", "{}"],
+    ["status desconocido", JSON.stringify({ status: "completed" })],
+    ["JSON inválido", "{not json"],
+  ])("rechaza con 400 un body %s (DOG-19)", async (_label, body) => {
+    const id = randomUUID();
+    const response = await PATCH(
+      new Request(`http://localhost/api/appointments/${id}/status`, { method: "PATCH", body }),
+      { params: Promise.resolve({ id }) },
+    );
+
+    expect(response.status).toBe(400);
+  });
 });

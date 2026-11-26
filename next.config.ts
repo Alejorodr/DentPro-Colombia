@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import withBundleAnalyzerInit from "@next/bundle-analyzer";
+import { withBotId } from "botid/next/config";
 
 const withBundleAnalyzer = withBundleAnalyzerInit({
   enabled: process.env.ANALYZE === "true",
@@ -40,6 +41,8 @@ const nextConfig: NextConfig = {
     tsconfigPath: "./tsconfig.build.json",
   },
   images: {
+    // DOG-15: AVIF primero (~20 % más liviano que WebP); WebP para navegadores sin AVIF.
+    formats: ["image/avif", "image/webp"],
     remotePatterns: [
       { protocol: "https", hostname: "images.unsplash.com" },
       { protocol: "https", hostname: "plus.unsplash.com" },
@@ -68,10 +71,11 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
-        source: "/(.*)",
+        // Las rutas de BotID llevan sus propios encabezados (withBotId): X-Frame-Options SAMEORIGIN.
+        source: "/((?!149e9513-01fa-4fb0-aad4-566afd725d1b/).*)",
         headers: securityHeaders,
       },
     ];
   },
 };
-export default withBundleAnalyzer(nextConfig);
+export default withBotId(withBundleAnalyzer(nextConfig));

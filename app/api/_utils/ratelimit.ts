@@ -33,7 +33,7 @@ export type RateLimitOptions = {
 const SECURITY_SENSITIVE_KEY_PREFIXES = ["auth:", "ops:"] as const;
 const SECURITY_SENSITIVE_KEYS = new Set(["ops"]);
 
-export function isSecuritySensitiveRateLimitKey(key: string): boolean {
+function isSecuritySensitiveRateLimitKey(key: string): boolean {
   return SECURITY_SENSITIVE_KEYS.has(key) || SECURITY_SENSITIVE_KEY_PREFIXES.some((prefix) => key.startsWith(prefix));
 }
 

@@ -1,0 +1,215 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+
+import { Bell, MagnifyingGlass, MoonStars, ShieldCheck } from "@/components/ui/Icon";
+
+import { useProfessionalPreferences } from "@/app/portal/professional/components/ProfessionalContext";
+import { fetchWithRetry } from "@/lib/http";
+import { logger } from "@/lib/logger";
+import { CLINIC_TIME_ZONE } from "@/lib/dates/tz";
+
+interface SearchResult {
+  id: string;
+  label: string;
+  description?: string;
+  href: string;
+  type: string;
+}
+
+interface NotificationItem {
+  id: string;
+  title: string;
+  body?: string;
+  createdAt: string;
+}
+
+/** Buscador de pacientes, citas y notas del profesional (barra superior del shell glassy). */
+export function ProfessionalSearch() {
+  const router = useRouter();
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState<SearchResult[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+
+  useEffect(() => {
+    if (!query.trim()) {
+      setResults([]);
+      return;
+    }
+
+    const controller = new AbortController();
+    const timeout = setTimeout(async () => {
+      setIsSearching(true);
+      try {
+        const response = await fetchWithRetry(`/api/search?q=${encodeURIComponent(query)}&scope=professional`, {
+          signal: controller.signal,
+        });
+        if (!response.ok) return;
+        const data = (await response.json()) as { results: SearchResult[] };
+        setResults(data.results ?? []);
+      } catch (error) {
+        if ((error as Error).name !== "AbortError") {
+          logger.error({ error }, "Professional search failed");
+        }
+      } finally {
+        setIsSearching(false);
+      }
+    }, 350);
+
+    return () => {
+      controller.abort();
+      clearTimeout(timeout);
+    };
+  }, [query]);
+
+  return (
+    <div className="relative w-full">
+      <div className="flex w-full items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-600 transition focus-within:ring-2 focus-within:ring-brand-teal/60 dark:border-surface-muted dark:bg-surface-base dark:text-slate-200">
+        <MagnifyingGlass aria-hidden="true" className="h-4 w-4" />
+        <input
+          type="search"
+          placeholder="Buscar pacientes, citas, notas"
+          aria-label="Buscar"
+          title="Buscar"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          className="w-full bg-transparent text-sm outline-hidden"
+        />
+      </div>
+      {query ? (
+        <div className="absolute left-0 right-0 z-40 mt-2 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl dark:border-surface-muted/60 dark:bg-surface-base">
+          {isSearching ? (
+            <p className="px-3 py-2 text-xs text-slate-500">Buscando…</p>
+          ) : results.length === 0 ? (
+            <p className="px-3 py-2 text-xs text-slate-500">Sin resultados.</p>
+          ) : (
+            <ul className="max-h-64 overflow-auto">
+              {results.map((result) => (
+                <li key={result.id}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setQuery("");
+                      setResults([]);
+                      router.push(result.href);
+                    }}
+                    className="flex w-full flex-col gap-1 rounded-xl px-3 py-2 text-left text-sm text-slate-600 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-surface-muted"
+                  >
+                    <span className="text-xs uppercase tracking-wide text-slate-400">{result.type}</span>
+                    <span className="font-medium text-slate-900 dark:text-white">{result.label}</span>
+                    {result.description ? (
+                      <span className="text-xs text-slate-500 dark:text-slate-400">{result.description}</span>
+                    ) : null}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+/** Campana de notificaciones del profesional. */
+export function ProfessionalNotifications() {
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    let active = true;
+    const loadNotifications = async () => {
+      try {
+        const response = await fetchWithRetry("/api/professional/notifications");
+        if (!response.ok) return;
+        const data = (await response.json()) as { notifications: NotificationItem[] };
+        if (active) {
+          setNotifications(data.notifications ?? []);
+        }
+      } catch (error) {
+        logger.error({ error }, "Professional notifications fetch failed");
+      }
+    };
+    loadNotifications();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) setIsOpen(false);
+    };
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsOpen(false);
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleEscape);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [isOpen]);
+
+  return (
+    <div ref={containerRef} className="relative">
+      <button
+        type="button"
+        className="relative"
+        aria-label="Ver notificaciones"
+        title="Ver notificaciones"
+        aria-expanded={isOpen}
+        onClick={() => setIsOpen((prev) => !prev)}
+      >
+        <Bell aria-hidden="true" weight="bold" />
+        {notifications.length ? <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-brand-sky" /> : null}
+      </button>
+      {isOpen ? (
+        <div className="absolute right-0 z-40 mt-3 w-80 rounded-2xl border border-slate-200 bg-white p-3 text-sm shadow-xl dark:border-surface-muted/60 dark:bg-surface-base">
+          <div className="mb-2 flex items-center justify-between">
+            <p className="text-xs uppercase tracking-wide text-slate-400">Notificaciones</p>
+            <MoonStars size={16} className="text-slate-400" />
+          </div>
+          {notifications.length === 0 ? (
+            <p className="text-xs text-slate-500">Sin novedades nuevas.</p>
+          ) : (
+            <ul className="space-y-2">
+              {notifications.map((notification) => (
+                <li key={notification.id} className="rounded-xl border border-slate-200 px-3 py-2 dark:border-surface-muted/60">
+                  <p className="text-sm font-semibold text-slate-900 dark:text-white">{notification.title}</p>
+                  {notification.body ? (
+                    <p className="text-xs text-slate-500 dark:text-slate-400">{notification.body}</p>
+                  ) : null}
+                  <p className="mt-1 text-[11px] text-slate-400">
+                    {new Date(notification.createdAt).toLocaleString("es-CO", { timeZone: CLINIC_TIME_ZONE })}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+/** Interruptor del modo privado (oculta datos sensibles de pacientes en pantalla). */
+export function PrivacyModeToggle() {
+  const { privacyMode, setPrivacyMode } = useProfessionalPreferences();
+  const label = privacyMode ? "Desactivar modo privado" : "Activar modo privado";
+
+  return (
+    <button
+      type="button"
+      aria-pressed={privacyMode}
+      aria-label={label}
+      title={label}
+      onClick={() => setPrivacyMode(!privacyMode)}
+    >
+      <ShieldCheck aria-hidden="true" weight="bold" />
+    </button>
+  );
+}

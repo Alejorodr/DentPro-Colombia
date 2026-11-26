@@ -1,5 +1,7 @@
 import { randomBytes } from "crypto";
 
+import { readConfiguredAuthSecret } from "@/lib/auth/secret";
+
 const encoder = new TextEncoder();
 
 const globalForJwt = globalThis as unknown as {
@@ -8,17 +10,10 @@ const globalForJwt = globalThis as unknown as {
 };
 
 export function getJwtSecretString(): string {
-  const candidates = [
-    process.env.AUTH_JWT_SECRET,
-    process.env.NEXTAUTH_SECRET,
-    process.env.AUTH_SECRET,
-  ];
-
-  for (const secret of candidates) {
-    if (secret && secret.trim().length > 0) {
-      globalForJwt.__authJwtSecretString = secret;
-      return secret;
-    }
+  const secret = readConfiguredAuthSecret();
+  if (secret) {
+    globalForJwt.__authJwtSecretString = secret;
+    return secret;
   }
 
   const isBuildPhase = process.env.NEXT_PHASE === "phase-production-build";

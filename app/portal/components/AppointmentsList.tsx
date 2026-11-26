@@ -5,6 +5,7 @@ import { useState } from "react";
 import type { UserRole } from "@/lib/auth/roles";
 import { fetchWithTimeout } from "@/lib/http";
 import { RescheduleModal, type RescheduledAppointment } from "@/app/portal/components/RescheduleModal";
+import { CLINIC_TIME_ZONE } from "@/lib/dates/tz";
 
 type AppointmentItem = {
   id: string;
@@ -30,7 +31,7 @@ interface AppointmentsListProps {
 function formatDateRange(startAt: string, endAt: string) {
   const start = new Date(startAt);
   const end = new Date(endAt);
-  return `${start.toLocaleDateString()} ${start.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} - ${end.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+  return `${start.toLocaleDateString("es-CO", { timeZone: CLINIC_TIME_ZONE })} ${start.toLocaleTimeString("es-CO", { timeZone: CLINIC_TIME_ZONE, hour: "2-digit", minute: "2-digit" })} - ${end.toLocaleTimeString("es-CO", { timeZone: CLINIC_TIME_ZONE, hour: "2-digit", minute: "2-digit" })}`;
 }
 
 export function AppointmentsList({ initialAppointments, role }: AppointmentsListProps) {
@@ -40,19 +41,26 @@ export function AppointmentsList({ initialAppointments, role }: AppointmentsList
   const [rescheduleTargetId, setRescheduleTargetId] = useState<string | null>(null);
 
   const updateStatus = async (id: string, status: string) => {
+    const previous = appointments.find((item) => item.id === id);
+    if (!previous) return;
     setBusyId(id);
-    const response = await fetchWithTimeout(`/api/appointments/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status }),
-    });
+    // DOG-12: el estado cambia al instante y se revierte si el servidor lo rechaza.
+    setAppointments((prev) => prev.map((item) => (item.id === id ? { ...item, status } : item)));
 
-    if (response.ok) {
+    try {
+      const response = await fetchWithTimeout(`/api/appointments/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      if (!response.ok) throw new Error(`status ${response.status}`);
       const updated = await response.json();
       setAppointments((prev) => prev.map((item) => (item.id === id ? updated : item)));
+    } catch {
+      setAppointments((prev) => prev.map((item) => (item.id === id ? previous : item)));
+    } finally {
+      setBusyId(null);
     }
-
-    setBusyId(null);
   };
 
   const openReschedule = (id: string) => {

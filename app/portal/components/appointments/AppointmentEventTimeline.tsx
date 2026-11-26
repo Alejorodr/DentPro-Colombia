@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 
 import { getAppointmentEventLabel } from "@/lib/appointments/activity";
 import { fetchWithRetry } from "@/lib/http";
+import { SkeletonRows } from "@/app/portal/components/ui/Skeleton";
+import { CLINIC_TIME_ZONE } from "@/lib/dates/tz";
 
 type AppointmentEventItem = {
   id: string;
@@ -54,7 +56,7 @@ export function AppointmentEventTimeline({ appointmentId }: { appointmentId: str
   }, [appointmentId]);
 
   if (isLoading) {
-    return <p className="text-xs text-slate-500">Cargando timeline...</p>;
+    return <SkeletonRows label="Cargando timeline" />;
   }
 
   if (error) {
@@ -75,7 +77,7 @@ export function AppointmentEventTimeline({ appointmentId }: { appointmentId: str
         return (
           <li key={event.id} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs dark:border-surface-muted dark:bg-surface-base/80">
             <p className="font-semibold text-slate-900 dark:text-white">{getAppointmentEventLabel(event.action, event.newStatus ?? null)}</p>
-            <p className="text-slate-500 dark:text-slate-400">{new Date(event.createdAt).toLocaleString("es-CO")}</p>
+            <p className="text-slate-500 dark:text-slate-400">{new Date(event.createdAt).toLocaleString("es-CO", { timeZone: CLINIC_TIME_ZONE })}</p>
             <p className="text-slate-500 dark:text-slate-400">Actor: {actor}</p>
             {event.action === "rescheduled" && event.metadata?.newSlotId ? (
               <p className="text-slate-500 dark:text-slate-400">Reprogramación: {event.metadata.previousSlotId ?? "-"} → {event.metadata.newSlotId}</p>

@@ -27,7 +27,7 @@ export type HomepageViewModel = {
   };
 };
 
-export function filterByPlacement<T extends { placements: string[] }>(items: T[], placement: string): T[] {
+function filterByPlacement<T extends { placements: string[] }>(items: T[], placement: string): T[] {
   return items.filter((item) => item.placements.includes(placement));
 }
 

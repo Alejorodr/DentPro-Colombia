@@ -9,6 +9,7 @@ vi.mock("@/lib/prisma", () => ({
 }));
 
 vi.mock("@/lib/notifications/email", () => ({ sendAppointmentEmail: vi.fn() }));
+vi.mock("@/lib/email/outbox", () => ({ processDueOutboxEmails: vi.fn().mockResolvedValue({ processed: 0 }) }));
 
 vi.mock("@/lib/logger", () => ({
   logger: { warn: vi.fn(), info: vi.fn(), error: vi.fn() },

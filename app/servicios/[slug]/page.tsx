@@ -4,6 +4,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { SERVICES, getServiceBySlug } from "@/lib/marketing/services-data";
+import { safeJsonLd } from "@/lib/security/json-ld";
+import { SITE_URL } from "@/lib/site/site-url";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -19,7 +21,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   if (!service) return {};
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://dentprocolombia.com";
+  const siteUrl = SITE_URL;
 
   return {
     title: `${service.name} en Chía`,
@@ -41,7 +43,7 @@ export default async function ServicePage({ params }: Props) {
 
   if (!service) notFound();
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://dentprocolombia.com";
+  const siteUrl = SITE_URL;
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -75,8 +77,8 @@ export default async function ServicePage({ params }: Props) {
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(faqJsonLd) }} />
 
       {/* Breadcrumb */}
       <nav aria-label="Breadcrumb" className="border-b border-slate-100 bg-white dark:border-surface-muted/40 dark:bg-surface-base">

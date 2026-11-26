@@ -83,6 +83,7 @@ model ProfessionalProfile {
   specialtyId         String
   slotDurationMinutes Int?
   active              Boolean       @default(true)
+  rethusNumber        String?
   user                User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   specialty           Specialty     @relation(fields: [specialtyId], references: [id], onDelete: Restrict)
   timeSlots           TimeSlot[]
@@ -94,6 +95,7 @@ model PatientProfile {
   id                String        @id @default(uuid())
   userId            String        @unique
   phone             String?
+  documentType      String        @default("CC")
   documentId        String?
   dateOfBirth       DateTime?
   gender            String?

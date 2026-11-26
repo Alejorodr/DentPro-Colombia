@@ -7,6 +7,7 @@ import { parseJson } from "@/app/api/_utils/validation";
 import { noHtml, requiredText } from "@/app/api/admin/homepage/_lib";
 import { getPrismaClient } from "@/lib/prisma";
 import { MARKETING_ICON_KEYS } from "@/lib/marketing/homepage-types";
+import { SERVICE_DETAIL_SLUGS } from "@/lib/marketing/service-detail-pages";
 
 const updateServiceSchema = z.object({
   name: requiredText(1, 120).optional(),
@@ -24,6 +25,7 @@ const updateServiceSchema = z.object({
   iconKey: z.enum(MARKETING_ICON_KEYS).nullable().optional(),
   showOnHomepage: z.boolean().optional(),
   homepageSortOrder: z.number().int().min(0).optional(),
+  detailSlug: z.enum(SERVICE_DETAIL_SLUGS).nullable().optional(),
 });
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -51,6 +53,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       ...(body.iconKey !== undefined ? { iconKey: body.iconKey } : {}),
       ...(typeof body.showOnHomepage === "boolean" ? { showOnHomepage: body.showOnHomepage } : {}),
       ...(typeof body.homepageSortOrder === "number" ? { homepageSortOrder: body.homepageSortOrder } : {}),
+      ...(body.detailSlug !== undefined ? { detailSlug: body.detailSlug } : {}),
     },
   });
 

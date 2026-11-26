@@ -8,7 +8,9 @@ import {
   isLocalE2EAuthRuntime,
   isProductionRuntime,
 } from "@/lib/auth/runtime";
+import { MFA_PAGE_PATH, requiresMfa } from "@/lib/auth/mfa";
 import { getDefaultDashboardPath, isUserRole, roleFromSlug, type UserRole } from "@/lib/auth/roles";
+import { readConfiguredAuthSecret } from "@/lib/auth/secret";
 import { errorResponse } from "@/app/api/_utils/response";
 import { checkMemoryRateLimit } from "@/lib/rateLimit";
 import { NONCE_HEADER, buildContentSecurityPolicy, generateNonce } from "@/lib/security/csp";
@@ -123,6 +125,11 @@ function tooManyRequestsResponse(retryAfterSeconds: number) {
 // de 10/min por IP con uso normal (o de toda una sede tras la misma IP) y devolvía 429.
 const RATE_LIMITED_AUTH_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 
+// El segundo paso (DOG-28) ya exige sesión y tiene su propio límite por usuario (5 cada 15 min).
+// Contarlo también por IP duplicaba el costo de cada ingreso del personal, que sale por la misma
+// IP de la sede, y bloqueaba ingresos legítimos seguidos.
+const MFA_API_PREFIX = "/api/auth/mfa/";
+
 function failClosedResponse(reason: string) {
   if (!warnedAuthRateLimitFallback) {
     console.error(`[ratelimit] Proxy auth rate limit unavailable (${reason}); failing closed.`);
@@ -137,6 +144,7 @@ function failClosedResponse(reason: string) {
 export async function applyAuthRateLimit(request: NextRequest): Promise<NextResponse | null> {
   if (!request.nextUrl.pathname.startsWith("/api/auth/")) return null;
   if (!RATE_LIMITED_AUTH_METHODS.has(request.method)) return null;
+  if (request.nextUrl.pathname.startsWith(MFA_API_PREFIX)) return null;
 
   const ip = resolveClientIp(request);
 
@@ -206,7 +214,7 @@ export default async function proxy(request: NextRequest) {
 
   const host = request.headers.get("host") ?? "";
   const isLocalhost = host.startsWith("localhost") || host.startsWith("127.0.0.1");
-  const secret = process.env.AUTH_JWT_SECRET ?? process.env.NEXTAUTH_SECRET ?? process.env.AUTH_SECRET;
+  const secret = readConfiguredAuthSecret();
   if (!secret) {
     const message = "NEXTAUTH_SECRET is not configured.";
     if (process.env.NODE_ENV === "production") {
@@ -222,6 +230,9 @@ export default async function proxy(request: NextRequest) {
   const cookieName = getSessionCookieName(getInferredAuthBaseUrl());
   const token = await getToken({ req: request, secret, cookieName });
   let role = resolveRole(token);
+  // DOG-28: sesión con contraseña válida pero sin el segundo factor. Solo mira el token; el
+  // servidor además revisa en la base que el MFA siga activo (restablecimientos).
+  const mfaPending = role !== null && requiresMfa(role) && token?.mfaVerified !== true;
   const testRoleCookie = request.cookies.get("dentpro-test-role")?.value ?? "";
   const isProductionEnv = process.env.NODE_ENV === "production" || process.env.VERCEL_ENV === "production";
   const allowE2EBypass = isLocalE2EAuthRuntime(host);
@@ -245,7 +256,7 @@ export default async function proxy(request: NextRequest) {
 
   if (isLoginRoute && role) {
     const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = getDefaultDashboardPath(role);
+    redirectUrl.pathname = mfaPending ? MFA_PAGE_PATH : getDefaultDashboardPath(role);
     redirectUrl.search = "";
     return withRequestId(NextResponse.redirect(redirectUrl), requestId, csp);
   }
@@ -263,7 +274,7 @@ export default async function proxy(request: NextRequest) {
   const isClinicalApiRoute = matchesPrefix(pathname, CLINICAL_SESSION_ONLY_PREFIX);
 
   if (isAdminApiRoute || isClinicalApiRoute) {
-    if (!role) {
+    if (!role || mfaPending) {
       return withRequestId(errorResponse("No autorizado.", 401), requestId, csp);
     }
     if (isAdminApiRoute && role !== "ADMINISTRADOR") {
@@ -283,6 +294,14 @@ export default async function proxy(request: NextRequest) {
     redirectUrl.pathname = "/auth/login";
     const callbackPath = `${pathname}${request.nextUrl.search}`;
     redirectUrl.searchParams.set("callbackUrl", callbackPath);
+    return withRequestId(NextResponse.redirect(redirectUrl), requestId, csp);
+  }
+
+  if (mfaPending) {
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname = MFA_PAGE_PATH;
+    redirectUrl.search = "";
+    redirectUrl.searchParams.set("callbackUrl", `${pathname}${request.nextUrl.search}`);
     return withRequestId(NextResponse.redirect(redirectUrl), requestId, csp);
   }
 
@@ -329,7 +348,7 @@ export const config = {
     // prefetches (RSC payloads, not HTML documents).
     {
       source:
-        "/((?!api|_next/static|_next/image|_vercel|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|avif|ico|txt|xml|webmanifest|json|js|css|map|woff|woff2)$).*)",
+        "/((?!api|149e9513-01fa-4fb0-aad4-566afd725d1b|_next/static|_next/image|_vercel|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|avif|ico|txt|xml|webmanifest|json|js|css|map|woff|woff2)$).*)",
       missing: [
         { type: "header", key: "next-router-prefetch" },
         { type: "header", key: "purpose", value: "prefetch" },

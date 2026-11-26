@@ -4,12 +4,15 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
+import { DocumentTypeSelect } from "@/components/ui/DocumentTypeSelect";
+import { DEFAULT_DOCUMENT_TYPE, isDocumentTypeCode, type DocumentTypeCode } from "@/lib/regulatory/colombia";
 
 type UserProfile = {
   name: string;
   lastName: string;
   patient?: {
     phone?: string | null;
+    documentType?: string | null;
     documentId?: string | null;
     dateOfBirth?: string | null;
     gender?: string | null;
@@ -24,6 +27,7 @@ export function OnboardingForm() {
     name: "",
     lastName: "",
     phone: "",
+    documentType: DEFAULT_DOCUMENT_TYPE as DocumentTypeCode,
     documentId: "",
     dateOfBirth: "",
     gender: "",
@@ -40,6 +44,7 @@ export function OnboardingForm() {
           name: data.name ?? "",
           lastName: data.lastName ?? "",
           phone: data.patient?.phone ?? "",
+          documentType: isDocumentTypeCode(data.patient?.documentType) ? data.patient.documentType : DEFAULT_DOCUMENT_TYPE,
           documentId: data.patient?.documentId ?? "",
           dateOfBirth: data.patient?.dateOfBirth
             ? new Date(data.patient.dateOfBirth).toISOString().slice(0, 10)
@@ -71,6 +76,7 @@ export function OnboardingForm() {
         name: form.name.trim() || undefined,
         lastName: form.lastName.trim() || undefined,
         phone: form.phone.trim(),
+        documentType: form.documentType,
         documentId: form.documentId.trim(),
         dateOfBirth: form.dateOfBirth || undefined,
         gender: form.gender.trim() || undefined,
@@ -112,6 +118,15 @@ export function OnboardingForm() {
         {field("Nombre", "name", "text")}
         {field("Apellido", "lastName", "text")}
         {field("Teléfono *", "phone", "tel", true)}
+        <label className="flex flex-col gap-1.5 text-sm font-medium text-slate-700 dark:text-slate-200">
+          Tipo de documento
+          <DocumentTypeSelect
+            className="input h-11 text-sm"
+            value={form.documentType}
+            disabled={saving}
+            onValueChange={(documentType) => setForm((prev) => ({ ...prev, documentType }))}
+          />
+        </label>
         {field("Número de documento *", "documentId", "text", true)}
         {field("Fecha de nacimiento", "dateOfBirth", "date")}
         <label className="flex flex-col gap-1.5 text-sm font-medium text-slate-700 dark:text-slate-200">

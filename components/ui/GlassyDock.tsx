@@ -122,5 +122,3 @@ export function GlassyDock({ items, variant, ariaLabel, className = "", footer }
     </nav>
   );
 }
-
-export default GlassyDock;

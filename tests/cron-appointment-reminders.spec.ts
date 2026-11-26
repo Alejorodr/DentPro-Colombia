@@ -19,10 +19,15 @@ vi.mock("@/lib/notifications/email", () => ({
   sendAppointmentEmail: (...args: unknown[]) => mockSendAppointmentEmail(...args),
 }));
 
+vi.mock("@/lib/email/outbox", () => ({
+  processDueOutboxEmails: vi.fn().mockResolvedValue({ processed: 0, sent: 0, pending: 0, failed: 0 }),
+}));
+
 vi.mock("@/lib/logger", () => ({
   logger: {
     warn: vi.fn(),
     info: vi.fn(),
+    error: vi.fn(),
   },
 }));
 

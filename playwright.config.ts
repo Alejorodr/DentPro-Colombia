@@ -39,6 +39,22 @@ export default defineConfig({
   use: {
     baseURL: e2eBaseUrl,
     headless: true,
+    // DOG-36: la decisión de cookies ya tomada, para que el aviso fijo no tape botones en
+    // los flujos. e2e/cookie-consent.spec.ts prueba el aviso con un visitante nuevo.
+    storageState: {
+      cookies: [],
+      origins: [
+        {
+          origin: e2eBaseUrl,
+          localStorage: [
+            {
+              name: "dentpro-cookie-consent",
+              value: JSON.stringify({ version: 1, thirdParty: false, updatedAt: "2026-01-01T00:00:00.000Z" }),
+            },
+          ],
+        },
+      ],
+    },
   },
   webServer: {
     command: webServerCommand,

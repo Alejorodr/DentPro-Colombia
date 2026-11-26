@@ -3,8 +3,10 @@
 import { useCallback, useEffect, useState } from "react";
 
 import type { MarketingIconKey } from "@/lib/marketing/homepage-types";
+import { SERVICE_DETAIL_PAGES, type ServiceDetailSlug } from "@/lib/marketing/service-detail-pages";
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
 import { IconSelect } from "@/app/portal/admin/content/components/IconSelect";
+import { SkeletonRows } from "@/app/portal/components/ui/Skeleton";
 
 type ServicesCopyForm = {
   servicesTitle: string;
@@ -27,6 +29,7 @@ type ServiceRecord = {
   iconKey?: string | null;
   showOnHomepage: boolean;
   homepageSortOrder: number;
+  detailSlug?: ServiceDetailSlug | null;
 };
 
 type HighlightItem = { id: string; text: string; sortOrder: number };
@@ -152,7 +155,7 @@ export function AdminServicesCopyPanel() {
     setSaving(false);
   };
 
-  const patchService = async (id: string, patch: Partial<Pick<ServiceRecord, "iconKey" | "showOnHomepage" | "homepageSortOrder">>) => {
+  const patchService = async (id: string, patch: Partial<Pick<ServiceRecord, "iconKey" | "showOnHomepage" | "homepageSortOrder" | "detailSlug">>) => {
     setRowSaving(id);
     setRowError(null);
     const response = await fetchWithTimeout(`/api/services/${id}`, {
@@ -222,7 +225,7 @@ export function AdminServicesCopyPanel() {
   };
 
   if (loading) {
-    return <p className="text-sm text-slate-600 dark:text-slate-300">Cargando servicios...</p>;
+    return <SkeletonRows label="Cargando servicios" />;
   }
 
   return (
@@ -268,10 +271,10 @@ export function AdminServicesCopyPanel() {
         {rowError ? <p className="text-sm text-red-600 dark:text-red-400">{rowError}</p> : null}
 
         {servicesLoading ? (
-          <p className="text-sm text-slate-500 dark:text-slate-400">Cargando servicios...</p>
+          <SkeletonRows label="Cargando servicios" />
         ) : services.length === 0 ? (
           <p className="rounded-2xl border border-dashed border-slate-200 p-6 text-center text-sm text-slate-500 dark:border-surface-muted">
-            No hay servicios registrados. Creá uno desde Servicios y tarifas.
+            No hay servicios registrados. Crea uno desde Servicios y tarifas.
           </p>
         ) : (
           <div className="space-y-3">
@@ -324,12 +327,33 @@ export function AdminServicesCopyPanel() {
                           disabled={rowSaving === service.id}
                         />
                       </label>
+                      <label className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400 md:col-span-2">
+                        Página de detalle
+                        <select
+                          className="input mt-2 h-11 text-sm normal-case tracking-normal"
+                          value={service.detailSlug ?? ""}
+                          onChange={(e) =>
+                            void patchService(service.id, { detailSlug: (e.target.value || null) as ServiceDetailSlug | null })
+                          }
+                          disabled={rowSaving === service.id}
+                        >
+                          <option value="">Sin página de detalle</option>
+                          {SERVICE_DETAIL_PAGES.map((page) => (
+                            <option key={page.slug} value={page.slug}>
+                              {page.label} (/servicios/{page.slug})
+                            </option>
+                          ))}
+                        </select>
+                        <span className="mt-1 block text-xs font-normal normal-case tracking-normal text-slate-400">
+                          La tarjeta del servicio muestra «Conoce el tratamiento» y enlaza a esta página.
+                        </span>
+                      </label>
                     </div>
 
                     <div className="space-y-2">
                       <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Highlights</p>
                       {highlightsLoading ? (
-                        <p className="text-sm text-slate-500 dark:text-slate-400">Cargando highlights...</p>
+                        <SkeletonRows label="Cargando highlights" />
                       ) : (
                         <>
                           {highlights.map((h) => (

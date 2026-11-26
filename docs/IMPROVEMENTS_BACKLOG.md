@@ -1,6 +1,6 @@
 # Improvements Backlog
 
-Estado: revisado el 2026-08-28. Los P0 y P1 de este documento ya fueron implementados y se conservan abajo como historial de cierre. Solo los P2 siguen siendo mejoras opcionales.
+Estado: revisado el 2026-11-24. Los P0 y P1 ya fueron implementados y se conservan abajo como historial de cierre. De los P2 solo queda abierto el segundo factor (MFA).
 
 ## Cerrado
 
@@ -9,35 +9,17 @@ Estado: revisado el 2026-08-28. Los P0 y P1 de este documento ya fueron implemen
 - Smoke E2E contra pantalla en blanco.
 - Telemetría configurable en CI.
 - Warning de rate limit controlado y emitido una sola vez por proceso.
+- Paginación de catálogos en recepción (DOG-23): los selectores traen todas las páginas con `fetchAllPages`.
+- `prisma generate` duplicado en Vercel (DOG-21): ya estaba resuelto; el `postinstall` se salta con `VERCEL=1`.
+- Matriz de responsables por dominio (DOG-24): sección 7 de `docs/ARCHITECTURE_MAP.md`.
+- Tests contractuales por rol (DOG-22): `tests/api-role-contracts.test.ts`.
+- Buscador de pacientes en documentos y resultados de laboratorio del profesional (DOG-29): `PatientSearchSelect`.
 
 ## Mejoras opcionales
 
 ## P2 — Performance / Tech Debt
 
-1. **Paginación de catálogos en recepción**
-   - Riesgo: bajo mientras los catálogos sigan siendo pequeños.
-   - Impacto: medio cuando aumente el número de profesionales o especialidades.
-   - Validación: paginación server-side o endpoint paginado con cobertura de UI.
-
-2. **Segundo factor para roles privilegiados**
+1. **Segundo factor para roles privilegiados**
    - Riesgo: medio; actualmente el acceso depende de credenciales y controles de rol.
    - Impacto: alto para endurecer ADMINISTRADOR/PROFESIONAL.
    - Validación: flujo MFA completo, recuperación, auditoría y pruebas de autenticación.
-
-3. **Evitar `prisma generate` redundante en install de Vercel**
-   - Riesgo: bajo.
-   - Impacto: medio (build más rápido y menos pasos duplicados).
-   - Esfuerzo: bajo.
-   - Validación: postinstall hace skip en `VERCEL=1`; `vercel-build` mantiene `prisma generate` como fuente de verdad.
-
-4. **Matriz explícita de ownership por dominio**
-   - Riesgo: bajo.
-   - Impacto: medio (menos fricción de soporte y revisiones).
-   - Esfuerzo: medio.
-   - Validación: `docs/ARCHITECTURE_MAP.md` actualizado con responsables por módulo/flujo.
-
-5. **Tests contractuales para APIs críticas por rol**
-   - Riesgo: medio.
-   - Impacto: medio-alto.
-   - Esfuerzo: medio.
-   - Validación: suite de integración por endpoint crítico (403/404/200 según rol y entorno).

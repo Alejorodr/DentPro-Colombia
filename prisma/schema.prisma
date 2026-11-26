@@ -52,6 +52,23 @@ enum UnavailabilityStatus {
   CANCELLED
 }
 
+/// Tipos de identificación de la tabla RIPS del Ministerio de Salud (DOG-34).
+enum DocumentType {
+  CC
+  TI
+  RC
+  CN
+  CE
+  PA
+  PE
+  PT
+  DE
+  CD
+  SC
+  AS
+  MS
+}
+
 enum InsuranceStatus {
   ACTIVE
   INACTIVE
@@ -179,9 +196,37 @@ model User {
   auditLogs                    AuditLog[]
   accounts                     Account[]
   sessions                     Session[]
+  mfa                          UserMfa?
 
   @@index([role])
   @@index([active])
+}
+
+/// Segundo factor por app autenticadora (DOG-28). Mientras `enabledAt` es null la inscripción
+/// está a medias: el secreto existe pero todavía no se confirmó con un código.
+model UserMfa {
+  userId       String          @id @db.Uuid
+  /// Secreto TOTP en base32. Se guarda cifrado (ENCRYPTED_FIELDS).
+  secret       String
+  enabledAt    DateTime?
+  /// Último paso TOTP aceptado: impide reutilizar un código interceptado.
+  lastUsedStep Int?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  user         User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  backupCodes  MfaBackupCode[]
+}
+
+/// Códigos de respaldo de un solo uso (DOG-28). Solo se guarda el hash bcrypt.
+model MfaBackupCode {
+  id        String    @id @default(uuid())
+  userId    String    @db.Uuid
+  codeHash  String
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  mfa       UserMfa   @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model Account {
@@ -229,11 +274,13 @@ model ProfessionalProfile {
   specialtyId            String
   slotDurationMinutes    Int?
   active                 Boolean                          @default(true)
-  homepageBioShort      String?
-  homepageImageUrl      String?
-  homepageImageAlt      String?
-  showOnHomepage        Boolean                          @default(false)
-  homepageSortOrder     Int                              @default(0)
+  homepageBioShort       String?
+  homepageImageUrl       String?
+  homepageImageAlt       String?
+  showOnHomepage         Boolean                          @default(false)
+  homepageSortOrder      Int                              @default(0)
+  /// Registro Único Nacional del Talento Humano en Salud. Opcional al crear (DOG-34).
+  rethusNumber           String?
   user                   User                             @relation(fields: [userId], references: [id], onDelete: Restrict)
   specialty              Specialty                        @relation(fields: [specialtyId], references: [id], onDelete: Restrict)
   timeSlots              TimeSlot[]
@@ -247,13 +294,17 @@ model ProfessionalProfile {
   unavailabilityEntries  ProfessionalUnavailability[]
   clinicalEpisodes       ClinicalEpisode[]
   prescriptions          Prescription[]
+  procedures             ProfessionalProcedure[]
 }
 
 model PatientProfile {
   id                  String               @id @default(uuid())
   userId              String               @unique @db.Uuid
   phone               String?
+  documentType        DocumentType         @default(CC)
   documentId          String?
+  /// HMAC del documento normalizado para buscarlo sin descifrar (DOG-18).
+  documentIdHash      String?
   dateOfBirth         DateTime?
   gender              String?
   insuranceProvider   String?
@@ -272,6 +323,8 @@ model PatientProfile {
   prescriptions       Prescription[]
   consents            SignedConsent[]
   accessLogs          AccessLog[]
+
+  @@index([documentIdHash])
 }
 
 model Service {
@@ -284,22 +337,24 @@ model Service {
   iconKey              String?
   showOnHomepage       Boolean               @default(false)
   homepageSortOrder    Int                   @default(0)
+  detailSlug           String?
   specialtyId          String?
   specialty            Specialty?            @relation(fields: [specialtyId], references: [id], onDelete: SetNull)
   appointments         Appointment[]
   professionalServices ProfessionalService[]
   homepageHighlights   ServiceHighlight[]
+  clinicProcedures     ClinicProcedure[]
 
   @@index([active])
   @@index([specialtyId])
 }
 
 model ServiceHighlight {
-  id        String   @id @default(uuid())
+  id        String  @id @default(uuid())
   serviceId String
-  service   Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  service   Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
   text      String
-  sortOrder Int      @default(0)
+  sortOrder Int     @default(0)
 
   @@index([serviceId, sortOrder])
 }
@@ -349,14 +404,14 @@ model Appointment {
   clinicalEpisodes  ClinicalEpisode[]
   events            AppointmentEvent[]
 
+  // Cancelled appointments release their slot: only one non-cancelled appointment per slot.
+  @@unique([timeSlotId], map: "Appointment_timeSlotId_active_key", where: raw("status <> 'CANCELLED'"))
   @@index([patientId])
   @@index([professionalId])
   @@index([serviceId])
   @@index([status])
   @@index([createdAt])
   @@index([timeSlotId])
-  // Cancelled appointments release their slot: only one non-cancelled appointment per slot.
-  @@unique([timeSlotId], map: "Appointment_timeSlotId_active_key", where: raw("status <> 'CANCELLED'"))
 }
 
 model AppointmentEvent {
@@ -604,6 +659,33 @@ model ProfessionalService {
   @@index([professionalId, active])
 }
 
+/// Procedimiento CUPS que la clínica presta (DOG-42). Que exista la fila significa que se presta;
+/// el nombre y el grupo salen del catálogo en lib/regulatory/cups-odontologia.ts.
+model ClinicProcedure {
+  id            String                  @id @default(uuid())
+  cupsCode      String                  @unique
+  /// Servicio comercial con el que se agenda y cobra (precio y duración viven en el servicio).
+  serviceId     String?
+  createdAt     DateTime                @default(now())
+  updatedAt     DateTime                @updatedAt
+  service       Service?                @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  professionals ProfessionalProcedure[]
+
+  @@index([serviceId])
+}
+
+/// Profesionales que realizan cada procedimiento CUPS de la clínica (DOG-42).
+model ProfessionalProcedure {
+  professionalId String
+  procedureId    String
+  createdAt      DateTime            @default(now())
+  professional   ProfessionalProfile @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+  procedure      ClinicProcedure     @relation(fields: [procedureId], references: [id], onDelete: Cascade)
+
+  @@id([professionalId, procedureId])
+  @@index([procedureId])
+}
+
 model ProfessionalWorkingSchedule {
   id              String                           @id @default(uuid())
   professionalId  String
@@ -753,7 +835,10 @@ model Notification {
   createdAt  DateTime  @default(now())
   user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([userId])
+  // (userId, readAt): contador de no leídas. (userId, createdAt): feed ordenado por fecha.
+  // Ambos cubren también las búsquedas solo por userId (DOG-11).
+  @@index([userId, readAt])
+  @@index([userId, createdAt])
   @@index([readAt])
   @@index([createdAt])
 }
@@ -774,7 +859,6 @@ model Campaign {
   @@index([startAt])
   @@index([endAt])
 }
-
 
 model AuditLog {
   id              String   @id @default(uuid())
@@ -893,15 +977,15 @@ model HomepageBookingBenefit {
 }
 
 model HomepageSocialLink {
-  id        String                     @id @default(uuid())
-  href      String
-  label     String
-  iconKey   String
+  id         String                     @id @default(uuid())
+  href       String
+  label      String
+  iconKey    String
   placements HomepageContentPlacement[]
-  sortOrder Int                        @default(0)
-  isActive  Boolean                    @default(true)
-  createdAt DateTime                   @default(now())
-  updatedAt DateTime                   @updatedAt
+  sortOrder  Int                        @default(0)
+  isActive   Boolean                    @default(true)
+  createdAt  DateTime                   @default(now())
+  updatedAt  DateTime                   @updatedAt
 
   @@index([isActive, sortOrder])
 }
@@ -991,4 +1075,34 @@ model PasswordResetToken {
 
   @@index([userId])
   @@index([expiresAt])
+}
+
+enum EmailOutboxStatus {
+  PENDING
+  SENDING
+  SENT
+  FAILED
+}
+
+/// Cola de correos salientes (DOG-13). El cuerpo va cifrado y se borra al enviarse.
+model EmailOutbox {
+  id            String            @id @default(uuid())
+  kind          String
+  transport     String
+  to            String
+  subject       String
+  html          String?
+  text          String?
+  status        EmailOutboxStatus @default(PENDING)
+  attempts      Int               @default(0)
+  lastError     String?
+  nextAttemptAt DateTime          @default(now())
+  /// Pasada esta fecha el correo ya no sirve (enlace vencido, cita pasada) y no se envía.
+  expiresAt     DateTime?
+  lockedUntil   DateTime?
+  sentAt        DateTime?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  @@index([status, nextAttemptAt])
 }

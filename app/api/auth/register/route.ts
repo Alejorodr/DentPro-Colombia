@@ -9,6 +9,7 @@ import { PASSWORD_POLICY_MESSAGE, PASSWORD_POLICY_REGEX } from "@/lib/auth/passw
 import { Prisma } from "@prisma/client";
 import { logAuditEvent } from "@/lib/audit";
 import { enforceRateLimit } from "@/app/api/_utils/ratelimit";
+import { botBlockedResponse, isBotRequest } from "@/lib/security/bot-protection";
 
 const registerSchema = z.object({
   name: z.string().trim().min(1, "El nombre es obligatorio.").max(120),
@@ -29,6 +30,7 @@ export async function POST(request: Request) {
     windowMs: 60_000,
   });
   if (rateLimited) return rateLimited;
+  if (await isBotRequest("/api/auth/register")) return botBlockedResponse();
 
   const { data: payload, error } = await parseJson(request, registerSchema);
   if (error) {

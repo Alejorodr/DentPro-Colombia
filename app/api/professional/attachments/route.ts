@@ -27,6 +27,8 @@ const professionalAttachmentSchema = z.object({
   patientId: z.string().uuid().nullable().optional(),
 });
 
+const ATTACHMENTS_LIST_LIMIT = 100;
+
 export async function GET(request: Request) {
   const sessionResult = await requireSession();
   if ("error" in sessionResult) {
@@ -81,6 +83,8 @@ export async function GET(request: Request) {
       },
     },
     orderBy: { createdAt: "desc" },
+    // Solo los más recientes: el listado crece con cada carga y cada dataUrl pesa hasta ~15 KB (DOG-11).
+    take: ATTACHMENTS_LIST_LIMIT,
   });
 
   return NextResponse.json({

@@ -7,6 +7,7 @@ import { Bell, Trash } from "@/components/ui/Icon";
 import { Skeleton } from "@/app/portal/components/ui/Skeleton";
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
 import { groupNotificationsByDate } from "@/lib/notifications/groupNotifications";
+import { CLINIC_TIME_ZONE } from "@/lib/dates/tz";
 
 type NotificationItem = {
   id: string;
@@ -87,31 +88,49 @@ export function NotificationsBell() {
     };
   }, []);
 
+  // DOG-12: actualización optimista. La vista cambia al instante y se revierte si el servidor falla.
+  const requestOk = async (input: string, init: RequestInit) => {
+    try {
+      return (await fetchWithTimeout(input, init)).ok;
+    } catch {
+      return false;
+    }
+  };
+
   const markAsRead = async (id: string) => {
-    const response = await fetchWithTimeout(`/api/notifications/${id}`, { method: "PATCH" });
-    if (response.ok) {
-      setNotifications((prev) => prev.map((item) => (item.id === id ? { ...item, readAt: new Date().toISOString() } : item)));
-      setUnreadCount((prev) => Math.max(prev - 1, 0));
+    const target = notifications.find((item) => item.id === id);
+    if (!target || target.readAt) return;
+    setNotifications((prev) => prev.map((item) => (item.id === id ? { ...item, readAt: new Date().toISOString() } : item)));
+    setUnreadCount((prev) => Math.max(prev - 1, 0));
+
+    if (!(await requestOk(`/api/notifications/${id}`, { method: "PATCH" }))) {
+      setNotifications((prev) => prev.map((item) => (item.id === id ? { ...item, readAt: target.readAt ?? null } : item)));
+      setUnreadCount((prev) => prev + 1);
     }
   };
 
   const markAllAsRead = async () => {
-    const response = await fetchWithTimeout("/api/notifications/read-all", { method: "PATCH" });
-    if (!response.ok) return;
+    const previousNotifications = notifications;
+    const previousUnread = unreadCount;
     setNotifications((prev) => prev.map((item) => (item.readAt ? item : { ...item, readAt: new Date().toISOString() })));
     setUnreadCount(0);
+
+    if (!(await requestOk("/api/notifications/read-all", { method: "PATCH" }))) {
+      setNotifications(previousNotifications);
+      setUnreadCount(previousUnread);
+    }
   };
 
   const deleteNotification = async (id: string) => {
-    const response = await fetchWithTimeout(`/api/notifications/${id}`, { method: "DELETE" });
-    if (response.ok) {
-      setNotifications((prev) => {
-        const removed = prev.find((item) => item.id === id);
-        if (removed && !removed.readAt) {
-          setUnreadCount((count) => Math.max(count - 1, 0));
-        }
-        return prev.filter((item) => item.id !== id);
-      });
+    const index = notifications.findIndex((item) => item.id === id);
+    if (index === -1) return;
+    const removed = notifications[index];
+    setNotifications((prev) => prev.filter((item) => item.id !== id));
+    if (!removed.readAt) setUnreadCount((count) => Math.max(count - 1, 0));
+
+    if (!(await requestOk(`/api/notifications/${id}`, { method: "DELETE" }))) {
+      setNotifications((prev) => (prev.some((item) => item.id === id) ? prev : [...prev.slice(0, index), removed, ...prev.slice(index)]));
+      if (!removed.readAt) setUnreadCount((count) => count + 1);
     }
   };
 
@@ -213,7 +232,7 @@ export function NotificationsBell() {
                             {notification.body ? (
                               <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{notification.body}</p>
                             ) : null}
-                            <p className="mt-1 text-[11px] text-slate-400">{new Date(notification.createdAt).toLocaleString("es-CO")}</p>
+                            <p className="mt-1 text-[11px] text-slate-400">{new Date(notification.createdAt).toLocaleString("es-CO", { timeZone: CLINIC_TIME_ZONE })}</p>
                             {href ? (
                               <Link className="mt-1 inline-flex text-xs font-semibold text-brand-teal" href={href}>
                                 Ver en agenda

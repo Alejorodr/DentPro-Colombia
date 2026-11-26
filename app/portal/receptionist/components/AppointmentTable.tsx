@@ -24,6 +24,8 @@ import { RescheduleModal } from "@/app/portal/components/RescheduleModal";
 import { AppointmentEventTimeline } from "@/app/portal/components/appointments/AppointmentEventTimeline";
 import { fetchWithTimeout } from "@/lib/http";
 import { toOperationalStatus } from "@/lib/appointments/status";
+import { PortalDialog } from "@/app/portal/components/ui/PortalDialog";
+import { CLINIC_TIME_ZONE } from "@/lib/dates/tz";
 
 type AppointmentSummary = {
   id: string;
@@ -47,13 +49,28 @@ interface AppointmentTableProps {
 }
 
 
-export function AppointmentTable({ appointments, page, totalPages, onPageChange, onRefresh, initialEventsAppointmentId = null, groupByProfessional = false }: AppointmentTableProps) {
+export function AppointmentTable({ appointments: sourceAppointments, page, totalPages, onPageChange, onRefresh, initialEventsAppointmentId = null, groupByProfessional = false }: AppointmentTableProps) {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [rescheduleId, setRescheduleId] = useState<string | null>(null);
   const [eventsAppointmentId, setEventsAppointmentId] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [cancelTarget, setCancelTarget] = useState<string | null>(null);
   const [cancelReason, setCancelReason] = useState("");
+  // DOG-12: estado optimista por cita, encima de lo que manda el padre. Se limpia cuando el
+  // padre recarga la lista (ya trae el estado real) o se revierte si el servidor rechaza el cambio.
+  const [optimisticStatus, setOptimisticStatus] = useState<Record<string, AppointmentStatus>>({});
+
+  useEffect(() => {
+    setOptimisticStatus({});
+  }, [sourceAppointments]);
+
+  const appointments = useMemo(
+    () =>
+      sourceAppointments.map((appointment) =>
+        optimisticStatus[appointment.id] ? { ...appointment, status: optimisticStatus[appointment.id] } : appointment,
+      ),
+    [optimisticStatus, sourceAppointments],
+  );
 
   useEffect(() => {
     if (initialEventsAppointmentId) {
@@ -68,21 +85,35 @@ export function AppointmentTable({ appointments, page, totalPages, onPageChange,
 
     setBusyId(id);
     setFeedback(null);
-    const response = await fetchWithTimeout(`/api/appointments/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status, action, ...(notes ? { notes } : {}) }),
-    });
+    setOptimisticStatus((prev) => ({ ...prev, [id]: status }));
+    const revert = () =>
+      setOptimisticStatus((prev) => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
 
-    if (response.ok) {
-      setFeedback("Estado actualizado correctamente.");
-      onRefresh();
-    } else {
-      const payload = (await response.json().catch(() => null)) as { error?: string } | null;
-      setFeedback(payload?.error ?? "No se pudo actualizar el estado. Intenta nuevamente.");
+    try {
+      const response = await fetchWithTimeout(`/api/appointments/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status, action, ...(notes ? { notes } : {}) }),
+      });
+
+      if (response.ok) {
+        setFeedback("Estado actualizado correctamente.");
+        onRefresh();
+      } else {
+        revert();
+        const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+        setFeedback(payload?.error ?? "No se pudo actualizar el estado. Intenta nuevamente.");
+      }
+    } catch {
+      revert();
+      setFeedback("No se pudo actualizar el estado. Intenta nuevamente.");
+    } finally {
+      setBusyId(null);
     }
-
-    setBusyId(null);
   };
 
   const confirmCancel = async () => {
@@ -93,7 +124,7 @@ export function AppointmentTable({ appointments, page, totalPages, onPageChange,
   };
 
   const timeline = useMemo(() => {
-    return [...appointments].sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime());
+    return appointments.toSorted((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime());
   }, [appointments]);
 
 
@@ -155,7 +186,7 @@ export function AppointmentTable({ appointments, page, totalPages, onPageChange,
                         return (
                           <div key={`timeline-${appointment.id}`} className="flex items-center justify-between rounded-xl border border-slate-100 px-3 py-2 text-xs">
                             <span>
-                              {new Date(appointment.startAt).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })} · {appointment.patient?.name ?? "Paciente"}
+                              {new Date(appointment.startAt).toLocaleTimeString("es-CO", { timeZone: CLINIC_TIME_ZONE, hour: "2-digit", minute: "2-digit" })} · {appointment.patient?.name ?? "Paciente"}
                             </span>
                             <span className={`rounded-full border px-2 py-1 font-semibold ${(STATUS_COLORS[slot] ?? DEFAULT_STATUS_COLOR).border} ${(STATUS_COLORS[slot] ?? DEFAULT_STATUS_COLOR).badge}`}>{(STATUS_COLORS[slot] ?? DEFAULT_STATUS_COLOR).label}</span>
                           </div>
@@ -172,7 +203,7 @@ export function AppointmentTable({ appointments, page, totalPages, onPageChange,
                   return (
                     <div key={`timeline-${appointment.id}`} className="flex items-center justify-between rounded-xl border-l-4 border-l-brand-teal border border-slate-200 bg-white px-3 py-2 text-xs shadow-xs">
                       <span>
-                        {new Date(appointment.startAt).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })} · {appointment.patient?.name ?? "Paciente"}
+                        {new Date(appointment.startAt).toLocaleTimeString("es-CO", { timeZone: CLINIC_TIME_ZONE, hour: "2-digit", minute: "2-digit" })} · {appointment.patient?.name ?? "Paciente"}
                       </span>
                       <span className={`rounded-full border px-2 py-1 font-semibold ${(STATUS_COLORS[slot] ?? DEFAULT_STATUS_COLOR).border} ${(STATUS_COLORS[slot] ?? DEFAULT_STATUS_COLOR).badge}`}>{(STATUS_COLORS[slot] ?? DEFAULT_STATUS_COLOR).label}</span>
                     </div>
@@ -197,7 +228,7 @@ export function AppointmentTable({ appointments, page, totalPages, onPageChange,
               {appointments.map((appointment) => {
                 const start = new Date(appointment.startAt);
                 const end = new Date(appointment.endAt);
-                const timeLabel = `${start.toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })} - ${end.toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })}`;
+                const timeLabel = `${start.toLocaleTimeString("es-CO", { timeZone: CLINIC_TIME_ZONE, hour: "2-digit", minute: "2-digit" })} - ${end.toLocaleTimeString("es-CO", { timeZone: CLINIC_TIME_ZONE, hour: "2-digit", minute: "2-digit" })}`;
                 return (
                   <tr key={appointment.id} className="bg-white dark:bg-surface-elevated/60">
                     <td className="px-4 py-3 font-semibold text-slate-900 dark:text-white">{timeLabel}</td>
@@ -268,40 +299,38 @@ export function AppointmentTable({ appointments, page, totalPages, onPageChange,
       <RescheduleModal appointmentId={rescheduleId} open={Boolean(rescheduleId)} onClose={() => setRescheduleId(null)} onUpdated={() => onRefresh()} />
 
       {cancelTarget ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 px-4">
-          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl dark:bg-surface-elevated">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Confirmar cancelación</p>
-            <h3 className="mt-1 text-lg font-semibold text-slate-900 dark:text-white">¿Cancelar esta cita?</h3>
-            <p className="mt-1 text-sm text-slate-500">Esta acción no se puede deshacer.</p>
-            <label className="mt-4 block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-              Motivo de cancelación (opcional)
-              <textarea
-                value={cancelReason}
-                onChange={(event) => setCancelReason(event.target.value)}
-                placeholder="Ej. Paciente no puede asistir, reagendamiento solicitado…"
-                rows={3}
-                className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm normal-case text-slate-700 focus:outline-none focus:ring-2 focus:ring-rose-300 dark:border-surface-muted dark:bg-surface-base dark:text-slate-200"
-              />
-            </label>
-            <div className="mt-5 flex justify-end gap-2">
-              <button
-                type="button"
-                className="rounded-full border border-slate-200 px-4 py-2 text-xs font-semibold uppercase text-slate-600 dark:border-surface-muted dark:text-slate-200"
-                onClick={() => { setCancelTarget(null); setCancelReason(""); }}
-              >
-                Volver
-              </button>
-              <button
-                type="button"
-                className="rounded-full bg-rose-600 px-4 py-2 text-xs font-semibold uppercase text-white disabled:opacity-50"
-                onClick={confirmCancel}
-                disabled={busyId === cancelTarget}
-              >
-                {busyId === cancelTarget ? "Cancelando…" : "Sí, cancelar cita"}
-              </button>
-            </div>
+        <PortalDialog onClose={() => { setCancelTarget(null); setCancelReason(""); }} labelledBy="cancel-appointment-title" size="md">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Confirmar cancelación</p>
+          <h3 id="cancel-appointment-title" className="mt-1 text-lg font-semibold text-slate-900 dark:text-white">¿Cancelar esta cita?</h3>
+          <p className="mt-1 text-sm text-slate-500">Esta acción no se puede deshacer.</p>
+          <label className="mt-4 block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            Motivo de cancelación (opcional)
+            <textarea
+              value={cancelReason}
+              onChange={(event) => setCancelReason(event.target.value)}
+              placeholder="Ej. Paciente no puede asistir, reagendamiento solicitado…"
+              rows={3}
+              className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm normal-case text-slate-700 focus:outline-none focus:ring-2 focus:ring-rose-300 dark:border-surface-muted dark:bg-surface-base dark:text-slate-200"
+            />
+          </label>
+          <div className="mt-5 flex justify-end gap-2">
+            <button
+              type="button"
+              className="rounded-full border border-slate-200 px-4 py-2 text-xs font-semibold uppercase text-slate-600 dark:border-surface-muted dark:text-slate-200"
+              onClick={() => { setCancelTarget(null); setCancelReason(""); }}
+            >
+              Volver
+            </button>
+            <button
+              type="button"
+              className="rounded-full bg-rose-600 px-4 py-2 text-xs font-semibold uppercase text-white disabled:opacity-50"
+              onClick={confirmCancel}
+              disabled={busyId === cancelTarget}
+            >
+              {busyId === cancelTarget ? "Cancelando…" : "Sí, cancelar cita"}
+            </button>
           </div>
-        </div>
+        </PortalDialog>
       ) : null}
     </div>
   );

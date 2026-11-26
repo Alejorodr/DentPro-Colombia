@@ -12,6 +12,11 @@ export async function getSessionUser(): Promise<SessionUser | null> {
     return null;
   }
 
+  // DOG-28: una sesión con el segundo factor pendiente no está autenticada para la API.
+  if (session?.user?.mfaPending) {
+    return null;
+  }
+
   return { id, role };
 }
 

@@ -7,6 +7,7 @@ import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
 import { MARKETING_ICON_KEYS } from "@/lib/marketing/homepage-types";
 
 import { IconSelect } from "./components/IconSelect";
+import { SkeletonRows } from "@/app/portal/components/ui/Skeleton";
 
 type ContactSupportItem = {
   id: string;
@@ -171,7 +172,7 @@ export function AdminHomepageContactSupportItemsPanel() {
         <button type="button" className="rounded-full bg-brand-teal px-4 py-2 text-xs font-semibold uppercase text-white disabled:opacity-60" onClick={createItem} disabled={saving}>Crear ítem</button>
       </Card>
 
-      {loading ? <Card><p className="text-sm text-slate-600 dark:text-slate-300">Cargando ítems...</p></Card> : null}
+      {loading ? <Card><SkeletonRows label="Cargando ítems" /></Card> : null}
 
       {items.map((item, index) => (
         <Card key={item.id} className="space-y-4">

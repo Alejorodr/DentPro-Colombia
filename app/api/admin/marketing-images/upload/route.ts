@@ -7,6 +7,7 @@ import {
   buildMarketingImageStorageKey,
   isAllowedMarketingImageType,
   isAllowedMarketingUploadFolder,
+  matchesMarketingImageSignature,
   sanitizeMarketingImageFilename,
   uploadPublicMarketingImage,
 } from "@/lib/marketing/images";
@@ -17,7 +18,13 @@ export async function POST(request: Request) {
     return admin.response;
   }
 
-  const formData = await request.formData();
+  let formData: FormData;
+  try {
+    formData = await request.formData();
+  } catch {
+    // DOG-19: un body que no es multipart antes terminaba en 500.
+    return errorResponse("Solicitud inválida: se esperaba un formulario con el archivo.", 400);
+  }
   const file = formData.get("file");
   const folder = formData.get("folder");
 
@@ -88,6 +95,25 @@ export async function POST(request: Request) {
       },
     });
     return errorResponse(`Archivo demasiado grande. Máximo ${Math.floor(MARKETING_IMAGE_MAX_BYTES / 1024 / 1024)}MB.`, 400);
+  }
+
+  const header = new Uint8Array(await file.slice(0, 16).arrayBuffer());
+  if (!matchesMarketingImageSignature(header, file.type)) {
+    await logAuditEvent({
+      actor: {
+        userId: admin.sessionUser.id,
+        role: admin.sessionUser.role,
+      },
+      action: "marketing.image.uploaded",
+      resourceType: "marketing_image_upload",
+      status: "failure",
+      metadata: {
+        reason: "signature_mismatch",
+        folder,
+        mimeType: file.type,
+      },
+    });
+    return errorResponse("El contenido del archivo no corresponde a una imagen JPEG, PNG o WEBP.", 400);
   }
 
   const sanitizedFilename = sanitizeMarketingImageFilename(file.name, file.type);

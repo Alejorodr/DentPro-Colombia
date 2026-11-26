@@ -6,6 +6,7 @@ import { getPrismaClient, isDatabaseUnavailableError } from "@/lib/prisma";
 import { createReceptionNotifications } from "@/lib/notifications";
 import { AppointmentStatus, TimeSlotStatus } from "@prisma/client";
 import { parseJson } from "@/app/api/_utils/validation";
+import { documentTypeSchema } from "@/lib/regulatory/colombia";
 import { enforceRateLimit } from "@/app/api/_utils/ratelimit";
 import { getRequestId } from "@/app/api/_utils/request";
 import { logger } from "@/lib/logger";
@@ -13,6 +14,7 @@ import { requireRole, requireSession } from "@/lib/authz";
 import { assertSlotBookable } from "@/lib/scheduling/effective-availability";
 import {
   BookingLimitError,
+  SlotAlreadyBookedError,
   assertPatientBookingCapInTransaction,
   checkSlotLeadTime,
 } from "@/lib/appointments/booking-limits";
@@ -31,6 +33,7 @@ const patientDetailsSchema = z.object({
   lastName: z.string().trim().max(80).optional(),
   email: z.string().trim().email().max(120).optional(),
   phone: z.string().trim().max(30).optional(),
+  documentType: documentTypeSchema.optional(),
   documentId: z.string().trim().max(40).optional(),
 });
 
@@ -142,7 +145,7 @@ export async function POST(request: Request) {
       });
 
       if (updatedSlot.count === 0) {
-        throw new Error("Slot reservado");
+        throw new SlotAlreadyBookedError();
       }
 
       const details = payload.patientDetails;
@@ -157,6 +160,7 @@ export async function POST(request: Request) {
             patient: {
               update: {
                 phone: details.phone?.trim() || undefined,
+                documentType: details.documentType,
                 documentId: details.documentId?.trim() || undefined,
               },
             },
@@ -203,6 +207,16 @@ export async function POST(request: Request) {
 
     return NextResponse.json(appointment, { status: 201 });
   } catch (error) {
+    if (error instanceof SlotAlreadyBookedError) {
+      logger.warn({
+        event: "client.appointment.slot_taken",
+        route: "/api/client/appointments",
+        requestId,
+        userId: sessionResult.user.id,
+        status: error.status,
+      });
+      return errorResponse(error.message, error.status);
+    }
     if (error instanceof BookingLimitError) {
       logger.warn({
         event: "client.appointment.limit_reached",

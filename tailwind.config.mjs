@@ -4,7 +4,6 @@ const config = {
   content: [
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
-    "./pages/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
     extend: {
@@ -26,6 +25,10 @@ const config = {
         },
         card: {
           dark: "#10243d",
+        },
+        // Solo para las estrellas de calificación (excepción aprobada, DOG-35).
+        gold: {
+          bright: "#e6b450",
         },
       },
       boxShadow: {

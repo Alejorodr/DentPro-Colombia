@@ -7,8 +7,7 @@ import { signIn } from "next-auth/react";
 import {
   ArrowRight,
   EnvelopeSimple,
-  Eye,
-  EyeSlash,
+  MorphToggleIcon,
   Lock,
   Phone,
   ShieldCheck,
@@ -193,7 +192,7 @@ export function RegisterForm({ googleEnabled = false }: RegisterFormProps) {
           error={fieldErrors.email}
           icon={<EnvelopeSimple className="h-4 w-4" aria-hidden="true" />}
           placeholder="tu@correo.com"
-          autoComplete="email"
+          autoComplete="username"
         />
 
         <FieldInput
@@ -333,10 +332,7 @@ function FieldInput({
             aria-label={showValue ? "Ocultar contraseña" : "Mostrar contraseña"}
             tabIndex={0}
           >
-            {showValue
-              ? <EyeSlash className="h-4 w-4" weight="bold" aria-hidden="true" />
-              : <Eye className="h-4 w-4" weight="bold" aria-hidden="true" />
-            }
+            <MorphToggleIcon name="visibility" active={showValue} className="h-4 w-4" weight="bold" aria-hidden="true" />
           </button>
         ) : null}
       </div>

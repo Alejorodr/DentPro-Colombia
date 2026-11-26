@@ -42,15 +42,18 @@ export default defineConfig({
   schema: "prisma/schema.prisma",
   migrations: {
     path: "prisma/migrations",
+    // Prisma 7 solo lee el seed desde aquí (ignora "prisma.seed" de package.json). tsx resuelve
+    // los alias `@/...` que usa el seed; el comando hereda el entorno ya cargado arriba (DOG-43).
+    seed: "tsx prisma/seed.ts",
   },
   datasource: {
     // Para deploy (migrate deploy) necesita SI o SI una url aquí:
     url: fallbackDatabaseUrl,
-    // Dedicated Neon branch used only as scratch space for `migrate dev`'s
-    // shadow-database diffing — never the real dev/prod database. Neon's
-    // pooled connection can't CREATE DATABASE, which is what a self-managed
-    // shadow DB would need; a real Postgres server would use its own scratch
-    // database instead of a separate branch.
+    // Scratch database for `migrate dev`'s shadow diffing: Prisma wipes it on
+    // every run, so it must never be the real dev/prod database. Locally it is
+    // the `prisma_shadow` database on Neon's Dev branch, next to the `neondb`
+    // database that DATABASE_URL uses (DOG-41). Neon's pooled connection can't
+    // CREATE DATABASE, so the shadow database has to exist beforehand.
     shadowDatabaseUrl,
   },
 });

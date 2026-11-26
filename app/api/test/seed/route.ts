@@ -5,6 +5,7 @@ import { AppointmentStatus, Prisma, ProfessionalScheduleStatus, Role, TimeSlotSt
 import { getPrismaClient } from "@/lib/prisma";
 import { upsertSlotAppointment } from "@/lib/appointments/upsert-slot-appointment";
 import { logAuditEvent } from "@/lib/audit";
+import { enrollSeededUsersInE2EMfa } from "@/lib/auth/e2e-mfa";
 import { logger } from "@/lib/logger";
 import { refreshFutureInventoryForProfessional } from "@/lib/scheduling/slot-inventory";
 import { enforceOpsRateLimit, getOpsKey, isOpsIpAllowed, isValidOpsKey, respondUnauthorized } from "@/app/api/ops/_utils";
@@ -201,8 +202,8 @@ export async function POST(request: Request) {
 
     const patient = await prisma.patientProfile.upsert({
       where: { userId: patientUser.id },
-      update: { phone: "3005550001", documentId: "CC10001", active: true },
-      create: { userId: patientUser.id, phone: "3005550001", documentId: "CC10001", active: true },
+      update: { phone: "3005550001", documentType: "CC", documentId: "10001", active: true },
+      create: { userId: patientUser.id, phone: "3005550001", documentType: "CC", documentId: "10001", active: true },
     });
 
     const now = new Date();
@@ -241,6 +242,9 @@ export async function POST(request: Request) {
     const rangeEnd = new Date(rangeStart);
     rangeEnd.setDate(rangeEnd.getDate() + 14);
     await refreshFutureInventoryForProfessional({ professionalId: professional.id, rangeStart, rangeEnd, prisma });
+
+    // DOG-28: solo en E2E local, para que las sesiones sembradas de estos roles no queden pendientes.
+    await enrollSeededUsersInE2EMfa(prisma, [admin.id, professionalUser.id]);
 
     logger.info({ event: "test.seed.success", route: "/api/test/seed", status: 200 });
     await logAuditEvent({

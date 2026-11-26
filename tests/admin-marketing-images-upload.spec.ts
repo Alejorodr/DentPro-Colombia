@@ -4,6 +4,9 @@ import { NextResponse } from "next/server";
 
 import { POST } from "@/app/api/admin/marketing-images/upload/route";
 
+// Cabecera mínima de un WEBP real: "RIFF" + tamaño + "WEBPVP8 ".
+const WEBP_HEADER = new Uint8Array([...new TextEncoder().encode("RIFF"), 0x24, 0, 0, 0, ...new TextEncoder().encode("WEBPVP8 ")]);
+
 const { requireAdminMock, uploadPublicMarketingImageMock, logAuditEventMock } = vi.hoisted(() => ({
   requireAdminMock: vi.fn(),
   uploadPublicMarketingImageMock: vi.fn(),
@@ -14,7 +17,10 @@ vi.mock("@/app/api/admin/homepage/_lib", () => ({
   requireAdmin: requireAdminMock,
 }));
 
-vi.mock("@/lib/marketing/images", () => ({
+vi.mock("@/lib/marketing/images", async () => ({
+  // La verificación de firma es la real (DOG-19): es justo lo que se quiere probar.
+  matchesMarketingImageSignature: (await vi.importActual<typeof import("@/lib/marketing/images")>("@/lib/marketing/images"))
+    .matchesMarketingImageSignature,
   MARKETING_IMAGE_MAX_BYTES: 5 * 1024 * 1024,
   buildMarketingImageStorageKey: vi.fn((folder: string, fileName: string) => `${folder}/${fileName}`),
   isAllowedMarketingImageType: vi.fn((type: string) => ["image/jpeg", "image/png", "image/webp"].includes(type)),
@@ -106,7 +112,7 @@ describe("POST /api/admin/marketing-images/upload", () => {
   it("acepta upload válido y responde 201", async () => {
     const formData = new FormData();
     formData.append("folder", "homepage");
-    formData.append("file", new File([new Uint8Array([1, 2, 3])], "hero image.webp", { type: "image/webp" }));
+    formData.append("file", new File([WEBP_HEADER], "hero image.webp", { type: "image/webp" }));
 
     const response = await POST(
       new Request("http://localhost/api/admin/marketing-images/upload", {
@@ -126,5 +132,31 @@ describe("POST /api/admin/marketing-images/upload", () => {
         status: "success",
       }),
     );
+  });
+
+  it("rechaza con 400 un archivo cuyo contenido no es la imagen declarada (DOG-19)", async () => {
+    const formData = new FormData();
+    formData.append("folder", "homepage");
+    const html = new TextEncoder().encode("<!doctype html><script>alert(1)</script>");
+    formData.append("file", new File([html], "hero.png", { type: "image/png" }));
+
+    const response = await POST(
+      new Request("http://localhost/api/admin/marketing-images/upload", { method: "POST", body: formData }),
+    );
+
+    expect(response.status).toBe(400);
+    expect(uploadPublicMarketingImageMock).not.toHaveBeenCalled();
+  });
+
+  it("rechaza con 400 un body que no es multipart (DOG-19)", async () => {
+    const response = await POST(
+      new Request("http://localhost/api/admin/marketing-images/upload", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ file: "x" }),
+      }),
+    );
+
+    expect(response.status).toBe(400);
   });
 });

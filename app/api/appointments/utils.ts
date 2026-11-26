@@ -63,6 +63,6 @@ export function buildError(message: string, status = 400) {
   return NextResponse.json({ error: message }, { status });
 }
 
-export function isValidAppointmentStatus(value: string): value is AppointmentStatus {
+function isValidAppointmentStatus(value: string): value is AppointmentStatus {
   return (APPOINTMENT_STATUSES as readonly string[]).includes(value);
 }

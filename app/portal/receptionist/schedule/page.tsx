@@ -9,7 +9,7 @@ const ReceptionistSchedule = dynamic(
     loading: () => (
       <div className="space-y-6">
         <Skeleton className="h-10 w-48" />
-        <div className="grid gap-6 lg:grid-cols-[1.1fr_2fr]">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.1fr_2fr]">
           <Skeleton className="h-80" />
           <Skeleton className="h-80" />
         </div>

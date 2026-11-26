@@ -27,6 +27,7 @@ import type {
   ProfessionalAppointmentDetail,
   ProfessionalDashboardAppointment,
 } from "@/app/portal/professional/types";
+import { CLINIC_TIME_ZONE } from "@/lib/dates/tz";
 
 
 type TabKey = "overview" | "imaging" | "history";
@@ -71,6 +72,15 @@ export function ProfessionalDashboard() {
   const [calendarView, setCalendarView] = useState<"list" | "grid">("grid");
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const autoSaveRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // DOG-12: la cita seleccionada se lee por ref al cargar la agenda, así elegir otra cita no
+  // vuelve a descargar todo el día. `savedNotesRef` evita autoguardar una nota que nadie editó.
+  const selectedAppointmentIdRef = useRef<string | null>(selectedAppointmentId);
+  const savedNotesRef = useRef<string>("");
+
+  // Declarado antes que la carga de la agenda: los efectos corren en orden.
+  useEffect(() => {
+    selectedAppointmentIdRef.current = selectedAppointmentId;
+  }, [selectedAppointmentId]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -90,8 +100,9 @@ export function ProfessionalDashboard() {
         if (requestedAppointment && data.appointments?.some((item) => item.id === requestedAppointment)) {
           setSelectedAppointmentId(requestedAppointment);
         } else if (data.appointments?.length) {
-          const hasSelected = selectedAppointmentId
-            ? data.appointments.some((item) => item.id === selectedAppointmentId)
+          const currentSelection = selectedAppointmentIdRef.current;
+          const hasSelected = currentSelection
+            ? data.appointments.some((item) => item.id === currentSelection)
             : false;
           if (!hasSelected) {
             setSelectedAppointmentId(data.appointments[0].id);
@@ -109,7 +120,7 @@ export function ProfessionalDashboard() {
     return () => {
       active = false;
     };
-  }, [searchParams, selectedDate, selectedAppointmentId]);
+  }, [searchParams, selectedDate]);
 
   useEffect(() => {
     if (!selectedAppointmentId) {
@@ -127,6 +138,7 @@ export function ProfessionalDashboard() {
         if (!active) return;
         setAppointmentDetail(data);
         const latestNote = data.clinicalNotes.at(0)?.content ?? "";
+        savedNotesRef.current = latestNote;
         setNotesContent(latestNote);
       } catch (error) {
         console.error(error);
@@ -143,11 +155,12 @@ export function ProfessionalDashboard() {
   const persistNotes = useCallback(async () => {
     if (!selectedAppointmentId) return;
     try {
-      await fetchWithTimeout(`/api/professional/appointment/${selectedAppointmentId}/notes`, {
+      const response = await fetchWithTimeout(`/api/professional/appointment/${selectedAppointmentId}/notes`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ content: notesContent }),
       });
+      if (response.ok) savedNotesRef.current = notesContent;
       setLastSavedAt(new Date());
     } catch (error) {
       console.error(error);
@@ -156,7 +169,7 @@ export function ProfessionalDashboard() {
 
   // Auto-save notes 2 s after the user stops typing
   useEffect(() => {
-    if (!selectedAppointmentId || !notesContent) return;
+    if (!selectedAppointmentId || !notesContent || notesContent === savedNotesRef.current) return;
     if (autoSaveRef.current) clearTimeout(autoSaveRef.current);
     autoSaveRef.current = setTimeout(() => {
       void persistNotes();
@@ -310,7 +323,12 @@ export function ProfessionalDashboard() {
           dataUrl: dataUrl ?? null,
         }),
       });
-      if (!response.ok) return;
+      if (!response.ok) {
+        // DOG-33: muestra por qué se rechazó el adjunto (ej. el contenido no es PDF/JPG/PNG/WEBP).
+        const body = (await response.json().catch(() => null)) as { error?: string } | null;
+        setUploadError(body?.error ?? "No se pudo subir el adjunto.");
+        return;
+      }
       const data = (await response.json()) as { attachment: ProfessionalAppointmentDetail["attachments"][number] };
       setAppointmentDetail((prev) => (prev ? { ...prev, attachments: [data.attachment, ...prev.attachments] } : prev));
     } catch (error) {
@@ -345,7 +363,7 @@ export function ProfessionalDashboard() {
     }
   };
 
-  const formattedDate = new Date(selectedDate + "T12:00:00").toLocaleDateString("es-CO", {
+  const formattedDate = new Date(selectedDate + "T12:00:00").toLocaleDateString("es-CO", { timeZone: CLINIC_TIME_ZONE,
     weekday: "long",
     day: "numeric",
     month: "long",
@@ -449,7 +467,7 @@ export function ProfessionalDashboard() {
                     >
                       <div className="flex items-center justify-between text-xs text-slate-500">
                         <span>
-                          {new Date(appointment.startAt).toLocaleTimeString("es-CO", {
+                          {new Date(appointment.startAt).toLocaleTimeString("es-CO", { timeZone: CLINIC_TIME_ZONE,
                             hour: "2-digit",
                             minute: "2-digit",
                             hour12: false,
@@ -531,7 +549,7 @@ export function ProfessionalDashboard() {
                     <p className="text-xs uppercase tracking-wide text-slate-400">Última visita</p>
                     <p className="mt-2 text-lg font-semibold text-slate-900 dark:text-white">
                       {appointmentDetail.history[0]?.startAt
-                        ? new Date(appointmentDetail.history[0].startAt).toLocaleDateString("es-CO", {
+                        ? new Date(appointmentDetail.history[0].startAt).toLocaleDateString("es-CO", { timeZone: CLINIC_TIME_ZONE,
                             month: "short",
                             day: "numeric",
                             year: "numeric",
@@ -579,7 +597,7 @@ export function ProfessionalDashboard() {
                         >
                           <div>
                             <p className="font-medium text-slate-900 dark:text-white">{item.filename}</p>
-                            <p className="text-xs text-slate-500">{new Date(item.createdAt).toLocaleString("es-CO")}</p>
+                            <p className="text-xs text-slate-500">{new Date(item.createdAt).toLocaleString("es-CO", { timeZone: CLINIC_TIME_ZONE })}</p>
                           </div>
                           {item.url ? (
                             <Link className="text-xs font-semibold text-brand-indigo" href={item.url} target="_blank" rel="noopener noreferrer">
@@ -611,7 +629,7 @@ export function ProfessionalDashboard() {
                           <StatusBadge status={history.status} />
                         </div>
                         <p className="text-xs text-slate-500">
-                          {new Date(history.startAt).toLocaleDateString("es-CO", {
+                          {new Date(history.startAt).toLocaleDateString("es-CO", { timeZone: CLINIC_TIME_ZONE,
                             year: "numeric",
                             month: "short",
                             day: "numeric",
@@ -692,7 +710,7 @@ export function ProfessionalDashboard() {
             <div className="mt-4 flex items-center justify-between text-xs text-slate-500">
               <span>
                 {lastSavedAt
-                  ? `Auto-guardado ${lastSavedAt.toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })}`
+                  ? `Auto-guardado ${lastSavedAt.toLocaleTimeString("es-CO", { timeZone: CLINIC_TIME_ZONE, hour: "2-digit", minute: "2-digit" })}`
                   : appointmentDetail?.clinicalNotes.at(0)?.updatedAt
                     ? "Guardado"
                     : "Sin notas aún"}

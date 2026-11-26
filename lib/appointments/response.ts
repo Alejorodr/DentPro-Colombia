@@ -1,6 +1,6 @@
 import { Prisma } from "@prisma/client";
 
-export const appointmentMutationUserSelect = {
+const appointmentMutationUserSelect = {
   id: true,
   name: true,
   lastName: true,

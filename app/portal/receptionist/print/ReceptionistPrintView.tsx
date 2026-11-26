@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { Table } from "@/app/portal/components/ui/Table";
 import { fetchWithRetry } from "@/lib/http";
+import { CLINIC_TIME_ZONE } from "@/lib/dates/tz";
 
 interface ReceptionistPrintViewProps {
   date?: string;
@@ -108,8 +109,8 @@ export function ReceptionistPrintView({ date, view }: ReceptionistPrintViewProps
         </thead>
         <tbody className="divide-y divide-slate-200 text-sm text-slate-600">
           {appointments.map((appointment) => {
-            const start = new Date(appointment.startAt).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" });
-            const end = new Date(appointment.endAt).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" });
+            const start = new Date(appointment.startAt).toLocaleTimeString("es-CO", { timeZone: CLINIC_TIME_ZONE, hour: "2-digit", minute: "2-digit" });
+            const end = new Date(appointment.endAt).toLocaleTimeString("es-CO", { timeZone: CLINIC_TIME_ZONE, hour: "2-digit", minute: "2-digit" });
             return (
               <tr key={appointment.id} className="bg-white">
                 <td className="px-4 py-3 font-semibold text-slate-900">{start} - {end}</td>

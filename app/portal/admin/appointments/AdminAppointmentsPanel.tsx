@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 import { AppointmentsList } from "@/app/portal/components/AppointmentsList";
 import { fetchWithRetry } from "@/lib/http";
+import { SkeletonRows } from "@/app/portal/components/ui/Skeleton";
 
 type AppointmentItem = Parameters<typeof AppointmentsList>[0]["initialAppointments"][number];
 
@@ -32,7 +33,7 @@ export function AdminAppointmentsPanel() {
   }, []);
 
   if (loading) {
-    return <p className="text-sm text-slate-500 dark:text-slate-400">Cargando citas...</p>;
+    return <SkeletonRows label="Cargando citas" />;
   }
 
   if (error) {

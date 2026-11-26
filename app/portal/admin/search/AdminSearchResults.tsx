@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
 import { fetchWithRetry } from "@/lib/http";
+import { SkeletonRows } from "@/app/portal/components/ui/Skeleton";
 type SearchResult = {
   type: string;
   id: string;
@@ -64,7 +65,7 @@ export function AdminSearchResults() {
       </div>
 
       {loading ? (
-        <p className="text-sm text-slate-500 dark:text-slate-400">Cargando resultados...</p>
+        <SkeletonRows label="Cargando resultados" />
       ) : results.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-6 text-sm text-slate-500 dark:border-surface-muted/70 dark:bg-surface-elevated/80 dark:text-slate-300">
           {query ? "Sin resultados para tu búsqueda." : "Ingresa un término en la búsqueda global."}

@@ -8,7 +8,7 @@ type SeedAttemptResult = {
   json: unknown;
 };
 
-export type SeededRoleUser = {
+type SeededRoleUser = {
   id: string;
   email: string;
   role: "ADMINISTRADOR" | "RECEPCIONISTA" | "PACIENTE" | "PROFESIONAL";

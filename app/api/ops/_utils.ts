@@ -74,7 +74,7 @@ export function getClientIp(request: Request): string {
   return firstHeaderValue(request, "cf-connecting-ip") ?? "unknown";
 }
 
-export function getOpsIpAllowlist(): string[] {
+function getOpsIpAllowlist(): string[] {
   const raw = process.env.OPS_IP_ALLOWLIST ?? "";
   return raw
     .split(",")

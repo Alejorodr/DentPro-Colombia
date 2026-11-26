@@ -1,6 +1,6 @@
 import type { AppointmentStatus, AppointmentSummary, PatientSummary } from "./types";
 
-export interface PaginatedResponse<T> {
+interface PaginatedResponse<T> {
   items?: T[];
   data?: T[];
   page?: number;

@@ -1,3 +1,8 @@
+import { withAbortTimeout } from "@/lib/http";
+
+// Imágenes de hasta 5 MB.
+const BLOB_UPLOAD_TIMEOUT_MS = 30_000;
+
 export const MARKETING_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
 export const MARKETING_IMAGE_ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
 
@@ -7,7 +12,7 @@ const MARKETING_IMAGE_EXTENSION_MAP: Record<(typeof MARKETING_IMAGE_ALLOWED_TYPE
   "image/webp": "webp",
 };
 
-export const MARKETING_UPLOAD_FOLDERS = [
+const MARKETING_UPLOAD_FOLDERS = [
   "marketing/homepage/hero",
   "marketing/homepage/testimonial",
   "marketing/specialists",
@@ -18,6 +23,31 @@ export type MarketingUploadFolder = (typeof MARKETING_UPLOAD_FOLDERS)[number];
 
 export function isAllowedMarketingImageType(type: string): type is (typeof MARKETING_IMAGE_ALLOWED_TYPES)[number] {
   return MARKETING_IMAGE_ALLOWED_TYPES.includes(type as (typeof MARKETING_IMAGE_ALLOWED_TYPES)[number]);
+}
+
+/**
+ * Comprueba que los primeros bytes del archivo correspondan al tipo declarado (DOG-19).
+ * `File.type` lo pone el navegador y el cliente lo controla: sin esto, un HTML o un SVG
+ * renombrado como `image/png` se subiría al Blob público.
+ */
+export function matchesMarketingImageSignature(
+  bytes: Uint8Array,
+  type: (typeof MARKETING_IMAGE_ALLOWED_TYPES)[number],
+): boolean {
+  const startsWith = (signature: number[], offset = 0) =>
+    bytes.length >= offset + signature.length && signature.every((byte, index) => bytes[offset + index] === byte);
+
+  switch (type) {
+    case "image/jpeg":
+      return startsWith([0xff, 0xd8, 0xff]);
+    case "image/png":
+      return startsWith([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+    case "image/webp":
+      // "RIFF" ???? "WEBP"
+      return startsWith([0x52, 0x49, 0x46, 0x46]) && startsWith([0x57, 0x45, 0x42, 0x50], 8);
+    default:
+      return false;
+  }
 }
 
 export function isAllowedMarketingUploadFolder(folder: string): folder is MarketingUploadFolder {
@@ -47,11 +77,10 @@ export function buildMarketingImageStorageKey(folder: MarketingUploadFolder, san
 
 export async function uploadPublicMarketingImage(file: File | Buffer, key: string, contentType: string) {
   const { put } = await import("@vercel/blob");
-  const result = await put(key, file, {
-    access: "public",
-    addRandomSuffix: false,
-    contentType,
-  });
+  const result = await withAbortTimeout(
+    (abortSignal) => put(key, file, { access: "public", addRandomSuffix: false, contentType, abortSignal }),
+    BLOB_UPLOAD_TIMEOUT_MS,
+  );
 
   return result.url;
 }

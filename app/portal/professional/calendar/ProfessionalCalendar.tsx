@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
+import { CLINIC_TIME_ZONE } from "@/lib/dates/tz";
 
 type BaselineSchedule = {
   id: string;
@@ -243,7 +244,7 @@ export function ProfessionalCalendar() {
             {adjustments.map((item) => (
               <div key={item.id} className="rounded-xl border border-slate-200 px-3 py-2 dark:border-surface-muted/60">
                 <p className="font-semibold">{item.dayOfWeek !== null && item.dayOfWeek !== undefined ? weekDays[item.dayOfWeek] : "Sin día"} · {item.startTime ?? "--:--"} - {item.endTime ?? "--:--"}</p>
-                <p className="text-xs text-slate-500">{new Date(item.effectiveFrom).toLocaleDateString("es-CO")} · {scheduleStatusLabels[item.status] ?? item.status}</p>
+                <p className="text-xs text-slate-500">{new Date(item.effectiveFrom).toLocaleDateString("es-CO", { timeZone: CLINIC_TIME_ZONE })} · {scheduleStatusLabels[item.status] ?? item.status}</p>
               </div>
             ))}
           </div>
@@ -276,7 +277,7 @@ export function ProfessionalCalendar() {
             {unavailability.map((item) => (
               <div key={item.id} className="rounded-xl border border-slate-200 px-3 py-2 dark:border-surface-muted/60">
                 <p className="font-semibold">{unavailabilityTypeLabels[item.type] ?? item.type} · {item.fullDay ? "Día completo" : "Parcial"}</p>
-                <p className="text-xs text-slate-500">{new Date(item.startsAt).toLocaleString("es-CO")} → {new Date(item.endsAt).toLocaleString("es-CO")}</p>
+                <p className="text-xs text-slate-500">{new Date(item.startsAt).toLocaleString("es-CO", { timeZone: CLINIC_TIME_ZONE })} → {new Date(item.endsAt).toLocaleString("es-CO", { timeZone: CLINIC_TIME_ZONE })}</p>
                 <p className="text-xs text-slate-500">Estado: {unavailabilityStatusLabels[item.status] ?? item.status}</p>
               </div>
             ))}

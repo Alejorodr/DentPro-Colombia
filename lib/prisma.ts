@@ -1,6 +1,11 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
+
+import { catalogTagsForWrite, invalidateCatalogTags } from "@/lib/cache/catalog";
+import { decryptResult, encryptWriteArgs } from "@/lib/security/prisma-field-encryption";
 import { Pool } from "pg";
+
+import { serializePoolClientQueries } from "@/lib/db/serialize-pg-queries";
 
 declare global {
   var __prisma: PrismaClient | undefined;
@@ -213,9 +218,11 @@ function makeClient(): PrismaClient {
 
   const pool =
     globalThis.__prismaPool ??
-    new Pool({
-      connectionString: selectedUrl,
-    });
+    serializePoolClientQueries(
+      new Pool({
+        connectionString: selectedUrl,
+      }),
+    );
   const adapter = new PrismaPg(pool);
 
   globalThis.__prismaPool = pool;
@@ -224,19 +231,22 @@ function makeClient(): PrismaClient {
   const extended = client.$extends({
     query: {
       $allModels: {
-        async $allOperations({ args, operation, query }) {
+        async $allOperations({ args, model, operation, query }) {
           if (isCircuitOpen()) {
             const retryAfter = circuitState.openUntil ? Math.max(circuitState.openUntil - Date.now(), 0) : 0;
             throw new DatabaseCircuitOpenError(retryAfter);
           }
 
-          const nextArgs = { ...(args ?? {}) };
-          const run = () => withTimeout(query(nextArgs), PRISMA_QUERY_TIMEOUT_MS);
+          // DOG-18: cifra los campos sensibles al escribir y los descifra al leer.
+          const nextArgs = encryptWriteArgs(model, operation, { ...(args ?? {}) });
+          const run = () => withTimeout(query(nextArgs as typeof args), PRISMA_QUERY_TIMEOUT_MS);
 
           try {
             const result = READ_ACTIONS.has(operation) ? await withRetry(run) : await run();
             recordSuccess();
-            return result;
+            // DOG-14: cualquier escritura en un catálogo cacheado lo invalida, venga de la ruta que venga.
+            invalidateCatalogTags(catalogTagsForWrite(model, operation));
+            return decryptResult(result);
           } catch (error) {
             if (isRetryablePrismaError(error)) {
               recordFailure(error);

@@ -1,14 +1,28 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { POST as createAppointment } from "@/app/api/appointments/route";
-import { sendEmail } from "@/lib/email";
+import { isEmailTransportConfigured } from "@/lib/email";
 
 const mockRequireSession = vi.fn();
 const mockEnforceRateLimit = vi.fn();
 const mockCreateReceptionNotifications = vi.fn();
 
 const mockTransportSend = vi.fn();
-const mockCreateTransport = vi.fn(() => ({ sendMail: mockTransportSend }));
+const mockCreateTransport = vi.fn(() => ({ sendMail: mockTransportSend, close: vi.fn() }));
+
+// DOG-13: el correo se encola y se envía con after(); aquí se capturan los callbacks.
+const afterCallbacks: Array<() => unknown> = [];
+vi.mock("next/server", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("next/server")>();
+  return { ...actual, after: (callback: () => unknown) => void afterCallbacks.push(callback) };
+});
+
+async function flushAfter() {
+  while (afterCallbacks.length > 0) await afterCallbacks.shift()!();
+}
+
+type OutboxRow = Record<string, unknown> & { id: string };
+const outboxRows = new Map<string, OutboxRow>();
 
 const mockPrisma = {
   timeSlot: {
@@ -45,6 +59,20 @@ const mockPrisma = {
   appointmentEvent: {
     create: vi.fn(),
   },
+  emailOutbox: {
+    create: vi.fn(async ({ data }: { data: Record<string, unknown> }) => {
+      const id = `outbox-${outboxRows.size + 1}`;
+      outboxRows.set(id, { id, attempts: 0, status: "PENDING", ...data });
+      return { id };
+    }),
+    updateMany: vi.fn(async () => ({ count: 1 })),
+    findUnique: vi.fn(async ({ where }: { where: { id: string } }) => outboxRows.get(where.id) ?? null),
+    update: vi.fn(async ({ where, data }: { where: { id: string }; data: Record<string, unknown> }) => {
+      const row = { ...outboxRows.get(where.id)!, ...data };
+      outboxRows.set(where.id, row);
+      return row;
+    }),
+  },
   $transaction: vi.fn(),
 };
 
@@ -74,6 +102,8 @@ vi.mock("nodemailer", () => ({
 
 beforeEach(() => {
   vi.clearAllMocks();
+  afterCallbacks.length = 0;
+  outboxRows.clear();
   process.env.SMTP_HOST = "smtp.test";
   process.env.SMTP_PORT = "587";
   process.env.SMTP_USER = "user";
@@ -174,7 +204,14 @@ describe("appointment email notifications", () => {
 
     const response = await createAppointment(request);
     expect(response.status).toBe(201);
-    expect(mockTransportSend).toHaveBeenCalled();
+    // Se responde sin esperar al SMTP: el envío ocurre después.
+    expect(mockTransportSend).not.toHaveBeenCalled();
+    const queued = mockPrisma.emailOutbox.create.mock.calls.length;
+    expect(queued).toBeGreaterThan(0);
+
+    await flushAfter();
+    expect(mockTransportSend).toHaveBeenCalledTimes(queued);
+    expect([...outboxRows.values()].every((row) => row.status === "SENT" && row.html === null)).toBe(true);
   });
 
   it("does not send email when preference is disabled", async () => {
@@ -255,6 +292,8 @@ describe("appointment email notifications", () => {
 
     const response = await createAppointment(request);
     expect(response.status).toBe(201);
+    await flushAfter();
+    expect(mockPrisma.emailOutbox.create).not.toHaveBeenCalled();
     expect(mockTransportSend).not.toHaveBeenCalled();
   });
 
@@ -309,13 +348,6 @@ describe("appointment email notifications", () => {
     delete process.env.SMTP_PASS;
     delete process.env.EMAIL_FROM;
 
-    const result = await sendEmail({
-      to: "test@example.com",
-      subject: "Prueba",
-      html: "<p>Hola</p>",
-    });
-
-    expect(result.skipped).toBe(true);
-    expect(result.sent).toBe(false);
+    expect(isEmailTransportConfigured("smtp")).toBe(false);
   });
 });

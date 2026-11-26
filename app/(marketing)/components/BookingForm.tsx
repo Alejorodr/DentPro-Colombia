@@ -10,6 +10,7 @@ import { resolveMarketingIcon } from "./icon-registry";
 import { buildEmailHref, buildPhoneHref, buildWhatsappHref } from "@/lib/marketing/homepage-adapter";
 
 import { fadeUpVariant, fadeUpVariantReduced } from "@/lib/motion/variants";
+import { CLINIC_TIME_ZONE } from "@/lib/dates/tz";
 
 interface SelectOption {
   value: string;
@@ -116,8 +117,8 @@ export function BookingFormSection({
 
         const mapped = (payload.slots ?? []).map((slot) => {
           const date = new Date(slot.startsAt);
-          const day = date.toLocaleDateString("es-CO", { weekday: "short", day: "2-digit", month: "short" });
-          const hour = date.toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" });
+          const day = date.toLocaleDateString("es-CO", { timeZone: CLINIC_TIME_ZONE, weekday: "short", day: "2-digit", month: "short" });
+          const hour = date.toLocaleTimeString("es-CO", { timeZone: CLINIC_TIME_ZONE, hour: "2-digit", minute: "2-digit" });
           return `${day} · ${hour} · ${slot.specialty} · ${slot.professional}`;
         });
 
@@ -155,9 +156,9 @@ export function BookingFormSection({
           <p className="mt-4 text-base text-slate-500 dark:text-slate-300">{description}</p>
         </motion.div>
 
-        <div className="mt-14 grid gap-8 lg:grid-cols-[1.2fr_1fr]">
+        <div className="mt-14 grid grid-cols-1 gap-8 lg:grid-cols-[1.2fr_1fr]">
           {/* Left — booking panel con gradiente */}
-          <div className="rounded-3xl bg-gradient p-10 text-white shadow-xl transition-colors duration-500 dark:bg-card-dark dark:text-slate-100 dark:shadow-glow-dark">
+          <div className="rounded-3xl bg-gradient p-6 text-white sm:p-10 shadow-xl transition-colors duration-500 dark:bg-card-dark dark:text-slate-100 dark:shadow-glow-dark">
             <div className="space-y-2">
               <h3 className="text-2xl font-bold">Reserva tu turno ahora</h3>
               <p className="text-sm text-brand-light/90">
@@ -168,7 +169,7 @@ export function BookingFormSection({
             <div className="mt-8 grid gap-4 rounded-2xl border border-white/25 bg-white/10 p-5" data-testid="availability-block">
               <Link
                 href="/appointments/new"
-                className="flex items-center justify-center gap-3 rounded-2xl bg-white px-6 py-4 text-base font-bold text-brand-teal shadow-md transition hover:bg-brand-light dark:bg-accent-cyan dark:text-slate-900 dark:hover:bg-accent-cyan/90"
+                className="flex flex-wrap items-center justify-center gap-3 rounded-2xl bg-white px-6 py-4 text-base font-bold text-brand-teal shadow-md transition hover:bg-brand-light dark:bg-accent-cyan dark:text-slate-900 dark:hover:bg-accent-cyan/90"
               >
                 Ver disponibilidad y reservar
                 <span className="rounded-full border border-brand-teal/30 bg-brand-light px-2 py-0.5 text-xs font-semibold text-brand-teal">

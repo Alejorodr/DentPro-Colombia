@@ -40,23 +40,29 @@ export function AdminGlobalSearch() {
       return;
     }
 
+    // DOG-12: al cambiar el texto se cancela la búsqueda anterior para que no pise a la nueva.
+    const controller = new AbortController();
     const handler = window.setTimeout(async () => {
       setLoading(true);
       try {
-        const response = await fetchWithRetry(`/api/search?q=${encodeURIComponent(query.trim())}&scope=admin`);
+        const response = await fetchWithRetry(`/api/search?q=${encodeURIComponent(query.trim())}&scope=admin`, { signal: controller.signal });
         if (response.ok) {
           const data = (await response.json()) as { results: SearchResult[] };
+          if (controller.signal.aborted) return;
           setResults(data.results);
           setOpen(true);
         }
       } catch (error) {
-        console.error("Search failed", error);
+        if ((error as Error).name !== "AbortError") console.error("Search failed", error);
       } finally {
-        setLoading(false);
+        if (!controller.signal.aborted) setLoading(false);
       }
     }, 250);
 
-    return () => window.clearTimeout(handler);
+    return () => {
+      controller.abort();
+      window.clearTimeout(handler);
+    };
   }, [query]);
 
   useEffect(() => {
@@ -91,6 +97,8 @@ export function AdminGlobalSearch() {
           onKeyDown={(event) => {
             if (event.key === "Enter") {
               event.preventDefault();
+              // Enter también confirma la composición de un IME: no buscar a mitad de palabra.
+              if (event.nativeEvent.isComposing || event.keyCode === 229) return;
               handleSubmit();
             }
           }}

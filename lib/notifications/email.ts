@@ -1,14 +1,15 @@
 import { Role } from "@prisma/client";
 
-import { sendEmail } from "@/lib/email";
 import {
   buildAppointmentCancellationEmail,
   buildAppointmentConfirmationEmail,
   buildAppointmentReminderEmail,
   buildAppointmentRescheduleEmail,
 } from "@/lib/email/templates";
+import { enqueueEmail } from "@/lib/email/outbox";
 import { isEmailEnabledForUser } from "@/lib/notification-preferences";
 import { logger } from "@/lib/logger";
+import { CLINIC_TIME_ZONE } from "@/lib/dates/tz";
 
 export type AppointmentEmailType = "confirmation" | "reminder" | "reschedule" | "cancellation";
 
@@ -38,11 +39,11 @@ type Recipient = {
 };
 
 function formatDateLabel(date: Date) {
-  return date.toLocaleDateString("es-CO", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+  return date.toLocaleDateString("es-CO", { timeZone: CLINIC_TIME_ZONE, weekday: "long", year: "numeric", month: "long", day: "numeric" });
 }
 
 function formatTimeLabel(startAt: Date, endAt: Date) {
-  return `${startAt.toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })} - ${endAt.toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })}`;
+  return `${startAt.toLocaleTimeString("es-CO", { timeZone: CLINIC_TIME_ZONE, hour: "2-digit", minute: "2-digit" })} - ${endAt.toLocaleTimeString("es-CO", { timeZone: CLINIC_TIME_ZONE, hour: "2-digit", minute: "2-digit" })}`;
 }
 
 function buildEmailData(appointment: AppointmentSnapshot) {
@@ -101,13 +102,17 @@ function getRecipients(appointment: AppointmentSnapshot): Recipient[] {
   return recipients;
 }
 
+/**
+ * Encola el correo de la cita para cada destinatario con correo y notificaciones activas (DOG-13).
+ * El envío ocurre después de responder; devuelve true si quedó al menos uno en cola.
+ */
 export async function sendAppointmentEmail(
   type: AppointmentEmailType,
   appointment: AppointmentSnapshot,
 ): Promise<boolean> {
   const template = buildTemplate(type, appointment);
   const recipients = getRecipients(appointment);
-  let sentCount = 0;
+  let queuedCount = 0;
 
   await Promise.all(
     recipients.map(async (recipient) => {
@@ -120,27 +125,29 @@ export async function sendAppointmentEmail(
         return;
       }
 
-      const result = await sendEmail({
+      const result = await enqueueEmail({
+        kind: `appointment.${type}`,
+        transport: "smtp",
         to: recipient.email,
         subject: template.subject,
         html: template.html,
         text: template.text,
+        // Pasada la hora de la cita, un recordatorio o confirmación ya no sirve.
+        expiresAt: appointment.timeSlot.startAt,
       });
 
-      if (result.sent) {
-        sentCount += 1;
-      }
-
-      if (!result.sent && !result.skipped) {
+      if (result.queued) {
+        queuedCount += 1;
+      } else {
         logger.warn({
-          event: "appointment.email.failed",
+          event: "appointment.email.not_queued",
           appointmentId: appointment.id,
-          recipient: recipient.email,
           type,
+          reason: result.reason,
         });
       }
     }),
   );
 
-  return sentCount > 0;
+  return queuedCount > 0;
 }

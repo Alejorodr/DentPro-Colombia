@@ -18,6 +18,7 @@ import { recordAppointmentEvent } from "@/lib/appointments/events";
 import { assertSlotBookable } from "@/lib/scheduling/effective-availability";
 import {
   BookingLimitError,
+  SlotAlreadyBookedError,
   assertPatientBookingCapInTransaction,
   checkSlotLeadTime,
 } from "@/lib/appointments/booking-limits";
@@ -325,7 +326,7 @@ export async function POST(request: Request) {
       });
 
       if (updated.count === 0) {
-        throw new Error("Slot reservado");
+        throw new SlotAlreadyBookedError();
       }
 
       const created = await tx.appointment.create({
@@ -414,6 +415,16 @@ export async function POST(request: Request) {
 
     return NextResponse.json(appointment, { status: 201 });
   } catch (error) {
+    if (error instanceof SlotAlreadyBookedError) {
+      logger.warn({
+        event: "appointment.create.slot_taken",
+        route: "/api/appointments",
+        requestId,
+        userId: sessionResult.user.id,
+        status: error.status,
+      });
+      return errorResponse(error.message, error.status);
+    }
     if (error instanceof BookingLimitError) {
       logger.warn({
         event: "appointment.create.limit_reached",

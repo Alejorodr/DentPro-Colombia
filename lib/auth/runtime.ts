@@ -14,11 +14,11 @@ export function isVercelRuntime(): boolean {
   return process.env.VERCEL === "1" || Boolean(process.env.VERCEL_ENV);
 }
 
-export function isCiRuntime(): boolean {
+function isCiRuntime(): boolean {
   return process.env.CI === "true" || process.env.CI === "1";
 }
 
-export function isE2ERuntime(): boolean {
+function isE2ERuntime(): boolean {
   return process.env.RUN_E2E === "1";
 }
 

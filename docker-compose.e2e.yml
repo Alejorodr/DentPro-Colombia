@@ -1,0 +1,20 @@
+# Postgres efímero solo para E2E locales (pnpm e2e:local).
+# Puerto 54329 para no chocar con un Postgres local en 5432.
+# tmpfs: los datos viven en RAM y desaparecen al bajar el contenedor.
+services:
+  postgres-e2e:
+    image: postgres:16
+    container_name: dentpro-postgres-e2e
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: dentpro_e2e
+    ports:
+      - "127.0.0.1:54329:5432"
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d dentpro_e2e"]
+      interval: 2s
+      timeout: 3s
+      retries: 30

@@ -1,0 +1,25 @@
+// Configuración de knip (DOG-27). Correr con:
+//   DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:54329/dentpro_e2e pnpm dlx knip
+// La URL local es necesaria porque knip carga playwright.config.ts y el guardia de E2E
+// aborta si DATABASE_URL apunta a un host remoto. knip no corre los tests.
+{
+  "$schema": "https://unpkg.com/knip@5/schema-jsonc.json",
+  // Scripts operativos que se corren a mano (tsx/node), no se importan desde la app.
+  "entry": ["scripts/**/*.{ts,mjs}"],
+  "ignore": [
+    // Material de referencia del sistema de diseño (ver CLAUDE.md), no se compila.
+    "design-system/**",
+    // Service worker servido tal cual desde /public y registrado en components/PwaRegister.tsx.
+    "public/sw.js",
+    // Lo lee por ruta tests/helpers/prisma-test-setup.ts.
+    "prisma/schema.test.prisma"
+  ],
+  "ignoreDependencies": [
+    // Se instala a propósito para que browserslist no avise que sus datos están viejos.
+    "baseline-browser-mapping",
+    // Next lo resuelve internamente; marca módulos que no deben llegar al cliente.
+    "server-only",
+    // Solo se importa el tipo AuthConfig; viene con next-auth y debe ir en su misma versión.
+    "@auth/core"
+  ]
+}

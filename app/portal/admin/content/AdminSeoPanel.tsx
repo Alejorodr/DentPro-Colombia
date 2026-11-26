@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
+import { SkeletonRows } from "@/app/portal/components/ui/Skeleton";
 
 type SeoForm = {
   metaTitle: string;
@@ -65,7 +66,7 @@ export function AdminSeoPanel() {
   };
 
   if (loading) {
-    return <p className="text-sm text-slate-600 dark:text-slate-300">Cargando configuración de SEO...</p>;
+    return <SkeletonRows label="Cargando configuración de SEO" />;
   }
 
   return (

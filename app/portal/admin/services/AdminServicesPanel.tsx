@@ -7,6 +7,7 @@ import { Card } from "@/app/portal/components/ui/Card";
 import { Table } from "@/app/portal/components/ui/Table";
 import { STATUS_COLORS } from "@/app/portal/components/ui/statusColors";
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
+import { PortalDialog } from "@/app/portal/components/ui/PortalDialog";
 
 type ServiceRecord = {
   id: string;
@@ -337,32 +338,30 @@ export function AdminServicesPanel() {
 
       {/* Delete confirm modal */}
       {deleteTarget ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 px-4">
-          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl dark:bg-surface-elevated">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Confirmar eliminación</p>
-            <h3 className="mt-1 text-lg font-semibold text-slate-900 dark:text-white">{deleteTarget.name}</h3>
-            <p className="mt-2 text-sm text-slate-500">
-              Esta acción no se puede deshacer. Si el servicio tiene citas asociadas, no podrá eliminarse.
-            </p>
-            <div className="mt-5 flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setDeleteTarget(null)}
-                className="rounded-full border border-slate-200 px-4 py-2 text-xs font-semibold uppercase text-slate-600 dark:border-surface-muted dark:text-slate-200"
-              >
-                Cancelar
-              </button>
-              <button
-                type="button"
-                onClick={confirmDelete}
-                disabled={saving}
-                className="rounded-full bg-rose-600 px-4 py-2 text-xs font-semibold uppercase text-white disabled:opacity-50"
-              >
-                {saving ? "Eliminando…" : "Sí, eliminar"}
-              </button>
-            </div>
+        <PortalDialog onClose={() => setDeleteTarget(null)} labelledBy="service-delete-title" size="sm" dismissible>
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Confirmar eliminación</p>
+          <h3 id="service-delete-title" className="mt-1 text-lg font-semibold text-slate-900 dark:text-white">{deleteTarget.name}</h3>
+          <p className="mt-2 text-sm text-slate-500">
+            Esta acción no se puede deshacer. Si el servicio tiene citas asociadas, no podrá eliminarse.
+          </p>
+          <div className="mt-5 flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => setDeleteTarget(null)}
+              className="rounded-full border border-slate-200 px-4 py-2 text-xs font-semibold uppercase text-slate-600 dark:border-surface-muted dark:text-slate-200"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              onClick={confirmDelete}
+              disabled={saving}
+              className="rounded-full bg-rose-600 px-4 py-2 text-xs font-semibold uppercase text-white disabled:opacity-50"
+            >
+              {saving ? "Eliminando…" : "Sí, eliminar"}
+            </button>
           </div>
-        </div>
+        </PortalDialog>
       ) : null}
     </div>
   );
@@ -393,120 +392,119 @@ function ServiceModal({
     onChange({ ...form, [key]: event.target.value });
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 px-4">
-      <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl dark:bg-surface-elevated">
-        <div className="flex items-start justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Servicios y tarifas</p>
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-white">{title}</h3>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 text-slate-500 dark:border-surface-muted"
-          >
-            <X size={14} weight="bold" />
-          </button>
+    <PortalDialog onClose={onClose} labelledBy="service-modal-title" size="lg">
+      <div className="flex items-start justify-between">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Servicios y tarifas</p>
+          <h3 id="service-modal-title" className="text-lg font-semibold text-slate-900 dark:text-white">{title}</h3>
         </div>
-
-        <div className="mt-5 grid gap-4 md:grid-cols-2">
-          <label className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400 md:col-span-2">
-            Nombre *
-            <input
-              className="input mt-2 h-10 w-full text-sm normal-case"
-              placeholder="Ej. Limpieza dental"
-              value={form.name}
-              onChange={set("name")}
-              disabled={saving}
-            />
-          </label>
-
-          <label className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400 md:col-span-2">
-            Descripción
-            <input
-              className="input mt-2 h-10 w-full text-sm normal-case"
-              placeholder="Descripción breve (opcional)"
-              value={form.description}
-              onChange={set("description")}
-              disabled={saving}
-            />
-          </label>
-
-          <label className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-            Precio (COP) *
-            <input
-              className="input mt-2 h-10 w-full text-sm normal-case"
-              type="number"
-              min={0}
-              step={1000}
-              placeholder="Ej. 80000"
-              value={form.price}
-              onChange={set("price")}
-              disabled={saving}
-            />
-          </label>
-
-          <label className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-            Duración (min)
-            <input
-              className="input mt-2 h-10 w-full text-sm normal-case"
-              type="number"
-              min={0}
-              step={15}
-              placeholder="Ej. 30"
-              value={form.duration}
-              onChange={set("duration")}
-              disabled={saving}
-            />
-          </label>
-
-          <label className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-            Especialidad
-            <select
-              className="input mt-2 h-10 w-full text-sm normal-case"
-              value={form.specialtyId}
-              onChange={set("specialtyId")}
-              disabled={saving}
-            >
-              <option value="">Sin especialidad</option>
-              {specialties.map((s) => (
-                <option key={s.id} value={s.id}>{s.name}</option>
-              ))}
-            </select>
-          </label>
-
-          <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-            <input
-              type="checkbox"
-              checked={form.active}
-              onChange={(event) => onChange({ ...form, active: event.target.checked })}
-              disabled={saving}
-              className="h-4 w-4 rounded border-slate-300 text-brand-teal"
-            />
-            Activo
-          </label>
-        </div>
-
-        {error ? <p className="mt-3 text-sm text-rose-600">{error}</p> : null}
-
-        <div className="mt-6 flex justify-end gap-2">
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-full border border-slate-200 px-4 py-2 text-xs font-semibold uppercase text-slate-600 dark:border-surface-muted dark:text-slate-200"
-          >
-            Cancelar
-          </button>
-          <button
-            type="button"
-            onClick={onSubmit}
-            disabled={saving}
-            className="rounded-full bg-brand-teal px-4 py-2 text-xs font-semibold uppercase text-white disabled:opacity-50"
-          >
-            {saving ? "Guardando…" : submitLabel}
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 text-slate-500 dark:border-surface-muted"
+        >
+          <X size={14} weight="bold" />
+        </button>
       </div>
-    </div>
+
+      <div className="mt-5 grid gap-4 md:grid-cols-2">
+        <label className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400 md:col-span-2">
+          Nombre *
+          <input
+            className="input mt-2 h-10 w-full text-sm normal-case"
+            placeholder="Ej. Limpieza dental"
+            value={form.name}
+            onChange={set("name")}
+            disabled={saving}
+          />
+        </label>
+
+        <label className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400 md:col-span-2">
+          Descripción
+          <input
+            className="input mt-2 h-10 w-full text-sm normal-case"
+            placeholder="Descripción breve (opcional)"
+            value={form.description}
+            onChange={set("description")}
+            disabled={saving}
+          />
+        </label>
+
+        <label className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+          Precio (COP) *
+          <input
+            className="input mt-2 h-10 w-full text-sm normal-case"
+            type="number"
+            min={0}
+            step={1000}
+            placeholder="Ej. 80000"
+            value={form.price}
+            onChange={set("price")}
+            disabled={saving}
+          />
+        </label>
+
+        <label className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+          Duración (min)
+          <input
+            className="input mt-2 h-10 w-full text-sm normal-case"
+            type="number"
+            min={0}
+            step={15}
+            placeholder="Ej. 30"
+            value={form.duration}
+            onChange={set("duration")}
+            disabled={saving}
+          />
+        </label>
+
+        <label className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+          Especialidad
+          <select
+            className="input mt-2 h-10 w-full text-sm normal-case"
+            value={form.specialtyId}
+            onChange={set("specialtyId")}
+            disabled={saving}
+          >
+            <option value="">Sin especialidad</option>
+            {specialties.map((s) => (
+              <option key={s.id} value={s.id}>{s.name}</option>
+            ))}
+          </select>
+        </label>
+
+
+        <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+          <input
+            type="checkbox"
+            checked={form.active}
+            onChange={(event) => onChange({ ...form, active: event.target.checked })}
+            disabled={saving}
+            className="h-4 w-4 rounded border-slate-300 text-brand-teal"
+          />
+          Activo
+        </label>
+      </div>
+
+      {error ? <p className="mt-3 text-sm text-rose-600">{error}</p> : null}
+
+      <div className="mt-6 flex justify-end gap-2">
+        <button
+          type="button"
+          onClick={onClose}
+          className="rounded-full border border-slate-200 px-4 py-2 text-xs font-semibold uppercase text-slate-600 dark:border-surface-muted dark:text-slate-200"
+        >
+          Cancelar
+        </button>
+        <button
+          type="button"
+          onClick={onSubmit}
+          disabled={saving}
+          className="rounded-full bg-brand-teal px-4 py-2 text-xs font-semibold uppercase text-white disabled:opacity-50"
+        >
+          {saving ? "Guardando…" : submitLabel}
+        </button>
+      </div>
+    </PortalDialog>
   );
 }

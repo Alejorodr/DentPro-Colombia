@@ -7,10 +7,13 @@ import { roleLabels, userRoles, type UserRole } from "@/lib/auth/roles";
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
 import { STATUS_COLORS } from "@/app/portal/components/ui/statusColors";
 import { Card } from "@/app/portal/components/ui/Card";
-import { useModalDialog } from "@/app/portal/components/ui/useModalDialog";
 import { ArrowLeft, ArrowRight } from "@/components/ui/Icon";
 import { RoleModal, type Specialty } from "./RoleModal";
 import { PatientDetailModal } from "./PatientDetailModal";
+import { SkeletonRows } from "@/app/portal/components/ui/Skeleton";
+import { DocumentTypeSelect } from "@/components/ui/DocumentTypeSelect";
+import { DEFAULT_DOCUMENT_TYPE, type DocumentTypeCode } from "@/lib/regulatory/colombia";
+import { PortalDialog } from "@/app/portal/components/ui/PortalDialog";
 
 type UserRecord = {
   id: string;
@@ -19,11 +22,13 @@ type UserRecord = {
   lastName: string;
   role: UserRole;
   active: boolean;
+  mfaEnabled?: boolean;
   hasLocalPassword: boolean;
   _isGoogleUser: boolean;
-  patient?: { id?: string; phone?: string | null; documentId?: string | null } | null;
+  patient?: { id?: string; phone?: string | null; documentType?: string | null; documentId?: string | null } | null;
   professional?: {
     id: string;
+    rethusNumber?: string | null;
     specialty?: { id: string; name: string } | null;
     homepageBioShort?: string | null;
     homepageImageUrl?: string | null;
@@ -40,9 +45,11 @@ const defaultFormState = {
   lastName: "",
   role: "PACIENTE" as UserRole,
   phone: "",
+  documentType: DEFAULT_DOCUMENT_TYPE as DocumentTypeCode,
   documentId: "",
   specialtyId: "",
   slotDurationMinutes: "",
+  rethusNumber: "",
 };
 
 interface AdminUsersPanelProps {
@@ -59,7 +66,6 @@ function ResetPasswordModal({
   userEmail: string;
   onClose: () => void;
 }) {
-  const containerRef = useModalDialog(onClose);
   const [status, setStatus] = useState<"idle" | "loading" | "done" | "error">("idle");
   const [password, setPassword] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -89,69 +95,59 @@ function ResetPasswordModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      {/* Deliberately not <Card>: this modal uses a heavier border-white/70 + shadow-xl treatment
-          for contrast against the dark backdrop overlay, not the standard portal Card look. */}
-      <div
-        ref={containerRef}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="reset-password-modal-title"
-        className="w-full max-w-sm rounded-2xl border border-white/70 bg-white p-6 shadow-xl"
-      >
-        <h3 id="reset-password-modal-title" className="text-base font-semibold text-slate-900">Resetear contraseña</h3>
-        <p className="mt-1 text-sm text-slate-600">{userEmail}</p>
+    <PortalDialog onClose={onClose} labelledBy="reset-password-modal-title" size="sm" className="overflow-y-auto rounded-2xl border border-white/70 bg-white p-6 shadow-xl">
+      <h3 id="reset-password-modal-title" className="text-base font-semibold text-slate-900">Resetear contraseña</h3>
+      <p className="mt-1 text-sm text-slate-600">{userEmail}</p>
 
-        {status === "idle" && (
-          <div className="mt-4 space-y-3">
-            <p className="text-sm text-slate-600">
-              Se generará una contraseña temporal. El usuario deberá cambiarla al iniciar sesión.
-            </p>
+      {status === "idle" && (
+        <div className="mt-4 space-y-3">
+          <p className="text-sm text-slate-600">
+            Se generará una contraseña temporal. El usuario deberá cambiarla al iniciar sesión.
+          </p>
+          <button
+            type="button"
+            className="w-full rounded-full bg-brand-teal py-2 text-sm font-semibold text-white"
+            onClick={() => void handleReset()}
+          >
+            Generar contraseña temporal
+          </button>
+        </div>
+      )}
+
+      {status === "loading" && (
+        <p className="mt-4 text-sm text-slate-500">Generando...</p>
+      )}
+
+      {status === "done" && password && (
+        <div className="mt-4 space-y-3">
+          <p className="text-xs font-semibold uppercase tracking-wide text-amber-600">
+            Muéstrasela al usuario ahora — no podrás verla de nuevo.
+          </p>
+          <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 p-3">
+            <code className="flex-1 select-all font-mono text-sm text-slate-900">{password}</code>
             <button
               type="button"
-              className="w-full rounded-full bg-brand-teal py-2 text-sm font-semibold text-white"
-              onClick={() => void handleReset()}
+              onClick={handleCopy}
+              className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600"
             >
-              Generar contraseña temporal
+              {copied ? "Copiado" : "Copiar"}
             </button>
           </div>
-        )}
+        </div>
+      )}
 
-        {status === "loading" && (
-          <p className="mt-4 text-sm text-slate-500">Generando...</p>
-        )}
+      {status === "error" && (
+        <p className="mt-4 text-sm text-red-600">{errorMsg}</p>
+      )}
 
-        {status === "done" && password && (
-          <div className="mt-4 space-y-3">
-            <p className="text-xs font-semibold uppercase tracking-wide text-amber-600">
-              Muéstrasela al usuario ahora — no podrás verla de nuevo.
-            </p>
-            <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 p-3">
-              <code className="flex-1 select-all font-mono text-sm text-slate-900">{password}</code>
-              <button
-                type="button"
-                onClick={handleCopy}
-                className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600"
-              >
-                {copied ? "Copiado" : "Copiar"}
-              </button>
-            </div>
-          </div>
-        )}
-
-        {status === "error" && (
-          <p className="mt-4 text-sm text-red-600">{errorMsg}</p>
-        )}
-
-        <button
-          type="button"
-          className="mt-4 w-full rounded-full border border-slate-200 py-2 text-sm font-semibold text-slate-600"
-          onClick={onClose}
-        >
-          Listo
-        </button>
-      </div>
-    </div>
+      <button
+        type="button"
+        className="mt-4 w-full rounded-full border border-slate-200 py-2 text-sm font-semibold text-slate-600"
+        onClick={onClose}
+      >
+        Listo
+      </button>
+    </PortalDialog>
   );
 }
 
@@ -176,6 +172,7 @@ export function AdminUsersPanel({ roleFilter, roleLock }: AdminUsersPanelProps) 
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [resetModal, setResetModal] = useState<{ userId: string; userEmail: string } | null>(null);
+  const [mfaResetConfirmId, setMfaResetConfirmId] = useState<string | null>(null);
 
   const canSubmit = useMemo(() => {
     const effectiveRole = roleLock ?? formState.role;
@@ -247,7 +244,9 @@ export function AdminUsersPanel({ roleFilter, roleLock }: AdminUsersPanelProps) 
       lastName: formState.lastName,
       role: resolvedRole,
       phone: resolvedRole === "PACIENTE" ? formState.phone : undefined,
+      documentType: resolvedRole === "PACIENTE" ? formState.documentType : undefined,
       documentId: resolvedRole === "PACIENTE" ? formState.documentId : undefined,
+      rethusNumber: resolvedRole === "PROFESIONAL" && formState.rethusNumber.trim() ? formState.rethusNumber : undefined,
       specialtyId: resolvedRole === "PROFESIONAL" ? formState.specialtyId : undefined,
       slotDurationMinutes:
         resolvedRole === "PROFESIONAL" && formState.slotDurationMinutes
@@ -307,6 +306,21 @@ export function AdminUsersPanel({ roleFilter, roleLock }: AdminUsersPanelProps) 
       setError(body?.error ?? "No pudimos dar de baja al usuario.");
     }
 
+    setSaving(false);
+  };
+
+  // DOG-28: restablecer el segundo factor obliga a la persona a inscribirse de nuevo.
+  const resetMfa = async (user: UserRecord) => {
+    setSaving(true);
+    setError(null);
+    const response = await fetchWithTimeout(`/api/users/${user.id}/mfa`, { method: "DELETE" });
+    if (response.ok) {
+      setUsers((prev) => prev.map((item) => (item.id === user.id ? { ...item, mfaEnabled: false } : item)));
+    } else {
+      const body = (await response.json().catch(() => null)) as { error?: string } | null;
+      setError(body?.error ?? "No pudimos restablecer la verificación en dos pasos.");
+    }
+    setMfaResetConfirmId(null);
     setSaving(false);
   };
 
@@ -392,6 +406,17 @@ export function AdminUsersPanel({ roleFilter, roleLock }: AdminUsersPanelProps) 
               disabled={saving}
             />
           ) : null}
+          {(roleLock ?? formState.role) === "PROFESIONAL" ? (
+            <input
+              className="input h-11 text-sm"
+              placeholder="Número RETHUS (opcional)"
+              aria-label="Número RETHUS (opcional, se puede completar después)"
+              autoComplete="off"
+              value={formState.rethusNumber}
+              onChange={(event) => setFormState((prev) => ({ ...prev, rethusNumber: event.target.value }))}
+              disabled={saving}
+            />
+          ) : null}
           {(roleLock ?? formState.role) === "PACIENTE" ? (
             <input
               className="input h-11 text-sm"
@@ -402,9 +427,19 @@ export function AdminUsersPanel({ roleFilter, roleLock }: AdminUsersPanelProps) 
             />
           ) : null}
           {(roleLock ?? formState.role) === "PACIENTE" ? (
+            <DocumentTypeSelect
+              className="input h-11 text-sm"
+              aria-label="Tipo de documento"
+              value={formState.documentType}
+              onValueChange={(documentType) => setFormState((prev) => ({ ...prev, documentType }))}
+              disabled={saving}
+            />
+          ) : null}
+          {(roleLock ?? formState.role) === "PACIENTE" ? (
             <input
               className="input h-11 text-sm"
-              placeholder="Documento"
+              placeholder="Número de documento"
+              aria-label="Número de documento"
               value={formState.documentId}
               onChange={(event) => setFormState((prev) => ({ ...prev, documentId: event.target.value }))}
               disabled={saving}
@@ -503,7 +538,7 @@ export function AdminUsersPanel({ roleFilter, roleLock }: AdminUsersPanelProps) 
         {error ? <p className="mt-4 text-sm text-red-600 dark:text-red-400">{error}</p> : null}
 
         {loading ? (
-          <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">Cargando usuarios...</p>
+          <SkeletonRows label="Cargando usuarios" />
         ) : (
           <div className="mt-4 space-y-3">
             {displayedUsers.map((user) => {
@@ -533,6 +568,11 @@ export function AdminUsersPanel({ roleFilter, roleLock }: AdminUsersPanelProps) 
                             Google
                           </span>
                         )}
+                        {user.role === "PROFESIONAL" && user.professional && !user.professional.rethusNumber ? (
+                          <span className="inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold uppercase text-amber-800 dark:bg-amber-500/15 dark:text-amber-200">
+                            Sin RETHUS
+                          </span>
+                        ) : null}
                       </div>
                     </div>
                     <div className="flex flex-wrap gap-2">
@@ -575,6 +615,28 @@ export function AdminUsersPanel({ roleFilter, roleLock }: AdminUsersPanelProps) 
                         >
                           Resetear password
                         </button>
+                      ) : null}
+                      {user.mfaEnabled ? (
+                        mfaResetConfirmId === user.id ? (
+                          <button
+                            type="button"
+                            className="rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-xs font-semibold uppercase text-amber-800"
+                            onClick={() => void resetMfa(user)}
+                            disabled={saving}
+                          >
+                            Confirmar: restablecer 2 pasos
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold uppercase text-slate-600 dark:border-surface-muted/70 dark:text-slate-200"
+                            onClick={() => setMfaResetConfirmId(user.id)}
+                            disabled={saving}
+                            title="Borra su app autenticadora y sus códigos de respaldo. Tendrá que configurarla de nuevo al entrar."
+                          >
+                            Restablecer 2 pasos
+                          </button>
+                        )
                       ) : null}
                       <button
                         type="button"

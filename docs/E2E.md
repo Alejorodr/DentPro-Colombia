@@ -1,7 +1,17 @@
-# E2E en DentPro (P10)
+# E2E en DentPro
 
-## Suites disponibles
-- `pnpm run e2e`: compatibilidad local (si `RUN_E2E=1` ejecuta Playwright real).
+## Correrlos en tu máquina (recomendado)
+`scripts/e2e-local.mjs` levanta un Postgres efímero en Docker (`docker-compose.e2e.yml`, puerto 54329), deja en blanco las variables de `.env` y `.env.local` y corre Playwright contra un build de producción, igual que el CI.
+
+- `pnpm e2e:local`: suite completa, igual que el Nightly.
+- `pnpm e2e:local:smoke`: solo `@smoke`, igual que el CI de los PR.
+- `pnpm e2e:local -- e2e/auth.spec.ts --repeat-each=3`: un spec puntual.
+- `pnpm e2e:db:down`: baja el contenedor.
+
+Nunca corras los E2E contra Neon (ni producción ni dev): siembran usuarios con contraseñas públicas. `scripts/e2e-db-guard.mjs` aborta si `DATABASE_URL` apunta a un host remoto.
+
+## Suites (las que usa el CI)
+- `pnpm run e2e`: si `RUN_E2E=1`, corre Playwright de verdad.
 - `pnpm run e2e:smoke`: suite rápida (`@smoke`) para CI.
 - `pnpm run e2e:full`: suite completa funcional.
 

@@ -5,6 +5,7 @@ import type { JWT } from "next-auth/jwt";
 
 import { authorizeCredentials } from "@/lib/auth/credentials";
 import { getJwtSecretString } from "@/lib/auth/jwt";
+import { hasConfiguredAuthSecret } from "@/lib/auth/secret";
 import { getDefaultDashboardPath, isUserRole, type UserRole } from "@/lib/auth/roles";
 import {
   getInferredAuthBaseUrl,
@@ -67,14 +68,10 @@ function warnAuthOnce(key: AuthWarnKey, message: string): void {
   console.warn(message);
 }
 
-function hasAuthSecretConfigured(): boolean {
-  return Boolean(process.env.AUTH_JWT_SECRET || process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET);
-}
-
 if (!inferredBaseUrl) {
   warnAuthOnce("missing-base-url", "[auth] Missing NEXTAUTH_URL or VERCEL_URL; check production auth configuration.");
 }
-if (!hasAuthSecretConfigured()) {
+if (!hasConfiguredAuthSecret()) {
   warnAuthOnce("missing-secret", "[auth] Missing AUTH_JWT_SECRET/NEXTAUTH_SECRET/AUTH_SECRET in production.");
 }
 if (!usesSecureCookies) {

@@ -12,7 +12,7 @@ import {
 } from "@/lib/dates/tz";
 
 export type AnalyticsBucket = "day" | "week" | "month";
-export type AnalyticsRangeKey = "today" | "last7" | "last30" | "mtd" | "ytd" | "custom";
+type AnalyticsRangeKey = "today" | "last7" | "last30" | "mtd" | "ytd" | "custom";
 
 export type AnalyticsRange = {
   rangeKey: AnalyticsRangeKey;

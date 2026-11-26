@@ -19,16 +19,17 @@ type AuthenticatedUser = {
   professionalId?: string | null;
   patientId?: string | null;
   mustChangePassword?: boolean;
+  mfaPending?: boolean;
 };
 
 export type AuthSession = { user?: AuthenticatedUser | null } | null;
 
-const { handlers, signIn, signOut } = NextAuth({
+const { handlers } = NextAuth({
   ...authConfig,
   adapter: DentProPrismaAdapter(),
 });
 
-export { handlers, signIn, signOut };
+export { handlers };
 
 // @auth/core@0.41.2 calls next/headers cookies() synchronously; Next.js 16
 // made cookies() strictly async. Decode the JWT with the async cookies API,
@@ -77,6 +78,8 @@ export async function auth(): Promise<AuthSession> {
             role: persistedUser.role,
             professionalId: persistedUser.professionalId ?? null,
             patientId: persistedUser.patientId ?? null,
+            // El bypass de E2E (solo local) representa una sesión ya verificada.
+            mfaPending: false,
           },
         };
       }

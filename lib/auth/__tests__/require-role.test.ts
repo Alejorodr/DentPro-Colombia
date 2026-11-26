@@ -45,4 +45,16 @@ describe("requireRole", () => {
     await expect(requireRole("ADMINISTRADOR")).rejects.toThrow("REDIRECT");
     expect(redirectMock).toHaveBeenCalledWith("/auth/login");
   });
+
+  it("manda a /auth/mfa una sesión con el segundo factor pendiente, antes que el cambio de contraseña (DOG-28)", async () => {
+    authMock.mockResolvedValue({
+      user: { id: "u1", role: "ADMINISTRADOR", mfaPending: true, mustChangePassword: true },
+    });
+    redirectMock.mockClear();
+
+    const { requireRole } = await import("@/lib/auth/require-role");
+
+    await expect(requireRole("ADMINISTRADOR")).rejects.toThrow("REDIRECT");
+    expect(redirectMock).toHaveBeenCalledWith("/auth/mfa");
+  });
 });

@@ -1,4 +1,8 @@
 import type { PrismaClient } from "@prisma/client";
+import { unstable_cache } from "next/cache";
+import { cache } from "react";
+
+import { CATALOG_CACHE_VERSION, CATALOG_REVALIDATE_SECONDS, CATALOG_TAGS } from "@/lib/cache/catalog";
 
 import { getPrismaClient } from "@/lib/prisma";
 import {
@@ -7,6 +11,7 @@ import {
   sanitizeMarketingIcon,
 } from "@/lib/marketing/homepage-defaults";
 import type { HomepageNormalizedContent } from "@/lib/marketing/homepage-types";
+import { serviceDetailHref } from "@/lib/marketing/service-detail-pages";
 
 function normalizeMapEmbed(url: string | null | undefined) {
   if (!url) {
@@ -17,11 +22,31 @@ function normalizeMapEmbed(url: string | null | undefined) {
   return url;
 }
 
+/**
+ * DOG-14: el home se renderiza en cada request (el CSP lleva nonce), así que sin caché
+ * cada visita lanzaba estas 13 consultas, dos veces (metadata y página). Ahora se leen
+ * de la caché de datos de Next; `cache` de React además evita la segunda lectura
+ * dentro del mismo request. Se invalida al editar desde el admin (ver lib/cache/catalog.ts).
+ */
+const getCachedHomepageContent = unstable_cache(
+  () => loadHomepageContent(getPrismaClient()),
+  ["homepage-content", CATALOG_CACHE_VERSION],
+  { tags: [CATALOG_TAGS.homepage], revalidate: CATALOG_REVALIDATE_SECONDS },
+);
+
+const getHomepageContentForRequest = cache(() => getCachedHomepageContent());
+
 export async function getHomepageContent(prismaClient?: PrismaClient): Promise<HomepageNormalizedContent> {
-  if (!prismaClient && !process.env.DATABASE_URL) {
+  if (prismaClient) {
+    return loadHomepageContent(prismaClient);
+  }
+  if (!process.env.DATABASE_URL) {
     return HOMEPAGE_DEFAULT_CONTENT;
   }
-  const prisma = prismaClient ?? getPrismaClient();
+  return getHomepageContentForRequest();
+}
+
+async function loadHomepageContent(prisma: PrismaClient): Promise<HomepageNormalizedContent> {
 
   const [
     settings,
@@ -37,7 +62,11 @@ export async function getHomepageContent(prismaClient?: PrismaClient): Promise<H
     faqs,
     navLinks,
     channels,
-  ] = await prisma.$transaction([
+  ] = await Promise.all([
+    // Lecturas independientes, sin transacción: un `$transaction` en lote espera como máximo
+    // 2 s para abrir la transacción, y en el build (muchos workers contra Neon) o con el
+    // compute frío fallaba con "Unable to start a transaction in the given time". No hace
+    // falta una instantánea consistente para el contenido público; el pool encola las consultas.
     prisma.homepageSettings.findUnique({ where: { id: HOMEPAGE_SETTINGS_SINGLETON_ID } }),
     prisma.service.findMany({
       where: { showOnHomepage: true, active: true },
@@ -152,6 +181,7 @@ export async function getHomepageContent(prismaClient?: PrismaClient): Promise<H
         description: s.description ?? "",
         icon: sanitizeMarketingIcon(s.iconKey ?? "", "Sparkle"),
         highlights: s.homepageHighlights.map((h) => h.text),
+        detailHref: serviceDetailHref(s.detailSlug),
       })),
     },
     specialists: {

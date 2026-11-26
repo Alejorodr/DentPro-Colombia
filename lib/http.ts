@@ -58,10 +58,30 @@ export async function fetchWithTimeout(
   const controller = new AbortController();
   const timeoutMs = resolveTimeoutMs(options.timeoutMs);
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-  const signal = init.signal ?? controller.signal;
+  // Si quien llama trae su propio signal (p. ej. para cancelar búsquedas viejas), se combina
+  // con el del timeout en vez de reemplazarlo: antes el timeout se perdía en ese caso.
+  const signal = init.signal
+    ? typeof AbortSignal.any === "function"
+      ? AbortSignal.any([init.signal, controller.signal])
+      : init.signal
+    : controller.signal;
 
   try {
     return await fetch(input, { ...init, signal });
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+/**
+ * Corre una operación de un SDK que acepta AbortSignal y la aborta si no responde a tiempo.
+ * El temporizador se limpia en cuanto la operación resuelve, así no corta una descarga en curso.
+ */
+export async function withAbortTimeout<T>(operation: (signal: AbortSignal) => Promise<T>, timeoutMs: number): Promise<T> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(new Error(`Tiempo de espera agotado (${timeoutMs} ms).`)), timeoutMs);
+  try {
+    return await operation(controller.signal);
   } finally {
     clearTimeout(timeoutId);
   }
@@ -112,6 +132,46 @@ export async function fetchWithRetry(
     throw lastError;
   }
   return fetchWithTimeout(input, init, options);
+}
+
+type PaginatedPayload<T> = { data?: T[]; totalPages?: number };
+
+/** Tope del servidor por página (app/api/_utils/pagination.ts). */
+const SERVER_MAX_PAGE_SIZE = 50;
+
+/**
+ * DOG-23: trae todas las páginas de un endpoint paginado. Sirve para selectores de
+ * catálogo (profesionales, servicios), que antes pedían `pageSize=50` o `100` y, por el
+ * tope de 50 del servidor, perdían en silencio todo lo que pasara de la primera página.
+ *
+ * Devuelve `null` si alguna página falla, para que quien llama conserve su estado.
+ * `maxPages` acota el total (50 × 20 = 1.000 elementos) por si el catálogo se desborda.
+ */
+export async function fetchAllPages<T>(
+  path: string,
+  { maxPages = 20, init }: { maxPages?: number; init?: RequestInit } = {},
+): Promise<T[] | null> {
+  const url = new URL(path, "http://local.invalid");
+  url.searchParams.set("pageSize", String(SERVER_MAX_PAGE_SIZE));
+  const pagePath = (page: number) => {
+    url.searchParams.set("page", String(page));
+    return `${url.pathname}${url.search}`;
+  };
+
+  const readPage = async (page: number) => {
+    const response = await fetchWithRetry(pagePath(page), init);
+    if (!response.ok) return null;
+    return (await response.json()) as PaginatedPayload<T>;
+  };
+
+  const first = await readPage(1);
+  if (!first) return null;
+
+  const lastPage = Math.min(first.totalPages ?? 1, maxPages);
+  const rest = await Promise.all(Array.from({ length: Math.max(lastPage - 1, 0) }, (_, index) => readPage(index + 2)));
+  if (rest.some((page) => page === null)) return null;
+
+  return [first, ...(rest as PaginatedPayload<T>[])].flatMap((page) => page.data ?? []);
 }
 
 export async function getApiErrorMessage(response: Response, fallbackMessage: string) {

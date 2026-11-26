@@ -6,6 +6,9 @@ import { Card } from "@/app/portal/components/ui/Card";
 import { Table } from "@/app/portal/components/ui/Table";
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
 import { PaymentMethod, PaymentStatus } from "@prisma/client";
+import { SkeletonRows } from "@/app/portal/components/ui/Skeleton";
+import { PortalDialog } from "@/app/portal/components/ui/PortalDialog";
+import { CLINIC_TIME_ZONE } from "@/lib/dates/tz";
 
 const formatCurrency = (cents: number) =>
   new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(cents / 100);
@@ -216,11 +219,11 @@ export function ReceptionistBilling({ isAdmin = false }: ReceptionistBillingProp
           <Card className="space-y-4">
             <div>
               <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Citas facturables</h2>
-              <p className="text-xs text-slate-500">Citas en sala o completadas · {new Date(`${selectedDate}T12:00:00`).toLocaleDateString("es-CO", { weekday: "long", day: "numeric", month: "long" })}</p>
+              <p className="text-xs text-slate-500">Citas en sala o completadas · {new Date(`${selectedDate}T12:00:00`).toLocaleDateString("es-CO", { timeZone: CLINIC_TIME_ZONE, weekday: "long", day: "numeric", month: "long" })}</p>
             </div>
 
             {loading ? (
-              <p className="text-sm text-slate-500">Cargando…</p>
+              <SkeletonRows label="Cargando" />
             ) : data.appointments.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-slate-200 p-6 text-center text-sm text-slate-500">
                 No hay citas facturables para este día.
@@ -243,7 +246,7 @@ export function ReceptionistBilling({ isAdmin = false }: ReceptionistBillingProp
                   {data.appointments.map((appointment) => (
                     <tr key={appointment.id} className="bg-white dark:bg-surface-elevated/60">
                       <td className="px-4 py-3 font-semibold text-slate-900 dark:text-white">
-                        {new Date(appointment.startAt).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })}
+                        {new Date(appointment.startAt).toLocaleTimeString("es-CO", { timeZone: CLINIC_TIME_ZONE, hour: "2-digit", minute: "2-digit" })}
                       </td>
                       <td className="px-4 py-3">
                         <p className="font-medium text-slate-900 dark:text-white">{appointment.patientName}</p>
@@ -286,112 +289,110 @@ export function ReceptionistBilling({ isAdmin = false }: ReceptionistBillingProp
       ) : null}
 
       {payTarget ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 px-4">
-          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl dark:bg-surface-elevated">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Registrar cobro</p>
-            <h3 className="mt-1 text-lg font-semibold text-slate-900 dark:text-white">{payTarget.patientName}</h3>
-            <p className="text-sm text-slate-500">{payTarget.serviceName}</p>
-            {payTarget.servicePriceCents != null && (
-              <p className="mt-1 text-xs text-slate-400">Tarifa: {formatCurrency(payTarget.servicePriceCents)}</p>
-            )}
+        <PortalDialog onClose={() => setPayTarget(null)} labelledBy="pay-modal-title" size="md">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Registrar cobro</p>
+          <h3 id="pay-modal-title" className="mt-1 text-lg font-semibold text-slate-900 dark:text-white">{payTarget.patientName}</h3>
+          <p className="text-sm text-slate-500">{payTarget.serviceName}</p>
+          {payTarget.servicePriceCents != null && (
+            <p className="mt-1 text-xs text-slate-400">Tarifa: {formatCurrency(payTarget.servicePriceCents)}</p>
+          )}
 
-            <div className="mt-5 space-y-4">
-              <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Estado del pago
-                <select
-                  className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm normal-case text-slate-700 dark:border-surface-muted dark:bg-surface-base dark:text-slate-200"
-                  value={payForm.paymentStatus}
-                  onChange={(event) => setPayForm((prev) => ({ ...prev, paymentStatus: event.target.value as PaymentStatus }))}
-                >
-                  <option value={PaymentStatus.PAID}>Cobrado</option>
-                  {/* Reverting a PAID payment is ADMINISTRADOR-only. */}
-                  {isAdmin || payTarget.paymentStatus !== PaymentStatus.PAID ? (
-                    <>
-                      <option value={PaymentStatus.PENDING}>Pendiente</option>
-                      <option value={PaymentStatus.WAIVED}>Exonerado</option>
-                    </>
-                  ) : null}
-                </select>
-                {!isAdmin && payTarget.paymentStatus === PaymentStatus.PAID ? (
-                  <span className="mt-1 block text-[11px] font-normal normal-case tracking-normal text-slate-400">
-                    Solo un administrador puede revertir un pago registrado.
-                  </span>
+          <div className="mt-5 space-y-4">
+            <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500">
+              Estado del pago
+              <select
+                className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm normal-case text-slate-700 dark:border-surface-muted dark:bg-surface-base dark:text-slate-200"
+                value={payForm.paymentStatus}
+                onChange={(event) => setPayForm((prev) => ({ ...prev, paymentStatus: event.target.value as PaymentStatus }))}
+              >
+                <option value={PaymentStatus.PAID}>Cobrado</option>
+                {/* Reverting a PAID payment is ADMINISTRADOR-only. */}
+                {isAdmin || payTarget.paymentStatus !== PaymentStatus.PAID ? (
+                  <>
+                    <option value={PaymentStatus.PENDING}>Pendiente</option>
+                    <option value={PaymentStatus.WAIVED}>Exonerado</option>
+                  </>
                 ) : null}
-              </label>
+              </select>
+              {!isAdmin && payTarget.paymentStatus === PaymentStatus.PAID ? (
+                <span className="mt-1 block text-[11px] font-normal normal-case tracking-normal text-slate-400">
+                  Solo un administrador puede revertir un pago registrado.
+                </span>
+              ) : null}
+            </label>
 
-              {payForm.paymentStatus === PaymentStatus.PAID && (
-                <>
-                  <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500">
-                    Método de pago
-                    <select
-                      className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm normal-case text-slate-700 dark:border-surface-muted dark:bg-surface-base dark:text-slate-200"
-                      value={payForm.paymentMethod}
-                      onChange={(event) => setPayForm((prev) => ({ ...prev, paymentMethod: event.target.value as PaymentMethod | "" }))}
-                    >
-                      <option value="">Selecciona un método</option>
-                      <option value={PaymentMethod.CASH}>Efectivo</option>
-                      <option value={PaymentMethod.CARD}>Tarjeta</option>
-                      <option value={PaymentMethod.TRANSFER}>Transferencia</option>
-                    </select>
-                  </label>
-                  <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500">
-                    Monto cobrado (COP)
-                    <input
-                      type="number"
-                      min={0}
-                      max={payTarget.servicePriceCents != null ? payTarget.servicePriceCents / 100 : undefined}
-                      step={1000}
-                      readOnly={isAmountLocked(payTarget)}
-                      aria-readonly={isAmountLocked(payTarget)}
-                      className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm normal-case text-slate-700 read-only:cursor-not-allowed read-only:bg-slate-50 read-only:text-slate-500 dark:border-surface-muted dark:bg-surface-base dark:text-slate-200 dark:read-only:bg-surface-muted/40"
-                      value={payForm.paidAmountCents}
-                      onChange={(event) => setPayForm((prev) => ({ ...prev, paidAmountCents: event.target.value }))}
-                      placeholder={payTarget.servicePriceCents != null ? String(payTarget.servicePriceCents / 100) : "0"}
-                    />
-                    {isAmountLocked(payTarget) ? (
-                      <span className="mt-1 block text-[11px] font-normal normal-case tracking-normal text-slate-400">
-                        El monto corresponde a la tarifa del servicio. Solo un administrador puede registrar un descuento.
-                      </span>
-                    ) : null}
-                  </label>
-                </>
-              )}
-            </div>
-
-            {feedback ? (
-              <div className="mt-3 text-sm text-rose-600" role="alert">
-                <p>{feedback}</p>
-                {conflict ? (
-                  <button
-                    type="button"
-                    onClick={reloadAfterConflict}
-                    className="mt-2 rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold uppercase text-slate-600 dark:border-surface-muted dark:text-slate-200"
+            {payForm.paymentStatus === PaymentStatus.PAID && (
+              <>
+                <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Método de pago
+                  <select
+                    className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm normal-case text-slate-700 dark:border-surface-muted dark:bg-surface-base dark:text-slate-200"
+                    value={payForm.paymentMethod}
+                    onChange={(event) => setPayForm((prev) => ({ ...prev, paymentMethod: event.target.value as PaymentMethod | "" }))}
                   >
-                    Recargar cobros
-                  </button>
-                ) : null}
-              </div>
-            ) : null}
-
-            <div className="mt-6 flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setPayTarget(null)}
-                className="rounded-full border border-slate-200 px-4 py-2 text-xs font-semibold uppercase text-slate-600 dark:border-surface-muted dark:text-slate-200"
-              >
-                Cancelar
-              </button>
-              <button
-                type="button"
-                onClick={submitPayment}
-                disabled={saving || (payForm.paymentStatus === PaymentStatus.PAID && !payForm.paymentMethod)}
-                className="rounded-full bg-brand-teal px-4 py-2 text-xs font-semibold uppercase text-white disabled:opacity-50"
-              >
-                {saving ? "Guardando…" : "Guardar"}
-              </button>
-            </div>
+                    <option value="">Selecciona un método</option>
+                    <option value={PaymentMethod.CASH}>Efectivo</option>
+                    <option value={PaymentMethod.CARD}>Tarjeta</option>
+                    <option value={PaymentMethod.TRANSFER}>Transferencia</option>
+                  </select>
+                </label>
+                <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Monto cobrado (COP)
+                  <input
+                    type="number"
+                    min={0}
+                    max={payTarget.servicePriceCents != null ? payTarget.servicePriceCents / 100 : undefined}
+                    step={1000}
+                    readOnly={isAmountLocked(payTarget)}
+                    aria-readonly={isAmountLocked(payTarget)}
+                    className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm normal-case text-slate-700 read-only:cursor-not-allowed read-only:bg-slate-50 read-only:text-slate-500 dark:border-surface-muted dark:bg-surface-base dark:text-slate-200 dark:read-only:bg-surface-muted/40"
+                    value={payForm.paidAmountCents}
+                    onChange={(event) => setPayForm((prev) => ({ ...prev, paidAmountCents: event.target.value }))}
+                    placeholder={payTarget.servicePriceCents != null ? String(payTarget.servicePriceCents / 100) : "0"}
+                  />
+                  {isAmountLocked(payTarget) ? (
+                    <span className="mt-1 block text-[11px] font-normal normal-case tracking-normal text-slate-400">
+                      El monto corresponde a la tarifa del servicio. Solo un administrador puede registrar un descuento.
+                    </span>
+                  ) : null}
+                </label>
+              </>
+            )}
           </div>
-        </div>
+
+          {feedback ? (
+            <div className="mt-3 text-sm text-rose-600" role="alert">
+              <p>{feedback}</p>
+              {conflict ? (
+                <button
+                  type="button"
+                  onClick={reloadAfterConflict}
+                  className="mt-2 rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold uppercase text-slate-600 dark:border-surface-muted dark:text-slate-200"
+                >
+                  Recargar cobros
+                </button>
+              ) : null}
+            </div>
+          ) : null}
+
+          <div className="mt-6 flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => setPayTarget(null)}
+              className="rounded-full border border-slate-200 px-4 py-2 text-xs font-semibold uppercase text-slate-600 dark:border-surface-muted dark:text-slate-200"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              onClick={submitPayment}
+              disabled={saving || (payForm.paymentStatus === PaymentStatus.PAID && !payForm.paymentMethod)}
+              className="rounded-full bg-brand-teal px-4 py-2 text-xs font-semibold uppercase text-white disabled:opacity-50"
+            >
+              {saving ? "Guardando…" : "Guardar"}
+            </button>
+          </div>
+        </PortalDialog>
       ) : null}
     </div>
   );

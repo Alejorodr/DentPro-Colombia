@@ -1,7 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { signOut } from "next-auth/react";
 
 import {
@@ -14,9 +13,9 @@ import {
 } from "@/components/ui/Icon";
 
 import type { AuthSession } from "@/auth";
-import { roleLabels } from "@/lib/auth/roles";
-import { Sidebar } from "@/app/portal/components/layout/Sidebar";
-import { ReceptionistTopbar } from "@/app/portal/receptionist/components/ReceptionistTopbar";
+import { PortalGlassShell } from "@/app/portal/components/layout/PortalGlassShell";
+import { GlobalSearch } from "@/app/portal/receptionist/components/GlobalSearch";
+import { NotificationsBell } from "@/app/portal/receptionist/components/NotificationsBell";
 
 interface ReceptionistShellProps {
   children: React.ReactNode;
@@ -24,46 +23,34 @@ interface ReceptionistShellProps {
 }
 
 const navItems = [
-  { label: "Dashboard", href: "/portal/receptionist/dashboard", icon: House },
-  { label: "Schedule", href: "/portal/receptionist/schedule", icon: CalendarCheck },
-  { label: "Patients", href: "/portal/receptionist/patients", icon: Users },
-  { label: "Staff", href: "/portal/receptionist/staff", icon: UserCircle },
-  { label: "Billing", href: "/portal/receptionist/billing", icon: CreditCard },
-  { label: "Settings", href: "/portal/receptionist/settings", icon: Gear },
+  { label: "Inicio", href: "/portal/receptionist/dashboard", icon: House },
+  { label: "Agenda", href: "/portal/receptionist/schedule", icon: CalendarCheck },
+  { label: "Pacientes", href: "/portal/receptionist/patients", icon: Users },
+  { label: "Personal", href: "/portal/receptionist/staff", icon: UserCircle },
+  { label: "Facturación", href: "/portal/receptionist/billing", icon: CreditCard },
 ];
+
+const settingsItems = [{ label: "Configuración", href: "/portal/receptionist/settings", icon: Gear }];
 
 export function ReceptionistShell({ children, session }: ReceptionistShellProps) {
   const pathname = usePathname();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const searchParams = useSearchParams();
   const userName = session?.user?.name ?? "Recepción";
-  const userRoleLabel = roleLabels[session?.user?.role ?? "RECEPCIONISTA"];
-
-  const activeLabel = useMemo(() => {
-    const activeItem = navItems.find((item) => pathname === item.href || pathname.startsWith(`${item.href}/`));
-    return activeItem?.label ?? "Dashboard";
-  }, [pathname]);
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-surface-base dark:text-white">
-      <Sidebar
-        items={navItems}
-        pathname={pathname}
-        isOpen={isSidebarOpen}
-        onClose={() => setIsSidebarOpen(false)}
-        onSignOut={() => signOut({ callbackUrl: "/auth/login" })}
-        brandSubtitle="Portal Recepcionista"
-      />
-      <div className="flex min-h-screen flex-col md:pl-72">
-        <ReceptionistTopbar
-          activeSection={activeLabel}
-          userName={userName}
-          userRole={userRoleLabel}
-          onMenuClick={() => setIsSidebarOpen(true)}
-        />
-        <main className="w-full px-6 py-8">
-          <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">{children}</div>
-        </main>
-      </div>
-    </div>
+    <PortalGlassShell
+      portalLabel="Portal recepción"
+      homeHref="/portal/receptionist/dashboard"
+      navItems={navItems}
+      settingsItems={settingsItems}
+      pathname={pathname}
+      search={searchParams.toString()}
+      userName={userName}
+      onSignOut={() => signOut({ callbackUrl: "/auth/login" })}
+      searchSlot={<GlobalSearch />}
+      notificationsSlot={<NotificationsBell />}
+    >
+      {children}
+    </PortalGlassShell>
   );
 }

@@ -2,7 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
+import { fetchAllPages, fetchWithRetry, fetchWithTimeout } from "@/lib/http";
+import { SkeletonRows } from "@/app/portal/components/ui/Skeleton";
+import { CLINIC_TIME_ZONE } from "@/lib/dates/tz";
 
 type Professional = {
   id: string;
@@ -102,22 +104,19 @@ export default function AdminSchedulingPage() {
   const [editingScheduleId, setEditingScheduleId] = useState<string | null>(null);
 
   const loadBaseData = useCallback(async () => {
-    const [profRes, servicesRes] = await Promise.all([
-      fetchWithRetry("/api/professionals?pageSize=100"),
-      fetchWithRetry("/api/services?pageSize=100"),
+    // DOG-23: `pageSize=100` recibía solo 50 (tope del servidor); ahora se traen todas las páginas.
+    const [incomingProfessionals, allServices] = await Promise.all([
+      fetchAllPages<Professional>("/api/professionals"),
+      fetchAllPages<Service>("/api/services"),
     ]);
 
-    if (!profRes.ok || !servicesRes.ok) {
+    if (!incomingProfessionals || !allServices) {
       setError("No se pudieron cargar profesionales y servicios.");
       return;
     }
 
-    const profData = (await profRes.json()) as { data: Professional[] };
-    const servicesData = (await servicesRes.json()) as { data: Service[] };
-
-    const incomingProfessionals = profData.data ?? [];
     setProfessionals(incomingProfessionals);
-    setServices((servicesData.data ?? []).filter((service) => service.active));
+    setServices(allServices.filter((service) => service.active));
 
     setSelectedProfessionalId((current) =>
       !current && incomingProfessionals.length > 0 ? incomingProfessionals[0].id : current,
@@ -450,7 +449,7 @@ export default function AdminSchedulingPage() {
       {!selectedProfessional ? (
         <p className="text-sm text-slate-500">Selecciona un profesional para administrar su agenda base.</p>
       ) : (
-        <section className="grid gap-6 lg:grid-cols-2">
+        <section className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <div className="rounded-3xl border border-slate-200 bg-white/80 p-6">
             <h2 className="text-lg font-semibold">Servicios asignados</h2>
             <p className="mt-1 text-sm text-slate-600">Controla qué servicios puede agendar este profesional.</p>
@@ -506,7 +505,7 @@ export default function AdminSchedulingPage() {
                       </label>
                     </div>
                     <textarea className="input mt-2 min-h-16" value={assignmentEdits[assignment.id]?.notes ?? ""} onChange={(event) => setAssignmentEdits((prev) => ({ ...prev, [assignment.id]: { ...prev[assignment.id], notes: event.target.value } }))} placeholder="Notas internas" />
-                    <div className="mt-2 flex gap-2">
+                    <div className="mt-2 flex flex-wrap gap-2">
                       <button className="btn btn-secondary" type="button" onClick={() => void handleUpdateAssignment(assignment.id)}>
                         Guardar cambios
                       </button>
@@ -597,7 +596,7 @@ export default function AdminSchedulingPage() {
                               onChange={(event) => updateScheduleDraft(schedule.id, "endTime", event.target.value)}
                             />
                           </div>
-                          <div className="flex gap-2">
+                          <div className="flex flex-wrap gap-2">
                             <button className="btn btn-secondary" type="button" onClick={() => void handleUpdateSchedule(schedule)}>
                               Guardar
                             </button>
@@ -607,14 +606,14 @@ export default function AdminSchedulingPage() {
                           </div>
                         </div>
                       ) : (
-                        <div className="flex items-center justify-between">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
                           <div>
                             <p className="font-medium text-slate-800">
                               {weekDays[schedule.dayOfWeek]} · {normalizeTime(schedule.startTime)}–{normalizeTime(schedule.endTime)}
                             </p>
                             <p className="text-xs text-slate-500">{schedule.active ? "Activo" : "Inactivo"}</p>
                           </div>
-                          <div className="flex gap-2">
+                          <div className="flex flex-wrap gap-2">
                             <button className="btn btn-ghost" type="button" onClick={() => setEditingScheduleId(schedule.id)}>
                               Editar
                             </button>
@@ -634,16 +633,16 @@ export default function AdminSchedulingPage() {
       )}
 
       {selectedProfessional ? (
-        <section className="grid gap-6 lg:grid-cols-2">
+        <section className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <div className="rounded-3xl border border-slate-200 bg-white/80 p-6">
             <h2 className="text-lg font-semibold">Revisión de ajustes de agenda</h2>
             <div className="mt-4 space-y-2 text-sm">
               {adjustments.length === 0 ? <p className="text-slate-500">Sin ajustes registrados.</p> : adjustments.map((item) => (
                 <div key={item.id} className="rounded-xl border border-slate-200 p-3">
                   <p className="font-medium">{item.dayOfWeek !== null ? weekDays[item.dayOfWeek] : "Sin día"} · {item.startTime ?? "--:--"} - {item.endTime ?? "--:--"}</p>
-                  <p className="text-xs text-slate-500">Desde {new Date(item.effectiveFrom).toLocaleDateString("es-CO")} · Estado: {item.status}</p>
+                  <p className="text-xs text-slate-500">Desde {new Date(item.effectiveFrom).toLocaleDateString("es-CO", { timeZone: CLINIC_TIME_ZONE })} · Estado: {item.status}</p>
                   {item.status === "CHANGES_REQUESTED" ? (
-                    <div className="mt-2 flex gap-2">
+                    <div className="mt-2 flex flex-wrap gap-2">
                       <button className="btn btn-secondary" type="button" onClick={() => void handleReviewAdjustment(item.id, "approve")}>Aprobar</button>
                       <button className="btn btn-ghost" type="button" onClick={() => void handleReviewAdjustment(item.id, "reject")}>Rechazar</button>
                     </div>
@@ -659,10 +658,10 @@ export default function AdminSchedulingPage() {
               {unavailability.length === 0 ? <p className="text-slate-500">Sin novedades registradas.</p> : unavailability.map((item) => (
                 <div key={item.id} className="rounded-xl border border-slate-200 p-3">
                   <p className="font-medium">{item.type}</p>
-                  <p className="text-xs text-slate-500">{new Date(item.startsAt).toLocaleString("es-CO")} → {new Date(item.endsAt).toLocaleString("es-CO")}</p>
+                  <p className="text-xs text-slate-500">{new Date(item.startsAt).toLocaleString("es-CO", { timeZone: CLINIC_TIME_ZONE })} → {new Date(item.endsAt).toLocaleString("es-CO", { timeZone: CLINIC_TIME_ZONE })}</p>
                   <p className="text-xs text-slate-500">Estado: {item.status}</p>
                   {item.status === "PENDING" ? (
-                    <div className="mt-2 flex gap-2">
+                    <div className="mt-2 flex flex-wrap gap-2">
                       <button className="btn btn-secondary" type="button" onClick={() => void handleReviewUnavailability(item.id, "approve")}>Aprobar</button>
                       <button className="btn btn-ghost" type="button" onClick={() => void handleReviewUnavailability(item.id, "reject")}>Rechazar</button>
                       <button className="btn btn-ghost" type="button" onClick={() => void handleReviewUnavailability(item.id, "cancel")}>Cancelar</button>
@@ -675,7 +674,7 @@ export default function AdminSchedulingPage() {
         </section>
       ) : null}
 
-      {loading ? <p className="text-sm text-slate-500">Cargando configuración...</p> : null}
+      {loading ? <SkeletonRows label="Cargando configuración" /> : null}
     </div>
   );
 }

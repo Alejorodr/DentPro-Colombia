@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 
-import { List, UserCircle, X } from "@/components/ui/Icon";
+import { MorphToggleIcon, UserCircle } from "@/components/ui/Icon";
 
 import { ThemeToggle } from "@/components/ThemeToggle";
 
@@ -82,7 +82,7 @@ export function Navbar({ brand, links, cta, login }: NavbarProps) {
             </a>
           ))}
         </nav>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4">
           <ThemeToggle />
           {login ? (
             <a
@@ -105,11 +105,7 @@ export function Navbar({ brand, links, cta, login }: NavbarProps) {
             aria-expanded={isOpen}
             onClick={toggleMenu}
           >
-            {isOpen ? (
-              <X className="h-6 w-6" weight="bold" aria-hidden="true" />
-            ) : (
-              <List className="h-6 w-6" weight="bold" aria-hidden="true" />
-            )}
+            <MorphToggleIcon name="menu" active={isOpen} className="h-6 w-6" weight="bold" aria-hidden="true" />
           </button>
         </div>
       </div>

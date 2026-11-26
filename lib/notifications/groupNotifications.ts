@@ -1,3 +1,4 @@
+import { CLINIC_TIME_ZONE } from "@/lib/dates/tz";
 export type NotificationGroupItem = {
   id: string;
   createdAt: string;
@@ -12,14 +13,10 @@ function labelForDate(dateIso: string) {
   yesterday.setDate(now.getDate() - 1);
   if (yesterday.toDateString() === date.toDateString()) return "Ayer";
 
-  return date.toLocaleDateString("es-CO", { weekday: "short", day: "2-digit", month: "short" });
+  return date.toLocaleDateString("es-CO", { timeZone: CLINIC_TIME_ZONE, weekday: "short", day: "2-digit", month: "short" });
 }
 
 export function groupNotificationsByDate<T extends NotificationGroupItem>(items: T[]) {
-  return items.reduce((acc, item) => {
-    const key = labelForDate(item.createdAt);
-    acc[key] = acc[key] ?? [];
-    acc[key].push(item);
-    return acc;
-  }, {} as Record<string, T[]>);
+  // Object.groupBy conserva el orden de inserción, igual que el reduce anterior.
+  return Object.groupBy(items, (item) => labelForDate(item.createdAt)) as Record<string, T[]>;
 }

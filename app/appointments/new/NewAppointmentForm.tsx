@@ -4,12 +4,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
 import type { UserRole } from "@/lib/auth/roles";
-import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
+import { fetchAllPages, fetchWithRetry, fetchWithTimeout } from "@/lib/http";
 import {
   ACTIVE_CAP_MESSAGE,
   MAX_ACTIVE_APPOINTMENTS_PER_PATIENT,
   isSlotBookableByPatient,
 } from "@/lib/appointments/booking-limits";
+import { CLINIC_TIME_ZONE } from "@/lib/dates/tz";
 
 type Professional = {
   id: string;
@@ -54,16 +55,14 @@ export function NewAppointmentForm({ role, activeAppointmentsCount = 0 }: NewApp
   const [status, setStatus] = useState<string | null>(null);
 
   useEffect(() => {
-    void fetchWithRetry("/api/professionals?pageSize=100")
-      .then((res) => res.json())
-      .then((payload) => setAllProfessionals((payload.data ?? []).map((item: { id: string; user: Professional["user"] }) => ({ id: item.id, user: item.user }))))
+    void fetchAllPages<{ id: string; user: Professional["user"] }>("/api/professionals")
+      .then((items) => setAllProfessionals((items ?? []).map((item) => ({ id: item.id, user: item.user }))))
       .catch(() => setAllProfessionals([]));
   }, []);
 
   useEffect(() => {
-    void fetchWithRetry("/api/services?active=true&pageSize=50")
-      .then((res) => res.json())
-      .then((payload) => setServices(payload.data ?? []))
+    void fetchAllPages<Service>("/api/services?active=true")
+      .then((items) => setServices(items ?? []))
       .catch(() => setServices([]));
   }, []);
 
@@ -225,7 +224,7 @@ export function NewAppointmentForm({ role, activeAppointmentsCount = 0 }: NewApp
             <option value="">Selecciona</option>
             {availableSlots.map((slot) => (
               <option key={slot.id} value={slot.id}>
-                {new Date(slot.startAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} - {new Date(slot.endAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                {new Date(slot.startAt).toLocaleTimeString("es-CO", { timeZone: CLINIC_TIME_ZONE, hour: "2-digit", minute: "2-digit" })} - {new Date(slot.endAt).toLocaleTimeString("es-CO", { timeZone: CLINIC_TIME_ZONE, hour: "2-digit", minute: "2-digit" })}
               </option>
             ))}
           </select>

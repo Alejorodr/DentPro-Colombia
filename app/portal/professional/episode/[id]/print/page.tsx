@@ -5,6 +5,8 @@ import { getProfessionalProfile } from "@/lib/clinical/access";
 import { logClinicalAccess } from "@/lib/clinical/access-log";
 import { getPrismaClient } from "@/lib/prisma";
 import { AccessLogAction } from "@prisma/client";
+import { sanitizeConsentHtml } from "@/lib/security/sanitize-html";
+import { CLINIC_TIME_ZONE } from "@/lib/dates/tz";
 
 export default async function EpisodePrintPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await requireRole("PROFESIONAL");
@@ -16,27 +18,29 @@ export default async function EpisodePrintPage({ params }: { params: Promise<{ i
     return <p className="text-sm text-slate-500">Profesional no encontrado.</p>;
   }
 
-  const episode = await prisma.clinicalEpisode.findFirst({
-    where: { id, deletedAt: null },
-    select: {
-      id: true,
-      patientId: true,
-      professionalId: true,
-      date: true,
-      reason: true,
-      diagnosis: true,
-      treatmentPlan: true,
-      notes: true,
-      patient: { select: { id: true, patientCode: true, user: { select: { name: true, lastName: true } } } },
-      professional: { select: { user: { select: { name: true, lastName: true } } } },
-    },
-  });
-
-  const quoteTemplate = await prisma.clinicDocumentTemplate.findFirst({
-    where: { type: "QUOTE", active: true },
-    select: { title: true, contentHtml: true },
-    orderBy: { updatedAt: "desc" },
-  });
+  // DOG-12: el episodio y la plantilla de cotización se consultan en paralelo.
+  const [episode, quoteTemplate] = await Promise.all([
+    prisma.clinicalEpisode.findFirst({
+      where: { id, deletedAt: null },
+      select: {
+        id: true,
+        patientId: true,
+        professionalId: true,
+        date: true,
+        reason: true,
+        diagnosis: true,
+        treatmentPlan: true,
+        notes: true,
+        patient: { select: { id: true, patientCode: true, user: { select: { name: true, lastName: true } } } },
+        professional: { select: { user: { select: { name: true, lastName: true } } } },
+      },
+    }),
+    prisma.clinicDocumentTemplate.findFirst({
+      where: { type: "QUOTE", active: true },
+      select: { title: true, contentHtml: true },
+      orderBy: { updatedAt: "desc" },
+    }),
+  ]);
 
   if (!episode || episode.professionalId !== professional.id) {
     return <p className="text-sm text-slate-500">Episodio no encontrado.</p>;
@@ -75,7 +79,7 @@ export default async function EpisodePrintPage({ params }: { params: Promise<{ i
           <p className="font-semibold">
             {episode.professional.user.name} {episode.professional.user.lastName}
           </p>
-          <p className="text-slate-500">Fecha: {episode.date.toLocaleDateString("es-CO")}</p>
+          <p className="text-slate-500">Fecha: {episode.date.toLocaleDateString("es-CO", { timeZone: CLINIC_TIME_ZONE })}</p>
         </div>
       </section>
 
@@ -101,7 +105,7 @@ export default async function EpisodePrintPage({ params }: { params: Promise<{ i
             <p className="text-xs font-semibold uppercase text-slate-400">{quoteTemplate.title}</p>
             <div
               className="prose prose-sm mt-2 max-w-none text-slate-700"
-              dangerouslySetInnerHTML={{ __html: quoteTemplate.contentHtml }}
+              dangerouslySetInnerHTML={{ __html: sanitizeConsentHtml(quoteTemplate.contentHtml) }}
             />
           </div>
         ) : null}

@@ -35,6 +35,10 @@ jobs:
     env:
       DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/dentpro"
       NEXTAUTH_SECRET: "test-secret"
+      # DOG-18: claves de prueba (bytes en cero/uno) para ejercitar el cifrado de campos.
+      FIELD_ENCRYPTION_KEY: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+      FIELD_ENCRYPTION_KEY_ID: "ci"
+      FIELD_HASH_KEY: "AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="
       AUTH_TRUST_HOST: "true"
       NEXT_PUBLIC_APP_URL: "http://localhost:3000"
       NEXTAUTH_URL: "http://localhost:3000"

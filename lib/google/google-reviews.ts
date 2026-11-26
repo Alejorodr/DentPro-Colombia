@@ -1,4 +1,9 @@
-export type GoogleReviewItem = {
+import { fetchWithTimeout } from "@/lib/http";
+
+// Si Google tarda, la home se muestra sin reseñas en vez de quedarse esperando.
+const GOOGLE_PLACES_TIMEOUT_MS = 5_000;
+
+type GoogleReviewItem = {
   id: string;
   authorName: string;
   authorUri?: string;
@@ -47,14 +52,14 @@ export async function getGoogleReviews(): Promise<GoogleReviewsSummary | null> {
 
   const url = `https://places.googleapis.com/v1/places/${encodeURIComponent(placeId)}?languageCode=es`;
 
-  const response = await fetch(url, {
+  const response = await fetchWithTimeout(url, {
     headers: {
       "X-Goog-Api-Key": apiKey,
       "X-Goog-FieldMask":
         "id,displayName,rating,userRatingCount,googleMapsUri,reviews.rating,reviews.text,reviews.authorAttribution,reviews.relativePublishTimeDescription,reviews.publishTime",
     },
     next: { revalidate: 21600 },
-  }).catch((error: unknown) => {
+  }, { timeoutMs: GOOGLE_PLACES_TIMEOUT_MS }).catch((error: unknown) => {
     if (process.env.NODE_ENV !== "production") {
       console.warn("Google Places reviews unavailable", { error });
     }

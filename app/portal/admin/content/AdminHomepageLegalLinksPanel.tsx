@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Card } from "@/app/portal/components/ui/Card";
 import { fetchWithRetry, fetchWithTimeout } from "@/lib/http";
+import { SkeletonRows } from "@/app/portal/components/ui/Skeleton";
 
 type LegalLinkItem = {
   id: string;
@@ -174,7 +175,7 @@ export function AdminHomepageLegalLinksPanel() {
         <button type="button" className="rounded-full bg-brand-teal px-4 py-2 text-xs font-semibold uppercase text-white disabled:opacity-60" onClick={createLegalLink} disabled={saving}>Crear enlace</button>
       </Card>
 
-      {loading ? <Card><p className="text-sm text-slate-600 dark:text-slate-300">Cargando enlaces legales...</p></Card> : null}
+      {loading ? <Card><SkeletonRows label="Cargando enlaces legales" /></Card> : null}
 
       {legalLinks.map((legalLink, index) => (
         <Card key={legalLink.id} className="space-y-4">

@@ -55,4 +55,31 @@ describe("resolveSessionUser", () => {
     const currentUser = { ...activeUser, passwordChangedAt: new Date("2026-08-29T12:00:00.000Z") };
     expect(resolveSessionUser(token({ iat: undefined }), currentUser)).toBeNull();
   });
+
+  // DOG-28: segundo factor.
+  describe("MFA", () => {
+    const enabled = { ...activeUser, mfaEnabled: true };
+
+    it("deja pendiente a un admin cuya sesión no está verificada", () => {
+      expect(resolveSessionUser(token(), enabled)?.mfaPending).toBe(true);
+    });
+
+    it("no deja pendiente una sesión verificada con el MFA activo", () => {
+      expect(resolveSessionUser(token({ mfaVerified: true }), enabled)?.mfaPending).toBe(false);
+    });
+
+    it("vuelve a dejar pendiente la sesión si un admin restableció el MFA", () => {
+      expect(resolveSessionUser(token({ mfaVerified: true }), { ...activeUser, mfaEnabled: false })?.mfaPending).toBe(true);
+    });
+
+    it("no exige MFA a pacientes ni recepcionistas", () => {
+      for (const role of ["PACIENTE", "RECEPCIONISTA"] as const) {
+        expect(resolveSessionUser(token({ role }), { ...activeUser, role })?.mfaPending).toBe(false);
+      }
+    });
+
+    it("lo exige también a profesionales", () => {
+      expect(resolveSessionUser(token({ role: "PROFESIONAL" }), { ...enabled, role: "PROFESIONAL" })?.mfaPending).toBe(true);
+    });
+  });
 });

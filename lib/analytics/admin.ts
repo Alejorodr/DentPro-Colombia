@@ -47,15 +47,6 @@ export type AdminAppointmentSummary = {
   status: AppointmentStatus;
 };
 
-export type AdminRecentAppointment = {
-  id: string;
-  startAt: Date;
-  status: AppointmentStatus;
-  patientName: string | null;
-  professionalName: string | null;
-  specialty: string | null;
-};
-
 function formatBucketLabel(date: Date, bucket: AnalyticsBucket, timeZone: string) {
   if (bucket === "month") {
     return formatInTimeZone(date, timeZone, { month: "short" });
@@ -445,56 +436,5 @@ export async function getAdminAppointmentsSummary(
     serviceName: appointment.service?.name ?? appointment.serviceName ?? null,
     startAt: appointment.timeSlot.startAt,
     status: appointment.status,
-  }));
-}
-
-export async function getAdminRecentAppointments(
-  prisma: PrismaClient,
-  {
-    from,
-    to,
-    limit,
-  }: {
-    from: Date;
-    to: Date;
-    limit?: number;
-  },
-): Promise<AdminRecentAppointment[]> {
-  const appointments = await prisma.appointment.findMany({
-    where: {
-      timeSlot: {
-        startAt: {
-          gte: from,
-          lt: to,
-        },
-      },
-    },
-    select: {
-      id: true,
-      status: true,
-      timeSlot: { select: { startAt: true } },
-      patient: { select: { user: { select: { name: true, lastName: true } } } },
-      professional: {
-        select: {
-          user: { select: { name: true, lastName: true } },
-          specialty: { select: { name: true } },
-        },
-      },
-    },
-    orderBy: { timeSlot: { startAt: "asc" } },
-    take: limit,
-  });
-
-  return appointments.map((appointment) => ({
-    id: appointment.id,
-    startAt: appointment.timeSlot.startAt,
-    status: appointment.status,
-    patientName: appointment.patient?.user
-      ? `${appointment.patient.user.name} ${appointment.patient.user.lastName}`.trim()
-      : null,
-    professionalName: appointment.professional?.user
-      ? `${appointment.professional.user.name} ${appointment.professional.user.lastName}`.trim()
-      : null,
-    specialty: appointment.professional?.specialty?.name ?? null,
   }));
 }

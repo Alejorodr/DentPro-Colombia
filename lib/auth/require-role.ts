@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
+import { MFA_PAGE_PATH } from "@/lib/auth/mfa";
 import { getDefaultDashboardPath, isUserRole, type UserRole } from "@/lib/auth/roles";
 
 export async function requireRole(allowedRoles: UserRole | UserRole[]) {
@@ -10,6 +11,10 @@ export async function requireRole(allowedRoles: UserRole | UserRole[]) {
 
   if (!role || !isUserRole(role)) {
     redirect("/auth/login");
+  }
+
+  if (session?.user?.mfaPending) {
+    redirect(MFA_PAGE_PATH);
   }
 
   if (session?.user?.mustChangePassword) {

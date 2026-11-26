@@ -2,7 +2,7 @@
 
 import type { HomepagePlacement } from "@/lib/marketing/homepage-types";
 
-export const PLACEMENT_OPTIONS: { value: HomepagePlacement; label: string }[] = [
+const PLACEMENT_OPTIONS: { value: HomepagePlacement; label: string }[] = [
   { value: "INFOBAR", label: "Barra superior" },
   { value: "FLOATING", label: "Botón flotante" },
   { value: "FOOTER", label: "Footer" },

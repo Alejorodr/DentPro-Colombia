@@ -5,6 +5,7 @@ import { AppointmentStatus, InsuranceStatus, Prisma, ProfessionalScheduleStatus,
 import { getPrismaClient } from "@/lib/prisma";
 import { upsertSlotAppointment } from "@/lib/appointments/upsert-slot-appointment";
 import { logAuditEvent } from "@/lib/audit";
+import { enrollSeededUsersInE2EMfa } from "@/lib/auth/e2e-mfa";
 import { logger } from "@/lib/logger";
 import { refreshFutureInventoryForAllProfessionals } from "@/lib/scheduling/slot-inventory";
 import {
@@ -241,6 +242,11 @@ export async function POST(request: Request) {
     );
 
     const professionalUsers = createdUsers.filter((user) => user.role === Role.PROFESIONAL);
+    // DOG-28: solo en E2E local, para que las sesiones sembradas de estos roles no queden pendientes.
+    await enrollSeededUsersInE2EMfa(
+      prisma,
+      createdUsers.filter((user) => user.role === Role.ADMINISTRADOR || user.role === Role.PROFESIONAL).map((user) => user.id),
+    );
     await Promise.all(
       professionalUsers.map((user, index) =>
         prisma.professionalProfile.upsert({
@@ -455,21 +461,34 @@ export async function POST(request: Request) {
     const primaryProfessional = await prisma.professionalProfile.findFirst({ orderBy: { userId: "asc" } });
 
     if (demoPatient && primaryProfessional) {
-      const demoAppointments = await prisma.appointment.count({ where: { patientId: demoPatient.id } });
-      if (demoAppointments < 3) {
-        const now = new Date();
-        const buildSlot = (offsetDays: number, hour: number) => {
-          const date = new Date(now);
-          date.setDate(now.getDate() + offsetDays);
-          date.setHours(hour, 0, 0, 0);
-          return date;
-        };
+      // Contrato con los E2E: la paciente demo siempre tiene al menos 2 visitas completadas.
+      // Antes esta historia solo se creaba si tenía menos de 3 citas, pero el bloque anterior
+      // reparte citas entre pacientes ordenados por UUID (aleatorio): a veces le tocaban 3 y la
+      // historia no se creaba, y el conteo de visitas dependía de la hora (DOG-39).
+      // Los upserts usan las mismas fechas para el mismo día, así que repetir el seed no duplica.
+      const [demoAppointments, demoCompleted] = await Promise.all([
+        prisma.appointment.count({ where: { patientId: demoPatient.id } }),
+        prisma.appointment.count({ where: { patientId: demoPatient.id, status: AppointmentStatus.COMPLETED } }),
+      ]);
+      const now = new Date();
+      const buildSlot = (offsetDays: number, hour: number) => {
+        const date = new Date(now);
+        date.setDate(now.getDate() + offsetDays);
+        date.setHours(hour, 0, 0, 0);
+        return date;
+      };
 
-        const demoSlots = [
-          { startAt: buildSlot(-7, 9), status: AppointmentStatus.COMPLETED },
-          { startAt: buildSlot(-3, 11), status: AppointmentStatus.COMPLETED },
-          { startAt: buildSlot(5, 10), status: AppointmentStatus.CONFIRMED },
-        ];
+      const demoSlots = [
+        ...(demoCompleted < 2
+          ? [
+              { startAt: buildSlot(-7, 9), status: AppointmentStatus.COMPLETED },
+              { startAt: buildSlot(-3, 11), status: AppointmentStatus.COMPLETED },
+            ]
+          : []),
+        ...(demoAppointments < 3 ? [{ startAt: buildSlot(5, 10), status: AppointmentStatus.CONFIRMED }] : []),
+      ];
+
+      {
 
         for (const slot of demoSlots) {
           const endAt = new Date(slot.startAt.getTime() + (primaryProfessional.slotDurationMinutes ?? 30) * 60_000);

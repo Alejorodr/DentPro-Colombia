@@ -3,6 +3,7 @@
 import { cn } from "@/lib/utils";
 import type { ProfessionalDashboardAppointment } from "@/app/portal/professional/types";
 import { STATUS_COLORS, DEFAULT_STATUS_COLOR } from "@/app/portal/components/ui/statusColors";
+import { CLINIC_TIME_ZONE } from "@/lib/dates/tz";
 
 const GRID_START_HOUR = 7;
 const GRID_END_HOUR = 20;
@@ -16,7 +17,7 @@ function toMinutesFromStart(dateStr: string): number {
 }
 
 function formatTime(dateStr: string): string {
-  return new Date(dateStr).toLocaleTimeString("es-CO", {
+  return new Date(dateStr).toLocaleTimeString("es-CO", { timeZone: CLINIC_TIME_ZONE,
     hour: "2-digit",
     minute: "2-digit",
     hour12: false,

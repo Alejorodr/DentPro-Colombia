@@ -14,9 +14,9 @@ app/
 │   ├── components/       # Hero, Navbar, Services, Specialists, BookingForm, Contact
 │   └── page.tsx          # Entry point del marketing site
 ├── portal/               # Portal clínico multi-rol
-│   ├── paciente/         # Vista paciente — citas, historial, consentimientos
-│   ├── profesional/      # Agenda, fichas clínicas, recetas, resultados
-│   ├── recepcion/        # Dashboard, turnos, gestión de pacientes, facturación
+│   ├── client/           # Vista paciente — citas, historial, consentimientos
+│   ├── professional/     # Agenda, fichas clínicas, recetas, resultados
+│   ├── receptionist/     # Dashboard, turnos, gestión de pacientes, facturación
 │   └── admin/            # KPIs, ingresos, staff, servicios, CMS, auditoría
 ├── api/                  # Rutas API — auth, citas, pacientes, etc.
 ├── globals.css           # Tokens Tailwind v4 — colores, sombras, radios, gradientes
@@ -28,7 +28,8 @@ components/
 
 lib/
 ├── marketing/            # Defaults del homepage, datos de servicios y especialistas
-└── portal/               # Lógica de roles, auth helpers
+├── auth/                 # Roles, sesión, credenciales y guardas de auth
+└── portal/               # Datos del dashboard del paciente
 
 design-system/            # Sistema de diseño exportado desde Claude Design
 ├── README.md             # Guías de marca, voz, color, tipografía, iconografía
@@ -46,10 +47,10 @@ design-system/            # Sistema de diseño exportado desde Claude Design
 
 | Capa | Tecnología |
 |---|---|
-| Framework | Next.js 15 App Router |
+| Framework | Next.js 16 App Router (build con webpack) |
 | Estilos | Tailwind CSS v4 |
 | Iconos | AnimateIcons/Lucide (`@animateicons/react` + `lucide-react`) |
-| Auth | NextAuth (Credentials provider) |
+| Auth | NextAuth v5 (Credentials + Google) |
 | Idioma | Español (Colombia), `lang="es"`, `locale="es_CO"` |
 | Fuentes | Outfit (headings), Inter (body) |
 
@@ -61,6 +62,7 @@ design-system/            # Sistema de diseño exportado desde Claude Design
 - Paleta azul-doble: `#031536` midnight → `#0a3d91` brand-teal → `#1f6cd3` brand-indigo → `#4cc3f1` brand-sky → `#5bd0ff` accent-cyan → `#e6f4ff` brand-light.
 - **Sin verdes, sin morados, sin cálidos**. Solo slate para neutros.
 - Dorado (`#c8901f`) solo en logos impresos, nunca en UI.
+- **Excepción aprobada**: dorado `gold-bright` (`#e6b450`) para las estrellas de calificación de reseñas (hero, InfoBar) — pedido explícito del dueño en DOG-35; no usarlo en ningún otro elemento de UI.
 - **Excepción aprobada**: rojo (`red-*`) para mensajes de error/validación (ej. login fallido) — no migrar a azul-marca, el rojo mantiene la urgencia visual del error.
 - **Excepción aprobada**: verde/emerald (`emerald-*`/`green-*`) para mensajes de éxito en formularios — paralelo a la excepción de rojo-error, misma lógica (urgencia/confirmación visual, no decorativo).
 - **Excepción aprobada**: rojo/rose para alertas clínicas de seguridad del paciente (ej. alergias críticas en `ProfessionalDashboard.tsx`) — la urgencia visual es intencional y no debe migrarse a azul-marca.
@@ -89,12 +91,18 @@ design-system/            # Sistema de diseño exportado desde Claude Design
 - **Tú-form siempre**, nunca usted.
 - CTAs = verbos: `Agenda tu cita`, `Ver disponibilidad`, `Reservar turno`.
 - Sin emoji nunca. Sin signos de exclamación excepto en mensajes de éxito (máx 1 por página).
-- Portal: navegación en inglés (`Dashboard`, `Staff Management`), contenido en español.
+- Portal: todo en español, navegación incluida (`Inicio`, `Agenda`, `Pacientes`). Los cuatro roles comparten el shell glassy (`PortalGlassShell`).
 
 ### Moneda y fechas
 - Precios: `Intl.NumberFormat("es-CO", { style: "currency", currency: "COP" })` — sin decimales: `$1.250.000`.
 - Fechas: `Lun–Sáb 8:00–19:00`, `Sáb 14 dic · 9:00 a. m.`
 - Teléfono: `+57 323 796 8435`
+- Zona horaria: todo instante (citas, registros, notificaciones) se formatea con `timeZone: CLINIC_TIME_ZONE` (`America/Bogota`, en `lib/dates/tz.ts`). El servidor de Vercel corre en UTC: sin la zona, las horas salen 5 horas corridas. Solo los días de calendario armados en el navegador (selectores de fecha) van sin zona.
+
+### Soporte de navegadores y plataforma web (DOG-40)
+- **Baseline amplio** sin fallbacks. Funciones **Baseline nuevas o aún no Baseline**: solo con detección y degradación elegante, siguiendo el fallback de la guía de `modern-web-guidance`. No se agregan polyfills ni dependencias si existe una solución nativa.
+- **Modales**: siempre `PortalDialog` (`app/portal/components/ui/PortalDialog.tsx`), que usa `<dialog>` nativo con `showModal()`. Nada de overlays `fixed inset-0` hechos a mano, `role="dialog"`, `aria-modal` ni trampas de foco manuales. Clic afuera para cerrar (`dismissible`) solo en diálogos de lectura o confirmación, nunca en formularios.
+- **Formularios**: cada campo con `<label>` asociado y `autocomplete` correcto (`username` + `current-password` en login, `new-password` al crear o cambiar contraseña, `one-time-code` en códigos). Un Enter manejado a mano chequea `isComposing` (IME).
 
 ---
 
@@ -113,14 +121,35 @@ design-system/            # Sistema de diseño exportado desde Claude Design
 
 ```bash
 # Desarrollo
-npm run dev
+pnpm dev
 
-# Build
-npm run build
+# Verificación local completa (antes de integrar un ticket a develop)
+pnpm lint && pnpm typecheck && pnpm test && pnpm build
 
-# Lint
-npm run lint
+# E2E locales contra Postgres efímero en Docker (aislado de .env.local)
+pnpm e2e:local:smoke          # @smoke, igual al CI de PR
+pnpm e2e:local                # suite completa, igual al Nightly
+pnpm e2e:local -- e2e/auth.spec.ts --repeat-each=3   # un spec puntual
+pnpm e2e:db:down              # bajar el contenedor
+
+# Escaneo de secretos con gitleaks en Docker (igual al workflow Secret Scan)
+pnpm secrets:scan             # todo el historial
+pnpm secrets:scan -- staged   # solo lo preparado para commit
 ```
+
+---
+
+## Flujo de trabajo: tickets, develop y releases
+
+- **Tickets en Linear.** Cada trabajo nace de un ticket (`DOG-123`, proyecto "DentPro Colombia" en el workspace DOGBYTE de Linear).
+- **`main`** = última versión publicada y estable (lo que está en producción). Solo recibe releases.
+- **`develop`** = versión local más nueva: acumula los tickets terminados y probados. Se sube a GitHub **solo como respaldo** (no dispara CI). Vercel crea un preview de cada push a `develop`, conectado a la rama Dev de Neon (DOG-7).
+- **Por ticket:** rama corta desde `develop` (`feat/DOG-123-descripcion`, `fix/DOG-124-...`), verificación local completa (lint, typecheck, test, build y E2E si toca flujos), changeset (`pnpm changeset`) y merge a `develop` en local.
+- **Release:** solo con aprobación explícita del dueño. Un único PR `develop` → `main`, CI verde, merge, `pnpm version-packages` y etiqueta `vX.Y.Z`.
+- **Hotfix urgente de producción:** rama desde `main`, PR directo a `main`, y luego merge de `main` en `develop`.
+- **Dependabot:** mensual y agrupado; sus PRs se unifican en el siguiente release. Las alertas de seguridad se atienden aparte.
+- **Base local:** `.env.local` apunta a la branch **Dev** de Neon (base `neondb`; la shadow de Prisma es `prisma_shadow` en la misma branch). Nunca a producción: las URLs de producción viven fuera del repo, en `~/.dentpro/prod.env`, y solo se usan en los pasos del release (DOG-41).
+- Nunca correr E2E contra Neon (prod ni dev): siembran usuarios con contraseñas públicas. Usar `pnpm e2e:local`.
 
 ---
 
@@ -149,7 +178,7 @@ npm run lint
 **Añades una pantalla al portal:**
 1. Revisa `design-system/ui_kits/portal/RoleViews.jsx` para el patrón de layout.
 2. Protege la ruta según el rol correspondiente en NextAuth.
-3. Labels de navegación en inglés, contenido de la página en español.
+3. Labels de navegación y contenido en español; la página se monta dentro de `PortalGlassShell`.
 
 **Modificas el marketing site:**
 1. Referencia `design-system/ui_kits/marketing/` para estructura.

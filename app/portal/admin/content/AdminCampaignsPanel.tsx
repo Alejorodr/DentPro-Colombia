@@ -10,6 +10,8 @@ import { AdminImageField } from "@/app/portal/admin/content/components/AdminImag
 import { fetchWithRetry, fetchWithTimeout, getApiErrorMessage } from "@/lib/http";
 import { SectionVisibilityToggle } from "@/app/portal/admin/content/components/SectionVisibilityToggle";
 import { STATUS_COLORS } from "@/app/portal/components/ui/statusColors";
+import { SkeletonRows } from "@/app/portal/components/ui/Skeleton";
+import { PortalDialog } from "@/app/portal/components/ui/PortalDialog";
 
 type CampaignRecord = {
   id: string;
@@ -267,7 +269,7 @@ export function AdminCampaignsPanel() {
         </button>
       </Card>
 
-      {loading ? <Card><p className="text-sm text-slate-600 dark:text-slate-300">Cargando campañas...</p></Card> : null}
+      {loading ? <Card><SkeletonRows label="Cargando campañas" /></Card> : null}
 
       <Card className="space-y-4">
         <div>
@@ -327,96 +329,94 @@ export function AdminCampaignsPanel() {
       </Card>
 
       {editing ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 px-4">
-          <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl dark:bg-surface-elevated">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Editar campaña</p>
-              <h3 className="text-lg font-semibold text-slate-900 dark:text-white">{editing.title}</h3>
-            </div>
-            <div className="mt-4 grid gap-4 md:grid-cols-2">
-              <input
-                className="input h-11 text-sm"
-                placeholder="Título"
-                value={editing.title}
-                onChange={(event) => setEditing((prev) => (prev ? { ...prev, title: event.target.value } : null))}
-              />
-              <input
-                className="input h-11 text-sm"
-                placeholder="Descripción"
-                value={editing.description ?? ""}
-                onChange={(event) =>
-                  setEditing((prev) => (prev ? { ...prev, description: event.target.value } : null))
-                }
-              />
-              <AdminImageField
-                label="Imagen campaña"
-                value={editing.imageUrl}
-                onChange={(value) => setEditing((prev) => (prev ? { ...prev, imageUrl: value } : null))}
-                uploadFolder="marketing/campaigns"
-                recommendation="1600x800 px"
-                aspectRatio="2:1"
-                placeholder="https://..."
-                disabled={saving}
-              />
-              <input
-                className="input h-11 text-sm"
-                placeholder="CTA (texto)"
-                value={editing.ctaText ?? ""}
-                onChange={(event) => setEditing((prev) => (prev ? { ...prev, ctaText: event.target.value } : null))}
-              />
-              <input
-                className="input h-11 text-sm"
-                placeholder="CTA (URL)"
-                value={editing.ctaUrl ?? ""}
-                onChange={(event) => setEditing((prev) => (prev ? { ...prev, ctaUrl: event.target.value } : null))}
-              />
-              <input
-                className="input h-11 text-sm"
-                type="date"
-                value={editing.startAt.slice(0, 10)}
-                onChange={(event) =>
-                  setEditing((prev) => (prev ? { ...prev, startAt: event.target.value } : null))
-                }
-              />
-              <input
-                className="input h-11 text-sm"
-                type="date"
-                value={editing.endAt.slice(0, 10)}
-                onChange={(event) =>
-                  setEditing((prev) => (prev ? { ...prev, endAt: event.target.value } : null))
-                }
-              />
-              <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                <input
-                  type="checkbox"
-                  checked={editing.active}
-                  onChange={(event) =>
-                    setEditing((prev) => (prev ? { ...prev, active: event.target.checked } : null))
-                  }
-                />
-                Activa
-              </label>
-            </div>
-            {error ? <p className="mt-3 text-sm text-red-600">{error}</p> : null}
-            <div className="mt-6 flex justify-end gap-2">
-              <button
-                type="button"
-                className="rounded-full border border-slate-200 px-4 py-2 text-xs font-semibold uppercase text-slate-600"
-                onClick={() => setEditing(null)}
-              >
-                Cancelar
-              </button>
-              <button
-                type="button"
-                className="rounded-full bg-brand-teal px-4 py-2 text-xs font-semibold uppercase text-white"
-                onClick={updateCampaign}
-                disabled={saving}
-              >
-                Guardar cambios
-              </button>
-            </div>
+        <PortalDialog onClose={() => setEditing(null)} labelledBy="campaign-modal-title" size="lg">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Editar campaña</p>
+            <h3 id="campaign-modal-title" className="text-lg font-semibold text-slate-900 dark:text-white">{editing.title}</h3>
           </div>
-        </div>
+          <div className="mt-4 grid gap-4 md:grid-cols-2">
+            <input
+              className="input h-11 text-sm"
+              placeholder="Título"
+              value={editing.title}
+              onChange={(event) => setEditing((prev) => (prev ? { ...prev, title: event.target.value } : null))}
+            />
+            <input
+              className="input h-11 text-sm"
+              placeholder="Descripción"
+              value={editing.description ?? ""}
+              onChange={(event) =>
+                setEditing((prev) => (prev ? { ...prev, description: event.target.value } : null))
+              }
+            />
+            <AdminImageField
+              label="Imagen campaña"
+              value={editing.imageUrl}
+              onChange={(value) => setEditing((prev) => (prev ? { ...prev, imageUrl: value } : null))}
+              uploadFolder="marketing/campaigns"
+              recommendation="1600x800 px"
+              aspectRatio="2:1"
+              placeholder="https://..."
+              disabled={saving}
+            />
+            <input
+              className="input h-11 text-sm"
+              placeholder="CTA (texto)"
+              value={editing.ctaText ?? ""}
+              onChange={(event) => setEditing((prev) => (prev ? { ...prev, ctaText: event.target.value } : null))}
+            />
+            <input
+              className="input h-11 text-sm"
+              placeholder="CTA (URL)"
+              value={editing.ctaUrl ?? ""}
+              onChange={(event) => setEditing((prev) => (prev ? { ...prev, ctaUrl: event.target.value } : null))}
+            />
+            <input
+              className="input h-11 text-sm"
+              type="date"
+              value={editing.startAt.slice(0, 10)}
+              onChange={(event) =>
+                setEditing((prev) => (prev ? { ...prev, startAt: event.target.value } : null))
+              }
+            />
+            <input
+              className="input h-11 text-sm"
+              type="date"
+              value={editing.endAt.slice(0, 10)}
+              onChange={(event) =>
+                setEditing((prev) => (prev ? { ...prev, endAt: event.target.value } : null))
+              }
+            />
+            <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              <input
+                type="checkbox"
+                checked={editing.active}
+                onChange={(event) =>
+                  setEditing((prev) => (prev ? { ...prev, active: event.target.checked } : null))
+                }
+              />
+              Activa
+            </label>
+          </div>
+          {error ? <p className="mt-3 text-sm text-red-600">{error}</p> : null}
+          <div className="mt-6 flex justify-end gap-2">
+            <button
+              type="button"
+              className="rounded-full border border-slate-200 px-4 py-2 text-xs font-semibold uppercase text-slate-600"
+              onClick={() => setEditing(null)}
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              className="rounded-full bg-brand-teal px-4 py-2 text-xs font-semibold uppercase text-white"
+              onClick={updateCampaign}
+              disabled={saving}
+            >
+              Guardar cambios
+            </button>
+          </div>
+        </PortalDialog>
       ) : null}
       {error ? <p className="text-sm text-red-600">{error}</p> : null}
       {success ? <p className="text-sm text-emerald-600">{success}</p> : null}

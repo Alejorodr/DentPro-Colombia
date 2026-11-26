@@ -1,3 +1,9 @@
+import { withAbortTimeout } from "@/lib/http";
+import { matchesFileSignature } from "@/lib/security/file-signature";
+
+// Adjuntos de hasta 10 MB: 60 s bastan incluso con conexiones lentas.
+const BLOB_UPLOAD_TIMEOUT_MS = 60_000;
+
 export const CLINICAL_ATTACHMENT_MAX_BYTES = 10 * 1024 * 1024;
 export const CLINICAL_ATTACHMENT_ALLOWED_TYPES = ["application/pdf", "image/jpeg", "image/png"] as const;
 
@@ -9,6 +15,14 @@ const CLINICAL_ATTACHMENT_EXTENSION_MAP: Record<(typeof CLINICAL_ATTACHMENT_ALLO
 
 export function isAllowedClinicalAttachmentType(type: string) {
   return CLINICAL_ATTACHMENT_ALLOWED_TYPES.includes(type as (typeof CLINICAL_ATTACHMENT_ALLOWED_TYPES)[number]);
+}
+
+/**
+ * `true` solo si el tipo está permitido y el contenido empieza con su firma (DOG-33).
+ * El tipo MIME lo declara el navegador; la firma dice qué hay realmente dentro.
+ */
+export function matchesClinicalAttachmentSignature(bytes: Uint8Array, declaredType: string): boolean {
+  return isAllowedClinicalAttachmentType(declaredType) && matchesFileSignature(bytes, declaredType);
 }
 
 export function sanitizeClinicalAttachmentFilename(originalName: string, mimeType: string): string {
@@ -31,7 +45,8 @@ export function buildClinicalAttachmentStorageKey(params: {
 }): string {
   const { episodeId, filename } = params;
   const uuid = crypto.randomUUID();
-  return `clinical/${episodeId}/${uuid}-${filename}`;
+  // DOG-32: prefijo propio para los privados; `clinical/` queda solo para los adjuntos viejos.
+  return `clinical-private/${episodeId}/${uuid}-${filename}`;
 }
 
 export async function buildClinicalAttachmentChecksum(file: File): Promise<string> {
@@ -47,10 +62,9 @@ export async function uploadToBlob(
   contentType?: string,
 ): Promise<string> {
   const { put } = await import("@vercel/blob");
-  const result = await put(key, file, {
-    access: "private",
-    addRandomSuffix: false,
-    contentType,
-  });
+  const result = await withAbortTimeout(
+    (abortSignal) => put(key, file, { access: "private", addRandomSuffix: false, contentType, abortSignal }),
+    BLOB_UPLOAD_TIMEOUT_MS,
+  );
   return result.pathname;
 }

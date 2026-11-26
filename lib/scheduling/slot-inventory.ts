@@ -255,15 +255,37 @@ export async function refreshFutureInventoryForProfessional(params: {
   const slotDuration = Number.isFinite(duration) && duration > 0 ? duration : fallbackDuration;
   const slots = buildSlotsFromIntervals(effective, slotDuration);
 
+  // DOG-39: solo se borran los horarios libres que ya no corresponden al inventario nuevo.
+  // Antes se borraban todos y se recreaban con IDs nuevos: un paciente que había elegido
+  // un horario mientras se regeneraba el inventario recibía 404 "Slot no encontrado"
+  // aunque el horario siguiera existiendo.
+  const slotKey = (startAt: Date, endAt: Date) => `${startAt.getTime()}-${endAt.getTime()}`;
+  const desiredKeys = new Set(slots.map((slot) => slotKey(slot.startAt, slot.endAt)));
+
   return prisma.$transaction(async (tx) => {
-    const removed = await tx.timeSlot.deleteMany({
+    const existing = await tx.timeSlot.findMany({
       where: {
         professionalId: professional.id,
         status: TimeSlotStatus.AVAILABLE,
         appointments: { none: {} },
         startAt: { gte: rangeStart, lt: rangeEnd },
       },
+      select: { id: true, startAt: true, endAt: true },
     });
+    const staleIds = existing
+      .filter((slot) => !desiredKeys.has(slotKey(slot.startAt, slot.endAt)))
+      .map((slot) => slot.id);
+
+    const removed =
+      staleIds.length > 0
+        ? await tx.timeSlot.deleteMany({
+            where: {
+              id: { in: staleIds },
+              status: TimeSlotStatus.AVAILABLE,
+              appointments: { none: {} },
+            },
+          })
+        : { count: 0 };
 
     const created = await tx.timeSlot.createMany({
       data: slots.map((slot) => ({

@@ -13,7 +13,7 @@ import {
 import type { AnalyticsBucket } from "@/lib/analytics/range";
 import { parseRange } from "@/lib/analytics/range";
 
-export type { AnalyticsBucket, AnalyticsRange, AnalyticsRangeKey } from "@/lib/analytics/range";
+export type { AnalyticsBucket } from "@/lib/analytics/range";
 export { parseRange };
 
 export const getAdminKpis = cache(async ({ from, to }: { from: Date; to: Date }) => {

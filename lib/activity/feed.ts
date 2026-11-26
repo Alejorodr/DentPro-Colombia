@@ -4,7 +4,7 @@ import { getAppointmentEventLabel, appointmentStatusPastLabel } from "@/lib/appo
 import { queryFeedSources } from "@/lib/activity/queryFeed";
 import { getPrismaClient } from "@/lib/prisma";
 
-export type ActivityFeedItem = {
+type ActivityFeedItem = {
   id: string;
   type: string;
   appointmentId?: string;
@@ -28,7 +28,7 @@ export type ActivityFeedResult = {
   nextCursor: string | null;
 };
 
-export type FeedCursor = {
+type FeedCursor = {
   timestamp: Date;
   source: "event" | "notification";
   sourceId: string;
