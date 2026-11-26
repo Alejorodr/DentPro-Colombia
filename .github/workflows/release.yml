@@ -59,8 +59,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      # Se decide por la versión de package.json y no por el mensaje del commit: los releases se
+      # mergean con merge commit (DOG-51), así que el último commit es "Merge pull request #…".
+      # Si la etiqueta de la versión actual ya existe (cualquier push que no sube versión), no hace nada.
       - name: Create Git tag and GitHub release
-        if: "${{ github.event_name == 'push' && startsWith(github.event.head_commit.message, 'chore(release): version packages') }}"
+        if: "${{ github.event_name == 'push' }}"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
