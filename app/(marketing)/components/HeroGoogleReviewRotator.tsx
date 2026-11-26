@@ -38,12 +38,14 @@ export function HeroGoogleReviewRotator({ googleReviews, fallback }: HeroGoogleR
   const globalRating = typeof googleReviews?.rating === "number" ? googleReviews.rating : null;
 
   return (
-    <div className="grid gap-3">
+    // DOG-66: grid-cols-1 + min-w-0, igual que en DOG-62. Sin columnas explícitas, la barra de
+    // calificación (nowrap) estiraba la columna y la tarjeta se salía de la pantalla a 320 px.
+    <div className="grid min-w-0 grid-cols-1 gap-3">
       <TestimonialCarousel testimonials={testimonials} />
 
       {googleReviews && reviews.length > 0 ? (
-        <div className="flex items-center justify-between gap-3 rounded-full border border-white/70 bg-white/90 px-4 py-2 text-sm shadow-lg shadow-slate-900/10 backdrop-blur-sm dark:border-accent-cyan/10 dark:bg-surface-elevated/90">
-          <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-2xl border min-[360px]:rounded-full border-white/70 bg-white/90 px-4 py-2 text-sm shadow-lg shadow-slate-900/10 backdrop-blur-sm dark:border-accent-cyan/10 dark:bg-surface-elevated/90">
+          <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
             {globalRating !== null ? (
               <span className="font-bold text-slate-900 dark:text-white">{globalRating.toFixed(1)}</span>
             ) : null}
