@@ -12,18 +12,12 @@
 import { Prisma } from "@prisma/client";
 
 import { getPrismaClient } from "../../lib/prisma";
+import { rewriteEncryptedRows, type RewriteDelegate } from "../../lib/security/encrypt-existing";
 import { isFieldEncryptionEnabled } from "../../lib/security/field-encryption";
 import { ENCRYPTED_FIELDS } from "../../lib/security/prisma-field-encryption";
 
-const BATCH_SIZE = 200;
-
-type Delegate = {
-  findMany(args: unknown): Promise<Array<Record<string, unknown>>>;
-  update(args: unknown): Promise<unknown>;
-};
-
-function delegateFor(model: string): Delegate {
-  const prisma = getPrismaClient() as unknown as Record<string, Delegate>;
+function delegateFor(model: string): RewriteDelegate {
+  const prisma = getPrismaClient() as unknown as Record<string, RewriteDelegate>;
   return prisma[model.charAt(0).toLowerCase() + model.slice(1)];
 }
 
@@ -40,37 +34,6 @@ async function countPlaintext(model: string, fields: Record<string, "text" | "js
   return Number(rows[0]?.total ?? 0);
 }
 
-/** Clave primaria de cada modelo cifrado cuando no se llama `id` (UserMfa usa `userId`, DOG-28). */
-const PRIMARY_KEYS: Record<string, string> = { UserMfa: "userId" };
-
-async function rewriteModel(model: string, fields: Record<string, "text" | "json">) {
-  const delegate = delegateFor(model);
-  const pk = PRIMARY_KEYS[model] ?? "id";
-  const select = Object.fromEntries([[pk, true], ...Object.keys(fields).map((field) => [field, true])]);
-  let cursor: string | undefined;
-  let rewritten = 0;
-
-  for (;;) {
-    const rows = await delegate.findMany({
-      select,
-      orderBy: { [pk]: "asc" },
-      take: BATCH_SIZE,
-      ...(cursor ? { cursor: { [pk]: cursor }, skip: 1 } : {}),
-    });
-    if (rows.length === 0) break;
-
-    for (const row of rows) {
-      const data = Object.fromEntries(Object.keys(fields).filter((field) => row[field] != null).map((field) => [field, row[field]]));
-      if (Object.keys(data).length > 0) {
-        await delegate.update({ where: { [pk]: row[pk] }, data });
-        rewritten += 1;
-      }
-    }
-    cursor = rows[rows.length - 1]?.[pk] as string;
-  }
-  return rewritten;
-}
-
 async function main() {
   const apply = process.argv.includes("--apply");
 
@@ -84,7 +47,7 @@ async function main() {
       console.log(`${model}: ${pending} filas con datos en claro`);
       continue;
     }
-    const rewritten = await rewriteModel(model, fields);
+    const rewritten = await rewriteEncryptedRows(delegateFor(model), model, fields);
     const left = await countPlaintext(model, fields);
     console.log(`${model}: ${rewritten} filas reescritas, ${left} en claro`);
     if (left > 0) process.exitCode = 1;
