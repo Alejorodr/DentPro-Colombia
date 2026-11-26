@@ -53,7 +53,15 @@ Como las historias se comparten, el merge solo trae el commit de versión.
 
 ### 5. Verificar producción
 
-1. CI en verde en el push a `main`, y deploy de Vercel en `READY`.
+1. CI en verde en el push a `main`, y deploy de Vercel en `READY`. El estado se consulta con el token de equipo guardado fuera del repo, en `~/.dentpro/vercel.env` (`VERCEL_TOKEN=...`, alcance solo `alejorodrs-projects`; su vencimiento está en DOG-67). No se usa el token del CLI porque vence seguido (DOG-67). El valor del token nunca se imprime ni se pega en un chat:
+
+   ```bash
+   set -a; . ~/.dentpro/vercel.env; set +a
+   curl -s -H "Authorization: Bearer $VERCEL_TOKEN" \
+     "https://api.vercel.com/v6/deployments?projectId=prj_1KaqL47XeBBSgh0vZwbAXyiDzIPU&teamId=team_78AjIhE2vgTvGBoRiFTlzFvd&target=production&limit=1"
+   ```
+
+   Si el token falla, el estado "Vercel" del commit en GitHub también confirma el deploy.
 2. **Prueba de humo con un navegador real**, no con curl. El firewall de Vercel responde `429` con `x-vercel-mitigated: challenge` a los clientes que no son navegador, así que curl o un monitor externo dan falsos negativos (DOG-58).
 3. Revisar el checklist "Para producción" del ticket del release: migraciones, scripts, datos y pruebas por rol.
 4. Cada fallo, desvío o alerta va como sub-ticket del release.
