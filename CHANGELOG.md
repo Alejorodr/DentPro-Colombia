@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.0.3
+
+### Patch Changes
+
+- f46887d: Los horarios libres de hoy ya no se corren ni cambian de ID cuando se regenera el inventario (cambios de agenda, festivos o CUPS): la grilla parte de la hora de inicio del turno. Antes una reserva en curso podía recibir "Slot no encontrado" (DOG-65).
+
 ## 2.0.2
 
 ### Patch Changes
