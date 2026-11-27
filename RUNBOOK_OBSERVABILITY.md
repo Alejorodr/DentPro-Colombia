@@ -48,7 +48,7 @@ Si falla la persistencia del `AccessLog`, ahora se emite log estructurado con:
 - error sanitizado por `lib/logger.ts` (sin exponer secrets/headers/cookies)
 
 ## Checklist de verificación
-- [ ] En desarrollo, dispara un error controlado: `GET /api/_monitoring?error=1`.
+- [ ] En desarrollo, dispara un error controlado: `GET /api/monitoring?error=1` con el header `x-monitoring-test-token`.
 - [ ] Verifica que el evento aparece en Sentry (si `SENTRY_DSN` está configurado).
 - [ ] Verifica que los logs incluyen `requestId` y no exponen datos sensibles.
 

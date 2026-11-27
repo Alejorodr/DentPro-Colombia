@@ -170,7 +170,7 @@
 - `PATCH|DELETE /api/notifications/[id]`: autenticado sobre recurso propio o staff.
 
 ### Ops / test / monitoreo
-- `GET /api/_monitoring`: interno/observabilidad.
+- `GET /api/monitoring`: interno/observabilidad.
 - `POST /api/cron/appointments/reminders`: cron protegido por secreto.
 - `GET /api/ops/auth-diagnostics`: protegido con `OPS_KEY`, allowlist IP y rate limit.
 - `POST /api/ops/seed-admin`: solo `development` + no Vercel/prod + `OPS_KEY`.
@@ -204,5 +204,5 @@
 | Base de datos | Backend/Data | `prisma/schema.prisma`, `prisma/migrations/**`, `lib/prisma.ts`, `lib/db/**` | `tests/prisma-client*`, `tests/dentpro-prisma-adapter*`, `tests/vercel-prisma*`, `lib/db/__tests__` |
 | Correo y notificaciones | Backend + Operaciones | `lib/email.ts`, `lib/email/**` (cola de salida), `lib/notifications/**` | `lib/email/__tests__`, `tests/appointment-email*` |
 | Jobs y cron | Backend + Operaciones | `app/api/cron/**`, `vercel.json` | `tests/cron-*` |
-| Observabilidad y operación | Security/Platform | `lib/logger.ts`, `lib/monitoring/**`, `app/api/_monitoring/**`, `app/api/ops/**` | `tests/monitoring-route*`, `lib/monitoring/__tests__` |
+| Observabilidad y operación | Security/Platform | `lib/logger.ts`, `lib/monitoring/**`, `app/api/monitoring/**`, `app/api/ops/**` | `tests/monitoring-route*`, `lib/monitoring/__tests__` |
 | CI/CD y releases | Security/Platform | `.github/workflows/**`, `.changeset/**`, `scripts/e2e-local.mjs`, `scripts/run-e2e.mjs` | Workflows `ci.yml`, `e2e-smoke.yml`, `e2e-nightly.yml`, `secret-scan.yml`, `codeql.yml` |
