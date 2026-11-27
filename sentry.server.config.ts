@@ -1,8 +1,9 @@
 import * as Sentry from "@sentry/nextjs";
 
+import { sentryDsn } from "@/lib/monitoring/sentry-dsn";
 import { scrubSentryEvent } from "@/lib/monitoring/sentry-scrub";
 
-const dsn = process.env.SENTRY_DSN;
+const dsn = sentryDsn();
 
 Sentry.init({
   dsn,
