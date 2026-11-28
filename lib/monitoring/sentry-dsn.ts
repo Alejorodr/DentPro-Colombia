@@ -1,9 +1,9 @@
 /**
  * DSN de Sentry para el servidor y el edge (DOG-69).
  *
- * La integración de Sentry del Marketplace de Vercel inyecta `NEXT_PUBLIC_SENTRY_DSN` y rota la
- * clave por su cuenta, así que no se copia a mano a `SENTRY_DSN`. `SENTRY_DSN` sigue teniendo
- * prioridad para quien lo configure explícitamente. Sin ninguno de los dos, Sentry queda apagado
+ * En Vercel, `SENTRY_DSN` apunta al proyecto `dogbyte/dentpro-colombia`. `NEXT_PUBLIC_SENTRY_DSN`
+ * queda como respaldo por si se conecta la integración de Sentry del Marketplace de Vercel, que
+ * inyecta solo esa variable. Sin ninguno de los dos, Sentry queda apagado
  * (local y E2E). Las referencias son literales para que Next.js pueda resolverlas en el build.
  */
 export function sentryDsn(): string | undefined {
